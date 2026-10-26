@@ -6,6 +6,10 @@ An AI construction crew that helps homeowners plan a renovation once — and sto
 
 **Live demo concept:** Convert a first-floor space in a Philadelphia rowhouse into a half bathroom.
 
+## Progress
+
+Day-by-day status: [PROGRESS.md](PROGRESS.md) · Live demo: https://dabidoe.github.io/unpermitted-ai/
+
 ## Run it
 
 No build step. Serve the folder and open the page:
