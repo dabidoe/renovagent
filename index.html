@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Unpermitted.ai — AI Construction Crew</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;900&family=IBM+Plex+Mono:wght@400;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,sans-serif;background:#141414;color:#f2efe9}
+.mono{font-family:"IBM Plex Mono",monospace}h1,h2,h3{font-family:Archivo,sans-serif;margin:0}
+header{background:#ffcf00;color:#141414;padding:14px 20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;border-bottom:4px solid #141414}
+header h1{font-size:28px;font-weight:900;letter-spacing:-.5px}header h1 span{background:#141414;color:#ffcf00;padding:2px 8px}
+.tag{font-weight:700;font-size:13px}.live{font-family:"IBM Plex Mono",monospace;font-size:11px;background:#141414;color:#7dff8a;padding:6px 10px}
+.hero{background:#1e1e1e;padding:22px 20px;display:grid;grid-template-columns:1.2fr .8fr;gap:20px;border-bottom:1px solid #333}
+.hero h2{font-size:34px;line-height:.95}.hero h2 em{color:#ffcf00;font-style:normal}
+.hero p{color:#c9c4b8;line-height:1.6;font-size:14px}
+.savings{background:#ffcf00;color:#141414;padding:16px}.savings h3{font-size:13px;letter-spacing:.08em}
+.bigsave{font-family:Archivo,sans-serif;font-size:44px;font-weight:900;line-height:1}
+.srow{display:flex;justify-content:space-between;font-family:"IBM Plex Mono",monospace;font-size:12px;padding:6px 0;border-top:1px solid #14141433}
+nav{display:flex;gap:8px;padding:12px 20px;background:#1a1a1a;flex-wrap:wrap;position:sticky;top:0;z-index:5}
+nav button{background:#262626;color:#eee;border:1px solid #444;padding:9px 14px;font-weight:700;cursor:pointer}nav button.active{background:#ffcf00;color:#141414;border-color:#ffcf00}
+main{padding:18px 20px 40px;max-width:1280px;margin:0 auto}.panel{display:none}.panel.active{display:block}
+.grid{display:grid;grid-template-columns:340px 1fr;gap:16px}@media(max-width:800px){.grid,.hero{grid-template-columns:1fr}}
+.card{background:#1f1f1f;border:1px solid #333;padding:16px;margin-bottom:14px}.card h3{margin-bottom:10px}
+label{font-size:12px;font-weight:700;display:block;margin:12px 0 5px;color:#ddd}
+input,select{width:100%;padding:10px;background:#111;border:1px solid #444;color:#fff}
+input[type=range]{padding:0}.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn{background:#ffcf00;color:#141414;border:0;padding:12px 16px;font-weight:900;cursor:pointer;width:100%}.btn.dark{background:#fff}
+.task{display:flex;gap:12px;padding:12px;border:1px solid #333;background:#1c1c1c;margin-bottom:8px;align-items:flex-start}
+.task.done{opacity:.55}.task.blocked{border-color:#ff5a4e}
+.badge{font-family:"IBM Plex Mono",monospace;font-size:10px;padding:4px 6px;background:#333;white-space:nowrap}.badge.ready{background:#234d2a;color:#7dff8a}.badge.blocked{background:#5a1f1a;color:#ff9a8a}.badge.doneb{background:#444;color:#fff}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:9px 8px;border-bottom:1px solid #333;text-align:left}th{font-family:"IBM Plex Mono",monospace;font-size:11px;color:#ffcf00}
+.crew{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}@media(max-width:800px){.crew{grid-template-columns:1fr}}
+.agent{background:#1f1f1f;border-top:5px solid #ffcf00;padding:16px}.agent.pete{border-color:#4ec9ff}.agent.sparky{border-color:#ff8a3d}
+.agent b{font-family:Archivo,sans-serif;font-size:18px}.finding{background:#171717;border:1px solid #333;padding:10px;margin-top:10px;font-size:13px;line-height:1.5}
+.sev{font-family:"IBM Plex Mono",monospace;font-size:10px;padding:3px 5px}.sev.high{background:#ff5a4e;color:#000}.sev.med{background:#ffcf00;color:#000}.sev.low{background:#555;color:#fff}
+.log{font-family:"IBM Plex Mono",monospace;font-size:12px;line-height:1.7;color:#bdb8aa;max-height:240px;overflow:auto}
+.kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px}@media(max-width:800px){.kpi{grid-template-columns:1fr 1fr}}
+.kpi div{background:#1f1f1f;border:1px solid #333;padding:14px}.kpi strong{font-family:Archivo,sans-serif;font-size:26px;display:block;color:#ffcf00}
+.check{display:flex;gap:8px;align-items:center;font-size:13px;padding:6px 0}.check input{width:auto}
+.note{font-size:12px;color:#aaa;line-height:1.6}.warn{background:#3a2410;border:1px solid #ff8a3d;padding:12px;font-size:13px;line-height:1.6}
+</style>
+</head>
+<body>
+<header>
+<div><h1>UNPERMITTED<span>.AI</span></h1><div class="tag">Questionable name. Surprisingly sound advice.</div></div>
+<div style="text-align:right"><div class="live">● DEMO PROJECT SAVED LOCALLY</div><div class="mono" style="font-size:11px;margin-top:6px">PHILADELPHIA ROWHOUSE · HALF BATH · PERMIT CHECK REQUIRED</div></div>
+</header>
+
+<section class="hero">
+<div>
+<h2>Build the bathroom.<br>Skip the <em>three extra<br>trips, overbuys &amp; rework.</em></h2>
+<p>Most DIY money is not lost on the toilet. It is lost on wrong quantities, forgotten fittings, blocked work, and buying twice. This crew plans the job once, groups every purchase, and flags trouble before you open a wall.</p>
+<div class="row" style="margin-top:14px"><button class="btn" onclick="show('crew');runCrew()">▶ RUN CREW MEETING</button><button class="btn dark" onclick="exportList()">⬇ EXPORT SHOPPING LIST</button></div>
+</div>
+<div class="savings">
+<h3>ESTIMATED SAVINGS ON THIS JOB</h3><div class="bigsave" id="bigSave">$0</div>
+<div class="srow"><span>🚚 Store trips avoided</span><b id="saveTrips">—</b></div>
+<div class="srow"><span>📦 Overbuy / waste avoided</span><b id="saveWaste">—</b></div>
+<div class="srow"><span>🔁 Rework avoided (crew catches)</span><b id="saveRework">—</b></div>
+<div class="srow"><span>⏱ Planning time saved</span><b id="saveTime">—</b></div>
+<p style="font-size:11px;line-height:1.5;margin:10px 0 0">Estimates vs. unplanned DIY baseline. Change any input — this number recalculates live. That is the product.</p>
+</div>
+</section>
+
+<nav>
+<button class="active" data-t="plan" onclick="show('plan',this)">1 · PLAN & TASKS</button>
+<button data-t="materials" onclick="show('materials',this)">2 · MATERIALS & SHOPPING</button>
+<button data-t="crew" onclick="show('crew',this)">3 · CREW MEETING</button>
+<button data-t="contractor" onclick="show('contractor',this)">4 · CONTRACTOR SCOPE</button>
+</nav>
+
+<main>
+<section id="panel-plan" class="panel active">
+<div class="kpi"><div><span class="mono">PROJECT COST (MATERIALS)</span><strong id="kCost">$0</strong></div><div><span class="mono">READY TASKS</span><strong id="kReady">—</strong></div><div><span class="mono">BLOCKED TASKS</span><strong id="kBlocked">—</strong></div><div><span class="mono">PROGRESS</span><strong id="kProg">0%</strong></div></div>
+<div class="grid">
+<div>
+<div class="card"><h3>🏠 Project intake — Archie measures</h3>
+<label>Room length (ft)</label><input id="inL" type="number" value="6" step="0.5" min="3" oninput="update('Room length changed')">
+<label>Room width (ft)</label><input id="inW" type="number" value="4" step="0.5" min="3" oninput="update('Room width changed')">
+<label>Distance to main soil stack (ft)</label><input id="inStack" type="number" value="8" step="1" min="1" oninput="update('Stack distance changed')">
+<label>Layout</label><select id="inLayout" onchange="update('Layout changed')"><option value="standard">Standard — toilet + pedestal sink</option><option value="compact">Compact — wall-hung toilet + corner sink</option><option value="comfort">Comfort — elongated toilet + vanity</option></select>
+<label>Floor finish</label><select id="inFloor" onchange="update('Floor finish changed')"><option value="12">Porcelain tile 12×12</option><option value="6">Hex mosaic tile</option><option value="0">Luxury vinyl (no thinset)</option></select>
+<label>Budget ceiling: <span id="budLab" class="mono">$4,000</span></label><input id="inBudget" type="range" min="1500" max="8000" step="100" value="4000" oninput="update('Budget changed')">
+<label class="check"><input type="checkbox" id="inBasement" checked onchange="update('Basement access changed')"> Basement below (easier plumbing)</label>
+<label class="check"><input type="checkbox" id="inVent" onchange="update('Vent info changed')"> I have confirmed a vent path</label>
+<label class="check"><input type="checkbox" id="inPermit" onchange="update('Permit status changed')"> Permit / inspection checked with city</label>
+</div>
+<div class="card"><h3>🧰 Already own it? Don't buy it twice.</h3><div id="inventory"></div><p class="note">Tick what is in your garage. Quantities and cost drop instantly — traceability stays.</p></div>
+<div class="card"><h3>📝 Revision log</h3><div class="log" id="log"></div><button class="btn dark" style="margin-top:10px" onclick="resetDemo()">Reset demo</button></div>
+</div>
+<div>
+<div class="warn" id="permitWarn">⚠️ <b>Stop-point:</b> Plumbing and electrical work usually needs a permit and inspection. This plan flags hold points — it does not help you dodge them. Confirm with Philadelphia L&amp;I before rough-in.</div>
+<div class="card" style="margin-top:14px"><h3>Phased plan — Dwang sequences, dependencies block you honestly</h3><p class="note">Tick a task done. Downstream tasks only unlock when prerequisites are done. Blocked is a feature: it stops expensive rework.</p><div id="tasks" style="margin-top:12px"></div></div>
+</div>
+</div>
+</section>
+
+<section id="panel-materials" class="panel">
+<div class="card"><h3>Bill of materials — deterministic, not guessed</h3><p class="note">Every line shows need → waste allowance → package rounding → buy qty. Same inputs always give the same list. Source task is preserved after dedup.</p><table><thead><tr><th>Material</th><th>Need</th><th>+ Waste</th><th>Pack</th><th>Buy</th><th>Est. cost</th><th>Source</th></tr></thead><tbody id="bom"></tbody></table><h3 style="margin-top:18px" id="bomTotal"></h3></div>
+<div class="card"><h3>Grouped shopping — fewer trips, one truck</h3><div id="groups"></div></div>
+</section>
+
+<section id="panel-crew" class="panel">
+<button class="btn" onclick="runCrew()">▶ RUN CREW MEETING — DWANG, PETE &amp; SPARKY REVIEW THIS PLAN</button>
+<div class="crew" style="margin-top:14px">
+<div class="agent"><b>DWANG</b> <span class="mono" style="font-size:11px">GC / ORCHESTRATOR</span><p class="note">"I keep the plan, budget and sequence honest."</p><div id="crew-dwang"></div></div>
+<div class="agent pete"><b>PETE</b> <span class="mono" style="font-size:11px">PLUMBING</span><p class="note">"No vent, no toilet. I said what I said."</p><div id="crew-pete"></div></div>
+<div class="agent sparky"><b>SPARKY</b> <span class="mono" style="font-size:11px">ELECTRICAL</span><p class="note">"Bathrooms + water + power. We do this right."</p><div id="crew-sparky"></div></div>
+</div>
+</section>
+
+<section id="panel-contractor" class="panel">
+<div class="grid"><div class="card"><h3>Contractor scope of work (auto-generated)</h3><pre id="scope" class="mono" style="white-space:pre-wrap;font-size:12px;line-height:1.7"></pre><button class="btn" onclick="exportScope()">⬇ Download scope</button></div>
+<div class="card"><h3>Due-diligence checklist — before you pay anyone</h3><div id="checklist"></div><p class="note">Unknown = unverified. Never marked verified without a source you supply.</p></div></div>
+</section>
+</main>
+
+<footer style="padding:18px 20px;border-top:1px solid #333" class="mono"><span style="font-size:11px;color:#888">UNPERMITTED.AI · HACKATHON DEMO · GUIDANCE ONLY — NOT A SUBSTITUTE FOR LICENSED TRADE OR CITY INSPECTION ADVICE · STATE SAVED IN YOUR BROWSER</span></footer>
+
+<script>
+const $=id=>document.getElementById(id);
+const INV=[{k:'wax',label:'Wax ring (spare)',val:9},{k:'valve',label:'Angle stop valve',val:14},{k:'ptrap',label:'P-trap kit',val:12},{k:'caulk',label:'Silicone caulk tube',val:8}];
+let done=new Set(JSON.parse(localStorage.getItem('up_done')||'[]'));
+let logArr=JSON.parse(localStorage.getItem('up_log')||'["Demo loaded — Philly rowhouse half bath"]');
+function show(t,btn){document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));$('panel-'+t).classList.add('active');document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.t===t));if(btn)btn.classList.add('active')}
+function vals(){return{L:+$('inL').value||6,W:+$('inW').value||4,stack:+$('inStack').value||8,layout:$('inLayout').value,floor:+$('inFloor').value,budget:+$('inBudget').value,basement:$('inBasement').checked,vent:$('inVent').checked,permit:$('inPermit').checked}}
+function invOwned(){let o={};document.querySelectorAll('.invchk').forEach(c=>o[c.dataset.k]=c.checked);return o}
+function calc(){
+ const v=vals(),o=invOwned(),area=v.L*v.W,perim=2*(v.L+v.W);
+ const waste=(q,p)=>Math.ceil(q*(1+p));
+ let m=[];
+ const add=(name,need,unit,w,pack,price,src,group,invKey)=>{let withW=waste(need,w);let owned=invKey&&o[invKey]?1:0;let buy=Math.max(0,Math.ceil((withW-owned)/pack)*pack);m.push({name,need:+need.toFixed(1),unit,withW,pack,price,buy,src,group,cost:buy/pack*price,owned})};
+ if(v.floor>0){add('Floor tile',area,'sq ft',.10,v.floor===6?5:12,v.floor===6?42:36,'Lay floor','Phase 3 · Flooring');add('Thinset mortar 50lb',Math.ceil(area/40),'bag',0,1,18,'Lay floor','Phase 3 · Flooring');add('Grout 10lb',Math.ceil(area/25),'bag',0,1,16,'Lay floor','Phase 3 · Flooring')}
+ else add('LVP flooring',area,'sq ft',.07,20,52,'Lay floor','Phase 3 · Flooring');
+ add('Cement backer board',area,'sq ft',.05,15,14,'Prep / demo','Phase 1 · Rough');
+ add('3" PVC drain pipe',v.stack+4,'ft',.08,10,22,'Rough plumbing','Phase 1 · Rough');
+ add('1/2" PEX pipe',v.stack*2+10,'ft',.08,25,18,'Rough plumbing','Phase 1 · Rough');
+ add('Wax ring',1,'ea',0,1,9,'Set toilet','Phase 4 · Fixtures','wax');
+ add('Angle stop valve',2,'ea',0,1,14,'Set fixtures','Phase 4 · Fixtures','valve');
+ add('P-trap kit',1,'ea',0,1,12,'Set sink','Phase 4 · Fixtures','ptrap');
+ add('Silicone caulk',1,'tube',0,1,8,'Finish','Phase 4 · Fixtures','caulk');
+ add('Toilet ('+v.layout+')',1,'ea',0,1,v.layout==='compact'?420:v.layout==='comfort'?310:240,'Set toilet','Phase 4 · Fixtures');
+ add(v.layout==='comfort'?'Vanity + sink':'Pedestal / corner sink',1,'ea',0,1,v.layout==='comfort'?380:190,'Set sink','Phase 4 · Fixtures');
+ add('GFCI receptacle 20A',1,'ea',0,1,24,'Rough electrical','Phase 1 · Rough');
+ add('Exhaust fan + duct',1,'ea',0,1,v.basement?135:185,'Rough electrical','Phase 1 · Rough');
+ add('Paint (walls, gal)',Math.ceil(perim*8/350),'gal',.05,1,38,'Paint','Phase 3 · Flooring');
+ let cost=m.reduce((s,x)=>s+x.cost,0);
+ let groups={};m.forEach(x=>{if(x.buy>0)(groups[x.group]=groups[x.group]||[]).push(x)});
+ let tripsSaved=Math.max(0,7-Object.keys(groups).length);
+ let wasteSaved=Math.round(m.reduce((s,x)=>s+((x.withW-x.need)/Math.max(1,x.pack))*x.price*0.4,0))+ (o.wax?9:0)+(o.valve?28:0)+(o.ptrap?12:0)+(o.caulk?8:0);
+ let rework=(!v.vent?180:0)+(!v.permit?220:0)+(!v.basement?90:0);
+ let totalSave=tripsSaved*38+wasteSaved+rework;
+ return{v,m,cost,groups,tripsSaved,wasteSaved,rework,totalSave,area};
+}
+const TASKS=[
+ {id:'t1',title:'Measure & confirm stack, vent, shutoffs',trade:'Archie / Pete',deps:[],hold:false},
+ {id:'t2',title:'Permit & inspection check (hold point)',trade:'Dwang',deps:['t1'],hold:true},
+ {id:'t3',title:'Demo & prep — protect floors, cap lines',trade:'Dwang',deps:['t1'],hold:false},
+ {id:'t4',title:'Rough plumbing — drain, vent, supply',trade:'Pete',deps:['t2','t3'],hold:false},
+ {id:'t5',title:'Rough electrical — GFCI, fan, lighting',trade:'Sparky',deps:['t2','t3'],hold:false},
+ {id:'t6',title:'Floor prep & finish',trade:'Dwang',deps:['t4','t5'],hold:false},
+ {id:'t7',title:'Set toilet & sink, test for leaks',trade:'Pete',deps:['t6'],hold:false},
+ {id:'t8',title:'Finish, caulk, punch list & photos',trade:'Dwang',deps:['t7'],hold:false}];
+function render(){
+ const c=calc();$('budLab').textContent='$'+c.v.budget.toLocaleString();
+ $('bigSave').textContent='$'+c.totalSave.toLocaleString();$('saveTrips').textContent=c.tripsSaved+' trips · $'+(c.tripsSaved*38);$('saveWaste').textContent='$'+c.wasteSaved;$('saveRework').textContent='$'+c.rework;$('saveTime').textContent='~6 hrs · $'+(6*0)+' of research';
+ $('kCost').textContent='$'+c.cost.toLocaleString();$('kCost').style.color=c.cost>c.v.budget?'#ff5a4e':'#ffcf00';
+ let ready=0,blocked=0;TASKS.forEach(t=>{let b=t.deps.some(d=>!done.has(d));b?blocked++:(done.has(t.id)||ready++)});
+ $('kReady').textContent=ready;$('kBlocked').textContent=blocked;$('kProg').textContent=Math.round(done.size/TASKS.length*100)+'%';
+ $('tasks').innerHTML=TASKS.map(t=>{let b=t.deps.some(d=>!done.has(d));let st=done.has(t.id)?'DONE':b?'BLOCKED':'READY';let cls=done.has(t.id)?'doneb':b?'blocked':'ready';return `<div class="task ${done.has(t.id)?'done':''} ${b&&!done.has(t.id)?'blocked':''}"><input type="checkbox" style="width:auto;margin-top:3px" ${done.has(t.id)?'checked':''} onchange="toggleTask('${t.id}')"><div style="flex:1"><b>${t.title}</b><div class="note">${t.trade}${t.hold?' · ⛔ HOLD POINT':''} · Needs: ${t.deps.length?t.deps.join(', '):'—'}</div></div><span class="badge ${cls}">${st}</span></div>`}).join('');
+ $('bom').innerHTML=c.m.map(x=>`<tr><td>${x.name}${x.owned?'<br><span class="mono" style="font-size:10px;color:#7dff8a">OWNED −1</span>':''}</td><td class="mono">${x.need} ${x.unit}</td><td class="mono">${x.withW}</td><td class="mono">${x.pack}</td><td class="mono"><b>${x.buy}</b></td><td class="mono">$${x.cost}</td><td class="note">${x.src}</td></tr>`).join('');
+ $('bomTotal').innerHTML=`Materials total: $${c.cost.toLocaleString()} &nbsp; <span class="mono" style="font-size:12px;color:${c.cost>c.v.budget?'#ff5a4e':'#7dff8a'}">${c.cost>c.v.budget?'OVER BUDGET by $'+(c.cost-c.v.budget):'UNDER BUDGET by $'+(c.v.budget-c.cost)}</span>`;
+ $('groups').innerHTML=Object.entries(c.groups).map(([g,items])=>`<div style="margin-bottom:12px"><b class="mono" style="color:#ffcf00">${g}</b> — ${items.length} lines, 1 trip<div class="note">${items.map(i=>i.name+' ×'+i.buy).join(' · ')}</div></div>`).join('')+`<p class="note">Unplanned baseline ≈ 7 trips. This plan: ${Object.keys(c.groups).length} grouped trips.</p>`;
+ $('scope').textContent=`HALF-BATH SCOPE — ${c.v.L}×${c.v.W} ft (${c.area} sq ft), ${c.v.layout} layout\nStack distance: ${c.v.stack} ft · Basement below: ${c.v.basement?'Yes':'No'} · Vent confirmed: ${c.v.vent?'Yes':'NO — verify before quote'}\n\nINCLUDED: demo, rough plumbing/electrical, floor, fixtures, finish.\nHOLD POINTS: permit confirmation, rough-in inspection.\nEXCLUDED UNTIL VERIFIED: concealed rot, stack condition, panel capacity.\nMATERIALS BASIS: $${c.cost} (see BOM with waste + pack rounding).\nQUESTIONS FOR BIDDER: license #, insurance cert, permit who-files, inspection scheduling, warranty, exclusions in writing.`;
+ $('checklist').innerHTML=['License / registration — source document seen?','Insurance certificate — sent direct from insurer?','Who files the permit, in writing?','Rough-in inspection scheduled before closing walls?','Quote lists exclusions, not just inclusions?','Two references from similar bath jobs called?','Payment tied to inspection milestones, not dates?'].map(x=>`<label class="check"><input type="checkbox"> ${x} <span class="mono" style="font-size:10px;color:#ffcf00">UNVERIFIED</span></label>`).join('');
+ $('log').innerHTML=logArr.slice(-12).map(x=>'› '+x).join('<br>');
+ localStorage.setItem('up_done',JSON.stringify([...done]));localStorage.setItem('up_log',JSON.stringify(logArr));
+}
+function toggleTask(id){done.has(id)?done.delete(id):done.add(id);logArr.push((done.has(id)?'Completed ':'Reopened ')+id+' — downstream & savings recalculated');render()}
+function update(msg){if(msg&&logArr[logArr.length-1]!==msg)logArr.push(msg+' — BOM, trips & savings recalculated');render()}
+function finding(sev,txt){return `<div class="finding"><span class="sev ${sev}">${sev.toUpperCase()}</span> ${txt}</div>`}
+function runCrew(){const c=calc();
+ $('crew-dwang').innerHTML=finding(c.cost>c.v.budget?'high':'low',c.cost>c.v.budget?`You are $${c.cost-c.v.budget} over budget. Swap comfort vanity or LVP floor before cutting waterproofing.`:`Sequence is sound. ${c.tripsSaved} trips saved by grouping. Next action: complete the hold point, not the demo.`)+finding('med','Do not mark rough-in done until inspection is booked. Blocked tasks are protecting your money.');
+ $('crew-pete').innerHTML=finding(c.v.vent?'low':'high',c.v.vent?'Vent path confirmed — rough-in can proceed.':'No vent path confirmed. A toilet without venting will siphon traps and fail inspection. Verify before buying pipe.')+finding(c.v.basement?'low':'med',c.v.basement?'Basement access keeps labour down. Photograph the stack before you cut.':`No basement access: add labour/contingency. Stack is ${c.v.stack} ft away — confirm fall (¼" per ft) is achievable.`);
+ $('crew-sparky').innerHTML=finding('high','GFCI protection is non-negotiable in a bath. It is in the BOM — do not substitute a standard receptacle to save $10.')+finding('med','Exhaust fan is in the plan. Skipping it saves $135 today and costs you mould remediation later. Vent it outside, not into a joist bay.');
+ show('crew');logArr.push('Crew Meeting run — findings generated from live project state');render()}
+function dl(name,text){let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type:'text/plain'}));a.download=name;a.click()}
+function exportList(){const c=calc();dl('unpermitted-shopping-list.txt','UNPERMITTED.AI SHOPPING LIST\n'+Object.entries(c.groups).map(([g,i])=>'\n'+g+'\n'+i.map(x=>'- '+x.name+' x'+x.buy+' ($'+x.cost+')').join('\n')).join('\n')+`\n\nTotal $${c.cost} · Est. savings $${c.totalSave}`)}
+function exportScope(){dl('unpermitted-scope.txt',$('scope').textContent)}
+function resetDemo(){done.clear();logArr=['Demo reset'];localStorage.clear();render()}
+// inventory UI
+$('inventory').innerHTML=INV.map(i=>`<label class="check"><input type="checkbox" class="invchk" data-k="${i.k}" onchange="update('Inventory changed')"> ${i.label} <span class="mono">saves $${i.val}</span></label>`).join('');
+render();
+</script>
+</body>
+</html>
+
+
