@@ -22,10 +22,12 @@ Every feature must answer: does it save trips, overbuy, rework, or planning time
 | 2 | Project intake (photos, dimensions) | 🔶 Partial — dimensions done, photo upload next |
 | 3 | Planning engine (tasks, dependencies) | ✅ Done in demo — phased tasks, blocked/ready |
 | 4 | Materials engine (waste, packs, inventory) | ✅ Done in demo — deterministic BOM |
-| 5 | Crew orchestration (Dwang, Pete, Sparky) | 🔶 Partial — rule-based findings, real model calls next |
+| 5 | Crew orchestration (Dwang, Pete, Sparky) | 🔶 Partial — rule-based findings, Meta-model architecture documented, real calls next |
 | 6 | Procurement (grouped trips, export) | ✅ Done in demo — groups + shopping list export |
 | 7 | Visual concepts (mockups) | ⬜ Not started |
-| 8 | Contractor scope + due diligence | ✅ Done in demo — scope generator + checklist |
+| 8 | Contractor scope + due diligence | ✅ Done in demo — scope, scored vetting (0–100, red flags), quote normalisation |
+| — | Code & permits (IBC/IPC/NEC search, Philly determinator) | ✅ Done in demo — 12-item cited extract, permit + inspection hold points |
+| — | Full purchasing (tax, contingency, CSV order, leftovers) | ✅ Done in demo — all-in materials, grouped trips, returns/inventory |
 | 9 | Integration & testing | 🔶 Partial — logic harness passes, browser QA pending |
 | 10 | Demo video + submission | ⬜ Not started |
 
