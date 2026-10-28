@@ -1,0 +1,253 @@
+{
+  "schemaVersion": 1,
+  "address": "7149 Bingham Street, Philadelphia PA 19111",
+  "jobId": "project:0a19d437-e8dd-43c1-9121-f055373ca721:property:fact:10aea412-d8fd-45d9-a4be-5099b6982355:1",
+  "goal": "Explore a kitchen refresh and feasibility of an additional powder room. Identify visible conditions, useful planning questions and next site checks; measured geometry and existing services remain unknown.",
+  "photos": [
+    {
+      "id": "listing-photo-01",
+      "sourceId": "atproperties-listing",
+      "pageUrl": "https://www.atproperties.com/PAPH2657666/7149-bingham-street-philadelphia-pennsylvania-19111-brightmls",
+      "imageUrl": "https://resources.atproperties.com/images/BRIGHTMLS/PA/PH2/657666/6a765126b2d5a/1.jpg",
+      "locator": "Native listing photo 1 of 35"
+    },
+    {
+      "id": "listing-photo-02",
+      "sourceId": "atproperties-listing",
+      "pageUrl": "https://www.atproperties.com/PAPH2657666/7149-bingham-street-philadelphia-pennsylvania-19111-brightmls",
+      "imageUrl": "https://resources.atproperties.com/images/BRIGHTMLS/PA/PH2/657666/6a765126b2d5a/2.jpg",
+      "locator": "Native listing photo 2 of 35"
+    },
+    {
+      "id": "listing-photo-03",
+      "sourceId": "atproperties-listing",
+      "pageUrl": "https://www.atproperties.com/PAPH2657666/7149-bingham-street-philadelphia-pennsylvania-19111-brightmls",
+      "imageUrl": "https://resources.atproperties.com/images/BRIGHTMLS/PA/PH2/657666/6a765126b2d5a/3.jpg",
+      "locator": "Native listing photo 3 of 35"
+    },
+    {
+      "id": "listing-photo-04",
+      "sourceId": "atproperties-listing",
+      "pageUrl": "https://www.atproperties.com/PAPH2657666/7149-bingham-street-philadelphia-pennsylvania-19111-brightmls",
+      "imageUrl": "https://resources.atproperties.com/images/BRIGHTMLS/PA/PH2/657666/6a765126b2d5a/4.jpg",
+      "locator": "Native listing photo 4 of 35"
+    },
+    {
+      "id": "listing-photo-05",
+      "sourceId": "atproperties-listing",
+      "pageUrl": "https://www.atproperties.com/PAPH2657666/7149-bingham-street-philadelphia-pennsylvania-19111-brightmls",
+      "imageUrl": "https://resources.atproperties.com/images/BRIGHTMLS/PA/PH2/657666/6a765126b2d5a/5.jpg",
+      "locator": "Native listing photo 5 of 35"
+    },
+    {
+      "id": "listing-photo-06",
+      "sourceId": "atproperties-listing",
+      "pageUrl": "https://www.atproperties.com/PAPH2657666/7149-bingham-street-philadelphia-pennsylvania-19111-brightmls",
+      "imageUrl": "https://resources.atproperties.com/images/BRIGHTMLS/PA/PH2/657666/6a765126b2d5a/6.jpg",
+      "locator": "Native listing photo 6 of 35"
+    },
+    {
+      "id": "listing-photo-07",
+      "sourceId": "atproperties-listing",
+      "pageUrl": "https://www.atproperties.com/PAPH2657666/7149-bingham-street-philadelphia-pennsylvania-19111-brightmls",
+      "imageUrl": "https://resources.atproperties.com/images/BRIGHTMLS/PA/PH2/657666/6a765126b2d5a/7.jpg",
+      "locator": "Native listing photo 7 of 35"
+    },
+    {
+      "id": "listing-photo-08",
+      "sourceId": "atproperties-listing",
+      "pageUrl": "https://www.atproperties.com/PAPH2657666/7149-bingham-street-philadelphia-pennsylvania-19111-brightmls",
+      "imageUrl": "https://resources.atproperties.com/images/BRIGHTMLS/PA/PH2/657666/6a765126b2d5a/8.jpg",
+      "locator": "Native listing photo 8 of 35"
+    },
+    {
+      "id": "listing-photo-09",
+      "sourceId": "atproperties-listing",
+      "pageUrl": "https://www.atproperties.com/PAPH2657666/7149-bingham-street-philadelphia-pennsylvania-19111-brightmls",
+      "imageUrl": "https://resources.atproperties.com/images/BRIGHTMLS/PA/PH2/657666/6a765126b2d5a/9.jpg",
+      "locator": "Native listing photo 9 of 35"
+    },
+    {
+      "id": "listing-photo-10",
+      "sourceId": "atproperties-listing",
+      "pageUrl": "https://www.atproperties.com/PAPH2657666/7149-bingham-street-philadelphia-pennsylvania-19111-brightmls",
+      "imageUrl": "https://resources.atproperties.com/images/BRIGHTMLS/PA/PH2/657666/6a765126b2d5a/10.jpg",
+      "locator": "Native listing photo 10 of 35"
+    },
+    {
+      "id": "listing-photo-11",
+      "sourceId": "atproperties-listing",
+      "pageUrl": "https://www.atproperties.com/PAPH2657666/7149-bingham-street-philadelphia-pennsylvania-19111-brightmls",
+      "imageUrl": "https://resources.atproperties.com/images/BRIGHTMLS/PA/PH2/657666/6a765126b2d5a/11.jpg",
+      "locator": "Native listing photo 11 of 35"
+    },
+    {
+      "id": "listing-photo-12",
+      "sourceId": "atproperties-listing",
+      "pageUrl": "https://www.atproperties.com/PAPH2657666/7149-bingham-street-philadelphia-pennsylvania-19111-brightmls",
+      "imageUrl": "https://resources.atproperties.com/images/BRIGHTMLS/PA/PH2/657666/6a765126b2d5a/12.jpg",
+      "locator": "Native listing photo 12 of 35"
+    },
+    {
+      "id": "listing-photo-13",
+      "sourceId": "atproperties-listing",
+      "pageUrl": "https://www.atproperties.com/PAPH2657666/7149-bingham-street-philadelphia-pennsylvania-19111-brightmls",
+      "imageUrl": "https://resources.atproperties.com/images/BRIGHTMLS/PA/PH2/657666/6a765126b2d5a/13.jpg",
+      "locator": "Native listing photo 13 of 35"
+    },
+    {
+      "id": "listing-photo-14",
+      "sourceId": "atproperties-listing",
+      "pageUrl": "https://www.atproperties.com/PAPH2657666/7149-bingham-street-philadelphia-pennsylvania-19111-brightmls",
+      "imageUrl": "https://resources.atproperties.com/images/BRIGHTMLS/PA/PH2/657666/6a765126b2d5a/14.jpg",
+      "locator": "Native listing photo 14 of 35"
+    },
+    {
+      "id": "listing-photo-15",
+      "sourceId": "atproperties-listing",
+      "pageUrl": "https://www.atproperties.com/PAPH2657666/7149-bingham-street-philadelphia-pennsylvania-19111-brightmls",
+      "imageUrl": "https://resources.atproperties.com/images/BRIGHTMLS/PA/PH2/657666/6a765126b2d5a/15.jpg",
+      "locator": "Native listing photo 15 of 35"
+    },
+    {
+      "id": "listing-photo-16",
+      "sourceId": "atproperties-listing",
+      "pageUrl": "https://www.atproperties.com/PAPH2657666/7149-bingham-street-philadelphia-pennsylvania-19111-brightmls",
+      "imageUrl": "https://resources.atproperties.com/images/BRIGHTMLS/PA/PH2/657666/6a765126b2d5a/16.jpg",
+      "locator": "Native listing photo 16 of 35"
+    },
+    {
+      "id": "listing-photo-17",
+      "sourceId": "atproperties-listing",
+      "pageUrl": "https://www.atproperties.com/PAPH2657666/7149-bingham-street-philadelphia-pennsylvania-19111-brightmls",
+      "imageUrl": "https://resources.atproperties.com/images/BRIGHTMLS/PA/PH2/657666/6a765126b2d5a/17.jpg",
+      "locator": "Native listing photo 17 of 35"
+    },
+    {
+      "id": "listing-photo-18",
+      "sourceId": "atproperties-listing",
+      "pageUrl": "https://www.atproperties.com/PAPH2657666/7149-bingham-street-philadelphia-pennsylvania-19111-brightmls",
+      "imageUrl": "https://resources.atproperties.com/images/BRIGHTMLS/PA/PH2/657666/6a765126b2d5a/18.jpg",
+      "locator": "Native listing photo 18 of 35"
+    },
+    {
+      "id": "listing-photo-19",
+      "sourceId": "atproperties-listing",
+      "pageUrl": "https://www.atproperties.com/PAPH2657666/7149-bingham-street-philadelphia-pennsylvania-19111-brightmls",
+      "imageUrl": "https://resources.atproperties.com/images/BRIGHTMLS/PA/PH2/657666/6a765126b2d5a/19.jpg",
+      "locator": "Native listing photo 19 of 35"
+    },
+    {
+      "id": "listing-photo-20",
+      "sourceId": "atproperties-listing",
+      "pageUrl": "https://www.atproperties.com/PAPH2657666/7149-bingham-street-philadelphia-pennsylvania-19111-brightmls",
+      "imageUrl": "https://resources.atproperties.com/images/BRIGHTMLS/PA/PH2/657666/6a765126b2d5a/20.jpg",
+      "locator": "Native listing photo 20 of 35"
+    },
+    {
+      "id": "listing-photo-21",
+      "sourceId": "atproperties-listing",
+      "pageUrl": "https://www.atproperties.com/PAPH2657666/7149-bingham-street-philadelphia-pennsylvania-19111-brightmls",
+      "imageUrl": "https://resources.atproperties.com/images/BRIGHTMLS/PA/PH2/657666/6a765126b2d5a/21.jpg",
+      "locator": "Native listing photo 21 of 35"
+    },
+    {
+      "id": "listing-photo-22",
+      "sourceId": "atproperties-listing",
+      "pageUrl": "https://www.atproperties.com/PAPH2657666/7149-bingham-street-philadelphia-pennsylvania-19111-brightmls",
+      "imageUrl": "https://resources.atproperties.com/images/BRIGHTMLS/PA/PH2/657666/6a765126b2d5a/22.jpg",
+      "locator": "Native listing photo 22 of 35"
+    },
+    {
+      "id": "listing-photo-23",
+      "sourceId": "atproperties-listing",
+      "pageUrl": "https://www.atproperties.com/PAPH2657666/7149-bingham-street-philadelphia-pennsylvania-19111-brightmls",
+      "imageUrl": "https://resources.atproperties.com/images/BRIGHTMLS/PA/PH2/657666/6a765126b2d5a/23.jpg",
+      "locator": "Native listing photo 23 of 35"
+    },
+    {
+      "id": "listing-photo-24",
+      "sourceId": "atproperties-listing",
+      "pageUrl": "https://www.atproperties.com/PAPH2657666/7149-bingham-street-philadelphia-pennsylvania-19111-brightmls",
+      "imageUrl": "https://resources.atproperties.com/images/BRIGHTMLS/PA/PH2/657666/6a765126b2d5a/24.jpg",
+      "locator": "Native listing photo 24 of 35"
+    },
+    {
+      "id": "listing-photo-25",
+      "sourceId": "atproperties-listing",
+      "pageUrl": "https://www.atproperties.com/PAPH2657666/7149-bingham-street-philadelphia-pennsylvania-19111-brightmls",
+      "imageUrl": "https://resources.atproperties.com/images/BRIGHTMLS/PA/PH2/657666/6a765126b2d5a/25.jpg",
+      "locator": "Native listing photo 25 of 35"
+    },
+    {
+      "id": "listing-photo-26",
+      "sourceId": "atproperties-listing",
+      "pageUrl": "https://www.atproperties.com/PAPH2657666/7149-bingham-street-philadelphia-pennsylvania-19111-brightmls",
+      "imageUrl": "https://resources.atproperties.com/images/BRIGHTMLS/PA/PH2/657666/6a765126b2d5a/26.jpg",
+      "locator": "Native listing photo 26 of 35"
+    },
+    {
+      "id": "listing-photo-27",
+      "sourceId": "atproperties-listing",
+      "pageUrl": "https://www.atproperties.com/PAPH2657666/7149-bingham-street-philadelphia-pennsylvania-19111-brightmls",
+      "imageUrl": "https://resources.atproperties.com/images/BRIGHTMLS/PA/PH2/657666/6a765126b2d5a/27.jpg",
+      "locator": "Native listing photo 27 of 35"
+    },
+    {
+      "id": "listing-photo-28",
+      "sourceId": "atproperties-listing",
+      "pageUrl": "https://www.atproperties.com/PAPH2657666/7149-bingham-street-philadelphia-pennsylvania-19111-brightmls",
+      "imageUrl": "https://resources.atproperties.com/images/BRIGHTMLS/PA/PH2/657666/6a765126b2d5a/28.jpg",
+      "locator": "Native listing photo 28 of 35"
+    },
+    {
+      "id": "listing-photo-29",
+      "sourceId": "atproperties-listing",
+      "pageUrl": "https://www.atproperties.com/PAPH2657666/7149-bingham-street-philadelphia-pennsylvania-19111-brightmls",
+      "imageUrl": "https://resources.atproperties.com/images/BRIGHTMLS/PA/PH2/657666/6a765126b2d5a/29.jpg",
+      "locator": "Native listing photo 29 of 35"
+    },
+    {
+      "id": "listing-photo-30",
+      "sourceId": "atproperties-listing",
+      "pageUrl": "https://www.atproperties.com/PAPH2657666/7149-bingham-street-philadelphia-pennsylvania-19111-brightmls",
+      "imageUrl": "https://resources.atproperties.com/images/BRIGHTMLS/PA/PH2/657666/6a765126b2d5a/30.jpg",
+      "locator": "Native listing photo 30 of 35"
+    },
+    {
+      "id": "listing-photo-31",
+      "sourceId": "atproperties-listing",
+      "pageUrl": "https://www.atproperties.com/PAPH2657666/7149-bingham-street-philadelphia-pennsylvania-19111-brightmls",
+      "imageUrl": "https://resources.atproperties.com/images/BRIGHTMLS/PA/PH2/657666/6a765126b2d5a/31.jpg",
+      "locator": "Native listing photo 31 of 35"
+    },
+    {
+      "id": "listing-photo-32",
+      "sourceId": "atproperties-listing",
+      "pageUrl": "https://www.atproperties.com/PAPH2657666/7149-bingham-street-philadelphia-pennsylvania-19111-brightmls",
+      "imageUrl": "https://resources.atproperties.com/images/BRIGHTMLS/PA/PH2/657666/6a765126b2d5a/32.jpg",
+      "locator": "Native listing photo 32 of 35"
+    },
+    {
+      "id": "listing-photo-33",
+      "sourceId": "atproperties-listing",
+      "pageUrl": "https://www.atproperties.com/PAPH2657666/7149-bingham-street-philadelphia-pennsylvania-19111-brightmls",
+      "imageUrl": "https://resources.atproperties.com/images/BRIGHTMLS/PA/PH2/657666/6a765126b2d5a/33.jpg",
+      "locator": "Native listing photo 33 of 35"
+    },
+    {
+      "id": "listing-photo-34",
+      "sourceId": "atproperties-listing",
+      "pageUrl": "https://www.atproperties.com/PAPH2657666/7149-bingham-street-philadelphia-pennsylvania-19111-brightmls",
+      "imageUrl": "https://resources.atproperties.com/images/BRIGHTMLS/PA/PH2/657666/6a765126b2d5a/34.jpg",
+      "locator": "Native listing photo 34 of 35"
+    },
+    {
+      "id": "listing-photo-35",
+      "sourceId": "atproperties-listing",
+      "pageUrl": "https://www.atproperties.com/PAPH2657666/7149-bingham-street-philadelphia-pennsylvania-19111-brightmls",
+      "imageUrl": "https://resources.atproperties.com/images/BRIGHTMLS/PA/PH2/657666/6a765126b2d5a/35.jpg",
+      "locator": "Native listing photo 35 of 35"
+    }
+  ]
+}

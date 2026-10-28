@@ -1,0 +1,993 @@
+{
+  "kind": "property-research",
+  "address": "2440 S Hutchinson St, Philadelphia, PA 19148",
+  "jobId": "project:a99ec568-b396-4a14-908e-5f21c04cdc07:property:fact:1bb045b2-844f-4612-a55e-feaba9b536a5:1",
+  "method": "muse",
+  "verification": "unreviewed",
+  "sources": [
+    {
+      "id": "compass-hutchinson",
+      "title": "Compass / Bright MLS PAPH2657784 · public listing and native 22-image gallery · browser source audit",
+      "url": "https://www.compass.com/homedetails/2440-S-Hutchinson-St-Philadelphia-PA-19148/1MRIT4_pid/",
+      "retrievedAt": "2026-10-28T12:49:43.325935Z"
+    },
+    {
+      "id": "homes-hutchinson",
+      "title": "Homes.com / Bright MLS PAPH2657784 · alternate public listing · source audit",
+      "url": "https://www.homes.com/property/2440-s-hutchinson-st-philadelphia-pa/992qkvp3rpcfl/",
+      "retrievedAt": "2026-10-28T12:49:43.325935Z"
+    }
+  ],
+  "findings": [
+    {
+      "label": "Listing bedrooms",
+      "value": "3",
+      "sourceId": "compass-hutchinson",
+      "limit": "Listing claim only; current use and room configuration need site verification."
+    },
+    {
+      "label": "Listing living area",
+      "value": "940 sq ft above grade",
+      "sourceId": "compass-hutchinson",
+      "limit": "Reported assessor-sourced listing area, not measured room dimensions or a takeoff."
+    },
+    {
+      "label": "Listing year built",
+      "value": "1925",
+      "sourceId": "compass-hutchinson",
+      "limit": "Listing claim; not an independent assessment-record lookup."
+    },
+    {
+      "label": "Listing zoning",
+      "value": "RSA5",
+      "sourceId": "compass-hutchinson",
+      "limit": "Listing claim; not a project-specific applicability finding."
+    },
+    {
+      "label": "Listing bathroom count · structured field",
+      "value": "1 full bathroom",
+      "sourceId": "compass-hutchinson",
+      "limit": "Conflicts with the description of 1.5 baths. Keep both until site and record review."
+    },
+    {
+      "label": "Listing bathroom count · description",
+      "value": "1.5 bathrooms, including a basement half bath",
+      "sourceId": "homes-hutchinson",
+      "limit": "Unverified description. Do not assume the half bath exists, is functional or permitted."
+    },
+    {
+      "label": "Listing amenities · kitchen",
+      "value": "Wood cabinetry, stainless-appearing appliances, gas range and dishwasher are described",
+      "sourceId": "homes-hutchinson",
+      "limit": "Description claims only. Model, condition, connection type and retained suitability need evidence."
+    },
+    {
+      "label": "Listing amenities · building systems",
+      "value": "Central air and electric baseboard heat are listed",
+      "sourceId": "homes-hutchinson",
+      "limit": "Listing claims may be incomplete or inconsistent. No capacity, condition, installation status or concealed routes established."
+    }
+  ],
+  "images": [
+    {
+      "id": "photo-09",
+      "title": "Muse: bathroom · high confidence",
+      "sourceId": "compass-hutchinson",
+      "pageUrl": "https://www.compass.com/homedetails/2440-S-Hutchinson-St-Philadelphia-PA-19148/1MRIT4_pid/",
+      "previewUrl": null,
+      "previewPermission": "unknown",
+      "capturedAt": "",
+      "locator": "Native Compass gallery image 9 of 22; original display 1500 x 1000 px",
+      "imageUrl": "https://www.compass.com/m/d1acc1fef90763072e39b333097d5131d8cc1bc4f7d23b265957b68f7cef417f/1500x1000.jpg",
+      "observations": "Large-format tile walls, tub with showerhead, corner shelves, and rod White toilet, gray vanity with sink, mirrored cabinet and 3-bulb light",
+      "planningUse": "Record visible fixtures and layout in the tile bath and toilet room on site."
+    },
+    {
+      "id": "photo-15",
+      "title": "Muse: bathroom · high confidence",
+      "sourceId": "compass-hutchinson",
+      "pageUrl": "https://www.compass.com/homedetails/2440-S-Hutchinson-St-Philadelphia-PA-19148/1MRIT4_pid/",
+      "previewUrl": null,
+      "previewPermission": "unknown",
+      "capturedAt": "",
+      "locator": "Native Compass gallery image 15 of 22; original display 1500 x 1000 px",
+      "imageUrl": "https://www.compass.com/m/29495447c363cade512829daf5f75191bcdae4b4ccee7249cbca203c7861af13/1500x1000.jpg",
+      "observations": "Wall-mounted white sink with two-knob faucet and exposed piping below White toilet beside partial folding panel and high window opening",
+      "planningUse": "Record visible fixtures and layout in the tile bath and toilet room on site."
+    },
+    {
+      "id": "photo-04",
+      "title": "Muse: living · medium confidence",
+      "sourceId": "compass-hutchinson",
+      "pageUrl": "https://www.compass.com/homedetails/2440-S-Hutchinson-St-Philadelphia-PA-19148/1MRIT4_pid/",
+      "previewUrl": null,
+      "previewPermission": "unknown",
+      "capturedAt": "",
+      "locator": "Native Compass gallery image 4 of 22; original display 1494 x 1000 px",
+      "imageUrl": "https://www.compass.com/m/72b4a2b5b2665b27a0612a4d9231d54c26458ca01ca18e293c3e0476a8c878be/1500x1000.jpg",
+      "observations": "Two sofas with red pillows on red carpet; octagonal mirror on wall above sofa Dining set and wood display cabinet in background; carpeted staircase with metal rail",
+      "planningUse": "Select the preferred zone for the new half bath within the open living and dining area."
+    },
+    {
+      "id": "photo-14",
+      "title": "Muse: basement · medium confidence",
+      "sourceId": "compass-hutchinson",
+      "pageUrl": "https://www.compass.com/homedetails/2440-S-Hutchinson-St-Philadelphia-PA-19148/1MRIT4_pid/",
+      "previewUrl": null,
+      "previewPermission": "unknown",
+      "capturedAt": "",
+      "locator": "Native Compass gallery image 14 of 22; original display 1500 x 1000 px",
+      "imageUrl": "https://www.compass.com/m/cf5c921d3229db69019396bf31c910015b6a27e04503f2cad764da3f98595b0e/1500x1000.jpg",
+      "observations": "Carpeted room with drop-tile ceiling, sliding doors, small high window Open doorway to toilet room and open enclosure with meter and piping",
+      "planningUse": "Record visible fixtures and layout in the tile bath and toilet room on site."
+    },
+    {
+      "id": "photo-16",
+      "title": "Muse: basement · medium confidence",
+      "sourceId": "compass-hutchinson",
+      "pageUrl": "https://www.compass.com/homedetails/2440-S-Hutchinson-St-Philadelphia-PA-19148/1MRIT4_pid/",
+      "previewUrl": null,
+      "previewPermission": "unknown",
+      "capturedAt": "",
+      "locator": "Native Compass gallery image 16 of 22; original display 1500 x 1000 px",
+      "imageUrl": "https://www.compass.com/m/9709d5c82ac86ce5507ace365102c5856c6bc386413c4f46d9cb59d8bdf39e2f/1500x1000.jpg",
+      "observations": "Carpeted room with drop-tile ceiling, ceiling light and staircase with wood rail Freestanding metal shelving, mural wall covering and wood sliding doors",
+      "planningUse": "Record visible laundry appliances, meter enclosure and basement room layout on site."
+    },
+    {
+      "id": "photo-01",
+      "title": "Muse: exterior · high confidence",
+      "sourceId": "compass-hutchinson",
+      "pageUrl": "https://www.compass.com/homedetails/2440-S-Hutchinson-St-Philadelphia-PA-19148/1MRIT4_pid/",
+      "previewUrl": null,
+      "previewPermission": "unknown",
+      "capturedAt": "",
+      "locator": "Native Compass gallery image 1 of 22; original display 1500 x 1000 px",
+      "imageUrl": "https://www.compass.com/m/5fcbe3e594c432b2549dd537f718c9b62504f823350c12688faa535fe516af12/1500x1000.jpg",
+      "observations": "Brick rowhouse front with white security door, shuttered bay window and basement windows Upper windows with one window AC unit; planters, steps and overhead string lights visible",
+      "planningUse": "Collect current measured site evidence before design."
+    },
+    {
+      "id": "photo-02",
+      "title": "Muse: exterior · high confidence",
+      "sourceId": "compass-hutchinson",
+      "pageUrl": "https://www.compass.com/homedetails/2440-S-Hutchinson-St-Philadelphia-PA-19148/1MRIT4_pid/",
+      "previewUrl": null,
+      "previewPermission": "unknown",
+      "capturedAt": "",
+      "locator": "Native Compass gallery image 2 of 22; original display 1500 x 1000 px",
+      "imageUrl": "https://www.compass.com/m/3ec91ab559f5b7b02df92204dd651f887d291cceefbbb1de4ae49f228f913301/1500x1000.jpg",
+      "observations": "Angled street view of brick rowhouses showing fronts, steps and entry doors Red awnings on adjoining facade, flag, planters and overhead string lights visible",
+      "planningUse": "Collect current measured site evidence before design."
+    },
+    {
+      "id": "photo-05",
+      "title": "Muse: kitchen · high confidence",
+      "sourceId": "compass-hutchinson",
+      "pageUrl": "https://www.compass.com/homedetails/2440-S-Hutchinson-St-Philadelphia-PA-19148/1MRIT4_pid/",
+      "previewUrl": null,
+      "previewPermission": "unknown",
+      "capturedAt": "",
+      "locator": "Native Compass gallery image 5 of 22; original display 1500 x 1000 px",
+      "imageUrl": "https://www.compass.com/m/e9b807ee1a548fc82f51a7162c2386994f9fbacb481a2104670a1046ff8ebebd/1500x1000.jpg",
+      "observations": "Galley kitchen with wood cabinets, stainless fridge, gas range, hood and dishwasher Sink under rear window, pendant light, baseboard heater and side window visible",
+      "planningUse": "Confirm whether the galley kitchen counters, cabinets and doorway arrangement will stay as observed."
+    },
+    {
+      "id": "photo-06",
+      "title": "Muse: kitchen · high confidence",
+      "sourceId": "compass-hutchinson",
+      "pageUrl": "https://www.compass.com/homedetails/2440-S-Hutchinson-St-Philadelphia-PA-19148/1MRIT4_pid/",
+      "previewUrl": null,
+      "previewPermission": "unknown",
+      "capturedAt": "",
+      "locator": "Native Compass gallery image 6 of 22; original display 1500 x 1000 px",
+      "imageUrl": "https://www.compass.com/m/b7b7421ca79a1f9a441e8e851af7c8a397535ce6d79753cc1802b3d90f2bc013/1500x1000.jpg",
+      "observations": "Kitchen with gas range, hood, fridge and wood cabinets beside wood-look flooring Open doorway showing red-carpeted area with dining table, stairs and front door",
+      "planningUse": "Confirm whether the galley kitchen counters, cabinets and doorway arrangement will stay as observed."
+    },
+    {
+      "id": "photo-17",
+      "title": "Muse: utility · high confidence",
+      "sourceId": "compass-hutchinson",
+      "pageUrl": "https://www.compass.com/homedetails/2440-S-Hutchinson-St-Philadelphia-PA-19148/1MRIT4_pid/",
+      "previewUrl": null,
+      "previewPermission": "unknown",
+      "capturedAt": "",
+      "locator": "Native Compass gallery image 17 of 22; original display 1500 x 1000 px",
+      "imageUrl": "https://www.compass.com/m/143389382c89c0b3d2353f6b83dd77eb3aad8ba856c7f5eee509769a23bf0cca/1500x1000.jpg",
+      "observations": "Two white laundry appliances with controls against wall with duct and valves Black wire shelving on tile floor; exposed joists with wiring and pipes above",
+      "planningUse": "Record visible laundry appliances, meter enclosure and basement room layout on site."
+    },
+    {
+      "id": "photo-19",
+      "title": "Muse: other · high confidence",
+      "sourceId": "compass-hutchinson",
+      "pageUrl": "https://www.compass.com/homedetails/2440-S-Hutchinson-St-Philadelphia-PA-19148/1MRIT4_pid/",
+      "previewUrl": null,
+      "previewPermission": "unknown",
+      "capturedAt": "",
+      "locator": "Native Compass gallery image 19 of 22; original display 1333 x 1000 px",
+      "imageUrl": "https://www.compass.com/m/698097f605e112f6132a61387b04ed3ae158b3ba2258f9eb0c3ac01d2ac580f0/1500x1000.jpg",
+      "observations": "Floor-plan drawing labeled LAUNDRY, RECREATION ROOM and BATH Stair symbol, wall openings and disclaimer text about measurements visible",
+      "planningUse": "Record visible laundry appliances, meter enclosure and basement room layout on site."
+    },
+    {
+      "id": "photo-20",
+      "title": "Muse: other · high confidence",
+      "sourceId": "compass-hutchinson",
+      "pageUrl": "https://www.compass.com/homedetails/2440-S-Hutchinson-St-Philadelphia-PA-19148/1MRIT4_pid/",
+      "previewUrl": null,
+      "previewPermission": "unknown",
+      "capturedAt": "",
+      "locator": "Native Compass gallery image 20 of 22; original display 1333 x 1000 px",
+      "imageUrl": "https://www.compass.com/m/d88fb8cc49edefb9e8530add98959565f33cd5360fc948d622af1ab210480658/1500x1000.jpg",
+      "observations": "Floor-plan drawing labeled KITCHEN, DINING AREA and LIVING ROOM Stair symbol, wall openings and measurement disclaimer text visible",
+      "planningUse": "Select the preferred zone for the new half bath within the open living and dining area."
+    }
+  ],
+  "nextQuestions": [
+    "Which area within the open living and dining space should be allocated for the new half bath?",
+    "How should the galley kitchen layout with cabinets and doorway remain during the half bath addition?",
+    "Which visible fixtures in the tile bath and toilet room should remain unchanged in this plan?",
+    "How should access to the meter enclosure and laundry area be maintained after adding the half bath?",
+    "How should circulation past the staircase and doorway be preserved when locating the new half bath?"
+  ],
+  "photoReview": {
+    "method": "muse-attached-images",
+    "goal": "Add an additional half bath in the living room. Owner-reported starting condition: a semi-finished basement with an existing half bath.",
+    "planning": {
+      "runId": "01a182a3-7ae5-7102-80ed-ea2fccd23c08",
+      "model": "muse-spark-1.3-contributor",
+      "goal": "Add an additional half bath in the living room. Owner-reported starting condition: a semi-finished basement with an existing half bath.",
+      "questions": [
+        {
+          "photoIds": [
+            "photo-03",
+            "photo-04",
+            "photo-20"
+          ],
+          "text": "Which area within the open living and dining space should be allocated for the new half bath?"
+        },
+        {
+          "photoIds": [
+            "photo-05",
+            "photo-06",
+            "photo-07"
+          ],
+          "text": "How should the galley kitchen layout with cabinets and doorway remain during the half bath addition?"
+        },
+        {
+          "photoIds": [
+            "photo-09",
+            "photo-14",
+            "photo-15"
+          ],
+          "text": "Which visible fixtures in the tile bath and toilet room should remain unchanged in this plan?"
+        },
+        {
+          "photoIds": [
+            "photo-14",
+            "photo-17",
+            "photo-19"
+          ],
+          "text": "How should access to the meter enclosure and laundry area be maintained after adding the half bath?"
+        },
+        {
+          "photoIds": [
+            "photo-03",
+            "photo-04",
+            "photo-06",
+            "photo-20"
+          ],
+          "text": "How should circulation past the staircase and doorway be preserved when locating the new half bath?"
+        }
+      ],
+      "nextSteps": [
+        {
+          "photoIds": [
+            "photo-03",
+            "photo-04",
+            "photo-20"
+          ],
+          "text": "Select the preferred zone for the new half bath within the open living and dining area.",
+          "kind": "user-choice"
+        },
+        {
+          "photoIds": [
+            "photo-05",
+            "photo-06",
+            "photo-07"
+          ],
+          "text": "Confirm whether the galley kitchen counters, cabinets and doorway arrangement will stay as observed.",
+          "kind": "user-choice"
+        },
+        {
+          "photoIds": [
+            "photo-03",
+            "photo-04",
+            "photo-06",
+            "photo-20"
+          ],
+          "text": "Measure the open living and dining area, staircase and doorway positions on site.",
+          "kind": "site-measurement"
+        },
+        {
+          "photoIds": [
+            "photo-09",
+            "photo-14",
+            "photo-15"
+          ],
+          "text": "Record visible fixtures and layout in the tile bath and toilet room on site.",
+          "kind": "site-measurement"
+        },
+        {
+          "photoIds": [
+            "photo-14",
+            "photo-16",
+            "photo-17",
+            "photo-19"
+          ],
+          "text": "Record visible laundry appliances, meter enclosure and basement room layout on site.",
+          "kind": "site-measurement"
+        },
+        {
+          "photoIds": [
+            "photo-04",
+            "photo-19",
+            "photo-20",
+            "photo-22"
+          ],
+          "text": "Request qualified review of observed conditions and diagram accuracy for the half bath proposal.",
+          "kind": "qualified-review"
+        }
+      ]
+    },
+    "reviewedAt": "2026-10-28T12:53:02.915Z",
+    "manifestHash": "5a3645660c52c67b1c6ba0b933dbdcf9b87b63b935f7cc94af4b0e555f8b2f09",
+    "batches": [
+      {
+        "runId": "01a1828f-739f-7fc2-8a2a-80e28ee786b5",
+        "model": "muse-spark-1.3-contributor",
+        "photoIds": [
+          "photo-01",
+          "photo-02",
+          "photo-03",
+          "photo-04",
+          "photo-05",
+          "photo-06",
+          "photo-07"
+        ]
+      },
+      {
+        "runId": "01a18290-19ec-7fa2-889b-c755c8fb9126",
+        "model": "muse-spark-1.3-contributor",
+        "photoIds": [
+          "photo-08",
+          "photo-09",
+          "photo-10",
+          "photo-11",
+          "photo-12",
+          "photo-13",
+          "photo-14"
+        ]
+      },
+      {
+        "runId": "01a18290-d2b8-7e81-a0bb-0847918d79ae",
+        "model": "muse-spark-1.3-contributor",
+        "photoIds": [
+          "photo-15",
+          "photo-16",
+          "photo-17",
+          "photo-18",
+          "photo-19",
+          "photo-20",
+          "photo-21"
+        ]
+      },
+      {
+        "runId": "01a18291-d9c8-76b2-9cb1-c68e806663b0",
+        "model": "muse-spark-1.3-contributor",
+        "photoIds": [
+          "photo-22"
+        ]
+      }
+    ],
+    "photos": [
+      {
+        "id": "photo-01",
+        "status": "reviewed",
+        "roomType": "exterior",
+        "confidence": "high",
+        "observations": [
+          "Brick rowhouse front with white security door, shuttered bay window and basement windows",
+          "Upper windows with one window AC unit; planters, steps and overhead string lights visible"
+        ],
+        "uncertainties": [
+          "Unclear which of the adjacent rowhouses is the subject home for planning",
+          "Window and door materials and operation not visible in this view"
+        ],
+        "questions": [
+          "Which exterior elements are in scope: facade, windows, doors, steps or sidewalk?",
+          "Should window AC units be retained, replaced or removed in the plan?"
+        ],
+        "nextSteps": [
+          "Inventory front facade windows, doors, shutters and basement windows on site",
+          "Verify entry access, lighting and house numbers visible from street"
+        ],
+        "sourceId": "compass-hutchinson",
+        "pageUrl": "https://www.compass.com/homedetails/2440-S-Hutchinson-St-Philadelphia-PA-19148/1MRIT4_pid/",
+        "imageUrl": "https://www.compass.com/m/5fcbe3e594c432b2549dd537f718c9b62504f823350c12688faa535fe516af12/1500x1000.jpg",
+        "locator": "Native Compass gallery image 1 of 22; original display 1500 x 1000 px",
+        "sha256": "7dd7a3864051ae739b846addbd83adce4daf73be19678164b6d33208a972a45e"
+      },
+      {
+        "id": "photo-02",
+        "status": "reviewed",
+        "roomType": "exterior",
+        "confidence": "high",
+        "observations": [
+          "Angled street view of brick rowhouses showing fronts, steps and entry doors",
+          "Red awnings on adjoining facade, flag, planters and overhead string lights visible"
+        ],
+        "uncertainties": [
+          "Subject property boundary among visible rowhouses is uncertain from pixels alone",
+          "Rear or side exterior areas are not shown in this view"
+        ],
+        "questions": [
+          "Is the street context needed for exterior scope or only the subject facade?",
+          "What exterior features should be retained versus changed?"
+        ],
+        "nextSteps": [
+          "Confirm subject address on site and photograph its full frontage",
+          "List visible awnings, railings and lights to include or exclude from inventory"
+        ],
+        "sourceId": "compass-hutchinson",
+        "pageUrl": "https://www.compass.com/homedetails/2440-S-Hutchinson-St-Philadelphia-PA-19148/1MRIT4_pid/",
+        "imageUrl": "https://www.compass.com/m/3ec91ab559f5b7b02df92204dd651f887d291cceefbbb1de4ae49f228f913301/1500x1000.jpg",
+        "locator": "Native Compass gallery image 2 of 22; original display 1500 x 1000 px",
+        "sha256": "4fde1917379c976935ddfebcf0a9d2069905bf4457fe5ca5b0fd5b20192faa27"
+      },
+      {
+        "id": "photo-03",
+        "status": "reviewed",
+        "roomType": "dining",
+        "confidence": "medium",
+        "observations": [
+          "Dining table with six chairs on red carpet; sofas near front window in same open area",
+          "Straight staircase with red carpet and metal railing beside closed white door"
+        ],
+        "uncertainties": [
+          "Room boundaries between living and dining areas are unclear in open space",
+          "Ceiling and wall finishes and under-carpet flooring are not identifiable"
+        ],
+        "questions": [
+          "Should the open living-dining layout be retained or redefined for planning?",
+          "Which furnishings, carpet and window treatments stay versus go?"
+        ],
+        "nextSteps": [
+          "Inventory flooring, stairs, railings, doors and light fixtures in this open area",
+          "Check window, front door and side door operation and natural light on site"
+        ],
+        "sourceId": "compass-hutchinson",
+        "pageUrl": "https://www.compass.com/homedetails/2440-S-Hutchinson-St-Philadelphia-PA-19148/1MRIT4_pid/",
+        "imageUrl": "https://www.compass.com/m/c3e9034884154fc4414c08ca2f838e5ea970bdc61e40ea8b971a5fec30473bdc/1500x1000.jpg",
+        "locator": "Native Compass gallery image 3 of 22; original display 1500 x 1000 px",
+        "sha256": "fe11e23278bed397efedd74d3f06c93c54a67ee67fe42acb4b093751060e20d1"
+      },
+      {
+        "id": "photo-04",
+        "status": "reviewed",
+        "roomType": "living",
+        "confidence": "medium",
+        "observations": [
+          "Two sofas with red pillows on red carpet; octagonal mirror on wall above sofa",
+          "Dining set and wood display cabinet in background; carpeted staircase with metal rail"
+        ],
+        "uncertainties": [
+          "Connection to rear area through far opening is unclear from this view alone",
+          "Wall attachment points and mirror mounting details are not visible"
+        ],
+        "questions": [
+          "Should carpet, sofas and display cabinet be included in improvement scope?",
+          "What lighting is desired for living versus dining zones in this space?"
+        ],
+        "nextSteps": [
+          "Record outlets, switches, ceiling lights and window coverings on site",
+          "Photograph staircase, display cabinet wall and far opening for layout reference"
+        ],
+        "sourceId": "compass-hutchinson",
+        "pageUrl": "https://www.compass.com/homedetails/2440-S-Hutchinson-St-Philadelphia-PA-19148/1MRIT4_pid/",
+        "imageUrl": "https://www.compass.com/m/72b4a2b5b2665b27a0612a4d9231d54c26458ca01ca18e293c3e0476a8c878be/1500x1000.jpg",
+        "locator": "Native Compass gallery image 4 of 22; original display 1494 x 1000 px",
+        "sha256": "b380365cad80e2d8b154143b0a558777e9a14eb4ca2fa66063a4b19d245cb579"
+      },
+      {
+        "id": "photo-05",
+        "status": "reviewed",
+        "roomType": "kitchen",
+        "confidence": "high",
+        "observations": [
+          "Galley kitchen with wood cabinets, stainless fridge, gas range, hood and dishwasher",
+          "Sink under rear window, pendant light, baseboard heater and side window visible"
+        ],
+        "uncertainties": [
+          "Cabinet interior storage and appliance connections not visible",
+          "Rear door exterior area and security gate operation are unclear"
+        ],
+        "questions": [
+          "Which appliances and cabinets are to be retained versus replaced?",
+          "Is the rear door exit to be kept as daily access or secondary use?"
+        ],
+        "nextSteps": [
+          "Inventory appliances, sink, faucet, cabinets, counters and lights in kitchen",
+          "Check window, door, heater and outlet locations along both walls on site"
+        ],
+        "sourceId": "compass-hutchinson",
+        "pageUrl": "https://www.compass.com/homedetails/2440-S-Hutchinson-St-Philadelphia-PA-19148/1MRIT4_pid/",
+        "imageUrl": "https://www.compass.com/m/e9b807ee1a548fc82f51a7162c2386994f9fbacb481a2104670a1046ff8ebebd/1500x1000.jpg",
+        "locator": "Native Compass gallery image 5 of 22; original display 1500 x 1000 px",
+        "sha256": "d028d07957c8f6ebbcfd779d06ee98b187ff5d2a277232167f0b6b5038694bce"
+      },
+      {
+        "id": "photo-06",
+        "status": "reviewed",
+        "roomType": "kitchen",
+        "confidence": "high",
+        "observations": [
+          "Kitchen with gas range, hood, fridge and wood cabinets beside wood-look flooring",
+          "Open doorway showing red-carpeted area with dining table, stairs and front door"
+        ],
+        "uncertainties": [
+          "Layout link between kitchen doorway and front room needs on-site confirmation",
+          "Range hood vent path and fridge surround clearances not visible"
+        ],
+        "questions": [
+          "Should the kitchen-to-front-room opening be retained as-is or modified?",
+          "What storage or counter needs are priorities for this galley layout?"
+        ],
+        "nextSteps": [
+          "Record doorway, traffic path and cabinet runs with photos on site",
+          "List pendant, recessed lights and baseboard heater for electrical plan"
+        ],
+        "sourceId": "compass-hutchinson",
+        "pageUrl": "https://www.compass.com/homedetails/2440-S-Hutchinson-St-Philadelphia-PA-19148/1MRIT4_pid/",
+        "imageUrl": "https://www.compass.com/m/b7b7421ca79a1f9a441e8e851af7c8a397535ce6d79753cc1802b3d90f2bc013/1500x1000.jpg",
+        "locator": "Native Compass gallery image 6 of 22; original display 1500 x 1000 px",
+        "sha256": "fab197b80af600c0786e82a555eff5ba0db6bc6dd54366d73e601b046d540fb8"
+      },
+      {
+        "id": "photo-07",
+        "status": "reviewed",
+        "roomType": "kitchen",
+        "confidence": "high",
+        "observations": [
+          "L-shaped counter with sink under window, stainless dishwasher and wood cabinets",
+          "Open white door with textured glass beside black security gate to exterior"
+        ],
+        "uncertainties": [
+          "Counter and backsplash materials and sink plumbing routes not identifiable",
+          "Exterior space beyond rear door is only partly visible"
+        ],
+        "questions": [
+          "Should sink, faucet, dishwasher and rear doors be retained or upgraded?",
+          "What counter work zones are needed around the sink corner?"
+        ],
+        "nextSteps": [
+          "Inventory sink wall cabinets, outlets, window and doors for replacement list",
+          "Check rear door swing, gate and daylight impact on kitchen on site"
+        ],
+        "sourceId": "compass-hutchinson",
+        "pageUrl": "https://www.compass.com/homedetails/2440-S-Hutchinson-St-Philadelphia-PA-19148/1MRIT4_pid/",
+        "imageUrl": "https://www.compass.com/m/f35e4deecc95bc11ff300b017f125ff71355dcc0f1ebcd66be93643d06c1e08a/1500x1000.jpg",
+        "locator": "Native Compass gallery image 7 of 22; original display 1500 x 1000 px",
+        "sha256": "e357b8b908f5caa8f79a024aabc994a19320bfe5881a80358ba4e76920a1ffef"
+      },
+      {
+        "id": "photo-08",
+        "status": "reviewed",
+        "roomType": "uncertain",
+        "confidence": "low",
+        "observations": [
+          "Patterned wallpaper walls, drop-tile ceiling, and carpet with wood trim",
+          "White ceiling fan with lights and black loose cable across wall and floor"
+        ],
+        "uncertainties": [
+          "Room function unclear; no window or closet visible in this view",
+          "Cable purpose and connection points not visible"
+        ],
+        "questions": [
+          "What function is planned for this carpeted room?",
+          "Should the ceiling fan/light be retained or replaced?"
+        ],
+        "nextSteps": [
+          "Check outlet and switch operation and cable routing on site",
+          "Inspect flooring transition at doorway to red-carpet area"
+        ],
+        "sourceId": "compass-hutchinson",
+        "pageUrl": "https://www.compass.com/homedetails/2440-S-Hutchinson-St-Philadelphia-PA-19148/1MRIT4_pid/",
+        "imageUrl": "https://www.compass.com/m/2151f9d1f7051b2456d9bf752e68f2aa8fc6af21c51ef22e11f31f364569af86/1500x1000.jpg",
+        "locator": "Native Compass gallery image 8 of 22; original display 1500 x 1000 px",
+        "sha256": "478155f27aead719f004ba7f2ed3230e3e676c0fee050e7904a843d8c27b0a74"
+      },
+      {
+        "id": "photo-09",
+        "status": "reviewed",
+        "roomType": "bathroom",
+        "confidence": "high",
+        "observations": [
+          "Large-format tile walls, tub with showerhead, corner shelves, and rod",
+          "White toilet, gray vanity with sink, mirrored cabinet and 3-bulb light"
+        ],
+        "uncertainties": [
+          "Tub finish material and valve function not determinable from pixels",
+          "Window ventilation path and exterior conditions not visible"
+        ],
+        "questions": [
+          "Should tub, toilet, and vanity be retained or replaced?",
+          "Is additional storage or support needed at tub and sink?"
+        ],
+        "nextSteps": [
+          "Test shower, tub filler, sink faucet, and toilet operation on site",
+          "Check window operation and bathroom ventilation provision on site"
+        ],
+        "sourceId": "compass-hutchinson",
+        "pageUrl": "https://www.compass.com/homedetails/2440-S-Hutchinson-St-Philadelphia-PA-19148/1MRIT4_pid/",
+        "imageUrl": "https://www.compass.com/m/d1acc1fef90763072e39b333097d5131d8cc1bc4f7d23b265957b68f7cef417f/1500x1000.jpg",
+        "locator": "Native Compass gallery image 9 of 22; original display 1500 x 1000 px",
+        "sha256": "aa28647b7de9517a7a4bd434cdeef6ea47969bcf8e753c397a69d375547c887a"
+      },
+      {
+        "id": "photo-10",
+        "status": "reviewed",
+        "roomType": "uncertain",
+        "confidence": "low",
+        "observations": [
+          "Vertical panel walls, drop-tile ceiling, and striped woven carpet",
+          "Two wall outlets visible; partial door hardware at left edge"
+        ],
+        "uncertainties": [
+          "Room function unclear; no window, closet, or fixtures visible",
+          "Wall marks show unknown prior attachments"
+        ],
+        "questions": [
+          "What function is planned for this paneled carpeted space?",
+          "Should paneling and carpet be retained or replaced?"
+        ],
+        "nextSteps": [
+          "Inspect walls, outlets, and ceiling tiles closely on site",
+          "Check door swing and adjoining spaces from this room"
+        ],
+        "sourceId": "compass-hutchinson",
+        "pageUrl": "https://www.compass.com/homedetails/2440-S-Hutchinson-St-Philadelphia-PA-19148/1MRIT4_pid/",
+        "imageUrl": "https://www.compass.com/m/825bce6a2905d8cf50847970307260b094e82ae24ae992a3802bae69c5c95b10/1500x1000.jpg",
+        "locator": "Native Compass gallery image 10 of 22; original display 1500 x 1000 px",
+        "sha256": "5833d19d9ca5912951103cd7e20a55e0338d43089fc64113bdb1cea26307c155"
+      },
+      {
+        "id": "photo-11",
+        "status": "reviewed",
+        "roomType": "bedroom",
+        "confidence": "medium",
+        "observations": [
+          "Paneled walls, drop ceiling, striped carpet, window with blinds and radiator",
+          "Wood sliding closet with shelf and doorway to red-carpet area with railing"
+        ],
+        "uncertainties": [
+          "Closet interior depth and fittings beyond shelf not visible",
+          "Radiator and window operational state not visible"
+        ],
+        "questions": [
+          "Should closet doors, blinds, and radiator be retained or updated?",
+          "What lighting and outlet needs are planned for this room?"
+        ],
+        "nextSteps": [
+          "Test window, blinds, radiator controls, and outlets on site",
+          "Inspect closet interior and doorway transition to hall area"
+        ],
+        "sourceId": "compass-hutchinson",
+        "pageUrl": "https://www.compass.com/homedetails/2440-S-Hutchinson-St-Philadelphia-PA-19148/1MRIT4_pid/",
+        "imageUrl": "https://www.compass.com/m/be66a376ba3e1563925c5a5b71775c84825c081f7c9e5cec53873a5fc38c9575/1500x1000.jpg",
+        "locator": "Native Compass gallery image 11 of 22; original display 1500 x 1000 px",
+        "sha256": "148f0b65b7db7002ed0cd908461675ef4440fbf2f538b7282caaf4ed5d689ef4"
+      },
+      {
+        "id": "photo-12",
+        "status": "reviewed",
+        "roomType": "bedroom",
+        "confidence": "medium",
+        "observations": [
+          "Striped walls, drop ceiling, carpet, two windows with vertical blinds",
+          "Wood sliding closets, radiator, window AC unit, and dark ceiling fan"
+        ],
+        "uncertainties": [
+          "Heating/cooling distribution beyond radiator and AC not visible",
+          "Screen panel leaning on wall and its intended location unclear"
+        ],
+        "questions": [
+          "Should radiator plus window AC be retained or changed in plan?",
+          "Should closets, blinds, and ceiling fan be retained or replaced?"
+        ],
+        "nextSteps": [
+          "Test windows, blinds, AC unit, fan, and outlets on site",
+          "Inspect closet interiors and carpet-to-wall transitions on site"
+        ],
+        "sourceId": "compass-hutchinson",
+        "pageUrl": "https://www.compass.com/homedetails/2440-S-Hutchinson-St-Philadelphia-PA-19148/1MRIT4_pid/",
+        "imageUrl": "https://www.compass.com/m/570789e4dd4d117b0d0219df17fa75e5be2ebfa13c5ea576e3429c523ff649e4/1500x1000.jpg",
+        "locator": "Native Compass gallery image 12 of 22; original display 1500 x 1000 px",
+        "sha256": "2322eaee9da86462a29a7354dc0737099dd41896e9bf48d1efec04d2ef30ddf2"
+      },
+      {
+        "id": "photo-13",
+        "status": "reviewed",
+        "roomType": "bedroom",
+        "confidence": "medium",
+        "observations": [
+          "Vertical striped walls, drop ceiling, carpet, window with blinds and AC",
+          "Four wood sliding closet doors, dark ceiling fan, screen on wall"
+        ],
+        "uncertainties": [
+          "Full room extent beyond this single view not confirmed",
+          "AC support and sealing method and screen fit not visible"
+        ],
+        "questions": [
+          "What storage use is planned for the double closet bank?",
+          "Should window AC, screen, and ceiling fan be retained or changed?"
+        ],
+        "nextSteps": [
+          "Inspect closet interiors, tracks, and door operation on site",
+          "Check window AC mounting, window function, and outlets on site"
+        ],
+        "sourceId": "compass-hutchinson",
+        "pageUrl": "https://www.compass.com/homedetails/2440-S-Hutchinson-St-Philadelphia-PA-19148/1MRIT4_pid/",
+        "imageUrl": "https://www.compass.com/m/de84222da58dbef6d0dae59b0a368d71291f6cd2d0c6482c46039204e6b6a208/1500x1000.jpg",
+        "locator": "Native Compass gallery image 13 of 22; original display 1500 x 1000 px",
+        "sha256": "23110f78c830559e48f1bddbd9ae63a584d4b28a89e93aa651b7ca00fa9fedba"
+      },
+      {
+        "id": "photo-14",
+        "status": "reviewed",
+        "roomType": "basement",
+        "confidence": "medium",
+        "observations": [
+          "Carpeted room with drop-tile ceiling, sliding doors, small high window",
+          "Open doorway to toilet room and open enclosure with meter and piping"
+        ],
+        "uncertainties": [
+          "Home level and full room layout beyond this view not confirmed",
+          "Toilet-room fixtures beyond toilet and piping routes not visible"
+        ],
+        "questions": [
+          "Should meter enclosure remain accessible and how to finish around it?",
+          "Should adjoining toilet room be retained as-is or updated?"
+        ],
+        "nextSteps": [
+          "Verify meter access needs and enclosure clearances on site",
+          "Inspect toilet-room fixtures, flooring, and small window on site"
+        ],
+        "sourceId": "compass-hutchinson",
+        "pageUrl": "https://www.compass.com/homedetails/2440-S-Hutchinson-St-Philadelphia-PA-19148/1MRIT4_pid/",
+        "imageUrl": "https://www.compass.com/m/cf5c921d3229db69019396bf31c910015b6a27e04503f2cad764da3f98595b0e/1500x1000.jpg",
+        "locator": "Native Compass gallery image 14 of 22; original display 1500 x 1000 px",
+        "sha256": "7700b7d46674398f3cc68ca490a4ad68d62ce94316ac1e5969c2211e183d6d77"
+      },
+      {
+        "id": "photo-15",
+        "status": "reviewed",
+        "roomType": "bathroom",
+        "confidence": "high",
+        "observations": [
+          "Wall-mounted white sink with two-knob faucet and exposed piping below",
+          "White toilet beside partial folding panel and high window opening"
+        ],
+        "uncertainties": [
+          "Wall finish variation near corner; coverage intent unclear from pixels",
+          "Function and full extent of folding panel beyond cropped view unclear"
+        ],
+        "questions": [
+          "Retain or replace sink faucet and toilet as part of improvement plan?",
+          "What wall finish and privacy treatment are desired for window area?"
+        ],
+        "nextSteps": [
+          "Check faucet operation and exposed piping connections on site",
+          "Confirm window operation and panel swing and access on site"
+        ],
+        "sourceId": "compass-hutchinson",
+        "pageUrl": "https://www.compass.com/homedetails/2440-S-Hutchinson-St-Philadelphia-PA-19148/1MRIT4_pid/",
+        "imageUrl": "https://www.compass.com/m/29495447c363cade512829daf5f75191bcdae4b4ccee7249cbca203c7861af13/1500x1000.jpg",
+        "locator": "Native Compass gallery image 15 of 22; original display 1500 x 1000 px",
+        "sha256": "bbb89ee3fb834d9c14aa62ac871b799eb2a3631be5bab9b5055e6ad33f959f74"
+      },
+      {
+        "id": "photo-16",
+        "status": "reviewed",
+        "roomType": "basement",
+        "confidence": "medium",
+        "observations": [
+          "Carpeted room with drop-tile ceiling, ceiling light and staircase with wood rail",
+          "Freestanding metal shelving, mural wall covering and wood sliding doors"
+        ],
+        "uncertainties": [
+          "Whether space is below grade or ground level cannot be told from pixels",
+          "Area beyond far open doorway and behind sliding doors not visible"
+        ],
+        "questions": [
+          "Retain or replace carpet, ceiling tiles, shelving and sliding doors?",
+          "What use is planned for open area, stair access and far doorway?"
+        ],
+        "nextSteps": [
+          "Photograph far doorway room and inside sliding-door storage on site",
+          "Note lighting and outlet positions for planning inventory"
+        ],
+        "sourceId": "compass-hutchinson",
+        "pageUrl": "https://www.compass.com/homedetails/2440-S-Hutchinson-St-Philadelphia-PA-19148/1MRIT4_pid/",
+        "imageUrl": "https://www.compass.com/m/9709d5c82ac86ce5507ace365102c5856c6bc386413c4f46d9cb59d8bdf39e2f/1500x1000.jpg",
+        "locator": "Native Compass gallery image 16 of 22; original display 1500 x 1000 px",
+        "sha256": "ad94ac979cfbd6b3e2762d67d64f1611fd43de57f04eab806e54224ad12a6722"
+      },
+      {
+        "id": "photo-17",
+        "status": "reviewed",
+        "roomType": "utility",
+        "confidence": "high",
+        "observations": [
+          "Two white laundry appliances with controls against wall with duct and valves",
+          "Black wire shelving on tile floor; exposed joists with wiring and pipes above"
+        ],
+        "uncertainties": [
+          "Areas behind appliances and inside wooden cabinet not visible",
+          "Full room extent outside frame and ceiling run endpoints not shown"
+        ],
+        "questions": [
+          "Retain existing appliances and shelving locations or reconfigure layout?",
+          "What improvements are planned for lighting and exposed ceiling runs?"
+        ],
+        "nextSteps": [
+          "Record appliance labels and visible hookups without moving units",
+          "Photograph ceiling runs and adjacent areas for inventory linkage"
+        ],
+        "sourceId": "compass-hutchinson",
+        "pageUrl": "https://www.compass.com/homedetails/2440-S-Hutchinson-St-Philadelphia-PA-19148/1MRIT4_pid/",
+        "imageUrl": "https://www.compass.com/m/143389382c89c0b3d2353f6b83dd77eb3aad8ba856c7f5eee509769a23bf0cca/1500x1000.jpg",
+        "locator": "Native Compass gallery image 17 of 22; original display 1500 x 1000 px",
+        "sha256": "99fa6e25fa724795417ef0365493cfceb27bba8d7be316c847fe231f5f382ef7"
+      },
+      {
+        "id": "photo-18",
+        "status": "reviewed",
+        "roomType": "exterior",
+        "confidence": "high",
+        "observations": [
+          "Aerial view of attached brick rowhouses with flat roofs along street",
+          "Sidewalk, parked cars and varied roof surfaces and rooftop fixtures visible"
+        ],
+        "uncertainties": [
+          "Which specific house in row is inventory subject cannot be told from pixels alone",
+          "Street-level details and rear conditions not visible in aerial view"
+        ],
+        "questions": [
+          "Which roof and facade in the row correspond to the subject home?",
+          "Are roof, facade, sidewalk or parking areas in scope for improvements?"
+        ],
+        "nextSteps": [
+          "Confirm subject address and photograph its facade at street level",
+          "Capture roof access and rear exterior views if exterior work is planned"
+        ],
+        "sourceId": "compass-hutchinson",
+        "pageUrl": "https://www.compass.com/homedetails/2440-S-Hutchinson-St-Philadelphia-PA-19148/1MRIT4_pid/",
+        "imageUrl": "https://www.compass.com/m/a8d355e4b46b5399e29d94e1ca957ed6d686334a2b5f9ab4f6a9fa0f689d3bcc/1500x1000.jpg",
+        "locator": "Native Compass gallery image 18 of 22; original display 1333 x 1000 px",
+        "sha256": "0e0e1c69af168e11338d5bee2cceb992cf307729fece26f29566380202d9994f"
+      },
+      {
+        "id": "photo-19",
+        "status": "reviewed",
+        "roomType": "other",
+        "confidence": "high",
+        "observations": [
+          "Floor-plan drawing labeled LAUNDRY, RECREATION ROOM and BATH",
+          "Stair symbol, wall openings and disclaimer text about measurements visible"
+        ],
+        "uncertainties": [
+          "Diagram accuracy versus on-site layout not verifiable from pixels alone",
+          "Finishes, fixtures and equipment within diagrammed rooms not shown"
+        ],
+        "questions": [
+          "Does on-site laundry, recreation and bath layout match this diagram?",
+          "What items in those diagrammed spaces should be retained or investigated?"
+        ],
+        "nextSteps": [
+          "Verify room arrangement and openings on site against diagram",
+          "Record surfaces and fixtures observed on site for rooms shown"
+        ],
+        "sourceId": "compass-hutchinson",
+        "pageUrl": "https://www.compass.com/homedetails/2440-S-Hutchinson-St-Philadelphia-PA-19148/1MRIT4_pid/",
+        "imageUrl": "https://www.compass.com/m/698097f605e112f6132a61387b04ed3ae158b3ba2258f9eb0c3ac01d2ac580f0/1500x1000.jpg",
+        "locator": "Native Compass gallery image 19 of 22; original display 1333 x 1000 px",
+        "sha256": "0ec314cb4b6ca405cea305f9d99efb46dadc0dfdb3b4904cdeaa0303f58ac898"
+      },
+      {
+        "id": "photo-20",
+        "status": "reviewed",
+        "roomType": "other",
+        "confidence": "high",
+        "observations": [
+          "Floor-plan drawing labeled KITCHEN, DINING AREA and LIVING ROOM",
+          "Stair symbol, wall openings and measurement disclaimer text visible"
+        ],
+        "uncertainties": [
+          "Diagram accuracy versus on-site layout not verifiable from pixels alone",
+          "Finishes, fixtures and equipment within diagrammed rooms not shown"
+        ],
+        "questions": [
+          "Does on-site kitchen, dining and living layout match this diagram?",
+          "Which kitchen and living-area features should be retained or investigated?"
+        ],
+        "nextSteps": [
+          "Verify room arrangement and openings on site against diagram",
+          "Record surfaces and fixtures observed on site for rooms shown"
+        ],
+        "sourceId": "compass-hutchinson",
+        "pageUrl": "https://www.compass.com/homedetails/2440-S-Hutchinson-St-Philadelphia-PA-19148/1MRIT4_pid/",
+        "imageUrl": "https://www.compass.com/m/d88fb8cc49edefb9e8530add98959565f33cd5360fc948d622af1ab210480658/1500x1000.jpg",
+        "locator": "Native Compass gallery image 20 of 22; original display 1333 x 1000 px",
+        "sha256": "4ad7c9ca8ea752947269aa5da2ea574956ad1f7620c0437350fde024676c26d4"
+      },
+      {
+        "id": "photo-21",
+        "status": "reviewed",
+        "roomType": "other",
+        "confidence": "high",
+        "observations": [
+          "Floor-plan drawing labeled BEDROOM, BATH, HALL and PRIMARY BEDROOM",
+          "Stair symbol, closet outlines and measurement disclaimer text visible"
+        ],
+        "uncertainties": [
+          "Diagram accuracy versus on-site layout not verifiable from pixels alone",
+          "Finishes, fixtures and equipment within diagrammed rooms not shown"
+        ],
+        "questions": [
+          "Does on-site bedroom, bath and hall layout match this diagram?",
+          "Which bedroom and bath features should be retained or investigated?"
+        ],
+        "nextSteps": [
+          "Verify room arrangement and openings on site against diagram",
+          "Record surfaces and fixtures observed on site for rooms shown"
+        ],
+        "sourceId": "compass-hutchinson",
+        "pageUrl": "https://www.compass.com/homedetails/2440-S-Hutchinson-St-Philadelphia-PA-19148/1MRIT4_pid/",
+        "imageUrl": "https://www.compass.com/m/85d6fd30cff6e8e92efbb7adf3b29d6305c54ed797b57d8f82129857f98ef8ca/1500x1000.jpg",
+        "locator": "Native Compass gallery image 21 of 22; original display 1333 x 1000 px",
+        "sha256": "9934d558595438c653267413c9f0da3f31bc3eb9cbc0be4e06d3222991e9a47a"
+      },
+      {
+        "id": "photo-22",
+        "status": "reviewed",
+        "roomType": "other",
+        "confidence": "high",
+        "observations": [
+          "Three side-by-side black-and-white floor plans labeled Basement, 1st floor, 2nd floor.",
+          "Room names, door and stair symbols, and window outlines visible in plan graphics."
+        ],
+        "uncertainties": [
+          "Plan accuracy and current layout cannot be confirmed from diagram alone.",
+          "Actual finishes, fixtures and equipment not visible in this diagram view."
+        ],
+        "questions": [
+          "Which labeled areas correspond to current on-site room uses?",
+          "What finishes and fixtures exist in each labeled space for planning?"
+        ],
+        "nextSteps": [
+          "Walk site to verify layout matches diagram room labels.",
+          "Capture room photos linked to each plan area for inventory."
+        ],
+        "sourceId": "compass-hutchinson",
+        "pageUrl": "https://www.compass.com/homedetails/2440-S-Hutchinson-St-Philadelphia-PA-19148/1MRIT4_pid/",
+        "imageUrl": "https://www.compass.com/m/46914b4a231b8b97547c0bbfca00e4a181f09a56312dfe37dd84d5cfc0d19d34/1500x1000.jpg",
+        "locator": "Native Compass gallery image 22 of 22; original display 1333 x 1000 px",
+        "sha256": "fef12b46ce6faedf59bf62942f2eebf75b680fdb82be1037c79461ae9f1cee90"
+      }
+    ]
+  }
+}

@@ -1,0 +1,243 @@
+{
+  "kind": "property-research",
+  "address": "7149 Bingham Street, Philadelphia PA 19111",
+  "jobId": "project:0a19d437-e8dd-43c1-9121-f055373ca721:property:fact:10aea412-d8fd-45d9-a4be-5099b6982355:1",
+  "method": "muse",
+  "verification": "unreviewed",
+  "sources": [
+    {
+      "id": "phila-opa",
+      "title": "Philadelphia Office of Property Assessment · public record (OPA via phl.carto.com SQL API, re-queried live this run)",
+      "url": "https://phl.carto.com/api/v2/sql?q=SELECT+parcel_number%2Clocation%2Ctotal_livable_area%2Ctotal_area%2Cfrontage%2Cdepth%2Cyear_built%2Cnumber_stories%2Czoning+FROM+opa_properties_public+WHERE+UPPER%28location%29+%3D+%277149+BINGHAM+ST%27+LIMIT+8",
+      "retrievedAt": "2026-10-27T21:16:01.037Z"
+    },
+    {
+      "id": "atproperties-listing",
+      "title": "RLAH @properties listing PAPH2657666 — 7149 Bingham Street (page opened; body truncated by fetcher, structured facts corroborated via Compass syndication below)",
+      "url": "https://www.atproperties.com/PAPH2657666/7149-bingham-street-philadelphia-pennsylvania-19111-brightmls",
+      "retrievedAt": "2026-10-27T21:20:00.000Z"
+    },
+    {
+      "id": "compass-listing",
+      "title": "Compass syndication of MLS PAPH2657666 — 7149 Bingham St (35-photo gallery; Photos 1–7 image URLs observed in page)",
+      "url": "https://www.compass.com/homedetails/7149-Bingham-St-Philadelphia-PA-19111/1OGO6J_pid/",
+      "retrievedAt": "2026-10-27T21:22:00.000Z"
+    },
+    {
+      "id": "phila-permits-query",
+      "title": "Philadelphia L&I permits (phl.carto.com 'permits' table) — exact-address query returning 0 rows",
+      "url": "https://phl.carto.com/api/v2/sql?q=SELECT+permitnumber%2Cpermittype%2Cstatus%2Cpermitissuedate%2Caddress%2Capprovedscopeofwork+FROM+permits+WHERE+address+%3D+%277149+BINGHAM+ST%27+ORDER+BY+permitissuedate+DESC+LIMIT+20",
+      "retrievedAt": "2026-10-27T21:24:00.000Z"
+    },
+    {
+      "id": "phila-atlas",
+      "title": "Philadelphia Atlas property page (opened; no readable property content returned by fetcher — lead only, no facts taken)",
+      "url": "https://atlas.phila.gov/7149%20BINGHAM%20ST",
+      "retrievedAt": "2026-10-27T21:23:00.000Z"
+    }
+  ],
+  "findings": [
+    {
+      "label": "Assessment parcel (OPA parcel_number)",
+      "value": "532382800",
+      "sourceId": "phila-opa",
+      "limit": "Assessment record; may be historic, estimated or different from current conditions. Supplied UNREVIEWED lead re-queried live at same URL in this run; do not claim supplied record was retrieved by this run beyond this re-query."
+    },
+    {
+      "label": "City record address (OPA location)",
+      "value": "7149 BINGHAM ST",
+      "sourceId": "phila-opa",
+      "limit": "Assessment record; may be historic, estimated or different from current conditions."
+    },
+    {
+      "label": "Recorded living area (OPA total_livable_area, raw value; dataset units to confirm, listed elsewhere as sq ft)",
+      "value": "1512",
+      "sourceId": "phila-opa",
+      "limit": "Raw OPA total_livable_area; confirm dataset units. Lot/assessment data is not a measured room or building footprint. CONFLICT PRESERVED: structured listing fields also state 1,512 sq ft while listing description states over 1,600 sq ft above-grade — do not reconcile without measurement."
+    },
+    {
+      "label": "Listing structured living area (Compass/MLS structured fields)",
+      "value": "1,512 sqft (3 beds / 1 bath header)",
+      "sourceId": "compass-listing",
+      "limit": "Listing structured field, not a measurement. CONFLICT: conflicts with listing description 'over 1,600 square feet' on same pages; both preserved, neither verified."
+    },
+    {
+      "label": "Listing description living area claim",
+      "value": "over 1,600 square feet of above-grade living space",
+      "sourceId": "compass-listing",
+      "limit": "Marketing description text, not a measurement. CONFLICT with 1,512 structured/OPA figure; requires field measurement to resolve. No room dimensions inferred."
+    },
+    {
+      "label": "Recorded lot area (OPA total_area, raw value; dataset units to confirm)",
+      "value": "3163",
+      "sourceId": "phila-opa",
+      "limit": "Raw OPA total_area; confirm dataset units. Lot/assessment data is not a measured room or building footprint. Listing states 0.07 acres / 3,163 sq ft lot, consistent as marketing restatement, not independent survey."
+    },
+    {
+      "label": "Recorded lot frontage (OPA frontage, raw value; dataset units to confirm, presumed feet)",
+      "value": "25",
+      "sourceId": "phila-opa",
+      "limit": "Raw OPA frontage; confirm dataset units. Assessment dimension, not a survey; verify by survey/deed before any addition or setback planning."
+    },
+    {
+      "label": "Recorded lot depth (OPA depth, raw value; dataset units to confirm, presumed feet)",
+      "value": "127",
+      "sourceId": "phila-opa",
+      "limit": "Raw OPA depth; confirm dataset units. Assessment dimension, not a survey; 25 x 127 does not by itself establish buildable area or footprint."
+    },
+    {
+      "label": "Recorded year built (OPA year_built)",
+      "value": "1925",
+      "sourceId": "phila-opa",
+      "limit": "Assessment record; may be historic, estimated or different from current conditions. Listing also states 1925; agreement is restatement risk, not independent verification."
+    },
+    {
+      "label": "Recorded stories (OPA number_stories)",
+      "value": "1",
+      "sourceId": "phila-opa",
+      "limit": "Assessment record; may be historic, estimated or different from current conditions. FLAGGED DISAGREEMENT: OPA records 1 story while listing markets a 3-bedroom twin/townhouse with main + upper rooms implied; do not use either for design until floors are counted on site. Definition difference possible."
+    },
+    {
+      "label": "Recorded zoning (OPA zoning)",
+      "value": "RSA3",
+      "sourceId": "phila-opa",
+      "limit": "Assessment record; may be historic, estimated or different from current conditions. Code text/limits not retrieved from an HTTPS primary source in this run — see nextQuestions; no compliance conclusion drawn."
+    },
+    {
+      "label": "Listing price and status observed (Compass syndication of MLS PAPH2657666)",
+      "value": "$245,000, Active, 3 beds, 1 bath, Townhouse, 0.07 acres, 1925, $162/sq ft",
+      "sourceId": "compass-listing",
+      "limit": "Point-in-time listing syndication; price/status change without notice and differ across syndication snapshots (other snapshots seen at $259,900/$269,900 under earlier MLS numbers). Not an appraisal or offer."
+    },
+    {
+      "label": "Listing room sequence (description text only)",
+      "value": "Enclosed sun parlor with French doors opening to large living room, then formal dining area, then oversized kitchen described as having plenty of cabinetry and space for table and counter seating",
+      "sourceId": "compass-listing",
+      "limit": "Listing description wording only; no dimensions, no concealed-services inference. Sequence must be confirmed by walkthrough sketch before kitchen/powder-room planning."
+    },
+    {
+      "label": "Existing bath count relevant to powder-room goal",
+      "value": "1 bathroom (structured fields); no existing powder room stated",
+      "sourceId": "compass-listing",
+      "limit": "Listing structured count only. No plumbing, waste/vent, or water-supply location inferred; powder-room feasibility is undetermined until services are exposed/located by qualified inspection."
+    },
+    {
+      "label": "Permits query result for exact address string",
+      "value": "0 rows returned",
+      "sourceId": "phila-permits-query",
+      "limit": "Limited exact-match query only (address = '7149 BINGHAM ST', 20-row cap). Zero rows returned substantiates only that this query returned no rows; it does NOT prove no permits exist under variant addresses/unit strings. No total-count or absent-permit claim made."
+    },
+    {
+      "label": "Violations/inspections status",
+      "value": "Not established — do not treat as clear",
+      "sourceId": "phila-atlas",
+      "limit": "UNRESOLVED in this run. Atlas page fetch returned no readable property content. Must be re-checked in Atlas/L&I Property History before any work planning.",
+      "blockedReason": "Violations table query returned HTTP 400 (column/schema mismatch) in this run; no violations claim made either way."
+    }
+  ],
+  "images": [
+    {
+      "id": "compass-photo-01",
+      "title": "Specific listing photo 1 of 35 — Compass gallery (room not labeled; not viewed in this run)",
+      "sourceId": "compass-listing",
+      "pageUrl": "https://www.compass.com/homedetails/7149-Bingham-St-Philadelphia-PA-19111/1OGO6J_pid/",
+      "previewUrl": null,
+      "previewPermission": "unknown",
+      "capturedAt": "",
+      "locator": "Photo 1 of 35",
+      "imageUrl": "https://www.compass.com/m/c40bf7f573ff72c7b3b2967e45e1cf6aaa8f9ebf909ed63da8eb157f1b856c1f/origin.webp",
+      "planningUse": "Open at full size to identify room/view, then record that room's length x width, ceiling height, window/door positions on site; do not estimate dimensions from photo."
+    },
+    {
+      "id": "compass-photo-02",
+      "title": "Specific listing photo 2 of 35 — Compass gallery (room not labeled; not viewed in this run)",
+      "sourceId": "compass-listing",
+      "pageUrl": "https://www.compass.com/homedetails/7149-Bingham-St-Philadelphia-PA-19111/1OGO6J_pid/",
+      "previewUrl": null,
+      "previewPermission": "unknown",
+      "capturedAt": "",
+      "locator": "Photo 2 of 35",
+      "imageUrl": "https://www.compass.com/m/1e331ade8aeb13174eb68804b4b3a1ca82831d2eab5596006520a46bfeb6285e/origin.webp",
+      "planningUse": "Open at full size to identify room/view, then measure that space and note radiator/outlet locations on site."
+    },
+    {
+      "id": "compass-photo-03",
+      "title": "Specific listing photo 3 of 35 — Compass gallery (room not labeled; not viewed in this run)",
+      "sourceId": "compass-listing",
+      "pageUrl": "https://www.compass.com/homedetails/7149-Bingham-St-Philadelphia-PA-19111/1OGO6J_pid/",
+      "previewUrl": null,
+      "previewPermission": "unknown",
+      "capturedAt": "",
+      "locator": "Photo 3 of 35",
+      "imageUrl": "https://www.compass.com/m/7567f7d7159a81104bbac14e97587bb64c4385b2c3f6c6e58d934cff5aa882fd/origin.webp",
+      "planningUse": "If this is the kitchen view, use it only to plan the site checklist: cabinet run lengths, window sill height, door swings — all to be taped on site."
+    },
+    {
+      "id": "compass-photo-04",
+      "title": "Specific listing photo 4 of 35 — Compass gallery (room not labeled; not viewed in this run)",
+      "sourceId": "compass-listing",
+      "pageUrl": "https://www.compass.com/homedetails/7149-Bingham-St-Philadelphia-PA-19111/1OGO6J_pid/",
+      "previewUrl": null,
+      "previewPermission": "unknown",
+      "capturedAt": "",
+      "locator": "Photo 4 of 35",
+      "imageUrl": "https://www.compass.com/m/8d639a606c7568b1c4d024c5f625cf36251a5ff8a52a7577e08bc683ad03a945/origin.webp",
+      "planningUse": "If this is a bathroom view, use it only to plan the site checklist: fixture clearances and visible supply/shutoff locations — concealed waste/vent routing still requires qualified inspection."
+    },
+    {
+      "id": "compass-photo-05",
+      "title": "Specific listing photo 5 of 35 — Compass gallery (room not labeled; not viewed in this run)",
+      "sourceId": "compass-listing",
+      "pageUrl": "https://www.compass.com/homedetails/7149-Bingham-St-Philadelphia-PA-19111/1OGO6J_pid/",
+      "previewUrl": null,
+      "previewPermission": "unknown",
+      "capturedAt": "",
+      "locator": "Photo 5 of 35",
+      "imageUrl": "https://www.compass.com/m/243c2a0948fe40714d5cd4b17d9fa06fa58fa8e982148740df64568c88c15e28/origin.webp",
+      "planningUse": "Open at full size to identify room/view, then add that room to the measured sketch list before any layout work."
+    },
+    {
+      "id": "compass-photo-06",
+      "title": "Specific listing photo 6 of 35 — Compass gallery (room not labeled; not viewed in this run)",
+      "sourceId": "compass-listing",
+      "pageUrl": "https://www.compass.com/homedetails/7149-Bingham-St-Philadelphia-PA-19111/1OGO6J_pid/",
+      "previewUrl": null,
+      "previewPermission": "unknown",
+      "capturedAt": "",
+      "locator": "Photo 6 of 35",
+      "imageUrl": "https://www.compass.com/m/38b0595d8f4c48745bfea680440103224fa5efe0eb7e64e625af8f2af60509e7/origin.webp",
+      "planningUse": "Open at full size to identify room/view; if exterior, plan on-site check of frontage, party-wall line and rear access rather than scaling from photo."
+    },
+    {
+      "id": "compass-photo-07",
+      "title": "Specific listing photo 7 of 35 — Compass gallery (room not labeled; not viewed in this run)",
+      "sourceId": "compass-listing",
+      "pageUrl": "https://www.compass.com/homedetails/7149-Bingham-St-Philadelphia-PA-19111/1OGO6J_pid/",
+      "previewUrl": null,
+      "previewPermission": "unknown",
+      "capturedAt": "",
+      "locator": "Photo 7 of 35",
+      "imageUrl": "https://www.compass.com/m/29e1d664decd313b2a41ab185eb4e561df41885e64ce186147db5683b72ea147/origin.webp",
+      "planningUse": "Open at full size to identify room/view, then confirm with current dated photos from site; listing photos may predate current condition."
+    },
+    {
+      "id": "compass-gallery-remainder",
+      "title": "Listing gallery remainder Photos 8–35 — Compass (specific photos not yet enumerated; not a map/search lead)",
+      "sourceId": "compass-listing",
+      "pageUrl": "https://www.compass.com/homedetails/7149-Bingham-St-Philadelphia-PA-19111/1OGO6J_pid/",
+      "previewUrl": null,
+      "previewPermission": "unknown",
+      "capturedAt": "",
+      "locator": "Photos 8–35 of 35 (open gallery and record each kitchen/bath/exterior photo number)",
+      "planningUse": "Manually step through Photos 8–35, note the exact numbers showing kitchen, the existing bathroom, front exterior and rear, then take matching measured photos on site.",
+      "blockedReason": "Gallery index reports 35 photos but only Photos 1–7 image URLs were exposed in the fetched page text; remaining photos must be enumerated by opening the gallery — not guessed."
+    }
+  ],
+  "nextQuestions": [
+    "Gap — Google Maps/Earth/Street View: no property-specific HTTPS map/street-view URL was actually opened or returned in search results in this run, so none is cited; please confirm the Street View frontage/rear-alley view on site, or authorize a follow-up lookup.",
+    "Gap — RSA-3 dimensional/use limits and L&I violations history were not retrieved from a readable HTTPS primary source in this run (Atlas returned no readable content; violations query errored); should a follow-up pull the Atlas Property History and current Philadelphia Zoning Code RSA-3 table before any powder-room layout is drawn?",
+    "Which space is the kitchen-refresh priority and where could a powder room go (e.g., under-stair, part of kitchen/dining, or other)? Please add a simple room-by-room sketch with taped length x width and ceiling heights for kitchen, existing bath, and the candidate powder-room area.",
+    "Please photograph and note, without opening walls: kitchen cabinet runs and window/door positions, existing bath fixture positions and any accessible basement/ceiling view below it, plus electrical panel location — concealed supply/waste/vent routes must not be assumed.",
+    "Can you confirm floor count on site (to resolve OPA '1 story' vs listing layout) and provide any survey/deed dimensions to replace the assessment frontage/depth (25 x 127, units presumed feet)?"
+  ]
+}

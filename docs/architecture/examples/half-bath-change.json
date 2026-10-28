@@ -1,0 +1,199 @@
+{
+  "schemaVersion": 1,
+  "name": "Room width changes after a plan was accepted",
+  "purpose": "Implementation acceptance fixture for revision conflicts and dependency invalidation; not a construction or code-compliance example.",
+  "mode": "synthetic-fixture",
+  "projectId": "project-half-bath-fixture",
+  "initial": {
+    "projectRevision": 17,
+    "facts": [
+      {
+        "id": "fact-room-width",
+        "revision": 1,
+        "subjectId": "space-first-floor",
+        "key": "finishedWidth",
+        "value": {
+          "kind": "quantity",
+          "amount": 1200,
+          "unit": "mm"
+        },
+        "assertion": "user_reported",
+        "evidenceIds": [
+          "evidence-measurement-1"
+        ]
+      },
+      {
+        "id": "fact-selected-fixture",
+        "revision": 1,
+        "subjectId": "project-half-bath-fixture",
+        "key": "selectedFixture",
+        "value": {
+          "kind": "text",
+          "text": "Synthetic fixture A"
+        },
+        "assertion": "user_reported",
+        "evidenceIds": [
+          "evidence-fixture-selection"
+        ]
+      }
+    ],
+    "evidence": [
+      {
+        "id": "evidence-measurement-1",
+        "kind": "user-observation",
+        "description": "Synthetic measured-width report"
+      },
+      {
+        "id": "evidence-fixture-selection",
+        "kind": "user-message",
+        "description": "Synthetic fixture choice"
+      },
+      {
+        "id": "evidence-site-photo",
+        "kind": "attachment",
+        "description": "Synthetic reference-photo metadata; no image analysis or code approval"
+      }
+    ],
+    "artifacts": [
+      {
+        "id": "artifact-layout-check",
+        "kind": "technical-check",
+        "revision": 3,
+        "lifecycle": "accepted",
+        "freshness": "current",
+        "inputRefs": [
+          {
+            "kind": "fact",
+            "id": "fact-room-width",
+            "revision": 1
+          },
+          {
+            "kind": "fact",
+            "id": "fact-selected-fixture",
+            "revision": 1
+          }
+        ],
+        "note": "Synthetic previously accepted result only; no real check or applicability conclusion."
+      },
+      {
+        "id": "artifact-material-plan",
+        "kind": "material-plan",
+        "revision": 2,
+        "lifecycle": "accepted",
+        "freshness": "current",
+        "inputRefs": [
+          {
+            "kind": "artifact",
+            "id": "artifact-layout-check",
+            "revision": 3
+          }
+        ]
+      },
+      {
+        "id": "artifact-estimate",
+        "kind": "estimate",
+        "revision": 2,
+        "lifecycle": "accepted",
+        "freshness": "current",
+        "inputRefs": [
+          {
+            "kind": "artifact",
+            "id": "artifact-material-plan",
+            "revision": 2
+          }
+        ]
+      },
+      {
+        "id": "artifact-task-plan",
+        "kind": "task-plan",
+        "revision": 4,
+        "lifecycle": "accepted",
+        "freshness": "current",
+        "inputRefs": [
+          {
+            "kind": "artifact",
+            "id": "artifact-layout-check",
+            "revision": 3
+          },
+          {
+            "kind": "artifact",
+            "id": "artifact-material-plan",
+            "revision": 2
+          }
+        ]
+      },
+      {
+        "id": "artifact-site-photo-index",
+        "kind": "evidence-index",
+        "revision": 1,
+        "lifecycle": "accepted",
+        "freshness": "current",
+        "inputRefs": [
+          {
+            "kind": "evidence",
+            "id": "evidence-site-photo",
+            "revision": 1
+          }
+        ]
+      }
+    ],
+    "taskViews": [
+      {
+        "id": "task-prepare-material-package",
+        "progress": "not_started",
+        "readiness": "ready",
+        "planRef": {
+          "id": "artifact-task-plan",
+          "revision": 4
+        }
+      }
+    ]
+  },
+  "command": {
+    "commandId": "command-width-correction-1",
+    "projectId": "project-half-bath-fixture",
+    "baseRevision": 17,
+    "type": "RecordFact",
+    "payload": {
+      "factId": "fact-room-width",
+      "supersedesRevision": 1,
+      "value": {
+        "kind": "quantity",
+        "amount": 1100,
+        "unit": "mm"
+      },
+      "assertion": "user_reported",
+      "evidence": {
+        "id": "evidence-measurement-2",
+        "kind": "user-observation",
+        "description": "Synthetic corrected width"
+      }
+    }
+  },
+  "expected": {
+    "committedProjectRevision": 18,
+    "factRevision": {
+      "id": "fact-room-width",
+      "revision": 2
+    },
+    "staleArtifactIds": [
+      "artifact-layout-check",
+      "artifact-material-plan",
+      "artifact-estimate",
+      "artifact-task-plan"
+    ],
+    "unchangedArtifactIds": [
+      "artifact-site-photo-index"
+    ],
+    "blockedTaskIds": [
+      "task-prepare-material-package"
+    ],
+    "priorAcceptedRevisionsPreserved": true,
+    "duplicateIdenticalCommand": "Return the original revision-18 result; no new mutation, event set, or recalculation run.",
+    "sameCommandIdDifferentPayload": "Reject idempotency misuse without mutation.",
+    "concurrentCommandAtRevision17": "Reject revision conflict; retain the correction.",
+    "lateRunUsingWidthRevision1": "Persist only as stale output; cannot become current or release dependent work.",
+    "acceptOldTaskPlanRevision4": "Reject as stale; ask for a current replacement proposal.",
+    "unrelatedProject": "Remains unchanged unless it references the changed shared fact."
+  }
+}

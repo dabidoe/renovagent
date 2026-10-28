@@ -1,0 +1,289 @@
+{
+  "kind": "property-research",
+  "address": "1400 JOHN F KENNEDY BLVD, Philadelphia PA",
+  "jobId": "project:ea60488c-22af-48ae-a7d4-e79a8e05b483:property:fact:26c8bae6-1427-4c08-b657-4e65474f268a:1",
+  "method": "muse",
+  "verification": "unreviewed",
+  "sources": [
+    {
+      "id": "s1",
+      "title": "Property assessments | Office of Property Assessment | City of Philadelphia",
+      "url": "https://www.phila.gov/departments/office-of-property-assessment/property-assessments/",
+      "retrievedAt": "2026-10-27T12:00:00Z"
+    },
+    {
+      "id": "s2",
+      "title": "Historic preservation and climate action | Office of Sustainability | City of Philadelphia",
+      "url": "https://www.phila.gov/2025-02-05-historic-preservation-and-climate-action/",
+      "retrievedAt": "2026-10-27T12:00:00Z"
+    },
+    {
+      "id": "s3",
+      "title": "Philadelphia City Hall - Philadelphia Architects and Buildings",
+      "url": "https://www.philadelphiabuildings.org/pab/app/pj_display.cfm?RecordId=911AA16B-2513-454F-BBB56232DCC31B08",
+      "retrievedAt": "2026-10-27T12:00:00Z"
+    },
+    {
+      "id": "s4",
+      "title": "Philly's City Hall: Jaw-Dropping Views, Hidden History | Visit Philadelphia",
+      "url": "https://www.visitphilly.com/things-to-do/attractions/city-hall/",
+      "retrievedAt": "2026-10-27T12:00:00Z"
+    },
+    {
+      "id": "s5",
+      "title": "Atlas property page for 1400 JOHN F KENNEDY BLVD | phila.gov",
+      "url": "https://atlas.phila.gov/1400%20JOHN%20F%20KENNEDY%20BLVD/property",
+      "retrievedAt": "2026-10-27T12:00:00Z"
+    },
+    {
+      "id": "s6",
+      "title": "Map Measure Open House: Learn about a new public app called Atlas | City of Philadelphia",
+      "url": "https://www.phila.gov/2017-11-10-map-measure-open-house-learn-about-a-new-public-app-called-atlas/",
+      "retrievedAt": "2026-10-27T12:00:00Z"
+    },
+    {
+      "id": "s7",
+      "title": "HABS Philadelphia City Hall data pages (PA-1054) | Library of Congress",
+      "url": "https://tile.loc.gov/storage-services/master/pnp/habshaer/pa/pa1000/pa1054/data/pa1054data.pdf",
+      "retrievedAt": "2026-10-27T12:00:00Z"
+    },
+    {
+      "id": "s8",
+      "title": "Philadelphia City Hall National Register / NHL nomination 76001666, 12/08/1976 | National Archives Catalog",
+      "url": "https://catalog.archives.gov/medialz/electronic-records/rg-079/NPS_PA/76001666_NHL.pdf",
+      "retrievedAt": "2026-10-27T12:00:00Z"
+    },
+    {
+      "id": "s9",
+      "title": "1400 John F Kennedy Blvd, Philadelphia, PA 19107 - Property Record | LoopNet (secondary aggregator)",
+      "url": "https://www.loopnet.ca/property/1400-john-f-kennedy-blvd-philadelphia-pa-19107/42101-782273400/",
+      "retrievedAt": "2026-10-27T12:00:00Z"
+    },
+    {
+      "id": "s10",
+      "title": "Philadelphia Zoning Code - CMX-5 Center City Core Commercial Mixed-Use District definition | AmLegal Code Library",
+      "url": "https://codelibrary.amlegal.com/codes/philadelphia/latest/philadelphia_pa/0-0-0-289458",
+      "retrievedAt": "2026-10-27T12:00:00Z"
+    },
+    {
+      "id": "s11",
+      "title": "City of Philadelphia datasets (L&I permits, violations) | OpenDataPhilly",
+      "url": "https://opendataphilly.org/organizations/city-of-philadelphia/",
+      "retrievedAt": "2026-10-27T12:00:00Z"
+    }
+  ],
+  "findings": [
+    {
+      "label": "Building identity",
+      "value": "Philadelphia City Hall, also known as Public Buildings; building type listed as city hall, courthouse",
+      "sourceId": "s3",
+      "limit": "Address form in PAB is 1400 JOHN F KENNEDY BLV; matches requested address without ZIP."
+    },
+    {
+      "label": "Current municipal use",
+      "value": "Seat of Philadelphia municipal government / city hall and courthouse functions",
+      "sourceId": "s3",
+      "limit": "Use described in general project record; room-level occupancy not verified."
+    },
+    {
+      "label": "Property-specific assessor record route",
+      "value": "Atlas property URL for 1400 JOHN F KENNEDY BLVD exists at atlas.phila.gov, but assessment values were not readable from the fetched page",
+      "sourceId": "s5",
+      "limit": "Atlas web app returned a blank JavaScript shell when fetched; no parcel table was retrieved in this pass."
+    },
+    {
+      "label": "What Atlas is for",
+      "value": "City of Philadelphia Atlas can be searched by address, tax account, or deed registry number for deeds, permits, zoning and other property records",
+      "sourceId": "s6",
+      "limit": "2017 City explainer; confirms system purpose, not this parcel's values."
+    },
+    {
+      "label": "OPA assessment method (general)",
+      "value": "Office of Property Assessment determines value of all real property in Philadelphia; commercial value may use sales, operating costs, income, or land and construction cost",
+      "sourceId": "s1",
+      "limit": "General OPA methodology only; not this parcel's assessed value. No owner or mailing address included."
+    },
+    {
+      "label": "Parcel / APN (secondary aggregator)",
+      "value": "APN/Parcel ID 782273400; subdivision name Philadelphia City Hall; legal description fragment SEC 15TH-J F KENNEDY BLVD",
+      "sourceId": "s9",
+      "limit": "Secondary aggregator, not a primary OPA extract; must be confirmed in Atlas/OPA before planning reliance."
+    },
+    {
+      "label": "Lot size (secondary aggregator)",
+      "value": "5.31 AC lot size",
+      "sourceId": "s9",
+      "limit": "Measures land lot as reported by aggregator, tax year 2022 / assessed year 2024 in snippet; not a surveyed dimension and not building floor area."
+    },
+    {
+      "label": "Total size (secondary aggregator)",
+      "value": "891,135 SF total size",
+      "sourceId": "s9",
+      "limit": "Aggregator total size; definition of measurement (gross building area vs other) not stated in snippet. Disagrees in scale with lot acreage conversion, so do not conflate lot and building area."
+    },
+    {
+      "label": "Exterior building dimensions (HABS)",
+      "value": "Measures 486 feet (19 bays) by 470 feet",
+      "sourceId": "s7",
+      "limit": "Historic survey measurement of the building form, 486 ft by 470 ft exterior plan; not lot dimensions and not room sizes."
+    },
+    {
+      "label": "Height",
+      "value": "548 foot tower; world's tallest masonry-bearing building claim in HABS description",
+      "sourceId": "s7",
+      "limit": "Tower height above street; Visit Philadelphia describes observation deck 548 feet above street level just below the statue. Do not treat as main roof height."
+    },
+    {
+      "label": "Stories (primary historic sources)",
+      "value": "Rises seven stories high; seven floors with unusually wide corridor around each floor in NPS nomination description",
+      "sourceId": "s7",
+      "limit": "Seven floors around a courtyard in HABS/NPS description; tower and partial levels are separate. No room sizes inferred."
+    },
+    {
+      "label": "Stories disagreement",
+      "value": "Project record confirms built/extant city hall but does not resolve the 7-story vs 9-story secondary description in retrieved text",
+      "sourceId": "s3",
+      "limit": "Secondary source calls it nine-story; primary historic survey says seven stories plus tower/partial levels. Preserve disagreement and verify floor count from building records before design."
+    },
+    {
+      "label": "Year built / completion",
+      "value": "Completed 1901; Second Empire style (City of Philadelphia, 2025-02-05)",
+      "sourceId": "s2",
+      "limit": "Completion date is not start of occupation; earlier secondary reporting noted occupation began 1877, not verified from a primary source in this pass."
+    },
+    {
+      "label": "Construction period",
+      "value": "Constructed 1871-1901 in nomination summaries linked from the project record",
+      "sourceId": "s3",
+      "limit": "Historic range; exact year-built field in OPA was not retrieved, so 1901 is completion, not a confirmed assessor year-built value."
+    },
+    {
+      "label": "Architectural style",
+      "value": "Second Empire style",
+      "sourceId": "s2",
+      "limit": "Style label only; no condition assessment."
+    },
+    {
+      "label": "Historic designation - National Register",
+      "value": "National Register 76001666, 12/8/1976",
+      "sourceId": "s3",
+      "limit": "Registration date and number from project record; nomination PDF is the primary nomination source."
+    },
+    {
+      "label": "Historic designation - Landmark / local",
+      "value": "National Historic Landmark and Philadelphia Register of Historic Places listed in project record; HABS PA-1530",
+      "sourceId": "s3",
+      "limit": "Listing in project record; specific review triggers and approvals were not retrieved and no compliance claim is made."
+    },
+    {
+      "label": "Zoning - property-specific",
+      "value": "Not verified for this parcel in this pass",
+      "sourceId": "s5",
+      "limit": "Property-specific zoning was not retrieved because Atlas returned no readable data; do not assume a district from neighboring Center City parcels."
+    },
+    {
+      "label": "Zoning - aggregator value",
+      "value": "LoopNet lists Zoning as X and land use as Governmental public use general",
+      "sourceId": "s9",
+      "limit": "Single-letter aggregator value X is unexplained and conflicts with the need for an official district; treat as unresolved, not as a zoning district."
+    },
+    {
+      "label": "Zoning - general district definition nearby",
+      "value": "CMX-5 is Center City Core Commercial Mixed-Use, primarily intended to accommodate mixed-use development in the central core area of Center City",
+      "sourceId": "s10",
+      "limit": "General code definition only; CMX-5 was found for other Center City properties in search, not confirmed for this parcel."
+    },
+    {
+      "label": "Permits and violations - official route",
+      "value": "Permits and zoning records for an address are maintained through Atlas; L&I permits/violations datasets are also published via OpenDataPhilly",
+      "sourceId": "s6",
+      "limit": "No property-specific permit or violation list was retrieved; counts from people-search aggregators were excluded as unreliable and privacy-adjacent."
+    },
+    {
+      "label": "Permits and violations - status for this address",
+      "value": "Unavailable in this pass - no permit numbers, dates, statuses, or violation cases are claimed",
+      "sourceId": "s11",
+      "limit": "Gap is explicit: a human or browser session must open Atlas for this address and export permits/violations before any work planning."
+    },
+    {
+      "label": "Planning constraint - historic building",
+      "value": "Building is a designated historic resource at Penn Square / Broad and Market crossing; alterations would need historic-review routing to be confirmed by the project team",
+      "sourceId": "s8",
+      "limit": "Constraint is the presence of landmark/local registration; exact approval path was not researched and no code-compliance claim is made."
+    },
+    {
+      "label": "Location context",
+      "value": "Located at the crossing of Broad and Market Streets, Penn Square, Center City",
+      "sourceId": "s8",
+      "limit": "Intersection context from nomination; coordinates from secondary listings were not relied on."
+    },
+    {
+      "label": "Flood zone (secondary aggregator)",
+      "value": "Flood Zone panel listed as 42045C0150F",
+      "sourceId": "s9",
+      "limit": "Panel number only from aggregator; no FEMA flood determination was opened and no flood-risk claim is made."
+    }
+  ],
+  "images": [
+    {
+      "id": "img1",
+      "title": "Specific discovered photo gallery page (not a map/search lead) - Philadelphia Architects and Buildings image gallery for Philadelphia City Hall, 237 images referenced on project page",
+      "sourceId": "s3",
+      "pageUrl": "https://www.philadelphiabuildings.org/pab/app/image_gallery.cfm?RecordId=911AA16B-2513-454F-BBB56232DCC31B08",
+      "previewUrl": null,
+      "previewPermission": "unknown",
+      "capturedAt": ""
+    },
+    {
+      "id": "img2",
+      "title": "Specific discovered photo page lead - Visit Philadelphia City Hall attraction page with building and tower photography",
+      "sourceId": "s4",
+      "pageUrl": "https://www.visitphilly.com/things-to-do/attractions/city-hall/",
+      "previewUrl": null,
+      "previewPermission": "unknown",
+      "capturedAt": ""
+    },
+    {
+      "id": "img3",
+      "title": "Specific discovered photo page lead - City of Philadelphia article page showing City Hall (completed 1901); page date used, photo capture date unknown",
+      "sourceId": "s2",
+      "pageUrl": "https://www.phila.gov/2025-02-05-historic-preservation-and-climate-action/",
+      "previewUrl": null,
+      "previewPermission": "unknown",
+      "capturedAt": "2025-02-05"
+    },
+    {
+      "id": "img4",
+      "title": "Map viewer lead (not a specific photo) - Google Maps location link for 1400 JOHN F KENNEDY BLV from PAB project page; use to find Maps/Earth/Street View manually, no imagery scraped",
+      "sourceId": "s3",
+      "pageUrl": "https://maps.google.com/?q=1400%20JOHN%20F%20KENNEDY%20BLV%2C%20Philadelphia%2C%20PA",
+      "previewUrl": null,
+      "previewPermission": "unknown",
+      "capturedAt": ""
+    },
+    {
+      "id": "img5",
+      "title": "Map viewer lead (not a specific photo) - Philadelphia Atlas property map for the address; imagery/parcel view must be opened in a browser, none captured here",
+      "sourceId": "s5",
+      "pageUrl": "https://atlas.phila.gov/1400%20JOHN%20F%20KENNEDY%20BLVD/property",
+      "previewUrl": null,
+      "previewPermission": "unknown",
+      "capturedAt": ""
+    },
+    {
+      "id": "img6",
+      "title": "Specific discovered historic documentation page (data PDF, not a listing photo) - HABS PA-1054 / PA-1530 Philadelphia City Hall documentation via Library of Congress",
+      "sourceId": "s7",
+      "pageUrl": "https://tile.loc.gov/storage-services/master/pnp/habshaer/pa/pa1000/pa1054/data/pa1054data.pdf",
+      "previewUrl": null,
+      "previewPermission": "unknown",
+      "capturedAt": ""
+    }
+  ],
+  "nextQuestions": [
+    "Property-specific OPA/Atlas values (parcel confirmation for 782273400, lot dimensions and what they measure, assessor year-built, stories, zoning district, permits and violations) could not be read because Atlas returned a blank JavaScript shell - can a browser session open Atlas for this address and export those tabs?",
+    "This is a public municipal landmark, not a residence, and the goal states public-building workflow test only - what is the exact test scope (exterior, courtyard, tower, or a named interior space) and who is the authorizing building contact? No work is approved by this research.",
+    "Are former listing pages required? None were found for this government building (LoopNet is a property-record aggregator, not a former listing) - should listing research be marked not applicable, or is there a specific former listing URL to check?",
+    "Do you want a follow-up pass limited to primary exports: OPA via Atlas, L&I permits/violations via OpenDataPhilly, and the NPS/HABS nomination, to resolve the 7 vs 9 stories and CMX-5 vs aggregator X zoning disagreements before any plan handoff?"
+  ]
+}

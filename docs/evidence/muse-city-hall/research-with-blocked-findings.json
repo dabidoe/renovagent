@@ -1,0 +1,232 @@
+{
+  "kind": "property-research",
+  "address": "1400 JOHN F KENNEDY BLVD, Philadelphia PA",
+  "jobId": "project:ea60488c-22af-48ae-a7d4-e79a8e05b483:property:fact:26c8bae6-1427-4c08-b657-4e65474f268a:1",
+  "method": "muse",
+  "verification": "unreviewed",
+  "sources": [
+    {
+      "id": "phila-opa",
+      "title": "Philadelphia Office of Property Assessment \u00b7 public record (supplied lead, preserved)",
+      "url": "https://phl.carto.com/api/v2/sql?q=SELECT+parcel_number%2Clocation%2Ctotal_livable_area%2Ctotal_area%2Cfrontage%2Cdepth%2Cyear_built%2Cnumber_stories%2Czoning+FROM+opa_properties_public+WHERE+UPPER%28location%29+%3D+%271400+JOHN+F+KENNEDY+BLVD%27+LIMIT+8",
+      "retrievedAt": "2026-10-27T20:49:46.723Z"
+    },
+    {
+      "id": "phila-li-permits",
+      "title": "Philadelphia L&I permits \u00b7 CARTO li_permits query for exact address",
+      "url": "https://phl.carto.com/api/v2/sql?q=SELECT+permitnumber%2Cpermitdescription%2Ctypeofwork%2Cdescriptionofwork%2Cpermitissuedate%2Cstatus+FROM+li_permits+WHERE+UPPER%28address%29+%3D+%271400+JOHN+F+KENNEDY+BLVD%27+ORDER+BY+permitissuedate+DESC+LIMIT+10",
+      "retrievedAt": "2026-10-27T21:00:00.000Z"
+    },
+    {
+      "id": "asce-cityhall",
+      "title": "ASCE/Invention & Technology landmark summary \u00b7 Philadelphia City Hall (cites NPS nomination)",
+      "url": "https://www.inventionandtech.com/landmark_landing/80337",
+      "retrievedAt": "2026-10-27T21:00:00.000Z"
+    },
+    {
+      "id": "nps-nhl",
+      "title": "National Park Service / National Archives \u00b7 Philadelphia City Hall NHL nomination PDF (search-discovered)",
+      "url": "https://catalog.archives.gov/medialz/electronic-records/rg-079/NPS_PA/76001666_NHL.pdf",
+      "retrievedAt": "2026-10-27T21:00:00.000Z"
+    },
+    {
+      "id": "loc-habs-cityhall",
+      "title": "Library of Congress HABS data pages \u00b7 Philadelphia City Hall (search-discovered PDF)",
+      "url": "https://tile.loc.gov/storage-services/master/pnp/habshaer/pa/pa1000/pa1054/data/pa1054data.pdf",
+      "retrievedAt": "2026-10-27T21:00:00.000Z"
+    },
+    {
+      "id": "phila-records-cityhall",
+      "title": "City of Philadelphia \u00b7 Getting City records (lists City Hall Room 156 address)",
+      "url": "https://www.phila.gov/2025-07-24-getting-city-records-a-simple-guide-to-subpoenas/",
+      "retrievedAt": "2026-10-27T21:00:00.000Z"
+    },
+    {
+      "id": "phila-historical-commission",
+      "title": "City of Philadelphia \u00b7 Philadelphia Historical Commission",
+      "url": "https://www.phila.gov/departments/philadelphia-historical-commission/",
+      "retrievedAt": "2026-10-27T21:00:00.000Z"
+    },
+    {
+      "id": "phila-zoning-code",
+      "title": "Philadelphia Code via American Legal \u00b7 zoning district definitions including CMX-5",
+      "url": "https://codelibrary.amlegal.com/codes/philadelphia/latest/philadelphia_pa/0-0-0-289458",
+      "retrievedAt": "2026-10-27T21:00:00.000Z"
+    },
+    {
+      "id": "wikimedia-commons-cityhall",
+      "title": "Wikimedia Commons \u00b7 Philadelphia City Hall category (search-discovered image lead)",
+      "url": "https://commons.wikimedia.org/wiki/Philadelphia_City_Hall",
+      "retrievedAt": "2026-10-27T21:00:00.000Z"
+    },
+    {
+      "id": "phillyyimby-cityhall",
+      "title": "Philadelphia YIMBY \u00b7 Looking at Philadelphia City Hall in Center City (search-discovered photo article)",
+      "url": "https://phillyyimby.com/2021/05/looking-at-philadelphia-city-hall-in-center-city.html",
+      "retrievedAt": "2026-10-27T21:00:00.000Z"
+    }
+  ],
+  "findings": [
+    {
+      "label": "Assessment parcel",
+      "value": "782273400",
+      "sourceId": "phila-opa",
+      "limit": "Assessment record; may be historic, estimated or different from current conditions. Supplied record preserved; do not treat as independently re-retrieved by this run."
+    },
+    {
+      "label": "City record address",
+      "value": "1400 JOHN F KENNEDY BLVD",
+      "sourceId": "phila-opa",
+      "limit": "Assessment record; may be historic, estimated or different from current conditions."
+    },
+    {
+      "label": "Recorded living area",
+      "value": "891135",
+      "sourceId": "phila-opa",
+      "limit": "Raw OPA total_livable_area; confirm dataset units. Lot/assessment data is not a measured room or building footprint. Disagreement: ASCE/NPS summary reports over 1 million sq ft originally; different definitions or dates may explain the difference."
+    },
+    {
+      "label": "Recorded lot area",
+      "value": "330443",
+      "sourceId": "phila-opa",
+      "limit": "Raw OPA total_area; confirm dataset units. Lot/assessment data is not a measured room or building footprint. Disagreement: ASCE summary says building covers 14.26 acres; do not convert or reconcile until OPA units and coverage definition are confirmed."
+    },
+    {
+      "label": "Recorded lot frontage",
+      "value": "524",
+      "sourceId": "phila-opa",
+      "limit": "Raw OPA frontage; confirm dataset units. This is a parcel/frontage record, not a measured building width. Compare building dimension finding separately."
+    },
+    {
+      "label": "Recorded lot depth",
+      "value": "442",
+      "sourceId": "phila-opa",
+      "limit": "Raw OPA depth; confirm dataset units. This is a parcel/depth record, not a measured building depth. Compare building dimension finding separately."
+    },
+    {
+      "label": "Recorded year built \u2014 disagreement flagged",
+      "value": "2015",
+      "sourceId": "phila-opa",
+      "limit": "Assessment record; may be historic, estimated or different from current conditions. Explicit disagreement: NPS/ASCE/HABS sources report construction 1871/1872\u20131901 and completion in 1901, not 2015. Treat 2015 as an unverified OPA field requiring assessor confirmation, not as the historic construction date."
+    },
+    {
+      "label": "Recorded zoning",
+      "value": "CMX5",
+      "sourceId": "phila-opa",
+      "limit": "Assessment record; may be historic, estimated or different from current conditions. Confirm current zoning and overlays in Philadelphia Atlas before any planning."
+    },
+    {
+      "label": "OPA stories field",
+      "value": "null (not reported)",
+      "sourceId": "phila-opa",
+      "limit": "Null in the returned OPA record; absence is not evidence of story count. Use the separate HABS/ASCE story finding."
+    },
+    {
+      "label": "Building identity and use",
+      "value": "Philadelphia City Hall \u2014 municipal government building at the Broad and Market / Penn Square location",
+      "sourceId": "asce-cityhall",
+      "limit": "Seat-of-government use is a public-building reference for this workflow test only; no residential room inference is made."
+    },
+    {
+      "label": "Historic construction period",
+      "value": "Construction began 1871/1872 and was completed in 1901",
+      "sourceId": "asce-cityhall",
+      "limit": "Secondary ASCE landmark summary citing the NPS nomination dated August 11, 1976; construction start is reported as 1871 in some sources and 1872 in the ASCE page opened here."
+    },
+    {
+      "label": "Building dimensions reported by HABS/ASCE",
+      "value": "486 feet by 470 feet",
+      "sourceId": "asce-cityhall",
+      "limit": "Reported building measurement, not lot frontage/depth and not a current measured survey. Units are feet as stated by the source."
+    },
+    {
+      "label": "Stories reported by HABS/ASCE",
+      "value": "7 stories",
+      "sourceId": "asce-cityhall",
+      "limit": "Historic/landmark summary; does not confirm current interior floor configuration."
+    },
+    {
+      "label": "Tower height reported by NPS/ASCE",
+      "value": "548 feet above ground including tower and statue",
+      "sourceId": "asce-cityhall",
+      "limit": "Historic landmark summary including tower and William Penn statue; not a zoning height determination."
+    },
+    {
+      "label": "Historic rooms and area reported by ASCE",
+      "value": "Originally contained 634 rooms with over 1 million square feet of space; building covers 14.26 acres",
+      "sourceId": "asce-cityhall",
+      "limit": "Original/historic description; conflicts in scope with raw OPA total_livable_area and must not be averaged with it."
+    },
+    {
+      "label": "National Historic Landmark record lead",
+      "value": "Philadelphia City Hall NHL/NRHP nomination file 76001666, dated 12/08/1976 in the Archives file title",
+      "sourceId": "nps-nhl",
+      "limit": "NPS nomination PDF discovered in search results; large PDF was not text-fetched in this run, so details beyond the file identification need direct PDF review."
+    },
+    {
+      "label": "Philadelphia Historical Commission role",
+      "value": "Commission identifies/designates historic landmarks, maintains the Philadelphia Register of Historic Places, and reviews work to historic properties",
+      "sourceId": "phila-historical-commission",
+      "limit": "General commission role, not a property-specific designation confirmation in this run. Confirm this parcel on the Philadelphia Register before assuming review triggers."
+    },
+    {
+      "label": "CMX-5 zoning district meaning",
+      "value": "CMX-5 = Center City Core Commercial Mixed-Use",
+      "sourceId": "phila-zoning-code",
+      "limit": "Code-library text opened was truncated; this is the district name from search/code text, not a use-permission or compliance determination."
+    },
+    {
+      "label": "City Hall address in a current City of Philadelphia page",
+      "value": "City Hall, Room 156, 1400 John F. Kennedy Boulevard, Philadelphia, PA 19107",
+      "sourceId": "phila-records-cityhall",
+      "limit": "Current phila.gov contact/subpoena guidance page opened 2025-07-24; confirms municipal use of the address, not parcel dimensions."
+    },
+    {
+      "label": "L&I permits count at exact address",
+      "value": "202 permit rows for UPPER(address) = '1400 JOHN F KENNEDY BLVD'",
+      "sourceId": "phila-li-permits",
+      "limit": "CARTO li_permits query result at retrieval; dataset may lag eCLIPSE and the same street address includes Dilworth Park/City Hall operations. Owner names and contractor personal details were excluded.",
+      "blockedReason": "Source audit: the cited SELECT query has LIMIT 10 and returns total_rows 10, not a COUNT result. It does not substantiate the claimed total of 202. Obtain the exact count-query result before use."
+    },
+    {
+      "label": "Most recent permits returned by L&I dataset",
+      "value": "2019-11-12 operations permit 26673 (Dilworth Park tent) COMPLETED; 2019-10-10 electrical permit 1018075 ACTIVE in dataset",
+      "sourceId": "phila-li-permits",
+      "limit": "Dataset snapshot returned no rows newer than 2019 in the 10-row descending sample; do not conclude no later permits exist in eCLIPSE."
+    },
+    {
+      "label": "Earlier building-system permits at exact address",
+      "value": "2019 plumbing permit 950181 COMPLETED; 2013 fire-suppression permit 466457 EXPIRED in dataset; 2013 electrical permit 471841 ACTIVE in dataset",
+      "sourceId": "phila-li-permits",
+      "limit": "Examples from the first CARTO rows; statuses are dataset statuses and may be stale. No permit approval is claimed for any proposed work.",
+      "blockedReason": "Source audit: permits 950181, 466457 and 471841 are absent from the cited ten-row result. The current source URL cannot substantiate these examples or statuses. Obtain a query returning these specific rows."
+    }
+  ],
+  "images": [
+    {
+      "id": "commons-cityhall-category-lead",
+      "title": "Map/category lead \u2014 Wikimedia Commons Philadelphia City Hall category page (not a single-photo page; verify each file license before reuse)",
+      "sourceId": "wikimedia-commons-cityhall",
+      "pageUrl": "https://commons.wikimedia.org/wiki/Philadelphia_City_Hall",
+      "previewUrl": null,
+      "previewPermission": "unknown",
+      "capturedAt": ""
+    },
+    {
+      "id": "yimby-cityhall-article-photos-lead",
+      "title": "Specific article photo lead \u2014 Philadelphia YIMBY, Looking at Philadelphia City Hall (publication page; photo capture dates not established here)",
+      "sourceId": "phillyyimby-cityhall",
+      "pageUrl": "https://phillyyimby.com/2021/05/looking-at-philadelphia-city-hall-in-center-city.html",
+      "previewUrl": null,
+      "previewPermission": "unknown",
+      "capturedAt": ""
+    }
+  ],
+  "nextQuestions": [
+    "This is Philadelphia City Hall, a public municipal building \u2014 which specific public-building area, system, or workflow handoff is being tested, and what is the authorized scope?",
+    "L&I violations could not be verified in this run: the li_violations CARTO query returned HTTP 400, so should the handoff use eCLIPSE/Atlas directly to confirm open violations before planning?",
+    "Can you confirm the OPA units and explain the flagged disagreements \u2014 OPA year_built 2015 versus historic completion 1901, and OPA raw areas versus ASCE over-1-million-sq-ft/14.26-acre coverage?",
+    "No Google Maps/Earth/Street View or former listing page was opened as a verified property-specific lead in this run; do you want map-viewer leads added as non-evidence references only, with previewUrl still null?",
+    "Can you provide current interior/exterior photos and any measured drawings for the exact area in scope? Do not infer room sizes or concealed conditions from parcel or landmark summaries."
+  ]
+}

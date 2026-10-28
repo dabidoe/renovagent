@@ -1,0 +1,1 @@
+{"rows":[],"time":0.002,"fields":{"permitnumber":{"type":"string","pgtype":"varchar"},"permittype":{"type":"string","pgtype":"varchar"},"status":{"type":"string","pgtype":"varchar"},"permitissuedate":{"type":"date","pgtype":"timestamptz"},"address":{"type":"string","pgtype":"varchar"},"approvedscopeofwork":{"type":"string","pgtype":"varchar"}},"total_rows":0}

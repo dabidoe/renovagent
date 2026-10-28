@@ -1,0 +1,16 @@
+{
+  "prompt": "Inspect the attached image pixels; no listing text or room labels supplied.",
+  "runId": "01a17f49-f0d1-73d1-bb2f-5f272642cd47",
+  "result": {
+    "likely_room_or_view": "Kitchen viewed from an adjoining open floor area",
+    "visible_features": [
+      "White cabinets and dark countertops along the far wall, with a sink beneath two windows",
+      "A central island/peninsula with a latticed panel on its side",
+      "Floral wallpaper, wood-look flooring, ceiling fan, and track lighting"
+    ],
+    "home_improvement_planning_questions": [
+      "Should the island/peninsula configuration be retained, modified, or removed in a future layout?",
+      "Would repainting or replacing the wallpaper and updating the visible lighting better suit the intended style and use of the space?"
+    ]
+  }
+}

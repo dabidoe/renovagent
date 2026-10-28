@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Slice 1 · Foundation verification</title>
+    <style>
+      body {
+        font:
+          14px/1.65 system-ui,
+          sans-serif;
+        background: #f7f7f2;
+        color: #30382a;
+        margin: 0;
+        padding: 40px;
+      }
+      main {
+        max-width: 900px;
+        margin: auto;
+      }
+      h1 {
+        font:
+          40px Georgia,
+          serif;
+        margin-bottom: 10px;
+      }
+      .note {
+        color: #747e69;
+      }
+      button,
+      a {
+        font: inherit;
+      }
+      button {
+        padding: 10px 15px;
+        border-radius: 6px;
+        background: #455ac0;
+        color: white;
+        border: 0;
+        cursor: pointer;
+        margin: 6px 8px 6px 0;
+      }
+      button:disabled {
+        opacity: 0.5;
+        cursor: default;
+      }
+      a {
+        color: #455ac0;
+      }
+      pre {
+        background: white;
+        border: 1px solid #dfe4d6;
+        border-radius: 8px;
+        padding: 20px;
+        overflow: auto;
+        max-height: 400px;
+        font-size: 12px;
+      }
+      li {
+        padding: 5px 0;
+      }
+      section {
+        margin-top: 25px;
+        padding-top: 15px;
+        border-top: 1px solid #dfe4d6;
+      }
+      .pass {
+        color: #456638;
+      }
+      .fail {
+        color: #9a362e;
+      }
+      textarea {
+        width: 100%;
+        min-height: 90px;
+      }
+      #import-summary {
+        white-space: pre-wrap;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <a href="/">← Current product preview</a>
+      <p class="note">DEVELOPER CHECK · SEPARATE LOCAL DATABASE · NO BACKEND</p>
+      <h1>Durable project foundation</h1>
+      <p>
+        This checks the new repository alongside the existing preview. It does not change the
+        preview’s localStorage project.
+      </p>
+      <p id="restore-status" role="status">Opening IndexedDB…</p>
+      <button id="run" disabled>Run browser verification</button
+      ><button id="reload">Reload and verify persistence</button>
+      <ul id="checks" aria-live="polite"></ul>
+      <section>
+        <h2>Stored workspace</h2>
+        <details>
+          <summary>Inspect full snapshot and audit log</summary>
+          <pre id="snapshot">Loading…</pre>
+        </details>
+      </section>
+      <section>
+        <h2>Legacy import preview</h2>
+        <p class="note">
+          Inspect the existing opening-v1 snapshot before explicitly importing it as a separate
+          project. The source is retained.
+        </p>
+        <button id="preview-import">Preview existing project</button>
+        <p id="import-summary"></p>
+        <button id="confirm-import" hidden>Import a separate project</button>
+      </section>
+    </main>
+    <script type="module" src="/apps/web/src/foundation-check.ts"></script>
+  </body>
+</html>

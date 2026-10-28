@@ -1,0 +1,1515 @@
+{
+  "kind": "property-research",
+  "address": "7149 Bingham Street, Philadelphia PA 19111",
+  "jobId": "project:0a19d437-e8dd-43c1-9121-f055373ca721:property:fact:10aea412-d8fd-45d9-a4be-5099b6982355:1",
+  "method": "muse",
+  "verification": "unreviewed",
+  "sources": [
+    {
+      "id": "phila-opa",
+      "title": "Philadelphia Office of Property Assessment · public record (OPA via phl.carto.com SQL API, re-queried live this run)",
+      "url": "https://phl.carto.com/api/v2/sql?q=SELECT+parcel_number%2Clocation%2Ctotal_livable_area%2Ctotal_area%2Cfrontage%2Cdepth%2Cyear_built%2Cnumber_stories%2Czoning+FROM+opa_properties_public+WHERE+UPPER%28location%29+%3D+%277149+BINGHAM+ST%27+LIMIT+8",
+      "retrievedAt": "2026-10-27T21:16:01.037Z"
+    },
+    {
+      "id": "atproperties-listing",
+      "title": "RLAH @properties listing PAPH2657666 — 7149 Bingham Street (page opened; body truncated by fetcher, structured facts corroborated via Compass syndication below)",
+      "url": "https://www.atproperties.com/PAPH2657666/7149-bingham-street-philadelphia-pennsylvania-19111-brightmls",
+      "retrievedAt": "2026-10-27T21:20:00.000Z"
+    },
+    {
+      "id": "compass-listing",
+      "title": "Compass syndication of MLS PAPH2657666 — 7149 Bingham St (35-photo gallery; Photos 1–7 image URLs observed in page)",
+      "url": "https://www.compass.com/homedetails/7149-Bingham-St-Philadelphia-PA-19111/1OGO6J_pid/",
+      "retrievedAt": "2026-10-27T21:22:00.000Z"
+    },
+    {
+      "id": "phila-permits-query",
+      "title": "Philadelphia L&I permits (phl.carto.com 'permits' table) — exact-address query returning 0 rows",
+      "url": "https://phl.carto.com/api/v2/sql?q=SELECT+permitnumber%2Cpermittype%2Cstatus%2Cpermitissuedate%2Caddress%2Capprovedscopeofwork+FROM+permits+WHERE+address+%3D+%277149+BINGHAM+ST%27+ORDER+BY+permitissuedate+DESC+LIMIT+20",
+      "retrievedAt": "2026-10-27T21:24:00.000Z"
+    },
+    {
+      "id": "phila-atlas",
+      "title": "Philadelphia Atlas property page (opened; no readable property content returned by fetcher — lead only, no facts taken)",
+      "url": "https://atlas.phila.gov/7149%20BINGHAM%20ST",
+      "retrievedAt": "2026-10-27T21:23:00.000Z"
+    },
+    {
+      "id": "listing-gallery-audit",
+      "title": "Source audit · @properties native listing gallery, MLS PAPH2657666 · photos 1, 11, 18 and 25 visually inspected",
+      "url": "https://www.atproperties.com/PAPH2657666/7149-bingham-street-philadelphia-pennsylvania-19111-brightmls",
+      "retrievedAt": "2026-10-27T21:23:12.825040Z"
+    }
+  ],
+  "findings": [
+    {
+      "label": "Existing bath count relevant to powder-room goal",
+      "value": "1 bathroom (structured fields); no existing powder room stated",
+      "sourceId": "compass-listing",
+      "limit": "Listing structured count only. No plumbing, waste/vent, or water-supply location inferred; powder-room feasibility is undetermined until services are exposed/located by qualified inspection."
+    },
+    {
+      "label": "Listing room sequence (description text only)",
+      "value": "Enclosed sun parlor with French doors opening to large living room, then formal dining area, then oversized kitchen described as having plenty of cabinetry and space for table and counter seating",
+      "sourceId": "compass-listing",
+      "limit": "Listing description wording only; no dimensions, no concealed-services inference. Sequence must be confirmed by walkthrough sketch before kitchen/powder-room planning."
+    },
+    {
+      "label": "Listing structured living area (Compass/MLS structured fields)",
+      "value": "1,512 sqft (3 beds / 1 bath header)",
+      "sourceId": "compass-listing",
+      "limit": "Listing structured field, not a measurement. CONFLICT: conflicts with listing description 'over 1,600 square feet' on same pages; both preserved, neither verified."
+    },
+    {
+      "label": "Listing description living area claim",
+      "value": "over 1,600 square feet of above-grade living space",
+      "sourceId": "compass-listing",
+      "limit": "Marketing description text, not a measurement. CONFLICT with 1,512 structured/OPA figure; requires field measurement to resolve. No room dimensions inferred."
+    },
+    {
+      "label": "Listing floor count — conflicts with OPA field",
+      "value": "2 levels/stories in Compass structured listing; OPA number_stories is 1",
+      "sourceId": "compass-listing",
+      "limit": "Source-audit addition: the listing explicitly reports 2, rather than merely implying upper rooms. No current floor survey or interpretation of the assessor field is established; resolve before design."
+    },
+    {
+      "label": "Recorded year built (OPA year_built)",
+      "value": "1925",
+      "sourceId": "phila-opa",
+      "limit": "Assessment record; may be historic, estimated or different from current conditions. Listing also states 1925; agreement is restatement risk, not independent verification."
+    },
+    {
+      "label": "Recorded zoning (OPA zoning)",
+      "value": "RSA3",
+      "sourceId": "phila-opa",
+      "limit": "Assessment record; may be historic, estimated or different from current conditions. Code text/limits not retrieved from an HTTPS primary source in this run — see nextQuestions; no compliance conclusion drawn."
+    },
+    {
+      "label": "Recorded living area (OPA total_livable_area, raw value; dataset units to confirm, listed elsewhere as sq ft)",
+      "value": "1512",
+      "sourceId": "phila-opa",
+      "limit": "Raw OPA total_livable_area; confirm dataset units. Lot/assessment data is not a measured room or building footprint. CONFLICT PRESERVED: structured listing fields also state 1,512 sq ft while listing description states over 1,600 sq ft above-grade — do not reconcile without measurement."
+    },
+    {
+      "label": "Assessment parcel (OPA parcel_number)",
+      "value": "532382800",
+      "sourceId": "phila-opa",
+      "limit": "Assessment record; may be historic, estimated or different from current conditions. Supplied UNREVIEWED lead re-queried live at same URL in this run; do not claim supplied record was retrieved by this run beyond this re-query."
+    },
+    {
+      "label": "City record address (OPA location)",
+      "value": "7149 BINGHAM ST",
+      "sourceId": "phila-opa",
+      "limit": "Assessment record; may be historic, estimated or different from current conditions."
+    },
+    {
+      "label": "Recorded lot area (OPA total_area, raw value; dataset units to confirm)",
+      "value": "3163",
+      "sourceId": "phila-opa",
+      "limit": "Raw OPA total_area; confirm dataset units. Lot/assessment data is not a measured room or building footprint. Listing states 0.07 acres / 3,163 sq ft lot, consistent as marketing restatement, not independent survey."
+    },
+    {
+      "label": "Recorded lot frontage (OPA raw value; units unconfirmed)",
+      "value": "25",
+      "sourceId": "phila-opa",
+      "limit": "Raw OPA frontage; confirm dataset units. Assessment dimension, not a survey; verify by survey/deed before any addition or setback planning."
+    },
+    {
+      "label": "Recorded lot depth (OPA raw value; units unconfirmed)",
+      "value": "127",
+      "sourceId": "phila-opa",
+      "limit": "Raw OPA depth; confirm dataset units. Assessment dimension, not a survey; 25 x 127 does not by itself establish buildable area or footprint."
+    },
+    {
+      "label": "Recorded stories (OPA number_stories)",
+      "value": "1",
+      "sourceId": "phila-opa",
+      "limit": "Assessment record; may be historic, estimated or different from current conditions. FLAGGED DISAGREEMENT: OPA records 1 story while listing markets a 3-bedroom twin/townhouse with main + upper rooms implied; do not use either for design until floors are counted on site. Definition difference possible."
+    },
+    {
+      "label": "Listing price and status observed (Compass syndication of MLS PAPH2657666)",
+      "value": "$245,000, Active, 3 beds, 1 bath, Townhouse, 0.07 acres, 1925, $162/sq ft",
+      "sourceId": "compass-listing",
+      "limit": "Point-in-time listing syndication; price/status change without notice and differ across syndication snapshots (other snapshots seen at $259,900/$269,900 under earlier MLS numbers). Not an appraisal or offer."
+    },
+    {
+      "label": "Permits query result for exact address string",
+      "value": "0 rows returned",
+      "sourceId": "phila-permits-query",
+      "limit": "Limited exact-match query only (address = '7149 BINGHAM ST', 20-row cap). Zero rows returned substantiates only that this query returned no rows; it does NOT prove no permits exist under variant addresses/unit strings. No total-count or absent-permit claim made."
+    },
+    {
+      "label": "Violations/inspections status",
+      "value": "Not established — do not treat as clear",
+      "sourceId": "phila-atlas",
+      "limit": "UNRESOLVED in this run. Atlas page fetch returned no readable property content. Must be re-checked in Atlas/L&I Property History before any work planning.",
+      "blockedReason": "Violations table query returned HTTP 400 (column/schema mismatch) in this run; no violations claim made either way."
+    }
+  ],
+  "images": [
+    {
+      "id": "listing-photo-11",
+      "title": "Muse: kitchen · high confidence",
+      "sourceId": "atproperties-listing",
+      "pageUrl": "https://www.atproperties.com/PAPH2657666/7149-bingham-street-philadelphia-pennsylvania-19111-brightmls",
+      "previewUrl": null,
+      "previewPermission": "unknown",
+      "capturedAt": "",
+      "locator": "Native listing photo 11 of 35",
+      "imageUrl": "https://resources.atproperties.com/images/BRIGHTMLS/PA/PH2/657666/6a765126b2d5a/11.jpg",
+      "observations": "A kitchen with floral-patterned wallpaper, a decorative border, white cabinets, dark green countertops, and wood-look plank flooring. A peninsula with a dark green countertop and a perforated or lattice-style front panel separates the work area from the foreground space. A wall-mounted heating unit is mounted low on the left wall, and a window air-conditioning unit is visible high on the right wall.",
+      "planningUse": "Decide whether to keep the kitchen cabinets, dark-green countertops, and peninsula."
+    },
+    {
+      "id": "listing-photo-12",
+      "title": "Muse: kitchen · high confidence",
+      "sourceId": "atproperties-listing",
+      "pageUrl": "https://www.atproperties.com/PAPH2657666/7149-bingham-street-philadelphia-pennsylvania-19111-brightmls",
+      "previewUrl": null,
+      "previewPermission": "unknown",
+      "capturedAt": "",
+      "locator": "Native listing photo 12 of 35",
+      "imageUrl": "https://resources.atproperties.com/images/BRIGHTMLS/PA/PH2/657666/6a765126b2d5a/12.jpg",
+      "observations": "A close kitchen view showing white upper and lower cabinets with dark green countertops and backsplash. A freestanding range with a black cooktop and stainless-steel oven front is positioned beneath a white over-range microwave. A black dishwasher is installed beside the sink run, and a double-bowl sink with a gooseneck-style faucet sits below two windows.",
+      "planningUse": "Decide whether to keep the kitchen cabinets, dark-green countertops, and peninsula."
+    },
+    {
+      "id": "listing-photo-18",
+      "title": "Muse: bathroom · high confidence",
+      "sourceId": "atproperties-listing",
+      "pageUrl": "https://www.atproperties.com/PAPH2657666/7149-bingham-street-philadelphia-pennsylvania-19111-brightmls",
+      "previewUrl": null,
+      "previewPermission": "unknown",
+      "capturedAt": "",
+      "locator": "Native listing photo 18 of 35",
+      "imageUrl": "https://resources.atproperties.com/images/BRIGHTMLS/PA/PH2/657666/6a765126b2d5a/18.jpg",
+      "observations": "Bathroom with a toilet under a tall window, tiled floor, floral lower-wall covering, wall cabinet, and a tub/shower with frosted sliding doors on the right. No sink/vanity is visible in this view; finishes and wallpaper show wear.",
+      "planningUse": "Decide whether bathroom refurbishment is in scope or only the new powder room."
+    },
+    {
+      "id": "listing-photo-19",
+      "title": "Muse: bathroom · high confidence",
+      "sourceId": "atproperties-listing",
+      "pageUrl": "https://www.atproperties.com/PAPH2657666/7149-bingham-street-philadelphia-pennsylvania-19111-brightmls",
+      "previewUrl": null,
+      "previewPermission": "unknown",
+      "capturedAt": "",
+      "locator": "Native listing photo 19 of 35",
+      "imageUrl": "https://resources.atproperties.com/images/BRIGHTMLS/PA/PH2/657666/6a765126b2d5a/19.jpg",
+      "observations": "Bathroom view dominated by a tub/shower with frosted sliding doors in a gold-tone frame, with a toilet and tall window to the left. Floral wall covering and painted walls are visible around the window.",
+      "planningUse": "Decide whether bathroom refurbishment is in scope or only the new powder room."
+    },
+    {
+      "id": "listing-photo-01",
+      "title": "Muse: exterior · high confidence",
+      "sourceId": "atproperties-listing",
+      "pageUrl": "https://www.atproperties.com/PAPH2657666/7149-bingham-street-philadelphia-pennsylvania-19111-brightmls",
+      "previewUrl": null,
+      "previewPermission": "unknown",
+      "capturedAt": "",
+      "locator": "Native listing photo 1 of 35",
+      "imageUrl": "https://resources.atproperties.com/images/BRIGHTMLS/PA/PH2/657666/6a765126b2d5a/1.jpg",
+      "observations": "Exterior front view of a two-story attached or semi-attached house under a clear sky. Ground floor has a stone-veneer-appearing lower facade, multiple large front windows, and two separate stepped entrances visible at left and center-right. Upper floor has siding and brick-appearing areas, multiple double-hung-appearing windows, black shutters, and a dark vertical flue or chimney element.",
+      "planningUse": "Photograph and measure all interior rooms on site, specifically locating any kitchen and any existing toilet/bathing room, since none are identifiable in this exterior view."
+    },
+    {
+      "id": "listing-photo-02",
+      "title": "Muse: exterior · high confidence",
+      "sourceId": "atproperties-listing",
+      "pageUrl": "https://www.atproperties.com/PAPH2657666/7149-bingham-street-philadelphia-pennsylvania-19111-brightmls",
+      "previewUrl": null,
+      "previewPermission": "unknown",
+      "capturedAt": "",
+      "locator": "Native listing photo 2 of 35",
+      "imageUrl": "https://resources.atproperties.com/images/BRIGHTMLS/PA/PH2/657666/6a765126b2d5a/2.jpg",
+      "observations": "Exterior front view of a two-story house from a slightly angled street-side viewpoint, showing a lawn and sidewalk in the foreground. Ground floor shows stone-veneer-appearing cladding, two grouped window bays, a dark decorative door at left, and a light-colored door at center-right, each reached by steps. Upper floor shows siding, brick-appearing sections, grouped windows with black shutters, and a dark vertical flue or chimney element.",
+      "planningUse": "Measure the interior plan on site and label each room by direct observation rather than inferring room use from the facade."
+    },
+    {
+      "id": "listing-photo-15",
+      "title": "Muse: circulation · high confidence",
+      "sourceId": "atproperties-listing",
+      "pageUrl": "https://www.atproperties.com/PAPH2657666/7149-bingham-street-philadelphia-pennsylvania-19111-brightmls",
+      "previewUrl": null,
+      "previewPermission": "unknown",
+      "capturedAt": "",
+      "locator": "Native listing photo 15 of 35",
+      "imageUrl": "https://resources.atproperties.com/images/BRIGHTMLS/PA/PH2/657666/6a765126b2d5a/15.jpg",
+      "observations": "Upper-level hallway/landing with wood flooring, stair railing, tiled ceiling, and multiple door openings. Wall and trim finishes appear worn with visible scuffs and paint loss on the railing.",
+      "planningUse": "Measure hallway widths, door openings and understair enclosure dimensions on the circulation routes."
+    },
+    {
+      "id": "listing-photo-25",
+      "title": "Muse: basement · high confidence",
+      "sourceId": "atproperties-listing",
+      "pageUrl": "https://www.atproperties.com/PAPH2657666/7149-bingham-street-philadelphia-pennsylvania-19111-brightmls",
+      "previewUrl": null,
+      "previewPermission": "unknown",
+      "capturedAt": "",
+      "locator": "Native listing photo 25 of 35",
+      "imageUrl": "https://resources.atproperties.com/images/BRIGHTMLS/PA/PH2/657666/6a765126b2d5a/25.jpg",
+      "observations": "Basement view with carpeted stairs, red and cream patterned tile flooring in the foreground, a concrete-floored rear area, a small high window, exposed ductwork, and a radiator  The rear ceiling area is open or unfinished with visible framing, wiring, and fluorescent lighting.",
+      "planningUse": "Nominate candidate powder-room zones for measurement: basement, an understair area visible at the left in listing-photo-06, or another unobstructed ground-floor bay, accepting none is yet confirmed feasible."
+    },
+    {
+      "id": "listing-photo-26",
+      "title": "Muse: basement · high confidence",
+      "sourceId": "atproperties-listing",
+      "pageUrl": "https://www.atproperties.com/PAPH2657666/7149-bingham-street-philadelphia-pennsylvania-19111-brightmls",
+      "previewUrl": null,
+      "previewPermission": "unknown",
+      "capturedAt": "",
+      "locator": "Native listing photo 26 of 35",
+      "imageUrl": "https://resources.atproperties.com/images/BRIGHTMLS/PA/PH2/657666/6a765126b2d5a/26.jpg",
+      "observations": "Long basement room with red and cream patterned tile flooring, painted beams, a large insulated or wrapped duct along the ceiling, small high window, wall outlets, and a wooden  Walls show scuffs, patches, and a rectangular boarded or patched area; no bathroom or kitchen fixtures are visible.",
+      "planningUse": "Nominate candidate powder-room zones for measurement: basement, an understair area visible at the left in listing-photo-06, or another unobstructed ground-floor bay, accepting none is yet confirmed feasible."
+    },
+    {
+      "id": "listing-photo-04",
+      "title": "Muse: other · medium confidence",
+      "sourceId": "atproperties-listing",
+      "pageUrl": "https://www.atproperties.com/PAPH2657666/7149-bingham-street-philadelphia-pennsylvania-19111-brightmls",
+      "previewUrl": null,
+      "previewPermission": "unknown",
+      "capturedAt": "",
+      "locator": "Native listing photo 4 of 35",
+      "imageUrl": "https://resources.atproperties.com/images/BRIGHTMLS/PA/PH2/657666/6a765126b2d5a/4.jpg",
+      "observations": "Interior view of an enclosed porch or sunroom-like space in the foreground, with wood-appearing flooring, multiple windows, floral-border wallpaper, and a suspended tile ceiling. Open wood French doors with multiple glass panes lead to an adjacent empty interior room; similarity or adjacency beyond this visible opening should not be assumed for other photos. The adjacent room has wood-appearing flooring, a ceiling fan, small high windows, a wall-mounted air-conditioning-appearing unit, and baseboard heating-appearing elements.",
+      "planningUse": "Measure this room and the room beyond on site and confirm their current uses and connecting door operation."
+    },
+    {
+      "id": "listing-photo-05",
+      "title": "Muse: other · medium confidence",
+      "sourceId": "atproperties-listing",
+      "pageUrl": "https://www.atproperties.com/PAPH2657666/7149-bingham-street-philadelphia-pennsylvania-19111-brightmls",
+      "previewUrl": null,
+      "previewPermission": "unknown",
+      "capturedAt": "",
+      "locator": "Native listing photo 5 of 35",
+      "imageUrl": "https://resources.atproperties.com/images/BRIGHTMLS/PA/PH2/657666/6a765126b2d5a/5.jpg",
+      "observations": "Interior view of an enclosed porch or sunroom-like space with wood-appearing flooring, a suspended tile ceiling, floral wallpaper and border, and a bank of windows on the left wall. A black freestanding stove with a vertical and angled flue sits on a raised hearth-like base against the far wall. Wood French doors with multiple glass panes are visible at right, and a long low covered unit with decorative grilles runs below the left windows.",
+      "planningUse": "Measure the room, window openings, stove and flue clearances as observed on site, and verify the status and permitted use of the stove and flue with qualified professionals before relying on them."
+    },
+    {
+      "id": "listing-photo-08",
+      "title": "Muse: living · medium confidence",
+      "sourceId": "atproperties-listing",
+      "pageUrl": "https://www.atproperties.com/PAPH2657666/7149-bingham-street-philadelphia-pennsylvania-19111-brightmls",
+      "previewUrl": null,
+      "previewPermission": "unknown",
+      "capturedAt": "",
+      "locator": "Native listing photo 8 of 35",
+      "imageUrl": "https://resources.atproperties.com/images/BRIGHTMLS/PA/PH2/657666/6a765126b2d5a/8.jpg",
+      "observations": "An unfurnished room with wood-plank flooring, visible wear marks, and light-colored patches on the floor surface. A suspended tile ceiling with a ceiling fan and integrated lights is visible. Two high windows with blinds or louvers are visible on the left wall, with a window air-conditioning unit below the smaller window.",
+      "planningUse": "Measure the room, window, and cased-opening positions before considering any change of use, including whether any part could support a powder room without assuming adjacency."
+    }
+  ],
+  "nextQuestions": [
+    "Which kitchen elements must stay, and which can change: cabinets, countertops, sink, range, microwave and dishwasher?",
+    "Should the peninsula and its lattice front remain as the work and circulation divider?",
+    "Is the existing bathroom's tub/shower, toilet and vanity arrangement acceptable, or is alteration expected?",
+    "Is basement use acceptable for a powder room given the stair access, exposed ductwork and small high windows shown?",
+    "Would use of an understair or closed-door ground-floor area be acceptable if measurements and services later proved suitable?",
+    "Must the existing stair and hallway circulation widths and door positions remain fully unchanged?"
+  ],
+  "photoReview": {
+    "method": "muse-attached-images",
+    "planning": {
+      "runId": "01a17f58-7794-71d0-8aff-0a377ed1d72d",
+      "model": "muse-wonder-1.0",
+      "goal": "Explore a kitchen refresh and feasibility of an additional powder room. Identify useful planning questions and next site checks; measurements and concealed services are unknown.",
+      "questions": [
+        {
+          "photoIds": [
+            "listing-photo-11",
+            "listing-photo-12",
+            "listing-photo-13",
+            "listing-photo-14"
+          ],
+          "text": "Which kitchen elements must stay, and which can change: cabinets, countertops, sink, range, microwave and dishwasher?"
+        },
+        {
+          "photoIds": [
+            "listing-photo-11",
+            "listing-photo-14"
+          ],
+          "text": "Should the peninsula and its lattice front remain as the work and circulation divider?"
+        },
+        {
+          "photoIds": [
+            "listing-photo-18",
+            "listing-photo-19",
+            "listing-photo-20"
+          ],
+          "text": "Is the existing bathroom's tub/shower, toilet and vanity arrangement acceptable, or is alteration expected?"
+        },
+        {
+          "photoIds": [
+            "listing-photo-25",
+            "listing-photo-26",
+            "listing-photo-27"
+          ],
+          "text": "Is basement use acceptable for a powder room given the stair access, exposed ductwork and small high windows shown?"
+        },
+        {
+          "photoIds": [
+            "listing-photo-06",
+            "listing-photo-07",
+            "listing-photo-09"
+          ],
+          "text": "Would use of an understair or closed-door ground-floor area be acceptable if measurements and services later proved suitable?"
+        },
+        {
+          "photoIds": [
+            "listing-photo-15",
+            "listing-photo-06",
+            "listing-photo-07"
+          ],
+          "text": "Must the existing stair and hallway circulation widths and door positions remain fully unchanged?"
+        }
+      ],
+      "nextSteps": [
+        {
+          "photoIds": [
+            "listing-photo-11",
+            "listing-photo-12",
+            "listing-photo-13",
+            "listing-photo-14"
+          ],
+          "text": "Decide whether to keep the kitchen cabinets, dark-green countertops, and peninsula.",
+          "kind": "user-choice"
+        },
+        {
+          "photoIds": [
+            "listing-photo-12",
+            "listing-photo-13"
+          ],
+          "text": "Decide whether the range, microwave, dishwasher and sink positions should remain.",
+          "kind": "user-choice"
+        },
+        {
+          "photoIds": [
+            "listing-photo-18",
+            "listing-photo-19",
+            "listing-photo-20"
+          ],
+          "text": "Decide whether bathroom refurbishment is in scope or only the new powder room.",
+          "kind": "user-choice"
+        },
+        {
+          "photoIds": [
+            "listing-photo-25",
+            "listing-photo-26",
+            "listing-photo-27",
+            "listing-photo-06",
+            "listing-photo-07"
+          ],
+          "text": "Nominate candidate powder-room zones for measurement: basement, an understair area visible at the left in listing-photo-06, or another unobstructed ground-floor bay, accepting none is yet confirmed feasible.",
+          "kind": "user-choice"
+        },
+        {
+          "photoIds": [
+            "listing-photo-11",
+            "listing-photo-14"
+          ],
+          "text": "Measure the kitchen footprint, peninsula clearances, cabinet runs, door swings and window/door positions on site.",
+          "kind": "site-measurement"
+        },
+        {
+          "photoIds": [
+            "listing-photo-18",
+            "listing-photo-19",
+            "listing-photo-20"
+          ],
+          "text": "Measure the existing bathroom fixtures, clearances, window position and door swing on site.",
+          "kind": "site-measurement"
+        },
+        {
+          "photoIds": [
+            "listing-photo-25",
+            "listing-photo-26",
+            "listing-photo-27"
+          ],
+          "text": "Measure basement access from the stairs, headroom under beams and ducts, floor levels and clear wall lengths in nominated zones.",
+          "kind": "site-measurement"
+        },
+        {
+          "photoIds": [
+            "listing-photo-15",
+            "listing-photo-06",
+            "listing-photo-07"
+          ],
+          "text": "Measure hallway widths, door openings and understair enclosure dimensions on the circulation routes.",
+          "kind": "site-measurement"
+        }
+      ]
+    },
+    "reviewedAt": "2026-10-27T21:48:44.384Z",
+    "manifestHash": "c294bfd22e7137aab185fcf6af7586ba155b56b4fe8e7dd6c95e41f6a28390c8",
+    "batches": [
+      {
+        "runId": "01a17f4f-d600-7f73-b4de-05a71fcf3409",
+        "model": "muse-wonder-1.0",
+        "photoIds": [
+          "listing-photo-01",
+          "listing-photo-02",
+          "listing-photo-03",
+          "listing-photo-04",
+          "listing-photo-05",
+          "listing-photo-06",
+          "listing-photo-07"
+        ]
+      },
+      {
+        "runId": "01a17f52-44f0-7382-b78e-a937cc39a2ea",
+        "model": "muse-wonder-1.0",
+        "photoIds": [
+          "listing-photo-08",
+          "listing-photo-09",
+          "listing-photo-10",
+          "listing-photo-11",
+          "listing-photo-12",
+          "listing-photo-13",
+          "listing-photo-14"
+        ]
+      },
+      {
+        "runId": "01a17f54-e8d2-7603-a256-77402e0e0eea",
+        "model": "muse-wonder-1.0",
+        "photoIds": [
+          "listing-photo-15",
+          "listing-photo-16",
+          "listing-photo-17",
+          "listing-photo-18",
+          "listing-photo-19",
+          "listing-photo-20",
+          "listing-photo-21"
+        ]
+      },
+      {
+        "runId": "01a17f55-4f45-7301-8890-e0481782ca4e",
+        "model": "muse-wonder-1.0",
+        "photoIds": [
+          "listing-photo-22",
+          "listing-photo-23",
+          "listing-photo-24",
+          "listing-photo-25",
+          "listing-photo-26",
+          "listing-photo-27",
+          "listing-photo-28"
+        ]
+      },
+      {
+        "runId": "01a17f55-f647-7f83-aff0-5b6c3809cdb6",
+        "model": "muse-wonder-1.0",
+        "photoIds": [
+          "listing-photo-29",
+          "listing-photo-30",
+          "listing-photo-31",
+          "listing-photo-32",
+          "listing-photo-33",
+          "listing-photo-34",
+          "listing-photo-35"
+        ]
+      }
+    ],
+    "photos": [
+      {
+        "id": "listing-photo-01",
+        "status": "reviewed",
+        "roomType": "exterior",
+        "confidence": "high",
+        "observations": [
+          "Exterior front view of a two-story attached or semi-attached house under a clear sky.",
+          "Ground floor has a stone-veneer-appearing lower facade, multiple large front windows, and two separate stepped entrances visible at left and center-right.",
+          "Upper floor has siding and brick-appearing areas, multiple double-hung-appearing windows, black shutters, and a dark vertical flue or chimney element.",
+          "Front yard with grass, shrubs, concrete walks and steps, neighboring houses, overhead wires, and leafless and leafy trees are visible."
+        ],
+        "uncertainties": [],
+        "questions": [
+          "Which visible entrance leads toward the kitchen, and what is the interior circulation route from that entrance?",
+          "Where inside the house could a powder room be considered without assuming adjacency from this exterior view?",
+          "Are either of the ground-floor window bays associated with a kitchen, and would a refresh seek to retain or alter any windows or doors?"
+        ],
+        "nextSteps": [
+          "Photograph and measure all interior rooms on site, specifically locating any kitchen and any existing toilet/bathing room, since none are identifiable in this exterior view.",
+          "Record the interior layout behind each visible ground-floor entrance and window bay without assuming which interior room each serves.",
+          "For a possible powder room, have qualified professionals identify existing water, waste, vent, and electrical locations on site; none can be determined from the exterior pixels."
+        ],
+        "sourceId": "atproperties-listing",
+        "pageUrl": "https://www.atproperties.com/PAPH2657666/7149-bingham-street-philadelphia-pennsylvania-19111-brightmls",
+        "imageUrl": "https://resources.atproperties.com/images/BRIGHTMLS/PA/PH2/657666/6a765126b2d5a/1.jpg",
+        "locator": "Native listing photo 1 of 35",
+        "sha256": "6065d33d69531749accb2f292ca395a9584aac570ebc83f3986a0a4cc4f32b54"
+      },
+      {
+        "id": "listing-photo-02",
+        "status": "reviewed",
+        "roomType": "exterior",
+        "confidence": "high",
+        "observations": [
+          "Exterior front view of a two-story house from a slightly angled street-side viewpoint, showing a lawn and sidewalk in the foreground.",
+          "Ground floor shows stone-veneer-appearing cladding, two grouped window bays, a dark decorative door at left, and a light-colored door at center-right, each reached by steps.",
+          "Upper floor shows siding, brick-appearing sections, grouped windows with black shutters, and a dark vertical flue or chimney element.",
+          "Neighboring houses, shrubs, trees, overhead wires, and a wall-mounted house number beside the left door are visible."
+        ],
+        "uncertainties": [],
+        "questions": [
+          "What interior rooms sit behind the two ground-floor window bays and the two doors?",
+          "Could visitor circulation to a possible powder room avoid passing through private or kitchen work areas, based on a measured interior plan still to be obtained?",
+          "Would a kitchen refresh require changes to any visible door, window, step, or walk, or is the scope intended to be interior only?"
+        ],
+        "nextSteps": [
+          "Measure the interior plan on site and label each room by direct observation rather than inferring room use from the facade.",
+          "Check on site which entrance provides the most practical route for kitchen materials and for visitor access to a possible powder room.",
+          "Verify all services and any proposed service routes inside the property with qualified professionals; no service locations are visible here."
+        ],
+        "sourceId": "atproperties-listing",
+        "pageUrl": "https://www.atproperties.com/PAPH2657666/7149-bingham-street-philadelphia-pennsylvania-19111-brightmls",
+        "imageUrl": "https://resources.atproperties.com/images/BRIGHTMLS/PA/PH2/657666/6a765126b2d5a/2.jpg",
+        "locator": "Native listing photo 2 of 35",
+        "sha256": "8eb9ac3f4b076cfd7e06a45f2f365eae2019274d3f62c4fc16d6d280d4c851fb"
+      },
+      {
+        "id": "listing-photo-03",
+        "status": "reviewed",
+        "roomType": "exterior",
+        "confidence": "high",
+        "observations": [
+          "Exterior front and side view of a two-story house, with the front facade at left-center and a red brick-appearing side elevation at right.",
+          "Front ground floor has grouped windows, a dark door at left, and a light-colored glazed door at center, with stone-veneer-appearing cladding below.",
+          "Side elevation shows multiple windows at different levels, wall-mounted air-conditioning-appearing units, and a projecting upper bay at the rear-right.",
+          "A side walk, grass areas, shrubs, a leafless tree, neighboring buildings, a parked white car, and overhead wires are visible."
+        ],
+        "uncertainties": [],
+        "questions": [
+          "Which side-elevation windows serve the kitchen or any room that might be considered for a powder room?",
+          "Is the side walk connected to an interior area that could support powder-room access, or is it only an exterior route?",
+          "Would kitchen work affect any side window or wall-mounted unit visible here, and what interior functions lie behind them?"
+        ],
+        "nextSteps": [
+          "On site, map the side windows and doors to interior rooms by direct interior observation, then relate that map to kitchen and powder-room options.",
+          "Inspect and measure any side or rear access route that might be used during a kitchen refresh; feasibility cannot be judged from this view alone.",
+          "Have qualified professionals locate existing plumbing and drainage inside before considering any powder-room position."
+        ],
+        "sourceId": "atproperties-listing",
+        "pageUrl": "https://www.atproperties.com/PAPH2657666/7149-bingham-street-philadelphia-pennsylvania-19111-brightmls",
+        "imageUrl": "https://resources.atproperties.com/images/BRIGHTMLS/PA/PH2/657666/6a765126b2d5a/3.jpg",
+        "locator": "Native listing photo 3 of 35",
+        "sha256": "e67f5b052d9232d698cb74b57ecbfb8db5c11fb21390a98772f88e57fd09681a"
+      },
+      {
+        "id": "listing-photo-04",
+        "status": "reviewed",
+        "roomType": "other",
+        "confidence": "medium",
+        "observations": [
+          "Interior view of an enclosed porch or sunroom-like space in the foreground, with wood-appearing flooring, multiple windows, floral-border wallpaper, and a suspended tile ceiling.",
+          "Open wood French doors with multiple glass panes lead to an adjacent empty interior room; similarity or adjacency beyond this visible opening should not be assumed for other photos.",
+          "The adjacent room has wood-appearing flooring, a ceiling fan, small high windows, a wall-mounted air-conditioning-appearing unit, and baseboard heating-appearing elements.",
+          "Visible surfaces show areas of peeling or missing paint, discoloration, exposed or unfinished areas near the doorway threshold, and a light-colored semicircular tiled area on the foreground floor."
+        ],
+        "uncertainties": [
+          "Exact room function is uncertain; enclosed porch/sunroom is inferred from windows, doors, and finishes only."
+        ],
+        "questions": [
+          "Is this enclosed porch intended to remain a separate room, or is opening or incorporating it into a refreshed kitchen part of the design brief?",
+          "What is the function of the room beyond the French doors, and could its circulation support access to a powder room without using this porch as the only route?",
+          "What lies beneath or behind the semicircular tiled floor area and the covered low wall units, and should those elements be retained, removed, or investigated further on site?"
+        ],
+        "nextSteps": [
+          "Measure this room and the room beyond on site and confirm their current uses and connecting door operation.",
+          "If either space is contemplated for kitchen or powder-room use, have qualified professionals check for nearby water, waste, vent, heating, and electrical capacity; none is visible in the pixels.",
+          "Inspect window and door operation, floor levels at the threshold, and the condition of visible finishes on site without assuming the cause of any wear or discoloration."
+        ],
+        "sourceId": "atproperties-listing",
+        "pageUrl": "https://www.atproperties.com/PAPH2657666/7149-bingham-street-philadelphia-pennsylvania-19111-brightmls",
+        "imageUrl": "https://resources.atproperties.com/images/BRIGHTMLS/PA/PH2/657666/6a765126b2d5a/4.jpg",
+        "locator": "Native listing photo 4 of 35",
+        "sha256": "f90ee999b9193f859535f94e8e35ea020bce0f830c9c3be09bb23ff507173c17"
+      },
+      {
+        "id": "listing-photo-05",
+        "status": "reviewed",
+        "roomType": "other",
+        "confidence": "medium",
+        "observations": [
+          "Interior view of an enclosed porch or sunroom-like space with wood-appearing flooring, a suspended tile ceiling, floral wallpaper and border, and a bank of windows on the left wall.",
+          "A black freestanding stove with a vertical and angled flue sits on a raised hearth-like base against the far wall.",
+          "Wood French doors with multiple glass panes are visible at right, and a long low covered unit with decorative grilles runs below the left windows.",
+          "Visible wall and floor surfaces show discoloration, scuffs, and areas of worn finish; paneled or covered sections are visible on the far wall."
+        ],
+        "uncertainties": [
+          "Exact room function is uncertain; enclosed porch/sunroom is inferred from glazing and finishes only.",
+          "Function of the low grille-covered unit cannot be confirmed from pixels alone."
+        ],
+        "questions": [
+          "Is the stove and flue intended to remain, and would that constrain using any part of this room for kitchen functions or a powder room?",
+          "Could this porch space contribute useful area to a kitchen refresh, or is it better kept separate given its extensive glazing?",
+          "If a powder room were considered near this space, how would privacy be handled given the large windows and glazed French doors?"
+        ],
+        "nextSteps": [
+          "Measure the room, window openings, stove and flue clearances as observed on site, and verify the status and permitted use of the stove and flue with qualified professionals before relying on them.",
+          "Check whether the low covered wall units are heating elements or storage and whether they would conflict with any proposed kitchen or powder-room layout in this space.",
+          "Trace plumbing and drainage from existing kitchen and bathroom fixtures elsewhere in the house; no plumbing fixtures or supply points are visible here."
+        ],
+        "sourceId": "atproperties-listing",
+        "pageUrl": "https://www.atproperties.com/PAPH2657666/7149-bingham-street-philadelphia-pennsylvania-19111-brightmls",
+        "imageUrl": "https://resources.atproperties.com/images/BRIGHTMLS/PA/PH2/657666/6a765126b2d5a/5.jpg",
+        "locator": "Native listing photo 5 of 35",
+        "sha256": "9b3085723e7415b39c7f4df468e39da8825eb114a4f2a57ac3a3f7228d7a4d57"
+      },
+      {
+        "id": "listing-photo-06",
+        "status": "reviewed",
+        "roomType": "other",
+        "confidence": "low",
+        "observations": [
+          "Interior view of a large empty room with worn wood-appearing flooring, a suspended tile ceiling, and a ceiling fan with lights.",
+          "Part of a staircase with a dark handrail and white newel post is visible at the left edge, and a wide cased opening leads to another room in the background.",
+          "Two small high windows and a wall-mounted air-conditioning-appearing unit are visible on the right wall, above a baseboard heating-appearing element.",
+          "Walls show extensive areas of peeling paint, patches, marks, and discoloration; no kitchen cabinets, appliances, sink, toilet, or basin are visible."
+        ],
+        "uncertainties": [
+          "Specific room function is uncertain; no furniture, kitchen fittings, or bathroom fixtures are visible to confirm use."
+        ],
+        "questions": [
+          "What is this room's intended function after renovation, and is it a candidate to receive kitchen functions, remain a living/dining space, or provide area for a powder room?",
+          "Given the staircase and wide opening visible here, how would visitors reach a possible powder room without crossing a refreshed kitchen work zone?",
+          "Would relocating or extending kitchen functions into this room be considered, or is the kitchen to stay in its existing, not-yet-photographed location?"
+        ],
+        "nextSteps": [
+          "Measure this room and all connecting openings on site and confirm its intended role in the plan before assigning kitchen or powder-room functions.",
+          "Locate the actual kitchen and any existing bathroom elsewhere in the house and record fixture, cabinet, appliance, and service positions directly.",
+          "Have qualified professionals assess visible heating and air-conditioning elements and electrical points on site if this room is to support kitchen or powder-room use."
+        ],
+        "sourceId": "atproperties-listing",
+        "pageUrl": "https://www.atproperties.com/PAPH2657666/7149-bingham-street-philadelphia-pennsylvania-19111-brightmls",
+        "imageUrl": "https://resources.atproperties.com/images/BRIGHTMLS/PA/PH2/657666/6a765126b2d5a/6.jpg",
+        "locator": "Native listing photo 6 of 35",
+        "sha256": "4bf75670a7853f5fd173e3f74531ab684166ae362c198bf3640492ee9ab63a14"
+      },
+      {
+        "id": "listing-photo-07",
+        "status": "reviewed",
+        "roomType": "other",
+        "confidence": "low",
+        "observations": [
+          "Interior view of a large empty room with worn wood-appearing flooring, a suspended tile ceiling with a displaced or missing tile near the stairs, and a ceiling fan with lights.",
+          "A staircase with white balusters and a dark handrail rises along the right wall; a solid understair wall is visible below it.",
+          "An open wood French door in the far wall leads to a brighter windowed space with a low grille-covered unit.",
+          "Walls show extensive peeling paint, patchy discoloration, and exposed areas; a dark tilted object leans near the base of the stairs and no kitchen or bathroom fixtures are visible."
+        ],
+        "uncertainties": [
+          "Specific room function is uncertain; no furniture or fixtures confirm living, dining, or other use.",
+          "Whether the understair area is hollow, enclosed, or usable cannot be determined from pixels."
+        ],
+        "questions": [
+          "Is the understair area a possible location to investigate for a powder room, subject to measured headroom, access, and services checks on site?",
+          "What is the intended function of this room, and would placing a powder room off it create acceptable visitor circulation from the entrance and living areas?",
+          "Would a kitchen refresh change the doorway or French door connection visible here, and should that connection be retained for light or circulation?"
+        ],
+        "nextSteps": [
+          "Measure the room, staircase, understair area, and doorway on site, and test whether the understair zone is enclosed, accessible, or already used.",
+          "Confirm the room beyond the doorway and the function of the dark object near the stairs by direct on-site inspection.",
+          "Before considering an understair or in-room powder room, have qualified professionals establish the nearest existing water, waste, and vent routes and whether any route is practical."
+        ],
+        "sourceId": "atproperties-listing",
+        "pageUrl": "https://www.atproperties.com/PAPH2657666/7149-bingham-street-philadelphia-pennsylvania-19111-brightmls",
+        "imageUrl": "https://resources.atproperties.com/images/BRIGHTMLS/PA/PH2/657666/6a765126b2d5a/7.jpg",
+        "locator": "Native listing photo 7 of 35",
+        "sha256": "d36a9dcb4ac5f2807583441fc7d9bad1b1bf2748e53aad7626f90e5e2628e4f3"
+      },
+      {
+        "id": "listing-photo-08",
+        "status": "reviewed",
+        "roomType": "living",
+        "confidence": "medium",
+        "observations": [
+          "An unfurnished room with wood-plank flooring, visible wear marks, and light-colored patches on the floor surface.",
+          "A suspended tile ceiling with a ceiling fan and integrated lights is visible.",
+          "Two high windows with blinds or louvers are visible on the left wall, with a window air-conditioning unit below the smaller window.",
+          "Wall surfaces show peeling or patchy finish, discoloration, a large black treble-clef graphic, and other painted markings including red and blue lettering or symbols; the cause is not determinable from the image."
+        ],
+        "uncertainties": [
+          "Exact room dimensions, ceiling height, and wall construction are not determinable from the image.",
+          "The location and condition of hidden plumbing, drainage, venting, electrical, and structural elements are not visible.",
+          "The room visible through the opening cannot be confirmed as a distinct or adjacent functional space beyond the visible opening."
+        ],
+        "questions": [
+          "Is this room intended to remain living space, or should any portion be tested during measured planning as a possible powder-room location?",
+          "Would conversion of any part of this room affect the usable living area, natural light, circulation, or the open connection to the room beyond?",
+          "Are the painted wall graphics and existing wall openings to be retained, covered, removed, or otherwise included in the redecoration scope?"
+        ],
+        "nextSteps": [
+          "Measure the room, window, and cased-opening positions before considering any change of use, including whether any part could support a powder room without assuming adjacency.",
+          "Have qualified professionals locate and assess existing water, drain, vent, electrical, and heating services; none can be determined from this view.",
+          "Inspect the ceiling tiles, wall finishes, floor finish, window operation, and wall-mounted cooling unit on site to establish their actual condition and whether they remain in the refresh scope."
+        ],
+        "sourceId": "atproperties-listing",
+        "pageUrl": "https://www.atproperties.com/PAPH2657666/7149-bingham-street-philadelphia-pennsylvania-19111-brightmls",
+        "imageUrl": "https://resources.atproperties.com/images/BRIGHTMLS/PA/PH2/657666/6a765126b2d5a/8.jpg",
+        "locator": "Native listing photo 8 of 35",
+        "sha256": "283a830a28a7c37577d0ccc765477d33435dce4e151ba16626c9deb60e8b89e3"
+      },
+      {
+        "id": "listing-photo-09",
+        "status": "reviewed",
+        "roomType": "living",
+        "confidence": "medium",
+        "observations": [
+          "An unfurnished room with light lavender-painted walls, white baseboards, and wood-plank flooring with visible dark marks and worn patches.",
+          "A caged ceiling pendant light and a wall-mounted light fixture are visible.",
+          "A wide cased opening leads toward another room, with a staircase, dark handrail, and ceiling fan visible in the background.",
+          "A closed white paneled door sits beneath a sloped ceiling or soffit area on the back wall."
+        ],
+        "uncertainties": [
+          "The purpose and size of the space behind the closed door are not visible.",
+          "Whether the staircase area provides any practical space for a powder room cannot be determined from this view.",
+          "Existing services, structure, and precise geometry remain unknown."
+        ],
+        "questions": [
+          "What does the closed door beneath the sloped area serve, and could that area be considered in a measured feasibility study for a powder room or storage?",
+          "Should the staircase-adjacent area remain entirely open circulation, or is any change to that circulation being considered?",
+          "Is this room intended as dining, living, or another use after the kitchen refresh?"
+        ],
+        "nextSteps": [
+          "Prepare a measured plan of the room, doorway, stair, and closed-door area before deciding whether any area is a feasible powder-room candidate.",
+          "Open or inspect behind the closed door on site, if authorized, to identify the space it serves without assuming it is usable for plumbing fixtures.",
+          "Have professionals trace existing plumbing and drainage routes and verify whether a powder room could be served without relying on proximity assumptions."
+        ],
+        "sourceId": "atproperties-listing",
+        "pageUrl": "https://www.atproperties.com/PAPH2657666/7149-bingham-street-philadelphia-pennsylvania-19111-brightmls",
+        "imageUrl": "https://resources.atproperties.com/images/BRIGHTMLS/PA/PH2/657666/6a765126b2d5a/9.jpg",
+        "locator": "Native listing photo 9 of 35",
+        "sha256": "cfe7fca8a3adde64c93dd93e19ab77210b4e1c33647cbc8abceb19a26537ef19"
+      },
+      {
+        "id": "listing-photo-10",
+        "status": "reviewed",
+        "roomType": "living",
+        "confidence": "medium",
+        "observations": [
+          "An unfurnished room with light lavender walls, white baseboards, and wood-plank flooring with visible wear and dark marking.",
+          "Three tall windows with white trim occupy the right wall, providing a view to neighboring houses, trees, and fencing.",
+          "A long baseboard heating unit is visible beneath the windows, with an electrical outlet nearby.",
+          "A caged ceiling pendant, two wall-mounted fixtures, and an open doorway to a brighter adjacent-looking space are visible."
+        ],
+        "uncertainties": [
+          "The exact room function is ambiguous from furnishings and fittings alone.",
+          "Window dimensions, privacy conditions from outside, and heating-system details cannot be established from the image.",
+          "No plumbing or drainage provision for a powder room is visible."
+        ],
+        "questions": [
+          "Should this windowed room remain a primary living or sleeping space, or should part of it be studied for a powder room despite the prominent window wall?",
+          "If a powder room were considered here, how would privacy, window treatment, ventilation, and the baseboard unit be addressed after site verification?",
+          "What is the intended relationship between this room and the kitchen after the refresh?"
+        ],
+        "nextSteps": [
+          "Measure the room and the window wall, including clearances around the baseboard unit, before assessing layout options.",
+          "Inspect the doorway and room beyond on site to understand circulation without assuming this is the same room shown in another photograph.",
+          "Verify on site the locations of any existing plumbing, electrical outlets, lighting circuits, and heating components that could affect a change of use."
+        ],
+        "sourceId": "atproperties-listing",
+        "pageUrl": "https://www.atproperties.com/PAPH2657666/7149-bingham-street-philadelphia-pennsylvania-19111-brightmls",
+        "imageUrl": "https://resources.atproperties.com/images/BRIGHTMLS/PA/PH2/657666/6a765126b2d5a/10.jpg",
+        "locator": "Native listing photo 10 of 35",
+        "sha256": "7a5006a0529c5dabaa3304ece7079c2e364e3a9b941a58fb94d82f21403b60c4"
+      },
+      {
+        "id": "listing-photo-11",
+        "status": "reviewed",
+        "roomType": "kitchen",
+        "confidence": "high",
+        "observations": [
+          "A kitchen with floral-patterned wallpaper, a decorative border, white cabinets, dark green countertops, and wood-look plank flooring.",
+          "A peninsula with a dark green countertop and a perforated or lattice-style front panel separates the work area from the foreground space.",
+          "A wall-mounted heating unit is mounted low on the left wall, and a window air-conditioning unit is visible high on the right wall.",
+          "Two windows are visible above the rear counter, beside a white glazed exterior door with multiple glass panes."
+        ],
+        "uncertainties": [
+          "Appliance and cabinet dimensions, counter heights, and walkway widths cannot be measured from the photograph.",
+          "The fuel type and condition of the wall-mounted unit and the services serving the kitchen are not determinable.",
+          "Hidden plumbing, venting, structure, and any hazardous materials cannot be assessed from pixels."
+        ],
+        "questions": [
+          "Should the existing cabinet layout and peninsula be retained, modified, or replaced during the kitchen refresh?",
+          "Is the peninsula intended for seating, storage, food preparation, or removal to improve circulation?",
+          "Should the glazed door remain a principal exterior entrance, and how would that affect cabinet, appliance, or possible powder-room planning nearby?"
+        ],
+        "nextSteps": [
+          "Take full kitchen measurements, including the peninsula, door swings, window positions, appliance openings, and clearances at the glazed door.",
+          "Have qualified professionals verify the type, condition, and capacity of the heating unit, cooling unit, electrical supply, plumbing, drainage, and venting before design decisions are made.",
+          "Inspect wall coverings, flooring, cabinet interiors, countertop edges, and the peninsula panel on site to determine what is sound, reusable, or scheduled for replacement without presuming condition."
+        ],
+        "sourceId": "atproperties-listing",
+        "pageUrl": "https://www.atproperties.com/PAPH2657666/7149-bingham-street-philadelphia-pennsylvania-19111-brightmls",
+        "imageUrl": "https://resources.atproperties.com/images/BRIGHTMLS/PA/PH2/657666/6a765126b2d5a/11.jpg",
+        "locator": "Native listing photo 11 of 35",
+        "sha256": "02ad17ab6400e029519d404f629fdf68cea73eea0b662fe96384d85712c59b42"
+      },
+      {
+        "id": "listing-photo-12",
+        "status": "reviewed",
+        "roomType": "kitchen",
+        "confidence": "high",
+        "observations": [
+          "A close kitchen view showing white upper and lower cabinets with dark green countertops and backsplash.",
+          "A freestanding range with a black cooktop and stainless-steel oven front is positioned beneath a white over-range microwave.",
+          "A black dishwasher is installed beside the sink run, and a double-bowl sink with a gooseneck-style faucet sits below two windows.",
+          "A white four-pane glazed door is on the right, track lighting is mounted on the ceiling, and a white fire extinguisher is partly visible at the right edge."
+        ],
+        "uncertainties": [
+          "The range fuel type, appliance condition, and whether appliances operate cannot be determined visually.",
+          "Water supply, waste, vent, and electrical routes behind cabinets are hidden.",
+          "Exact counter, cabinet, window, and door dimensions remain unknown."
+        ],
+        "questions": [
+          "Are the range, microwave, dishwasher, sink, and faucet to be replaced, retained, or relocated in the refresh?",
+          "Should the sink remain beneath the windows, or is a different work-triangle arrangement preferred after measurements are taken?",
+          "Does the glazed door require security, privacy, weatherproofing, or clearance changes as part of the project scope?"
+        ],
+        "nextSteps": [
+          "Measure each appliance opening and confirm required clearances directly on site before selecting replacements.",
+          "Verify sink plumbing, dishwasher connections, range fuel or electrical supply, microwave power and venting, and available circuits through professional inspection.",
+          "Check door swing, window operation, cabinet-door clearance, countertop condition, and flooring transitions in person."
+        ],
+        "sourceId": "atproperties-listing",
+        "pageUrl": "https://www.atproperties.com/PAPH2657666/7149-bingham-street-philadelphia-pennsylvania-19111-brightmls",
+        "imageUrl": "https://resources.atproperties.com/images/BRIGHTMLS/PA/PH2/657666/6a765126b2d5a/12.jpg",
+        "locator": "Native listing photo 12 of 35",
+        "sha256": "6d9a59520d4ccadd9354c8696a5da7e8cee3035f4915a76b5eb4c864cd514c8e"
+      },
+      {
+        "id": "listing-photo-13",
+        "status": "reviewed",
+        "roomType": "kitchen",
+        "confidence": "high",
+        "observations": [
+          "A kitchen view from the sink side showing white cabinets, dark green countertops, floral wallpaper, and wood-look plank flooring.",
+          "The sink and faucet are in the right foreground below large windows, with a black dishwasher and additional base cabinets extending toward the rear wall.",
+          "A freestanding range and over-range microwave are centered on the back wall, flanked by white upper cabinets.",
+          "A closed white interior door is visible on the left wall, and several cabinet doors appear closed while one lower door near the dishwasher is slightly open."
+        ],
+        "uncertainties": [
+          "The destination and size of the space behind the closed door are not visible.",
+          "The slightly open cabinet door does not establish cabinet condition or storage capacity.",
+          "Concealed services and structural elements remain unknown."
+        ],
+        "questions": [
+          "What is behind the closed interior door, and could that space be relevant to storage, laundry, basement access, or a powder-room study?",
+          "Should cabinet storage be reconfigured around the existing sink and dishwasher positions or redesigned after plumbing is verified?",
+          "Is additional task lighting, changed track lighting, or a different ceiling-light arrangement desired for the refreshed kitchen?"
+        ],
+        "nextSteps": [
+          "Document the full run of cabinetry, appliance positions, sink location, and every door and window opening on a measured plan.",
+          "Inspect cabinet interiors and undersink areas on site for existing service locations and visible condition without assuming concealed routes.",
+          "Have professionals confirm whether plumbing could be extended for a powder room from any verified existing route, rather than inferring feasibility from the sink position alone."
+        ],
+        "sourceId": "atproperties-listing",
+        "pageUrl": "https://www.atproperties.com/PAPH2657666/7149-bingham-street-philadelphia-pennsylvania-19111-brightmls",
+        "imageUrl": "https://resources.atproperties.com/images/BRIGHTMLS/PA/PH2/657666/6a765126b2d5a/13.jpg",
+        "locator": "Native listing photo 13 of 35",
+        "sha256": "08bea06617f01a6a305c9e062e06e56df67444ad13065ca7ab87600001359cb1"
+      },
+      {
+        "id": "listing-photo-14",
+        "status": "reviewed",
+        "roomType": "kitchen",
+        "confidence": "high",
+        "observations": [
+          "A wider kitchen view showing a central peninsula with a dark green countertop, a small white cabinet door, and a large perforated metal or lattice panel on its side.",
+          "White upper cabinets, a white microwave, and a stainless-steel and black range are visible along the right wall, with a sink counter in the right foreground.",
+          "Floral wallpaper, wood-look flooring, track lighting, and a ceiling fan in the adjoining open area are visible.",
+          "Multiple white doors and a wide cased opening are visible, with another light-colored room and windows seen through the opening in the background."
+        ],
+        "uncertainties": [
+          "What is concealed behind the peninsula panel cannot be determined from the image.",
+          "The rooms and doors visible in the background cannot be confirmed as separate spaces or assigned functions from this photograph alone.",
+          "Feasibility of additional plumbing depends on unmeasured and concealed site conditions."
+        ],
+        "questions": [
+          "Should the peninsula remain as a divider between the kitchen and eating or living area, become seating, or be removed after its enclosed components are identified?",
+          "Which of the visible doors serve exterior access, storage, circulation, or other rooms, and should any route be changed?",
+          "Could a powder room be introduced near the kitchen without reducing essential kitchen storage, blocking a door swing, or interrupting the main circulation path?"
+        ],
+        "nextSteps": [
+          "Measure the combined kitchen and connected open area, including the peninsula footprint, seating clearance if any, and paths to each door and opening.",
+          "Inspect the perforated peninsula panel and identify on site what it encloses before deciding whether it can be altered or removed.",
+          "Map all verified plumbing, heating, electrical, and ventilation points on the measured plan before selecting a powder-room candidate location."
+        ],
+        "sourceId": "atproperties-listing",
+        "pageUrl": "https://www.atproperties.com/PAPH2657666/7149-bingham-street-philadelphia-pennsylvania-19111-brightmls",
+        "imageUrl": "https://resources.atproperties.com/images/BRIGHTMLS/PA/PH2/657666/6a765126b2d5a/14.jpg",
+        "locator": "Native listing photo 14 of 35",
+        "sha256": "673ab0ecefc81f3805cfd5a7863c1b5910ef2a6b6e18c51442bb24f120f1fb7a"
+      },
+      {
+        "id": "listing-photo-15",
+        "status": "reviewed",
+        "roomType": "circulation",
+        "confidence": "high",
+        "observations": [
+          "Upper-level hallway/landing with wood flooring, stair railing, tiled ceiling, and multiple door openings.",
+          "Wall and trim finishes appear worn with visible scuffs and paint loss on the railing."
+        ],
+        "uncertainties": [
+          "Measured dimensions and doorway widths are unknown.",
+          "Locations of kitchen, plumbing, and structure are not visible."
+        ],
+        "questions": [
+          "Could any space off this hallway support a powder room without blocking circulation or stair access?",
+          "Where are the kitchen and nearest existing plumbing fixtures located relative to this hallway?"
+        ],
+        "nextSteps": [
+          "Measure hallway, stair, and doorway clearances and photograph circulation routes.",
+          "On site, locate the kitchen and existing bathrooms relative to this level without assuming adjacency from photos."
+        ],
+        "sourceId": "atproperties-listing",
+        "pageUrl": "https://www.atproperties.com/PAPH2657666/7149-bingham-street-philadelphia-pennsylvania-19111-brightmls",
+        "imageUrl": "https://resources.atproperties.com/images/BRIGHTMLS/PA/PH2/657666/6a765126b2d5a/15.jpg",
+        "locator": "Native listing photo 15 of 35",
+        "sha256": "ee7000aede115c41cbb614dd2a6f2874d18b00d3ed51eb806422ac77aca1ef79"
+      },
+      {
+        "id": "listing-photo-16",
+        "status": "reviewed",
+        "roomType": "bedroom",
+        "confidence": "medium",
+        "observations": [
+          "Empty room with floral wallpaper, worn wood flooring, ceiling fan/light, and an opening to a hallway.",
+          "A wall-mounted cooling unit and cartoon wall decals are visible; baseboards and wallpaper show wear."
+        ],
+        "uncertainties": [
+          "Room use is inferred from appearance and is not confirmed.",
+          "Hidden services and structural layout are unknown."
+        ],
+        "questions": [
+          "Is this room needed as a bedroom, or could part of it be considered for a powder room?",
+          "How would a kitchen refresh affect circulation or services passing through this room?"
+        ],
+        "nextSteps": [
+          "Measure the room and check window, outlet, and radiator locations in person.",
+          "Confirm current room use and distance to kitchen and existing plumbing during the site visit."
+        ],
+        "sourceId": "atproperties-listing",
+        "pageUrl": "https://www.atproperties.com/PAPH2657666/7149-bingham-street-philadelphia-pennsylvania-19111-brightmls",
+        "imageUrl": "https://resources.atproperties.com/images/BRIGHTMLS/PA/PH2/657666/6a765126b2d5a/16.jpg",
+        "locator": "Native listing photo 16 of 35",
+        "sha256": "667eae10b39c6874680b6ebecea949a5371013798cfe0c472dce353a6fe3e0b4"
+      },
+      {
+        "id": "listing-photo-17",
+        "status": "reviewed",
+        "roomType": "bedroom",
+        "confidence": "medium",
+        "observations": [
+          "Empty room with floral wallpaper, worn wood flooring, three windows, a radiator below the windows, ceiling fan/light, and a recessed alcove with cartoon murals.",
+          "Wallpaper and wall finishes show peeling and patches of exposed surface in places."
+        ],
+        "uncertainties": [
+          "Whether this is a distinct room from the previous photo is not proven.",
+          "Dimensions, services, and structural condition are unknown."
+        ],
+        "questions": [
+          "Should the alcove, windows, and radiator positions constrain any change of use for this space?",
+          "Could proximity to a future powder room be assessed only after locating the existing bathroom stack on site?"
+        ],
+        "nextSteps": [
+          "Measure the room, window openings, alcove, and radiator position on site.",
+          "Verify heating, electrical, and plumbing routes before considering layout changes."
+        ],
+        "sourceId": "atproperties-listing",
+        "pageUrl": "https://www.atproperties.com/PAPH2657666/7149-bingham-street-philadelphia-pennsylvania-19111-brightmls",
+        "imageUrl": "https://resources.atproperties.com/images/BRIGHTMLS/PA/PH2/657666/6a765126b2d5a/17.jpg",
+        "locator": "Native listing photo 17 of 35",
+        "sha256": "1cb015dcf46b59f4dd26034259ef7458467df4189b25f14be41aeafdf7a4fb02"
+      },
+      {
+        "id": "listing-photo-18",
+        "status": "reviewed",
+        "roomType": "bathroom",
+        "confidence": "high",
+        "observations": [
+          "Bathroom with a toilet under a tall window, tiled floor, floral lower-wall covering, wall cabinet, and a tub/shower with frosted sliding doors on the right.",
+          "No sink/vanity is visible in this view; finishes and wallpaper show wear."
+        ],
+        "uncertainties": [
+          "Plumbing routes, venting, and fixture condition cannot be determined from pixels.",
+          "Whether this is the only bathroom is unknown."
+        ],
+        "questions": [
+          "Could the existing bathroom plumbing location inform feasibility of a separate powder room elsewhere?",
+          "What clearances remain around the toilet and tub/shower for any refresh work?"
+        ],
+        "nextSteps": [
+          "Measure the bathroom, window, toilet, and tub/shower clearances on site.",
+          "Have a plumber locate visible supply/drain connections and check fixture operation in person."
+        ],
+        "sourceId": "atproperties-listing",
+        "pageUrl": "https://www.atproperties.com/PAPH2657666/7149-bingham-street-philadelphia-pennsylvania-19111-brightmls",
+        "imageUrl": "https://resources.atproperties.com/images/BRIGHTMLS/PA/PH2/657666/6a765126b2d5a/18.jpg",
+        "locator": "Native listing photo 18 of 35",
+        "sha256": "f259d8031084cf08a55bf405812b95073406013a596e6edc93df2abb9de8201d"
+      },
+      {
+        "id": "listing-photo-19",
+        "status": "reviewed",
+        "roomType": "bathroom",
+        "confidence": "high",
+        "observations": [
+          "Bathroom view dominated by a tub/shower with frosted sliding doors in a gold-tone frame, with a toilet and tall window to the left.",
+          "Floral wall covering and painted walls are visible around the window."
+        ],
+        "uncertainties": [
+          "This may be another view of the same bathroom; distinct-room status is not proven.",
+          "Hidden plumbing and waterproofing conditions are not visible."
+        ],
+        "questions": [
+          "Does the existing tub/shower layout leave any flexibility relevant to adding a separate powder room elsewhere?",
+          "What is the measured clearance between the toilet, window wall, and tub/shower?"
+        ],
+        "nextSteps": [
+          "Open and inspect the tub/shower enclosure and fixtures during a site visit.",
+          "Measure the room and confirm drain/supply locations with a licensed plumber."
+        ],
+        "sourceId": "atproperties-listing",
+        "pageUrl": "https://www.atproperties.com/PAPH2657666/7149-bingham-street-philadelphia-pennsylvania-19111-brightmls",
+        "imageUrl": "https://resources.atproperties.com/images/BRIGHTMLS/PA/PH2/657666/6a765126b2d5a/19.jpg",
+        "locator": "Native listing photo 19 of 35",
+        "sha256": "84934f0b6a230a5b7228ff805b5166f62170d797c55a3f5c617208cbf4f2c725"
+      },
+      {
+        "id": "listing-photo-20",
+        "status": "reviewed",
+        "roomType": "bathroom",
+        "confidence": "high",
+        "observations": [
+          "Bathroom vanity with integrated sink and two-handle faucet, light wood cabinets, open wood shelving above, towel bar, and a tall window beside it.",
+          "Floral wallpaper below the window and plain painted walls above; no mirror is visible in the open shelving unit."
+        ],
+        "uncertainties": [
+          "Sink and faucet function and hidden drain/supply condition are unknown.",
+          "Exact relationship to the other bathroom views is not proven."
+        ],
+        "questions": [
+          "Could this existing vanity/plumbing zone help a plumber assess tie-in options for an added powder room?",
+          "What storage and counter space would a kitchen/bath refresh brief require compared with what is visible here?"
+        ],
+        "nextSteps": [
+          "Measure the vanity, window, and toilet-area clearances and photograph all plumbing connections.",
+          "Check faucet/sink operation and cabinet condition in person."
+        ],
+        "sourceId": "atproperties-listing",
+        "pageUrl": "https://www.atproperties.com/PAPH2657666/7149-bingham-street-philadelphia-pennsylvania-19111-brightmls",
+        "imageUrl": "https://resources.atproperties.com/images/BRIGHTMLS/PA/PH2/657666/6a765126b2d5a/20.jpg",
+        "locator": "Native listing photo 20 of 35",
+        "sha256": "7e7c2e1316d46bbef14a644732d62aca7e715abb2274df3bd64aefd96a083c12"
+      },
+      {
+        "id": "listing-photo-21",
+        "status": "reviewed",
+        "roomType": "bedroom",
+        "confidence": "medium",
+        "observations": [
+          "Empty room with worn wood flooring, ceiling fan/light, radiator at right, two door openings, and walls extensively covered with painted sports logos and lettering.",
+          "Painted wall graphics cover most wall surfaces; floors show heavy wear patterns."
+        ],
+        "uncertainties": [
+          "Room use and dimensions are unconfirmed.",
+          "Paint composition, wall substrate, and hidden services are unknown and require professional checks."
+        ],
+        "questions": [
+          "Must this remain a bedroom, or could any portion be studied for a powder room subject to plumbing checks?",
+          "What surface preparation would the painted graphics require if this room is refreshed?"
+        ],
+        "nextSteps": [
+          "Measure the room, doors, window, and radiator position on site.",
+          "Confirm room use, heating/electrical locations, and route to kitchen and bathrooms during the visit."
+        ],
+        "sourceId": "atproperties-listing",
+        "pageUrl": "https://www.atproperties.com/PAPH2657666/7149-bingham-street-philadelphia-pennsylvania-19111-brightmls",
+        "imageUrl": "https://resources.atproperties.com/images/BRIGHTMLS/PA/PH2/657666/6a765126b2d5a/21.jpg",
+        "locator": "Native listing photo 21 of 35",
+        "sha256": "653124783680530d9bdf53c748aa4656cc676b5602f89135a63df9f3976ea5b9"
+      },
+      {
+        "id": "listing-photo-22",
+        "status": "reviewed",
+        "roomType": "bedroom",
+        "confidence": "low",
+        "observations": [
+          "Empty upper-level room with extensive colorful painted sports logos and graphics covering multiple walls, a small basketball hoop, three windows, a radiator, a ceiling fan, and a T"
+        ],
+        "uncertainties": [
+          "Room function is not certain from fixtures alone; no kitchen cabinetry, appliances, sink, toilet, or other plumbing fixtures are visible.",
+          "Dimensions, ceiling height, and the location or condition of any hidden services are unknown."
+        ],
+        "questions": [
+          "Is this room under consideration for conversion to a kitchen or powder room, or is it only relevant as a possible location to evaluate once existing services are confirmed on site?",
+          "Should the painted wall graphics be removed, covered, or retained in any refresh scope for this room?"
+        ],
+        "nextSteps": [
+          "Measure the room, windows, and radiator position on site, and confirm any nearby existing water and waste services without assuming they extend to this room.",
+          "Have the appropriate professionals assess the painted wall and wood floor surfaces and what preparation a kitchen or powder-room use would require."
+        ],
+        "sourceId": "atproperties-listing",
+        "pageUrl": "https://www.atproperties.com/PAPH2657666/7149-bingham-street-philadelphia-pennsylvania-19111-brightmls",
+        "imageUrl": "https://resources.atproperties.com/images/BRIGHTMLS/PA/PH2/657666/6a765126b2d5a/22.jpg",
+        "locator": "Native listing photo 22 of 35",
+        "sha256": "11c79266a092fba26b2c116ffb3b023b00783429da0f7fd410b6edec29e93ce9"
+      },
+      {
+        "id": "listing-photo-23",
+        "status": "reviewed",
+        "roomType": "bedroom",
+        "confidence": "low",
+        "observations": [
+          "Empty room with worn wood flooring, a suspended tile ceiling with ceiling fan, two closed or partially open paneled doors, wall paint loss or patching, baseboard outlets, and a "
+        ],
+        "uncertainties": [
+          "No sink, toilet, kitchen fittings, or visible supply or waste lines are present in this view.",
+          "Whether the two doors serve closets, circulation, or other rooms cannot be determined from this single view."
+        ],
+        "questions": [
+          "Could this room or an adjacent space shown only through the open doorway be a candidate for a powder room, subject to confirming plumbing access and clearances on site?",
+          "Is ceiling replacement or retention of the suspended tile ceiling and fan part of the desired refresh scope?"
+        ],
+        "nextSteps": [
+          "Measure the room, ceiling height, door swings, and outlet locations, and trace whether any existing plumbing is accessible from adjacent spaces on site.",
+          "Check the condition and makeup of the wall and floor finishes with qualified professionals before assuming repainting or refinishing is sufficient."
+        ],
+        "sourceId": "atproperties-listing",
+        "pageUrl": "https://www.atproperties.com/PAPH2657666/7149-bingham-street-philadelphia-pennsylvania-19111-brightmls",
+        "imageUrl": "https://resources.atproperties.com/images/BRIGHTMLS/PA/PH2/657666/6a765126b2d5a/23.jpg",
+        "locator": "Native listing photo 23 of 35",
+        "sha256": "c4c56dcc4c27f0d4fb0a85317dc4dcac0767c9bccef0d2c04eeb312ba06934ca"
+      },
+      {
+        "id": "listing-photo-24",
+        "status": "reviewed",
+        "roomType": "bedroom",
+        "confidence": "low",
+        "observations": [
+          "Empty room with three windows, a radiator, ceiling fan, suspended tile ceiling, wood flooring, and extensive pink, white, and gray peeling or patchy wall paint.",
+          "Small painted graphics appear on the wall beside the right-hand window, and electrical outlets are visible along the baseboards."
+        ],
+        "uncertainties": [
+          "Room use is ambiguous because no beds, kitchen equipment, bathroom fixtures, or closets are clearly shown.",
+          "No visible plumbing fixtures are present, and hidden service routes and structural capacity remain unknown."
+        ],
+        "questions": [
+          "Is this room being considered for a kitchen or powder-room conversion, or does its value to the project depend mainly on confirming proximity to existing plumbing in the kitchen or",
+          "Should the extensive wall-surface preparation be included in the refresh scope even if this room remains a habitable room rather than becoming a wet room?"
+        ],
+        "nextSteps": [
+          "Measure window and radiator locations, ceiling height, and room dimensions, and verify on site where the nearest existing water, waste, and vent services are located.",
+          "Obtain professional assessment of the peeling wall finishes and wood floor before defining cosmetic preparation or any conversion work."
+        ],
+        "sourceId": "atproperties-listing",
+        "pageUrl": "https://www.atproperties.com/PAPH2657666/7149-bingham-street-philadelphia-pennsylvania-19111-brightmls",
+        "imageUrl": "https://resources.atproperties.com/images/BRIGHTMLS/PA/PH2/657666/6a765126b2d5a/24.jpg",
+        "locator": "Native listing photo 24 of 35",
+        "sha256": "77555d866f97a3ff18f875ab98bc5603c69c81a52cc0bbaefc6968eb11a2f3aa"
+      },
+      {
+        "id": "listing-photo-25",
+        "status": "reviewed",
+        "roomType": "basement",
+        "confidence": "high",
+        "observations": [
+          "Basement view with carpeted stairs, red and cream patterned tile flooring in the foreground, a concrete-floored rear area, a small high window, exposed ductwork, and a radiator ",
+          "The rear ceiling area is open or unfinished with visible framing, wiring, and fluorescent lighting."
+        ],
+        "uncertainties": [
+          "No toilet, sink, floor drain, or clearly identified waste or water line is visible in this view.",
+          "Ceiling height, duct clearance, stair clearances, and below-slab drainage conditions cannot be determined from the image."
+        ],
+        "questions": [
+          "Is the basement a preferred candidate location for the additional powder room, and if so, which part of this space would be considered subject to service access and headroom checks",
+          "Would basement use require the tiled area to remain circulation space to the stairs, limiting where a powder-room enclosure could be placed?"
+        ],
+        "nextSteps": [
+          "Measure ceiling heights in both the tiled and rear areas, including clear height below the duct and beams, plus stair dimensions and clearances.",
+          "On site, locate and identify existing water, waste, vent, and electrical services and have qualified professionals assess moisture, drainage options, and whether a powder-room fixt"
+        ],
+        "sourceId": "atproperties-listing",
+        "pageUrl": "https://www.atproperties.com/PAPH2657666/7149-bingham-street-philadelphia-pennsylvania-19111-brightmls",
+        "imageUrl": "https://resources.atproperties.com/images/BRIGHTMLS/PA/PH2/657666/6a765126b2d5a/25.jpg",
+        "locator": "Native listing photo 25 of 35",
+        "sha256": "ec134af140a9517b1f738475d4fd6305a43509aece838dbbdbf0d8c26110e318"
+      },
+      {
+        "id": "listing-photo-26",
+        "status": "reviewed",
+        "roomType": "basement",
+        "confidence": "high",
+        "observations": [
+          "Long basement room with red and cream patterned tile flooring, painted beams, a large insulated or wrapped duct along the ceiling, small high window, wall outlets, and a wooden ",
+          "Walls show scuffs, patches, and a rectangular boarded or patched area; no bathroom or kitchen fixtures are visible."
+        ],
+        "uncertainties": [
+          "The image does not establish whether plumbing can be routed to this room or whether drainage falls are available.",
+          "Exact headroom below the duct and beams and the function of patched wall areas remain unknown."
+        ],
+        "questions": [
+          "Could a powder room be inserted along this long basement wall if on-site checks confirm suitable headroom, fixture clearances, and access to water, waste, and vent services?",
+          "Should the existing duct and beams remain exposed or be concealed, given that this choice would affect usable headroom for any new powder room?"
+        ],
+        "nextSteps": [
+          "Measure the room length and width, ceiling height, beam and duct clearances, stair opening, and any potential fixture layout without assuming code clearances.",
+          "Trace existing plumbing and electrical services from this space toward the kitchen and any existing bathrooms, and check window size, ventilation options, and moisture conditio"
+        ],
+        "sourceId": "atproperties-listing",
+        "pageUrl": "https://www.atproperties.com/PAPH2657666/7149-bingham-street-philadelphia-pennsylvania-19111-brightmls",
+        "imageUrl": "https://resources.atproperties.com/images/BRIGHTMLS/PA/PH2/657666/6a765126b2d5a/26.jpg",
+        "locator": "Native listing photo 26 of 35",
+        "sha256": "67d1984c31541beef2fba81197f0db893450ecbe5132642f8fcebf1d67179c9a"
+      },
+      {
+        "id": "listing-photo-27",
+        "status": "reviewed",
+        "roomType": "basement",
+        "confidence": "high",
+        "observations": [
+          "Unfinished basement or utility area with exposed ceiling joists, numerous visible pipes, ducts, wires and junction items, a fluorescent light, concrete floor, painted block or pl",
+          "A freestanding yellow cupboard, a radiator in the foreground, a doorway to stairs, and discolored or patched walls are visible; no sink or toilet is shown."
+        ],
+        "uncertainties": [
+          "The purpose, capacity, condition, and connectivity of the exposed pipes and wiring cannot be identified reliably from pixels alone.",
+          "No confirmed water supply, waste outlet, vent, or floor drain for a new powder room is visible."
+        ],
+        "questions": [
+          "Is this utility area the intended service hub for a basement powder room or for rerouting services to support the kitchen refresh, subject to professional identification of the vi",
+          "Would enclosing any part of this utility space for a powder room still preserve required access to the visible pipes, valves, panels, and cleanouts once they are identified on si"
+        ],
+        "nextSteps": [
+          "Have qualified plumbers and electricians identify each visible pipe, duct, and cable on site and confirm which, if any, could serve a powder room and kitchen refresh.",
+          "Measure clear ceiling height under the joists and pipes, check the concrete floor for possible drainage routes without assuming below-slab conditions, and assess moisture and ve"
+        ],
+        "sourceId": "atproperties-listing",
+        "pageUrl": "https://www.atproperties.com/PAPH2657666/7149-bingham-street-philadelphia-pennsylvania-19111-brightmls",
+        "imageUrl": "https://resources.atproperties.com/images/BRIGHTMLS/PA/PH2/657666/6a765126b2d5a/27.jpg",
+        "locator": "Native listing photo 27 of 35",
+        "sha256": "9d49549da8fe9bdf8c94e8aa64bbf1b992e1a0952247a9cfa93655d44dc74a93"
+      },
+      {
+        "id": "listing-photo-28",
+        "status": "reviewed",
+        "roomType": "exterior",
+        "confidence": "high",
+        "observations": [
+          "View from a wooden deck or stair landing with railings overlooking a grassed rear yard with mature trees, chain-link and timber fencing, two sheds, shrubs, and neighboring house",
+          "The foreground deck boards and rails are weathered in appearance, and shadows indicate uneven sunlight across the yard."
+        ],
+        "uncertainties": [
+          "No exterior kitchen, bathroom, plumbing, or utility connections are visible.",
+          "Property boundaries, shed ownership or condition, deck structure, drainage, and underground services cannot be determined from the image."
+        ],
+        "questions": [
+          "Would the project consider any rear extension, external works, or relocation of sheds or deck elements to create space for a powder room, or should the project remain entirely w",
+          "Could rear-yard access be used for construction deliveries or waste removal for the kitchen refresh, subject to confirming ownership, access rights, and gate widths on site?"
+        ],
+        "nextSteps": [
+          "Survey the rear access, deck or stair footprint, yard levels, fence lines, and locations of sheds and trees before considering any extension, external drainage work, or construct",
+          "Confirm on site whether any external water, sewer, or utility routes are present and accessible, without inferring them from neighboring buildings or yard features."
+        ],
+        "sourceId": "atproperties-listing",
+        "pageUrl": "https://www.atproperties.com/PAPH2657666/7149-bingham-street-philadelphia-pennsylvania-19111-brightmls",
+        "imageUrl": "https://resources.atproperties.com/images/BRIGHTMLS/PA/PH2/657666/6a765126b2d5a/28.jpg",
+        "locator": "Native listing photo 28 of 35",
+        "sha256": "62f46d1456657fb62f9e1de9d6cf3fd1dd9dadb94a9106a41ebaa31f711a36cf"
+      },
+      {
+        "id": "listing-photo-29",
+        "status": "reviewed",
+        "roomType": "exterior",
+        "confidence": "high",
+        "observations": [
+          "Grass yard with patchy bare areas, trees and shrubs, viewed from near a wooden post.",
+          "Chain-link fencing, a small white shed with a single door, and neighboring houses visible beyond."
+        ],
+        "uncertainties": [
+          "No kitchen, powder-room, plumbing, or interior layout is visible.",
+          "Boundaries, dimensions, and construction access are not established by this view."
+        ],
+        "questions": [
+          "Is rear-yard access usable for kitchen-refresh deliveries or construction staging?",
+          "Could any interior space near the rear, not shown here, be considered for a powder room?"
+        ],
+        "nextSteps": [
+          "Confirm property boundaries, fence lines, and rear access on site.",
+          "Photograph and measure the house rear wall and any rear interior rooms not shown."
+        ],
+        "sourceId": "atproperties-listing",
+        "pageUrl": "https://www.atproperties.com/PAPH2657666/7149-bingham-street-philadelphia-pennsylvania-19111-brightmls",
+        "imageUrl": "https://resources.atproperties.com/images/BRIGHTMLS/PA/PH2/657666/6a765126b2d5a/29.jpg",
+        "locator": "Native listing photo 29 of 35",
+        "sha256": "b2b67d4e31e7a706ba82dd0e36ea95fa16f950a0c940047875c83aa9a1a21e0e"
+      },
+      {
+        "id": "listing-photo-30",
+        "status": "reviewed",
+        "roomType": "exterior",
+        "confidence": "high",
+        "observations": [
+          "Rear brick facade with a white glazed door under a small awning and multiple white-framed windows.",
+          "Wooden deck with railings in the foreground, with fencing and vegetation to the sides."
+        ],
+        "uncertainties": [
+          "Interior rooms behind the door and windows cannot be identified from outside.",
+          "No services, dimensions, or structural details are visible."
+        ],
+        "questions": [
+          "Does the rear door open from the kitchen or from another room?",
+          "Would retaining or altering the deck affect a kitchen refresh or possible rear addition?"
+        ],
+        "nextSteps": [
+          "Identify the interior room behind the rear door and adjacent windows from inside.",
+          "Locate existing water, waste, vent, and electrical services inside before planning a powder room."
+        ],
+        "sourceId": "atproperties-listing",
+        "pageUrl": "https://www.atproperties.com/PAPH2657666/7149-bingham-street-philadelphia-pennsylvania-19111-brightmls",
+        "imageUrl": "https://resources.atproperties.com/images/BRIGHTMLS/PA/PH2/657666/6a765126b2d5a/30.jpg",
+        "locator": "Native listing photo 30 of 35",
+        "sha256": "f4f5415af9e6a82eb3fa19b482a8703fc2bee5bb212099c25f7a2b0f31d5ac40"
+      },
+      {
+        "id": "listing-photo-31",
+        "status": "reviewed",
+        "roomType": "exterior",
+        "confidence": "high",
+        "observations": [
+          "Wider rear view of a brick building with wooden deck, stairs, side path, bins, and a large tree in the foreground.",
+          "Multiple windows and rear doors are visible, including those of an adjoining portion of the building."
+        ],
+        "uncertainties": [
+          "Unit boundaries and interior adjacency cannot be determined from this view.",
+          "No kitchen or existing bathroom/powder-room details are visible."
+        ],
+        "questions": [
+          "Which rear door and deck area belong to the subject property?",
+          "Does the side path provide practical access for kitchen works?"
+        ],
+        "nextSteps": [
+          "Confirm the subject unit and its rear entry within the brick building on site.",
+          "Inspect the interior layout and service locations adjoining the rear wall."
+        ],
+        "sourceId": "atproperties-listing",
+        "pageUrl": "https://www.atproperties.com/PAPH2657666/7149-bingham-street-philadelphia-pennsylvania-19111-brightmls",
+        "imageUrl": "https://resources.atproperties.com/images/BRIGHTMLS/PA/PH2/657666/6a765126b2d5a/31.jpg",
+        "locator": "Native listing photo 31 of 35",
+        "sha256": "c23a450079251b601f0120a9d6a48e9c3412db643e7f219a406ea9fbe10e14cd"
+      },
+      {
+        "id": "listing-photo-32",
+        "status": "reviewed",
+        "roomType": "exterior",
+        "confidence": "high",
+        "observations": [
+          "Top-down aerial view of several roof forms at a street corner, with streets, parked cars, trees, and rear yards.",
+          "Adjoining properties show driveways, vehicles, sheds, and varied rear-yard uses."
+        ],
+        "uncertainties": [
+          "Parcel identity, boundaries, and dimensions cannot be verified from pixels alone.",
+          "No interior layout or below-ground services are visible."
+        ],
+        "questions": [
+          "Which roof and lot in this aerial view are the subject property?",
+          "Is there visible yard or access area that should be tested for staging without assuming an addition is feasible?"
+        ],
+        "nextSteps": [
+          "Confirm the subject parcel, building footprint, and boundaries against site records on site.",
+          "Check rear-yard access, roof drainage discharge points, and service entry locations in person."
+        ],
+        "sourceId": "atproperties-listing",
+        "pageUrl": "https://www.atproperties.com/PAPH2657666/7149-bingham-street-philadelphia-pennsylvania-19111-brightmls",
+        "imageUrl": "https://resources.atproperties.com/images/BRIGHTMLS/PA/PH2/657666/6a765126b2d5a/32.jpg",
+        "locator": "Native listing photo 32 of 35",
+        "sha256": "62b5de120efdcbf2ad5ebb6f0bd1ef17d309b614b3c08e724feced9fc50317c9"
+      },
+      {
+        "id": "listing-photo-33",
+        "status": "reviewed",
+        "roomType": "exterior",
+        "confidence": "medium",
+        "observations": [
+          "Wide aerial view of a dense residential neighborhood with many houses, streets, trees, and rear yards.",
+          "The subject property is not distinctly identifiable at this distance."
+        ],
+        "uncertainties": [
+          "No individual kitchen, interior, or service detail can be read at this scale.",
+          "Subject-property location within the view is uncertain."
+        ],
+        "questions": [
+          "Can the subject property be pinpointed to assess its lot and access in context?",
+          "Does neighborhood street access affect kitchen material deliveries?"
+        ],
+        "nextSteps": [
+          "Use a closer, labeled site plan to identify the subject lot before using aerial context for planning.",
+          "Verify street access, parking, and delivery routes at the property."
+        ],
+        "sourceId": "atproperties-listing",
+        "pageUrl": "https://www.atproperties.com/PAPH2657666/7149-bingham-street-philadelphia-pennsylvania-19111-brightmls",
+        "imageUrl": "https://resources.atproperties.com/images/BRIGHTMLS/PA/PH2/657666/6a765126b2d5a/33.jpg",
+        "locator": "Native listing photo 33 of 35",
+        "sha256": "fd91554d0aeb432a5fe912019eafa30135545ac394f7eb657390cd7d4634a45c"
+      },
+      {
+        "id": "listing-photo-34",
+        "status": "reviewed",
+        "roomType": "exterior",
+        "confidence": "medium",
+        "observations": [
+          "Wide aerial neighborhood view from another angle, with dense housing, roads, trees, and a distant skyline.",
+          "Individual property features are too small to assess for kitchen or powder-room planning."
+        ],
+        "uncertainties": [
+          "Subject property and its boundaries are not identifiable from this view alone.",
+          "No dimensions, interiors, or services are visible."
+        ],
+        "questions": [
+          "Which building is the subject property in this aerial context?",
+          "What access constraints should be confirmed on the ground for a refresh project?"
+        ],
+        "nextSteps": [
+          "Confirm the subject lot with an address-based site visit rather than this distant aerial.",
+          "Check on-street parking and the actual approach to the rear of the property."
+        ],
+        "sourceId": "atproperties-listing",
+        "pageUrl": "https://www.atproperties.com/PAPH2657666/7149-bingham-street-philadelphia-pennsylvania-19111-brightmls",
+        "imageUrl": "https://resources.atproperties.com/images/BRIGHTMLS/PA/PH2/657666/6a765126b2d5a/34.jpg",
+        "locator": "Native listing photo 34 of 35",
+        "sha256": "a12c295d18bff5b6b81a4a3c1045657ae88bdd85e11600c39bb757017a85a774"
+      },
+      {
+        "id": "listing-photo-35",
+        "status": "reviewed",
+        "roomType": "exterior",
+        "confidence": "medium",
+        "observations": [
+          "Wide aerial view of a residential area with many detached and attached houses, streets, vehicles, and yards.",
+          "Roofs and yards are visible only at neighborhood scale; no interior detail is shown."
+        ],
+        "uncertainties": [
+          "Subject-property identification is uncertain at this scale.",
+          "Kitchen condition, powder-room space, and all services remain unknown."
+        ],
+        "questions": [
+          "Can a closer aerial or site plan confirm the subject footprint and rear access?",
+          "What interior evidence is needed to test kitchen-refresh scope and powder-room feasibility?"
+        ],
+        "nextSteps": [
+          "Identify the subject property on site and obtain interior kitchen and bathroom photographs and measurements.",
+          "Locate existing plumbing stacks and any underused interior space that could be tested for a powder room."
+        ],
+        "sourceId": "atproperties-listing",
+        "pageUrl": "https://www.atproperties.com/PAPH2657666/7149-bingham-street-philadelphia-pennsylvania-19111-brightmls",
+        "imageUrl": "https://resources.atproperties.com/images/BRIGHTMLS/PA/PH2/657666/6a765126b2d5a/35.jpg",
+        "locator": "Native listing photo 35 of 35",
+        "sha256": "44774dabba2c0289005d0fc414b1e19cbdd5fc6d2e20c2fa499a60dc1b0d1a1b"
+      }
+    ]
+  }
+}

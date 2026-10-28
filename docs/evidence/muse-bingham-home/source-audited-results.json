@@ -1,0 +1,211 @@
+{
+  "kind": "property-research",
+  "address": "7149 Bingham Street, Philadelphia PA 19111",
+  "jobId": "project:0a19d437-e8dd-43c1-9121-f055373ca721:property:fact:10aea412-d8fd-45d9-a4be-5099b6982355:1",
+  "method": "user-import",
+  "verification": "unreviewed",
+  "sources": [
+    {
+      "id": "phila-opa",
+      "title": "Philadelphia Office of Property Assessment \u00b7 public record (OPA via phl.carto.com SQL API, re-queried live this run)",
+      "url": "https://phl.carto.com/api/v2/sql?q=SELECT+parcel_number%2Clocation%2Ctotal_livable_area%2Ctotal_area%2Cfrontage%2Cdepth%2Cyear_built%2Cnumber_stories%2Czoning+FROM+opa_properties_public+WHERE+UPPER%28location%29+%3D+%277149+BINGHAM+ST%27+LIMIT+8",
+      "retrievedAt": "2026-10-27T21:16:01.037Z"
+    },
+    {
+      "id": "atproperties-listing",
+      "title": "RLAH @properties listing PAPH2657666 \u2014 7149 Bingham Street (page opened; body truncated by fetcher, structured facts corroborated via Compass syndication below)",
+      "url": "https://www.atproperties.com/PAPH2657666/7149-bingham-street-philadelphia-pennsylvania-19111-brightmls",
+      "retrievedAt": "2026-10-27T21:20:00.000Z"
+    },
+    {
+      "id": "compass-listing",
+      "title": "Compass syndication of MLS PAPH2657666 \u2014 7149 Bingham St (35-photo gallery; Photos 1\u20137 image URLs observed in page)",
+      "url": "https://www.compass.com/homedetails/7149-Bingham-St-Philadelphia-PA-19111/1OGO6J_pid/",
+      "retrievedAt": "2026-10-27T21:22:00.000Z"
+    },
+    {
+      "id": "phila-permits-query",
+      "title": "Philadelphia L&I permits (phl.carto.com 'permits' table) \u2014 exact-address query returning 0 rows",
+      "url": "https://phl.carto.com/api/v2/sql?q=SELECT+permitnumber%2Cpermittype%2Cstatus%2Cpermitissuedate%2Caddress%2Capprovedscopeofwork+FROM+permits+WHERE+address+%3D+%277149+BINGHAM+ST%27+ORDER+BY+permitissuedate+DESC+LIMIT+20",
+      "retrievedAt": "2026-10-27T21:24:00.000Z"
+    },
+    {
+      "id": "phila-atlas",
+      "title": "Philadelphia Atlas property page (opened; no readable property content returned by fetcher \u2014 lead only, no facts taken)",
+      "url": "https://atlas.phila.gov/7149%20BINGHAM%20ST",
+      "retrievedAt": "2026-10-27T21:23:00.000Z"
+    },
+    {
+      "id": "listing-gallery-audit",
+      "title": "Source audit \u00b7 @properties native listing gallery, MLS PAPH2657666 \u00b7 photos 1, 11, 18 and 25 visually inspected",
+      "url": "https://www.atproperties.com/PAPH2657666/7149-bingham-street-philadelphia-pennsylvania-19111-brightmls",
+      "retrievedAt": "2026-10-27T21:23:12.825040Z"
+    }
+  ],
+  "findings": [
+    {
+      "label": "Existing bath count relevant to powder-room goal",
+      "value": "1 bathroom (structured fields); no existing powder room stated",
+      "sourceId": "compass-listing",
+      "limit": "Listing structured count only. No plumbing, waste/vent, or water-supply location inferred; powder-room feasibility is undetermined until services are exposed/located by qualified inspection."
+    },
+    {
+      "label": "Listing room sequence (description text only)",
+      "value": "Enclosed sun parlor with French doors opening to large living room, then formal dining area, then oversized kitchen described as having plenty of cabinetry and space for table and counter seating",
+      "sourceId": "compass-listing",
+      "limit": "Listing description wording only; no dimensions, no concealed-services inference. Sequence must be confirmed by walkthrough sketch before kitchen/powder-room planning."
+    },
+    {
+      "label": "Listing structured living area (Compass/MLS structured fields)",
+      "value": "1,512 sqft (3 beds / 1 bath header)",
+      "sourceId": "compass-listing",
+      "limit": "Listing structured field, not a measurement. CONFLICT: conflicts with listing description 'over 1,600 square feet' on same pages; both preserved, neither verified."
+    },
+    {
+      "label": "Listing description living area claim",
+      "value": "over 1,600 square feet of above-grade living space",
+      "sourceId": "compass-listing",
+      "limit": "Marketing description text, not a measurement. CONFLICT with 1,512 structured/OPA figure; requires field measurement to resolve. No room dimensions inferred."
+    },
+    {
+      "label": "Listing floor count \u2014 conflicts with OPA field",
+      "value": "2 levels/stories in Compass structured listing; OPA number_stories is 1",
+      "sourceId": "compass-listing",
+      "limit": "Source-audit addition: the listing explicitly reports 2, rather than merely implying upper rooms. No current floor survey or interpretation of the assessor field is established; resolve before design."
+    },
+    {
+      "label": "Recorded year built (OPA year_built)",
+      "value": "1925",
+      "sourceId": "phila-opa",
+      "limit": "Assessment record; may be historic, estimated or different from current conditions. Listing also states 1925; agreement is restatement risk, not independent verification."
+    },
+    {
+      "label": "Recorded zoning (OPA zoning)",
+      "value": "RSA3",
+      "sourceId": "phila-opa",
+      "limit": "Assessment record; may be historic, estimated or different from current conditions. Code text/limits not retrieved from an HTTPS primary source in this run \u2014 see nextQuestions; no compliance conclusion drawn."
+    },
+    {
+      "label": "Recorded living area (OPA total_livable_area, raw value; dataset units to confirm, listed elsewhere as sq ft)",
+      "value": "1512",
+      "sourceId": "phila-opa",
+      "limit": "Raw OPA total_livable_area; confirm dataset units. Lot/assessment data is not a measured room or building footprint. CONFLICT PRESERVED: structured listing fields also state 1,512 sq ft while listing description states over 1,600 sq ft above-grade \u2014 do not reconcile without measurement."
+    },
+    {
+      "label": "Assessment parcel (OPA parcel_number)",
+      "value": "532382800",
+      "sourceId": "phila-opa",
+      "limit": "Assessment record; may be historic, estimated or different from current conditions. Supplied UNREVIEWED lead re-queried live at same URL in this run; do not claim supplied record was retrieved by this run beyond this re-query."
+    },
+    {
+      "label": "City record address (OPA location)",
+      "value": "7149 BINGHAM ST",
+      "sourceId": "phila-opa",
+      "limit": "Assessment record; may be historic, estimated or different from current conditions."
+    },
+    {
+      "label": "Recorded lot area (OPA total_area, raw value; dataset units to confirm)",
+      "value": "3163",
+      "sourceId": "phila-opa",
+      "limit": "Raw OPA total_area; confirm dataset units. Lot/assessment data is not a measured room or building footprint. Listing states 0.07 acres / 3,163 sq ft lot, consistent as marketing restatement, not independent survey."
+    },
+    {
+      "label": "Recorded lot frontage (OPA raw value; units unconfirmed)",
+      "value": "25",
+      "sourceId": "phila-opa",
+      "limit": "Raw OPA frontage; confirm dataset units. Assessment dimension, not a survey; verify by survey/deed before any addition or setback planning."
+    },
+    {
+      "label": "Recorded lot depth (OPA raw value; units unconfirmed)",
+      "value": "127",
+      "sourceId": "phila-opa",
+      "limit": "Raw OPA depth; confirm dataset units. Assessment dimension, not a survey; 25 x 127 does not by itself establish buildable area or footprint."
+    },
+    {
+      "label": "Recorded stories (OPA number_stories)",
+      "value": "1",
+      "sourceId": "phila-opa",
+      "limit": "Assessment record; may be historic, estimated or different from current conditions. FLAGGED DISAGREEMENT: OPA records 1 story while listing markets a 3-bedroom twin/townhouse with main + upper rooms implied; do not use either for design until floors are counted on site. Definition difference possible."
+    },
+    {
+      "label": "Listing price and status observed (Compass syndication of MLS PAPH2657666)",
+      "value": "$245,000, Active, 3 beds, 1 bath, Townhouse, 0.07 acres, 1925, $162/sq ft",
+      "sourceId": "compass-listing",
+      "limit": "Point-in-time listing syndication; price/status change without notice and differ across syndication snapshots (other snapshots seen at $259,900/$269,900 under earlier MLS numbers). Not an appraisal or offer."
+    },
+    {
+      "label": "Permits query result for exact address string",
+      "value": "0 rows returned",
+      "sourceId": "phila-permits-query",
+      "limit": "Limited exact-match query only (address = '7149 BINGHAM ST', 20-row cap). Zero rows returned substantiates only that this query returned no rows; it does NOT prove no permits exist under variant addresses/unit strings. No total-count or absent-permit claim made."
+    },
+    {
+      "label": "Violations/inspections status",
+      "value": "Not established \u2014 do not treat as clear",
+      "sourceId": "phila-atlas",
+      "limit": "UNRESOLVED in this run. Atlas page fetch returned no readable property content. Must be re-checked in Atlas/L&I Property History before any work planning.",
+      "blockedReason": "Violations table query returned HTTP 400 (column/schema mismatch) in this run; no violations claim made either way."
+    }
+  ],
+  "images": [
+    {
+      "sourceId": "listing-gallery-audit",
+      "pageUrl": "https://www.atproperties.com/PAPH2657666/7149-bingham-street-philadelphia-pennsylvania-19111-brightmls",
+      "previewUrl": null,
+      "previewPermission": "unknown",
+      "capturedAt": "",
+      "id": "audit-kitchen",
+      "title": "Kitchen layout reference",
+      "locator": "Native @properties gallery \u00b7 photo 11 of 35 \u00b7 MLS PAPH2657666",
+      "imageUrl": "https://resources.atproperties.com/images/BRIGHTMLS/PA/PH2/657666/6a765126b2d5a/11.jpg",
+      "observations": "Browser source-audit note: cabinets, a peninsula, windows and a rear door are visible in this listing photo. Current conditions, dimensions and concealed services are unverified.",
+      "planningUse": "Measure cabinet runs, room and openings; confirm appliance services, heating equipment and proposed work limits on site."
+    },
+    {
+      "sourceId": "listing-gallery-audit",
+      "pageUrl": "https://www.atproperties.com/PAPH2657666/7149-bingham-street-philadelphia-pennsylvania-19111-brightmls",
+      "previewUrl": null,
+      "previewPermission": "unknown",
+      "capturedAt": "",
+      "id": "audit-bath",
+      "title": "Existing bathroom reference",
+      "locator": "Native @properties gallery \u00b7 photo 18 of 35 \u00b7 MLS PAPH2657666",
+      "imageUrl": "https://resources.atproperties.com/images/BRIGHTMLS/PA/PH2/657666/6a765126b2d5a/18.jpg",
+      "observations": "Browser source-audit note: a toilet below a window and an enclosure on the right are visible. This image does not establish fixture clearances or any concealed waste/vent route.",
+      "planningUse": "Measure the existing bathroom and fixture positions; locate accessible services with qualified help before assessing an additional powder room."
+    },
+    {
+      "sourceId": "listing-gallery-audit",
+      "pageUrl": "https://www.atproperties.com/PAPH2657666/7149-bingham-street-philadelphia-pennsylvania-19111-brightmls",
+      "previewUrl": null,
+      "previewPermission": "unknown",
+      "capturedAt": "",
+      "id": "audit-basement",
+      "title": "Basement and overhead access reference",
+      "locator": "Native @properties gallery \u00b7 photo 25 of 35 \u00b7 MLS PAPH2657666",
+      "imageUrl": "https://resources.atproperties.com/images/BRIGHTMLS/PA/PH2/657666/6a765126b2d5a/25.jpg",
+      "observations": "Browser source-audit note: stairs, ceiling framing/finished ceiling areas and overhead ductwork are visible. No connection to the bathroom or kitchen services is established.",
+      "planningUse": "Survey ceiling height and stair/headroom constraints; identify actual service locations and any access restrictions for the candidate powder-room area."
+    },
+    {
+      "sourceId": "listing-gallery-audit",
+      "pageUrl": "https://www.atproperties.com/PAPH2657666/7149-bingham-street-philadelphia-pennsylvania-19111-brightmls",
+      "previewUrl": null,
+      "previewPermission": "unknown",
+      "capturedAt": "",
+      "id": "audit-front",
+      "title": "Exterior access reference",
+      "locator": "Native @properties gallery \u00b7 photo 1 of 35 \u00b7 MLS PAPH2657666",
+      "imageUrl": "https://resources.atproperties.com/images/BRIGHTMLS/PA/PH2/657666/6a765126b2d5a/1.jpg",
+      "observations": "Browser source-audit note: front steps, enclosed porch and windows are visible. Property lines, structural condition and current state are unverified.",
+      "planningUse": "Confirm current access, delivery route and site constraints; use a measured survey for boundaries, not the photo."
+    }
+  ],
+  "nextQuestions": [
+    "Can you provide a measured sketch of the kitchen, existing bathroom and the proposed powder-room location, with ceiling heights and door/window positions?",
+    "Please take current matching photos for native listing photos 11 (kitchen), 18 (bathroom), 25 (basement) and 1 (exterior). Listing capture dates are unknown.",
+    "Resolve 1,512 versus over 1,600 sq ft and OPA one-story versus listing two-level records; do not size the renovation from either unverified value.",
+    "Have qualified trades locate accessible water, waste/vent and electrical services for the candidate powder room. The basement photo does not establish a feasible route.",
+    "Retrieve current permit/violation history and project-specific applicability before technical design. An empty exact-address permits query is not a clean-history determination."
+  ]
+}

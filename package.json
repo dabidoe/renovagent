@@ -1,0 +1,38 @@
+{
+  "name": "unpermitted-ai",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "npm run typecheck && npm run check:boundaries && vite build && npm run build:foundation",
+    "preview": "vite preview",
+    "test": "node --test tests/*.test.js && npm run test:foundation",
+    "typecheck": "tsc --noEmit",
+    "test:foundation": "node --import tsx --test tests/contracts/*.test.ts tests/domain/*.test.ts tests/integration/*.test.ts",
+    "build:foundation": "vite build --config vite.foundation.config.ts",
+    "check:boundaries": "node scripts/check-boundaries.mjs",
+    "format:foundation": "prettier --write \"packages/**/*.ts\" \"apps/**/*.{ts,tsx,css}\" \"fixtures/**/*.ts\" \"tests/**/*.ts\" \"scripts/*.{mjs,ts}\" vite.foundation.config.ts foundation.html",
+    "format:check": "prettier --check \"packages/**/*.ts\" \"apps/**/*.{ts,tsx,css}\" \"fixtures/**/*.ts\" \"tests/**/*.ts\" \"scripts/*.{mjs,ts}\" vite.foundation.config.ts foundation.html",
+    "muse:photos": "node --import tsx scripts/muse-photo-review.ts",
+    "muse:property": "node --import tsx scripts/muse-property-research.ts"
+  },
+  "devDependencies": {
+    "@types/react": "19.2.0",
+    "@types/react-dom": "19.2.0",
+    "fake-indexeddb": "6.2.4",
+    "prettier": "3.6.2",
+    "tsx": "4.23.15",
+    "typescript": "5.9.3",
+    "vite": "^6.0.7"
+  },
+  "dependencies": {
+    "firebase": "^13.1.0",
+    "react": "19.2.0",
+    "react-dom": "19.2.0"
+  },
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ]
+}

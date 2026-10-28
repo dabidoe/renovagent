@@ -1,0 +1,213 @@
+{
+  "type": "object",
+  "properties": {
+    "kind": {
+      "type": "string",
+      "enum": [
+        "property-research"
+      ]
+    },
+    "address": {
+      "type": "string"
+    },
+    "jobId": {
+      "type": "string"
+    },
+    "method": {
+      "type": "string",
+      "enum": [
+        "muse"
+      ]
+    },
+    "verification": {
+      "type": "string",
+      "enum": [
+        "unreviewed"
+      ]
+    },
+    "sources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "pattern": "^https://"
+          },
+          "retrievedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "url",
+          "retrievedAt"
+        ],
+        "additionalProperties": false
+      },
+      "maxItems": 30
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "value": {
+            "type": "string"
+          },
+          "sourceId": {
+            "type": "string"
+          },
+          "limit": {
+            "type": "string"
+          },
+          "blockedReason": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "minLength": 1,
+            "maxLength": 1000
+          }
+        },
+        "required": [
+          "label",
+          "value",
+          "sourceId",
+          "limit",
+          "blockedReason"
+        ],
+        "additionalProperties": false
+      },
+      "maxItems": 40
+    },
+    "images": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "sourceId": {
+            "type": "string"
+          },
+          "pageUrl": {
+            "type": "string",
+            "format": "uri",
+            "pattern": "^https://"
+          },
+          "previewUrl": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^https://"
+          },
+          "previewPermission": {
+            "type": "string",
+            "enum": [
+              "unknown",
+              "provider-embed",
+              "licensed"
+            ]
+          },
+          "capturedAt": {
+            "type": "string"
+          },
+          "locator": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "minLength": 1,
+            "maxLength": 300
+          },
+          "observations": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "minLength": 1,
+            "maxLength": 1000
+          },
+          "planningUse": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "minLength": 1,
+            "maxLength": 500
+          },
+          "blockedReason": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "minLength": 1,
+            "maxLength": 1000
+          },
+          "imageUrl": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uri",
+            "pattern": "^https://",
+            "maxLength": 2000
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "sourceId",
+          "pageUrl",
+          "previewUrl",
+          "previewPermission",
+          "capturedAt",
+          "locator",
+          "observations",
+          "planningUse",
+          "blockedReason",
+          "imageUrl"
+        ],
+        "additionalProperties": false
+      },
+      "maxItems": 12
+    },
+    "nextQuestions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 8
+    }
+  },
+  "required": [
+    "kind",
+    "address",
+    "jobId",
+    "method",
+    "verification",
+    "sources",
+    "findings",
+    "images",
+    "nextQuestions"
+  ],
+  "additionalProperties": false
+}

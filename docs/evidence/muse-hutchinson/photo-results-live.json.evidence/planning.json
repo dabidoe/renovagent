@@ -1,0 +1,121 @@
+{
+  "prompt": "Use ONLY Muse's attached-image observations below, not external research, earlier human labels or source-audit notes. These observations are unreviewed visual proposals, not verified site facts. For the project goal, propose 3–6 non-redundant decisions/questions and 4–8 ordered next steps, grounded in specific photo IDs. Cover relevant kitchen, existing bathroom, basement/service-access and circulation decisions when present. Keep sentences short, complete and under 35 words. Questions end with ?, next steps end with a period. Never estimate dimensions, infer hidden services, diagnose hazards or release construction. Separate user choices, site measurements and qualified review. Do not add room labels or facts; use only this model-generated evidence.\n{\"goal\":\"Build a photo-linked inventory of this home for home-improvement planning. Identify visible surfaces, fixtures and equipment; record uncertainty and choose what to retain, replace or investigate. No owner preferences, dimensions or feasibility are established.\",\"photos\":[{\"id\":\"photo-01\",\"roomType\":\"exterior\",\"confidence\":\"high\",\"observations\":[\"Brick rowhouse front with white security door, shuttered bay window and basement windows\",\"Upper windows with one window AC unit; planters, steps and overhead string lights visible\"],\"uncertainties\":[\"Unclear which of the adjacent rowhouses is the subject home for planning\",\"Window and door materials and operation not visible in this view\"]},{\"id\":\"photo-02\",\"roomType\":\"exterior\",\"confidence\":\"high\",\"observations\":[\"Angled street view of brick rowhouses showing fronts, steps and entry doors\",\"Red awnings on adjoining facade, flag, planters and overhead string lights visible\"],\"uncertainties\":[\"Subject property boundary among visible rowhouses is uncertain from pixels alone\",\"Rear or side exterior areas are not shown in this view\"]},{\"id\":\"photo-03\",\"roomType\":\"dining\",\"confidence\":\"medium\",\"observations\":[\"Dining table with six chairs on red carpet; sofas near front window in same open area\",\"Straight staircase with red carpet and metal railing beside closed white door\"],\"uncertainties\":[\"Room boundaries between living and dining areas are unclear in open space\",\"Ceiling and wall finishes and under-carpet flooring are not identifiable\"]},{\"id\":\"photo-04\",\"roomType\":\"living\",\"confidence\":\"medium\",\"observations\":[\"Two sofas with red pillows on red carpet; octagonal mirror on wall above sofa\",\"Dining set and wood display cabinet in background; carpeted staircase with metal rail\"],\"uncertainties\":[\"Connection to rear area through far opening is unclear from this view alone\",\"Wall attachment points and mirror mounting details are not visible\"]},{\"id\":\"photo-05\",\"roomType\":\"kitchen\",\"confidence\":\"high\",\"observations\":[\"Galley kitchen with wood cabinets, stainless fridge, gas range, hood and dishwasher\",\"Sink under rear window, pendant light, baseboard heater and side window visible\"],\"uncertainties\":[\"Cabinet interior storage and appliance connections not visible\",\"Rear door exterior area and security gate operation are unclear\"]},{\"id\":\"photo-06\",\"roomType\":\"kitchen\",\"confidence\":\"high\",\"observations\":[\"Kitchen with gas range, hood, fridge and wood cabinets beside wood-look flooring\",\"Open doorway showing red-carpeted area with dining table, stairs and front door\"],\"uncertainties\":[\"Layout link between kitchen doorway and front room needs on-site confirmation\",\"Range hood vent path and fridge surround clearances not visible\"]},{\"id\":\"photo-07\",\"roomType\":\"kitchen\",\"confidence\":\"high\",\"observations\":[\"L-shaped counter with sink under window, stainless dishwasher and wood cabinets\",\"Open white door with textured glass beside black security gate to exterior\"],\"uncertainties\":[\"Counter and backsplash materials and sink plumbing routes not identifiable\",\"Exterior space beyond rear door is only partly visible\"]},{\"id\":\"photo-08\",\"roomType\":\"uncertain\",\"confidence\":\"low\",\"observations\":[\"Patterned wallpaper walls, drop-tile ceiling, and carpet with wood trim\",\"White ceiling fan with lights and black loose cable across wall and floor\"],\"uncertainties\":[\"Room function unclear; no window or closet visible in this view\",\"Cable purpose and connection points not visible\"]},{\"id\":\"photo-09\",\"roomType\":\"bathroom\",\"confidence\":\"high\",\"observations\":[\"Large-format tile walls, tub with showerhead, corner shelves, and rod\",\"White toilet, gray vanity with sink, mirrored cabinet and 3-bulb light\"],\"uncertainties\":[\"Tub finish material and valve function not determinable from pixels\",\"Window ventilation path and exterior conditions not visible\"]},{\"id\":\"photo-10\",\"roomType\":\"uncertain\",\"confidence\":\"low\",\"observations\":[\"Vertical panel walls, drop-tile ceiling, and striped woven carpet\",\"Two wall outlets visible; partial door hardware at left edge\"],\"uncertainties\":[\"Room function unclear; no window, closet, or fixtures visible\",\"Wall marks show unknown prior attachments\"]},{\"id\":\"photo-11\",\"roomType\":\"bedroom\",\"confidence\":\"medium\",\"observations\":[\"Paneled walls, drop ceiling, striped carpet, window with blinds and radiator\",\"Wood sliding closet with shelf and doorway to red-carpet area with railing\"],\"uncertainties\":[\"Closet interior depth and fittings beyond shelf not visible\",\"Radiator and window operational state not visible\"]},{\"id\":\"photo-12\",\"roomType\":\"bedroom\",\"confidence\":\"medium\",\"observations\":[\"Striped walls, drop ceiling, carpet, two windows with vertical blinds\",\"Wood sliding closets, radiator, window AC unit, and dark ceiling fan\"],\"uncertainties\":[\"Heating/cooling distribution beyond radiator and AC not visible\",\"Screen panel leaning on wall and its intended location unclear\"]},{\"id\":\"photo-13\",\"roomType\":\"bedroom\",\"confidence\":\"medium\",\"observations\":[\"Vertical striped walls, drop ceiling, carpet, window with blinds and AC\",\"Four wood sliding closet doors, dark ceiling fan, screen on wall\"],\"uncertainties\":[\"Full room extent beyond this single view not confirmed\",\"AC support and sealing method and screen fit not visible\"]},{\"id\":\"photo-14\",\"roomType\":\"basement\",\"confidence\":\"medium\",\"observations\":[\"Carpeted room with drop-tile ceiling, sliding doors, small high window\",\"Open doorway to toilet room and open enclosure with meter and piping\"],\"uncertainties\":[\"Home level and full room layout beyond this view not confirmed\",\"Toilet-room fixtures beyond toilet and piping routes not visible\"]},{\"id\":\"photo-15\",\"roomType\":\"bathroom\",\"confidence\":\"high\",\"observations\":[\"Wall-mounted white sink with two-knob faucet and exposed piping below\",\"White toilet beside partial folding panel and high window opening\"],\"uncertainties\":[\"Wall finish variation near corner; coverage intent unclear from pixels\",\"Function and full extent of folding panel beyond cropped view unclear\"]},{\"id\":\"photo-16\",\"roomType\":\"basement\",\"confidence\":\"medium\",\"observations\":[\"Carpeted room with drop-tile ceiling, ceiling light and staircase with wood rail\",\"Freestanding metal shelving, mural wall covering and wood sliding doors\"],\"uncertainties\":[\"Whether space is below grade or ground level cannot be told from pixels\",\"Area beyond far open doorway and behind sliding doors not visible\"]},{\"id\":\"photo-17\",\"roomType\":\"utility\",\"confidence\":\"high\",\"observations\":[\"Two white laundry appliances with controls against wall with duct and valves\",\"Black wire shelving on tile floor; exposed joists with wiring and pipes above\"],\"uncertainties\":[\"Areas behind appliances and inside wooden cabinet not visible\",\"Full room extent outside frame and ceiling run endpoints not shown\"]},{\"id\":\"photo-18\",\"roomType\":\"exterior\",\"confidence\":\"high\",\"observations\":[\"Aerial view of attached brick rowhouses with flat roofs along street\",\"Sidewalk, parked cars and varied roof surfaces and rooftop fixtures visible\"],\"uncertainties\":[\"Which specific house in row is inventory subject cannot be told from pixels alone\",\"Street-level details and rear conditions not visible in aerial view\"]},{\"id\":\"photo-19\",\"roomType\":\"other\",\"confidence\":\"high\",\"observations\":[\"Floor-plan drawing labeled LAUNDRY, RECREATION ROOM and BATH\",\"Stair symbol, wall openings and disclaimer text about measurements visible\"],\"uncertainties\":[\"Diagram accuracy versus on-site layout not verifiable from pixels alone\",\"Finishes, fixtures and equipment within diagrammed rooms not shown\"]},{\"id\":\"photo-20\",\"roomType\":\"other\",\"confidence\":\"high\",\"observations\":[\"Floor-plan drawing labeled KITCHEN, DINING AREA and LIVING ROOM\",\"Stair symbol, wall openings and measurement disclaimer text visible\"],\"uncertainties\":[\"Diagram accuracy versus on-site layout not verifiable from pixels alone\",\"Finishes, fixtures and equipment within diagrammed rooms not shown\"]},{\"id\":\"photo-21\",\"roomType\":\"other\",\"confidence\":\"high\",\"observations\":[\"Floor-plan drawing labeled BEDROOM, BATH, HALL and PRIMARY BEDROOM\",\"Stair symbol, closet outlines and measurement disclaimer text visible\"],\"uncertainties\":[\"Diagram accuracy versus on-site layout not verifiable from pixels alone\",\"Finishes, fixtures and equipment within diagrammed rooms not shown\"]},{\"id\":\"photo-22\",\"roomType\":\"other\",\"confidence\":\"high\",\"observations\":[\"Three side-by-side black-and-white floor plans labeled Basement, 1st floor, 2nd floor.\",\"Room names, door and stair symbols, and window outlines visible in plan graphics.\"],\"uncertainties\":[\"Plan accuracy and current layout cannot be confirmed from diagram alone.\",\"Actual finishes, fixtures and equipment not visible in this diagram view.\"]}]}",
+  "runId": "01a18292-3e1f-7dd2-bdee-332a94148445",
+  "model": "muse-spark-1.3-contributor",
+  "result": {
+    "nextSteps": [
+      {
+        "kind": "site-measurement",
+        "photoIds": [
+          "photo-19",
+          "photo-20",
+          "photo-21",
+          "photo-22"
+        ],
+        "text": "Compare floor-plan drawings to on-site rooms, stairs, and openings and record visible differences without assuming accuracy."
+      },
+      {
+        "kind": "site-measurement",
+        "photoIds": [
+          "photo-05",
+          "photo-06",
+          "photo-07"
+        ],
+        "text": "Inventory visible kitchen cabinets, appliances, sink, counters, doors, and windows and record uncertain materials and connections."
+      },
+      {
+        "kind": "site-measurement",
+        "photoIds": [
+          "photo-09",
+          "photo-15"
+        ],
+        "text": "Inventory visible bathroom fixtures, tile, vanity, lighting, and windows and record uncertain materials and functions."
+      },
+      {
+        "kind": "site-measurement",
+        "photoIds": [
+          "photo-14",
+          "photo-16",
+          "photo-17"
+        ],
+        "text": "Inventory basement carpeted areas, shelving, laundry appliances, meter enclosure, and stairs and record uncertain extents."
+      },
+      {
+        "kind": "site-measurement",
+        "photoIds": [
+          "photo-03",
+          "photo-04",
+          "photo-06",
+          "photo-16"
+        ],
+        "text": "Record stairs, doorways, and open connections shown and note unclear boundaries and links for circulation inventory."
+      },
+      {
+        "kind": "user-choice",
+        "photoIds": [
+          "photo-05",
+          "photo-09",
+          "photo-14",
+          "photo-17"
+        ],
+        "text": "Choose retain, replace, or investigate for inventoried kitchen, bathroom, and basement items before further planning."
+      },
+      {
+        "kind": "qualified-review",
+        "photoIds": [
+          "photo-01",
+          "photo-02",
+          "photo-08",
+          "photo-10",
+          "photo-17",
+          "photo-18"
+        ],
+        "text": "Request qualified review of uncertain room functions, cable, piping, duct, and exterior subject identification for next planning."
+      }
+    ],
+    "questions": [
+      {
+        "photoIds": [
+          "photo-05",
+          "photo-06",
+          "photo-07"
+        ],
+        "text": "Which visible kitchen cabinets, counters, and appliances shown should be retained, replaced, or investigated further for planning?"
+      },
+      {
+        "photoIds": [
+          "photo-09",
+          "photo-15"
+        ],
+        "text": "Which bathroom fixtures and finishes shown should be retained, replaced, or investigated further for planning?"
+      },
+      {
+        "photoIds": [
+          "photo-14",
+          "photo-16",
+          "photo-17",
+          "photo-19"
+        ],
+        "text": "How should the basement carpeted areas, laundry appliances, and meter enclosure shown be recorded for retain, replace, or investigate decisions?"
+      },
+      {
+        "photoIds": [
+          "photo-03",
+          "photo-04",
+          "photo-06",
+          "photo-20",
+          "photo-22"
+        ],
+        "text": "How should stairs, doorways, and open connections shown be recorded for circulation planning and further investigation?"
+      },
+      {
+        "photoIds": [
+          "photo-01",
+          "photo-02",
+          "photo-18"
+        ],
+        "text": "Which rowhouse shown is the inventory subject for exterior planning among the brick rowhouses and aerial view?"
+      }
+    ]
+  }
+}

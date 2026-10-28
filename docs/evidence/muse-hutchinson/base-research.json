@@ -1,0 +1,76 @@
+{
+  "kind": "property-research",
+  "address": "2440 S Hutchinson St, Philadelphia, PA 19148",
+  "jobId": "project:a99ec568-b396-4a14-908e-5f21c04cdc07:property:fact:1bb045b2-844f-4612-a55e-feaba9b536a5:1",
+  "method": "user-import",
+  "verification": "unreviewed",
+  "sources": [
+    {
+      "id": "compass-hutchinson",
+      "title": "Compass / Bright MLS PAPH2657784 \u00b7 public listing and native 22-image gallery \u00b7 browser source audit",
+      "url": "https://www.compass.com/homedetails/2440-S-Hutchinson-St-Philadelphia-PA-19148/1MRIT4_pid/",
+      "retrievedAt": "2026-10-28T12:49:43.325935Z"
+    },
+    {
+      "id": "homes-hutchinson",
+      "title": "Homes.com / Bright MLS PAPH2657784 \u00b7 alternate public listing \u00b7 source audit",
+      "url": "https://www.homes.com/property/2440-s-hutchinson-st-philadelphia-pa/992qkvp3rpcfl/",
+      "retrievedAt": "2026-10-28T12:49:43.325935Z"
+    }
+  ],
+  "findings": [
+    {
+      "label": "Listing bedrooms",
+      "value": "3",
+      "sourceId": "compass-hutchinson",
+      "limit": "Listing claim only; current use and room configuration need site verification."
+    },
+    {
+      "label": "Listing living area",
+      "value": "940 sq ft above grade",
+      "sourceId": "compass-hutchinson",
+      "limit": "Reported assessor-sourced listing area, not measured room dimensions or a takeoff."
+    },
+    {
+      "label": "Listing year built",
+      "value": "1925",
+      "sourceId": "compass-hutchinson",
+      "limit": "Listing claim; not an independent assessment-record lookup."
+    },
+    {
+      "label": "Listing zoning",
+      "value": "RSA5",
+      "sourceId": "compass-hutchinson",
+      "limit": "Listing claim; not a project-specific applicability finding."
+    },
+    {
+      "label": "Listing bathroom count \u00b7 structured field",
+      "value": "1 full bathroom",
+      "sourceId": "compass-hutchinson",
+      "limit": "Conflicts with the description of 1.5 baths. Keep both until site and record review."
+    },
+    {
+      "label": "Listing bathroom count \u00b7 description",
+      "value": "1.5 bathrooms, including a basement half bath",
+      "sourceId": "homes-hutchinson",
+      "limit": "Unverified description. Do not assume the half bath exists, is functional or permitted."
+    },
+    {
+      "label": "Listing amenities \u00b7 kitchen",
+      "value": "Wood cabinetry, stainless-appearing appliances, gas range and dishwasher are described",
+      "sourceId": "homes-hutchinson",
+      "limit": "Description claims only. Model, condition, connection type and retained suitability need evidence."
+    },
+    {
+      "label": "Listing amenities \u00b7 building systems",
+      "value": "Central air and electric baseboard heat are listed",
+      "sourceId": "homes-hutchinson",
+      "limit": "Listing claims may be incomplete or inconsistent. No capacity, condition, installation status or concealed routes established."
+    }
+  ],
+  "images": [],
+  "nextQuestions": [
+    "Which visible finishes and equipment should be retained, replaced or investigated?",
+    "Does a site walkthrough confirm the basement half bath described in the listing?"
+  ]
+}

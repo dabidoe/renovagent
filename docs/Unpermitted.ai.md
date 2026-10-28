@@ -1,3 +1,5 @@
+> Original product vision and historical proposal. For the current implementation architecture, repository direction, and delivery gates, start with [Build architecture](architecture/README.md). The half-bath demonstration remains a reference case; the product covers the full home improvement lifecycle.
+
 ## Unpermitted.ai  
 ## AI Construction Crew — Product & Technical Project Plan  
 **Version:** 0.1 · October 2026 **Initial use case:** First-floor half-bathroom renovation **Hackathon track:** Indie Developer  

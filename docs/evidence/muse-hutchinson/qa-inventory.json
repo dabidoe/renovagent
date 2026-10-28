@@ -1,0 +1,905 @@
+{
+  "schemaVersion": 1,
+  "researchRef": {
+    "kind": "artifact",
+    "id": "project:5a592c49-f55c-4ff8-80f2-42c17e296371:property-research",
+    "revision": 1
+  },
+  "inventory": {
+    "kind": "photo-inventory",
+    "method": "muse-vision-regions",
+    "verification": "unreviewed",
+    "analyzedAt": "2026-10-28T12:57:29.099Z",
+    "runId": "01a18294-0b2a-7903-9288-8d99cc1ce887",
+    "model": "muse-spark-1.3-contributor",
+    "photos": [
+      {
+        "id": "photo-05",
+        "sha256": "d028d07957c8f6ebbcfd779d06ee98b187ff5d2a277232167f0b6b5038694bce",
+        "width": 1500,
+        "height": 1000
+      },
+      {
+        "id": "photo-04",
+        "sha256": "b380365cad80e2d8b154143b0a558777e9a14eb4ca2fa66063a4b19d245cb579",
+        "width": 1494,
+        "height": 1000
+      },
+      {
+        "id": "photo-09",
+        "sha256": "aa28647b7de9517a7a4bd434cdeef6ea47969bcf8e753c397a69d375547c887a",
+        "width": 1500,
+        "height": 1000
+      },
+      {
+        "id": "photo-14",
+        "sha256": "7700b7d46674398f3cc68ca490a4ad68d62ce94316ac1e5969c2211e183d6d77",
+        "width": 1500,
+        "height": 1000
+      }
+    ],
+    "items": [
+      {
+        "id": "photo-05-floor-01",
+        "photoId": "photo-05",
+        "label": "brown plank-pattern floor surface",
+        "category": "floor",
+        "polygon": [
+          {
+            "x": 291,
+            "y": 680
+          },
+          {
+            "x": 620,
+            "y": 667
+          },
+          {
+            "x": 775,
+            "y": 1000
+          },
+          {
+            "x": 195,
+            "y": 1000
+          }
+        ],
+        "confidence": "high",
+        "observation": "Brown plank pattern visible across central area between left cabinets and right wall to far doorway.",
+        "unknowns": [
+          "Actual flooring material and finish not determinable from this view",
+          "Area under appliances and cabinets not visible"
+        ],
+        "nextAction": "Capture straight-down close-up photo of floor near center with scale reference."
+      },
+      {
+        "id": "photo-05-fridge-01",
+        "photoId": "photo-05",
+        "label": "tall two-door metal-look refrigerator",
+        "category": "appliance",
+        "polygon": [
+          {
+            "x": 0,
+            "y": 125
+          },
+          {
+            "x": 133,
+            "y": 214
+          },
+          {
+            "x": 133,
+            "y": 997
+          },
+          {
+            "x": 0,
+            "y": 997
+          }
+        ],
+        "confidence": "high",
+        "observation": "Tall reflective two-door unit visible at left foreground beside wood-tone cabinetry.",
+        "unknowns": [
+          "Brand model and operational status not visible",
+          "Clearances behind and beside unit not visible"
+        ],
+        "nextAction": "Photograph refrigerator front straight-on from 1-2 meters."
+      },
+      {
+        "id": "photo-05-range-01",
+        "photoId": "photo-05",
+        "label": "dark cooking unit with oven window and cooktop",
+        "category": "appliance",
+        "polygon": [
+          {
+            "x": 197,
+            "y": 550
+          },
+          {
+            "x": 288,
+            "y": 540
+          },
+          {
+            "x": 288,
+            "y": 832
+          },
+          {
+            "x": 197,
+            "y": 872
+          }
+        ],
+        "confidence": "high",
+        "observation": "Dark unit with stovetop grates and front oven window visible left of center.",
+        "unknowns": [
+          "Fuel type and power connection not determinable from this view",
+          "Exact extent behind adjacent cabinets not visible"
+        ],
+        "nextAction": "Capture close-up photo of cooktop and oven front with adjacent cabinets in frame."
+      },
+      {
+        "id": "photo-05-cabinet-lower-01",
+        "photoId": "photo-05",
+        "label": "medium-brown wood-pattern lower cabinets",
+        "category": "cabinet",
+        "polygon": [
+          {
+            "x": 371,
+            "y": 559
+          },
+          {
+            "x": 450,
+            "y": 559
+          },
+          {
+            "x": 450,
+            "y": 654
+          },
+          {
+            "x": 371,
+            "y": 654
+          }
+        ],
+        "confidence": "medium",
+        "observation": "Wood-pattern cabinet fronts with drawers and doors visible under far window area.",
+        "unknowns": [
+          "Interior storage and hardware function not visible",
+          "Countertop joint detail above not clearly visible"
+        ],
+        "nextAction": "Photograph far lower cabinets straight-on from 2 meters with countertop edge visible."
+      },
+      {
+        "id": "photo-05-window-right-01",
+        "photoId": "photo-05",
+        "label": "dark-framed side window with light sill",
+        "category": "opening",
+        "polygon": [
+          {
+            "x": 723,
+            "y": 306
+          },
+          {
+            "x": 831,
+            "y": 233
+          },
+          {
+            "x": 831,
+            "y": 508
+          },
+          {
+            "x": 723,
+            "y": 505
+          }
+        ],
+        "confidence": "high",
+        "observation": "Two-pane window with dark frame and light sill visible on right wall above outlet.",
+        "unknowns": [
+          "Exterior view and operability not determinable from this view",
+          "Frame material and glazing layers not visible"
+        ],
+        "nextAction": "Capture straight-on photo of right window including full frame and sill."
+      },
+      {
+        "id": "photo-05-light-pendant-01",
+        "photoId": "photo-05",
+        "label": "hanging ceiling light with pale shade",
+        "category": "fixture",
+        "polygon": [
+          {
+            "x": 627,
+            "y": 383
+          },
+          {
+            "x": 683,
+            "y": 383
+          },
+          {
+            "x": 671,
+            "y": 436
+          },
+          {
+            "x": 635,
+            "y": 436
+          }
+        ],
+        "confidence": "medium",
+        "observation": "Suspended light with pale bowl shade visible hanging from center ceiling.",
+        "unknowns": [
+          "Mounting and electrical connection details not visible",
+          "Bulb type and light output not determinable"
+        ],
+        "nextAction": "Photograph pendant light from below with ceiling mount in frame."
+      },
+      {
+        "id": "photo-05-appliance-undercounter-01",
+        "photoId": "photo-05",
+        "label": "metal-look undercounter appliance front",
+        "category": "appliance",
+        "polygon": [
+          {
+            "x": 454,
+            "y": 559
+          },
+          {
+            "x": 507,
+            "y": 559
+          },
+          {
+            "x": 507,
+            "y": 657
+          },
+          {
+            "x": 454,
+            "y": 657
+          }
+        ],
+        "confidence": "medium",
+        "observation": "Reflective flat front panel visible under counter to right of sink cabinets.",
+        "unknowns": [
+          "Appliance type and operational status not confirmed from this view",
+          "Top edge and counter interface not clearly visible"
+        ],
+        "nextAction": "Capture close-up photo of undercounter front including adjacent cabinet seam."
+      },
+      {
+        "id": "photo-04-floor-01",
+        "photoId": "photo-04",
+        "label": "deep-red floor covering",
+        "category": "floor",
+        "polygon": [
+          {
+            "x": 140,
+            "y": 610
+          },
+          {
+            "x": 381,
+            "y": 632
+          },
+          {
+            "x": 602,
+            "y": 770
+          },
+          {
+            "x": 602,
+            "y": 997
+          },
+          {
+            "x": 0,
+            "y": 997
+          },
+          {
+            "x": 0,
+            "y": 850
+          }
+        ],
+        "confidence": "high",
+        "observation": "Deep-red textured covering visible across main area from stairs to sofas.",
+        "unknowns": [
+          "Covering material and subfloor not determinable",
+          "Extent under furniture not visible"
+        ],
+        "nextAction": "Capture straight-down close-up of floor covering near center with scale reference."
+      },
+      {
+        "id": "photo-04-stairs-01",
+        "photoId": "photo-04",
+        "label": "staircase with red covering and dark railing",
+        "category": "other",
+        "polygon": [
+          {
+            "x": 10,
+            "y": 221
+          },
+          {
+            "x": 93,
+            "y": 206
+          },
+          {
+            "x": 184,
+            "y": 738
+          },
+          {
+            "x": 0,
+            "y": 853
+          }
+        ],
+        "confidence": "high",
+        "observation": "Straight staircase with red steps and dark railing visible on left.",
+        "unknowns": [
+          "Upper landing beyond frame not visible",
+          "Underlying structure and attachments not visible"
+        ],
+        "nextAction": "Photograph full staircase from side angle showing top landing and railing."
+      },
+      {
+        "id": "photo-04-sofa-01",
+        "photoId": "photo-04",
+        "label": "light beige three-seat sofa with red pillows",
+        "category": "other",
+        "polygon": [
+          {
+            "x": 475,
+            "y": 543
+          },
+          {
+            "x": 774,
+            "y": 575
+          },
+          {
+            "x": 732,
+            "y": 776
+          },
+          {
+            "x": 465,
+            "y": 693
+          }
+        ],
+        "confidence": "high",
+        "observation": "Light-toned three-cushion sofa with two patterned pillows against right wall.",
+        "unknowns": [
+          "Back and underside areas not visible",
+          "Fabric type not determinable from this view"
+        ],
+        "nextAction": "Capture straight-on photo of full sofa front with wall above included."
+      },
+      {
+        "id": "photo-04-table-01",
+        "photoId": "photo-04",
+        "label": "dark dining table top with chairs",
+        "category": "other",
+        "polygon": [
+          {
+            "x": 208,
+            "y": 517
+          },
+          {
+            "x": 324,
+            "y": 518
+          },
+          {
+            "x": 324,
+            "y": 546
+          },
+          {
+            "x": 208,
+            "y": 546
+          }
+        ],
+        "confidence": "medium",
+        "observation": "Dark reflective tabletop surrounded by high-back chairs visible in rear area.",
+        "unknowns": [
+          "Table legs and full chair count obscured by angle",
+          "Surface material not determinable from this view"
+        ],
+        "nextAction": "Photograph dining set from alternate angle showing table sides and chairs."
+      },
+      {
+        "id": "photo-04-cabinet-display-01",
+        "photoId": "photo-04",
+        "label": "wood-tone glass-door display cabinet",
+        "category": "cabinet",
+        "polygon": [
+          {
+            "x": 357,
+            "y": 338
+          },
+          {
+            "x": 430,
+            "y": 342
+          },
+          {
+            "x": 430,
+            "y": 609
+          },
+          {
+            "x": 357,
+            "y": 600
+          }
+        ],
+        "confidence": "high",
+        "observation": "Tall wood-tone cabinet with glass doors visible against rear wall near dining area.",
+        "unknowns": [
+          "Interior contents and shelf arrangement not clearly visible",
+          "Back and side clearances not visible"
+        ],
+        "nextAction": "Capture straight-on photo of display cabinet front with full height in frame."
+      },
+      {
+        "id": "photo-04-mirror-01",
+        "photoId": "photo-04",
+        "label": "octagonal wall mirror with patterned frame",
+        "category": "other",
+        "polygon": [
+          {
+            "x": 663,
+            "y": 319
+          },
+          {
+            "x": 713,
+            "y": 320
+          },
+          {
+            "x": 747,
+            "y": 358
+          },
+          {
+            "x": 747,
+            "y": 441
+          },
+          {
+            "x": 713,
+            "y": 488
+          },
+          {
+            "x": 663,
+            "y": 489
+          },
+          {
+            "x": 630,
+            "y": 445
+          },
+          {
+            "x": 630,
+            "y": 360
+          }
+        ],
+        "confidence": "high",
+        "observation": "Octagonal mirror with marbled-pattern frame hanging above three-seat sofa.",
+        "unknowns": [
+          "Mounting method on wall not visible",
+          "Frame material not determinable from this view"
+        ],
+        "nextAction": "Photograph mirror straight-on from 2 meters with surrounding wall in frame."
+      },
+      {
+        "id": "photo-09-cabinet-vanity-01",
+        "photoId": "photo-09",
+        "label": "light gray two-door vanity cabinet",
+        "category": "cabinet",
+        "polygon": [
+          {
+            "x": 130,
+            "y": 820
+          },
+          {
+            "x": 281,
+            "y": 770
+          },
+          {
+            "x": 281,
+            "y": 999
+          },
+          {
+            "x": 130,
+            "y": 999
+          }
+        ],
+        "confidence": "high",
+        "observation": "Light gray two-door vanity visible under white sink basin on left.",
+        "unknowns": [
+          "Interior storage and plumbing behind doors not visible",
+          "Side clearances and wall joint not clearly visible"
+        ],
+        "nextAction": "Photograph vanity front straight-on from 1 meter with sink edge visible."
+      },
+      {
+        "id": "photo-09-sink-01",
+        "photoId": "photo-09",
+        "label": "white sink basin with two-handle faucet",
+        "category": "fixture",
+        "polygon": [
+          {
+            "x": 117,
+            "y": 719
+          },
+          {
+            "x": 287,
+            "y": 698
+          },
+          {
+            "x": 287,
+            "y": 768
+          },
+          {
+            "x": 117,
+            "y": 818
+          }
+        ],
+        "confidence": "high",
+        "observation": "White rectangular basin with paired metal-look faucet handles visible atop vanity.",
+        "unknowns": [
+          "Drain and water flow function not determinable from still image",
+          "Faucet mounting seal detail not clearly visible"
+        ],
+        "nextAction": "Capture top-down close-up of sink basin and faucet handles."
+      },
+      {
+        "id": "photo-09-toilet-01",
+        "photoId": "photo-09",
+        "label": "white toilet with tank and round bowl",
+        "category": "fixture",
+        "polygon": [
+          {
+            "x": 283,
+            "y": 719
+          },
+          {
+            "x": 399,
+            "y": 705
+          },
+          {
+            "x": 435,
+            "y": 997
+          },
+          {
+            "x": 283,
+            "y": 997
+          }
+        ],
+        "confidence": "high",
+        "observation": "White toilet with tank and lid-closed bowl visible beside vanity and tub.",
+        "unknowns": [
+          "Base seal and floor interface behind bowl not fully visible",
+          "Tank interior and flush function not determinable"
+        ],
+        "nextAction": "Photograph toilet side profile showing base-to-floor joint."
+      },
+      {
+        "id": "photo-09-tub-01",
+        "photoId": "photo-09",
+        "label": "light beige bathtub with white bar",
+        "category": "fixture",
+        "polygon": [
+          {
+            "x": 436,
+            "y": 797
+          },
+          {
+            "x": 971,
+            "y": 907
+          },
+          {
+            "x": 971,
+            "y": 998
+          },
+          {
+            "x": 536,
+            "y": 995
+          }
+        ],
+        "confidence": "medium",
+        "observation": "Light-toned tub with faucet and white bar visible along right wall.",
+        "unknowns": [
+          "Drain detail and base support not visible",
+          "Wall-to-tub seam along full length not clearly visible"
+        ],
+        "nextAction": "Capture photo along tub length showing rim faucet and wall joint."
+      },
+      {
+        "id": "photo-09-window-01",
+        "photoId": "photo-09",
+        "label": "small high two-pane bathroom window",
+        "category": "opening",
+        "polygon": [
+          {
+            "x": 614,
+            "y": 225
+          },
+          {
+            "x": 784,
+            "y": 151
+          },
+          {
+            "x": 784,
+            "y": 269
+          },
+          {
+            "x": 614,
+            "y": 314
+          }
+        ],
+        "confidence": "medium",
+        "observation": "Frosted-look high window with two panes visible above tub wall tiles.",
+        "unknowns": [
+          "Operability and exterior conditions not determinable",
+          "Frame material and seal detail not clearly visible"
+        ],
+        "nextAction": "Photograph window straight-on from tub side with full frame in view."
+      },
+      {
+        "id": "photo-09-cabinet-mirror-01",
+        "photoId": "photo-09",
+        "label": "tri-panel mirrored wall cabinet",
+        "category": "cabinet",
+        "polygon": [
+          {
+            "x": 62,
+            "y": 18
+          },
+          {
+            "x": 284,
+            "y": 131
+          },
+          {
+            "x": 284,
+            "y": 488
+          },
+          {
+            "x": 62,
+            "y": 482
+          }
+        ],
+        "confidence": "high",
+        "observation": "Three-panel mirrored cabinet with light bar above visible over sink area.",
+        "unknowns": [
+          "Interior shelves and side depth not visible",
+          "Mounting to wall not determinable from this view"
+        ],
+        "nextAction": "Capture straight-on photo of mirrored cabinet front with lights off."
+      },
+      {
+        "id": "photo-09-showerhead-01",
+        "photoId": "photo-09",
+        "label": "metal-look wall showerhead",
+        "category": "fixture",
+        "polygon": [
+          {
+            "x": 464,
+            "y": 253
+          },
+          {
+            "x": 493,
+            "y": 262
+          },
+          {
+            "x": 483,
+            "y": 293
+          },
+          {
+            "x": 460,
+            "y": 279
+          }
+        ],
+        "confidence": "low",
+        "observation": "Small round shower outlet visible on tiled back wall above controls.",
+        "unknowns": [
+          "Spray function and water supply not determinable",
+          "Arm connection behind wall not visible"
+        ],
+        "nextAction": "Capture zoomed photo of showerhead and surrounding tiles from doorway."
+      },
+      {
+        "id": "photo-14-floor-01",
+        "photoId": "photo-14",
+        "label": "light beige floor covering",
+        "category": "floor",
+        "polygon": [
+          {
+            "x": 379,
+            "y": 801
+          },
+          {
+            "x": 667,
+            "y": 848
+          },
+          {
+            "x": 934,
+            "y": 997
+          },
+          {
+            "x": 232,
+            "y": 997
+          }
+        ],
+        "confidence": "medium",
+        "observation": "Light beige textured covering visible across foreground to back walls.",
+        "unknowns": [
+          "Covering material and subfloor not determinable",
+          "Area under doors and beyond doorway not visible"
+        ],
+        "nextAction": "Capture straight-down close-up of floor near center with scale reference."
+      },
+      {
+        "id": "photo-14-doors-sliding-01",
+        "photoId": "photo-14",
+        "label": "large wood-pattern sliding doors",
+        "category": "opening",
+        "polygon": [
+          {
+            "x": 67,
+            "y": 282
+          },
+          {
+            "x": 357,
+            "y": 381
+          },
+          {
+            "x": 357,
+            "y": 907
+          },
+          {
+            "x": 66,
+            "y": 959
+          }
+        ],
+        "confidence": "high",
+        "observation": "Two large wood-pattern sliding panels visible along left wall.",
+        "unknowns": [
+          "Track and space behind panels not visible",
+          "Panel material and thickness not determinable"
+        ],
+        "nextAction": "Photograph sliding doors straight-on from 2 meters showing full height and track."
+      },
+      {
+        "id": "photo-14-doorway-01",
+        "photoId": "photo-14",
+        "label": "open doorway to small toilet room",
+        "category": "opening",
+        "polygon": [
+          {
+            "x": 381,
+            "y": 381
+          },
+          {
+            "x": 436,
+            "y": 392
+          },
+          {
+            "x": 436,
+            "y": 811
+          },
+          {
+            "x": 381,
+            "y": 819
+          }
+        ],
+        "confidence": "high",
+        "observation": "Open doorway with wood-pattern door swung inward revealing toilet room beyond.",
+        "unknowns": [
+          "Door hardware function and full swing range not visible",
+          "Toilet room extents outside doorway crop not visible"
+        ],
+        "nextAction": "Capture photo from doorway center showing toilet room interior walls and floor."
+      },
+      {
+        "id": "photo-14-toilet-01",
+        "photoId": "photo-14",
+        "label": "white toilet in small room",
+        "category": "fixture",
+        "polygon": [
+          {
+            "x": 386,
+            "y": 603
+          },
+          {
+            "x": 427,
+            "y": 606
+          },
+          {
+            "x": 427,
+            "y": 748
+          },
+          {
+            "x": 385,
+            "y": 747
+          }
+        ],
+        "confidence": "medium",
+        "observation": "White toilet with tank and bowl partially visible through open doorway.",
+        "unknowns": [
+          "Base and surrounding floor seal not clearly visible",
+          "Room fixtures beyond doorway crop not visible"
+        ],
+        "nextAction": "Photograph toilet room interior from doorway with full toilet and floor in frame."
+      },
+      {
+        "id": "photo-14-equipment-wallbox-01",
+        "photoId": "photo-14",
+        "label": "wall-mounted gray utility box with pipes",
+        "category": "equipment",
+        "polygon": [
+          {
+            "x": 744,
+            "y": 482
+          },
+          {
+            "x": 808,
+            "y": 484
+          },
+          {
+            "x": 808,
+            "y": 549
+          },
+          {
+            "x": 744,
+            "y": 549
+          }
+        ],
+        "confidence": "medium",
+        "observation": "Gray box with attached overhead piping visible on white wall in right alcove.",
+        "unknowns": [
+          "Box purpose and service connections not determinable from this view",
+          "Lower wall area behind and below box not clearly visible"
+        ],
+        "nextAction": "Capture straight-on close-up of wall box with overhead pipes in frame."
+      },
+      {
+        "id": "photo-14-window-01",
+        "photoId": "photo-14",
+        "label": "small high rectangular window",
+        "category": "opening",
+        "polygon": [
+          {
+            "x": 612,
+            "y": 421
+          },
+          {
+            "x": 671,
+            "y": 415
+          },
+          {
+            "x": 671,
+            "y": 465
+          },
+          {
+            "x": 612,
+            "y": 473
+          }
+        ],
+        "confidence": "medium",
+        "observation": "Small bright rectangular window with white frame visible high on back wall.",
+        "unknowns": [
+          "Exterior view and operability not determinable",
+          "Frame seal and glazing detail not clearly visible"
+        ],
+        "nextAction": "Photograph small window straight-on with surrounding wall in frame."
+      },
+      {
+        "id": "photo-14-wall-back-01",
+        "photoId": "photo-14",
+        "label": "plain white back wall section",
+        "category": "wall",
+        "polygon": [
+          {
+            "x": 576,
+            "y": 385
+          },
+          {
+            "x": 680,
+            "y": 387
+          },
+          {
+            "x": 680,
+            "y": 786
+          },
+          {
+            "x": 576,
+            "y": 811
+          }
+        ],
+        "confidence": "medium",
+        "observation": "Plain light wall with outlet and small window visible in back center area.",
+        "unknowns": [
+          "Wall material and finish layers not determinable",
+          "Area behind adjacent shelving unit not visible"
+        ],
+        "nextAction": "Capture straight-on photo of back wall section including window and outlet."
+      }
+    ]
+  }
+}
