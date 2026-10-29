@@ -62,8 +62,12 @@ export class CatalogStore {
     } catch (error) {
       throw new DomainError('VALIDATION', message(error));
     }
+    // Check every collection before writing any of them, then insert in
+    // dependency order. A failure mid-write (e.g. a concurrent import racing a
+    // unique index) removes this call's inserts so an import never half-lands.
+    // Standalone local Mongo has no transactions; see commerce-catalog.md.
     let skipped = 0;
-    const insertNew = async <T extends { id: string }>(
+    const freshOf = async <T extends { id: string }>(
       collection: Collection<T>,
       records: T[],
       label: string,
@@ -86,21 +90,43 @@ export class CatalogStore {
           );
         skipped += 1;
       }
-      if (fresh.length)
+      return fresh;
+    };
+    const fresh = {
+      products: await freshOf(this.products, batch.products, 'Product'),
+      offers: await freshOf(this.offers, batch.offers, 'Offer'),
+      observations: await freshOf(this.observations, batch.observations, 'Observation'),
+    };
+    const written: { collection: Collection<never>; ids: string[] }[] = [];
+    const insert = async <T extends { id: string }>(collection: Collection<T>, records: T[]) => {
+      if (!records.length) return;
+      const target = collection as unknown as Collection<never>;
+      try {
         await collection.insertMany(
-          fresh.map((record) => ({ ...record, _id: record.id }) as never),
+          records.map((record) => ({ ...record, _id: record.id }) as never),
+          { ordered: true },
         );
-      return fresh.length;
+        written.push({ collection: target, ids: records.map((record) => record.id) });
+      } catch (error) {
+        // Only the IDs this call actually inserted; a racing import's records stay.
+        const inserted = (error as { insertedIds?: Record<number, unknown> }).insertedIds;
+        written.push({ collection: target, ids: Object.values(inserted ?? {}).map(String) });
+        throw error;
+      }
     };
     try {
-      const [products, offers, observations] = await Promise.all([
-        insertNew(this.products, batch.products, 'Product'),
-        insertNew(this.offers, batch.offers, 'Offer'),
-        insertNew(this.observations, batch.observations, 'Observation'),
-      ]);
-      return { products, offers, observations, skipped };
+      await insert(this.products, fresh.products);
+      await insert(this.offers, fresh.offers);
+      await insert(this.observations, fresh.observations);
+      return {
+        products: fresh.products.length,
+        offers: fresh.offers.length,
+        observations: fresh.observations.length,
+        skipped,
+      };
     } catch (error) {
-      if (error instanceof DomainError) throw error;
+      for (const { collection, ids } of written.reverse())
+        await collection.deleteMany({ _id: { $in: ids } } as never);
       if (isDuplicateKey(error))
         throw new DomainError(
           'CONFLICT',
@@ -110,17 +136,20 @@ export class CatalogStore {
     }
   }
 
+  // `undefined` means no product filter; an empty list means no products and
+  // returns nothing, so an empty search can never fall through to the catalog.
   async offersFor(
-    productIds: string[],
+    productIds: string[] | undefined,
     filters: { region?: string; sku?: string; retailer?: string } = {},
   ): Promise<{
     products: Product[];
     offers: Offer[];
     observations: PriceObservation[];
   }> {
+    if (productIds?.length === 0) return { products: [], offers: [], observations: [] };
     const offers = await this.offers
       .find({
-        ...(productIds.length ? { productId: { $in: productIds } } : {}),
+        ...(productIds ? { productId: { $in: productIds } } : {}),
         ...(filters.region ? { fulfillmentRegion: filters.region } : {}),
         ...(filters.sku ? { sku: filters.sku } : {}),
         ...(filters.retailer ? { retailer: filters.retailer } : {}),

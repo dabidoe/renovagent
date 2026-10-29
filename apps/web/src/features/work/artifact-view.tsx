@@ -4,6 +4,7 @@ import { type WorkspaceController } from '../../app/workspace-controller.js';
 import { PhotoReviewSummary } from '../intake/photo-review-summary.js';
 import { researchForArtifact, questionsForReviewedPhoto } from '@renovagent/core';
 import { PlanningView } from '../technical/planning-view.js';
+import { BomView, CheckoutReviewView, PurchasePlanView } from '../commerce/commerce-views.js';
 import { type Workspace, type Artifact } from '@renovagent/contracts';
 export const artifactTitles: Record<Artifact['payload']['kind'], string> = {
   'conversation-plan': 'Conversation planning proposal',
@@ -403,5 +404,64 @@ export function ArtifactView({
           {p.evidenceIds.length} evidence references. Open Sources to inspect the original records.
         </p>
       );
+    case 'conversation-plan':
+      return (
+        <div className="document-sections">
+          <div className="investigation-banner">
+            Unreviewed {p.model} proposal · feasibility blocked until measurements and review
+          </div>
+          <p>{p.response}</p>
+          {p.options.map((o, i) => (
+            <section key={o.title}>
+              <span className="section-number">{String(i + 1).padStart(2, '0')}</span>
+              <div>
+                <h3>{o.title}</h3>
+                <p>{o.approach}</p>
+                <p className="small-note">Depends on: {o.dependsOn.join('; ')}</p>
+              </div>
+            </section>
+          ))}
+          <h3>Sequence</h3>
+          <ol>
+            {p.sequence.map((step) => (
+              <li key={step.title}>
+                {step.title}
+                {step.blockedBy.length > 0 && (
+                  <span className="small-note"> · blocked by {step.blockedBy.join('; ')}</span>
+                )}
+              </li>
+            ))}
+          </ol>
+          {p.missingMeasurements.length > 0 && (
+            <>
+              <h3>Measurements still needed</h3>
+              <ul>
+                {p.missingMeasurements.map((m) => (
+                  <li key={m.label}>
+                    {m.label}: {m.how} <span className="small-note">({m.why})</span>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+          <h3>Limits</h3>
+          <ul>
+            {p.limitations.map((limit) => (
+              <li key={limit}>{limit}</li>
+            ))}
+          </ul>
+        </div>
+      );
+    case 'bom':
+      return <BomView bom={p} />;
+    case 'purchase-plan':
+      return <PurchasePlanView plan={p} />;
+    case 'checkout-review':
+      return <CheckoutReviewView review={p} />;
+    default: {
+      // Every artifact kind needs a renderer; a new kind fails the typecheck here.
+      const unhandled: never = p;
+      return unhandled;
+    }
   }
 }

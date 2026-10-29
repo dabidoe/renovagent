@@ -33,8 +33,39 @@ labeled demo examples, never live offers.
   Accept/Decline through the existing decision commands. Fixture basis shows a
   persistent warning; nothing here is purchasable.
 - **Approvals**: purchase plans are versioned artifacts; `AcceptDecision` /
-  `RejectProposal` accept or decline a tier. New observations or BOM edits
-  stale old plans through the existing invalidation path.
+  `RejectProposal` accept or decline a tier. BOM revisions stale plans, and
+  plan revisions stale checkout reviews, through the existing invalidation
+  path. New price observations do **not** stale saved plans: the catalog sits
+  outside the workspace reference graph. A changed catalog shows up when plans
+  are rebuilt or when an MCP proposal no longer matches the catalog.
+
+## Integrity rules (October 29 follow-up)
+
+- **Selection**: every offer for a candidate product competes. Ranking uses
+  delivered cost (line total plus shipping when the offer must ship), then
+  offer ID. A shipping-only offer without an estimate ranks behind every offer
+  whose delivered cost is known, and the plan notes it. Out-of-stock offers are
+  rejected; unknown or limited stock is kept and noted. Pack units must match
+  the BOM unit (explicit `ea`/`each`/`pc` aliases only).
+- **Proposal validation (core)**: `ProposeArtifact` recomputes purchase-plan
+  lines against the referenced current BOM revision (one line per BOM item,
+  candidate product, quantity, pack rounding, totals, currency, code topics,
+  basis derived from sources). Checkout reviews must match every line of a
+  current, undeclined plan. Cart links are accepted only for the documented
+  Amazon cart URL.
+- **Provenance (server)**: core cannot see the catalog, so MCP
+  `propose_project_change` rebuilds commerce proposals from it and rejects any
+  difference across the whole payload except `builtAt`. Invented prices,
+  spec-incompatible candidates, and injected notes or checklist text are all
+  rejected. Tiered IDs (`…:purchase-plan:<tier>`) must hold that tier. Plan
+  notes are aggregated per kind and rejections capped at 200, so large BOMs stay
+  within the schema.
+- **Store**: `offersFor([])` returns nothing (`undefined` = no product filter).
+  `importBatch` checks conflicts in every collection before writing, inserts in
+  dependency order. If a later insert fails, it deletes only the IDs the driver
+  reports as inserted by this call, never a concurrent import's records. Local
+  Mongo is standalone, so this is compensating rollback, not a transaction; a
+  concurrent reader can briefly see a partial import.
 
 ## Holes filled beyond the ask
 

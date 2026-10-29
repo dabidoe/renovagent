@@ -116,9 +116,9 @@ The shipped Muse template timed out with a 45-second request budget. One interac
 4. **Turn the selected scope into a contractor/inspection package.** Work packages, exclusions, materials owner/contractor responsibilities, quote comparison and unresolved local requirements. Preserve actual inspection evidence; scheduled never means passed. Named outreach and purchases require their own authorization.
 5. **Finish the demo journey and polish.** Durable project files, clear unknowns and price coverage, reconnect/retry, phone usability, receipt reconciliation if time permits. Reduce breadth before dropping the complete journey. Stable hosting is still a separate implementation task.
 
-### Commerce review findings still open
+### Commerce review findings — addressed October 29 (step 1)
 
-These were identified in the earlier review and are not fixed by a green migration/MCP suite. Reproduce them with focused regressions before implementing corrections:
+All seven findings below have failing-first regressions and fixes; see the PROGRESS.md entry “Commerce integrity and saved-file viewers” and `docs/architecture/commerce-catalog.md` § Integrity rules. Remaining limits: catalog observations do not stale saved plans, and local import rollback is compensating rather than transactional. Next is step 2. Original findings:
 
 - `artifact-view.tsx` declares commerce titles but lacks rendering cases for `bom`, `purchase-plan` and `checkout-review`; opening these artifacts can show no useful content.
 - Proposal-grade commerce payloads need authoritative semantic validation of totals, line/source identity and dependencies. A schema-valid agent proposal must not become trusted purchasing math by assertion.

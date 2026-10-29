@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { WorkspaceController } from '../../app/workspace-controller.js';
 import { workspaceRequest } from '../../adapters/http/project-repository.js';
 import { vanityTemplate } from '../../../../../fixtures/catalog/vanity-philadelphia.js';
+import { PurchasePlanView } from './commerce-views.js';
 import { buildCheckoutReview, buildTierPlans, latest, type PricedOffer } from '@renovagent/core';
 import {
   tierLabels,
@@ -15,15 +16,6 @@ import {
 } from '@renovagent/contracts';
 
 const TIERS: Tier[] = ['builder', 'mid', 'high'];
-
-function money(minor: number, currency: string): string {
-  const amount = (minor / 100).toFixed(2);
-  return currency === 'USD' ? `$${amount}` : `${amount} ${currency}`;
-}
-
-function shortDate(stamp: string): string {
-  return stamp.slice(0, 10);
-}
 
 export function PurchasePlans({
   controller,
@@ -179,84 +171,9 @@ function PlanCard({
   onCheckout: () => void;
   checkoutBusy: boolean;
 }) {
-  const plan = artifact.payload;
-  const [showRejected, setShowRejected] = useState(false);
   return (
     <section aria-label={`${tierLabels[tier]} purchase plan`}>
-      <h3>
-        {tierLabels[tier]} · {money(plan.totals.subtotalMinor, plan.totals.currency)}
-      </h3>
-      {plan.basis !== 'verified' && (
-        <div className="historical-banner">
-          Example prices for planning only — {plan.basis === 'fixture' ? 'all' : 'some'} lines use
-          demo observations, not live offers. Verify every price before purchase.
-        </div>
-      )}
-      <table>
-        <thead>
-          <tr>
-            <th>Item</th>
-            <th>Product</th>
-            <th>Qty</th>
-            <th>Line total</th>
-            <th>Observed</th>
-          </tr>
-        </thead>
-        <tbody>
-          {plan.lines.map((line) => (
-            <tr key={line.bomItemId}>
-              <td>
-                {line.bomItemId}
-                {line.codeTopics.length > 0 && (
-                  <div className="small-note">Verify: {line.codeTopics.join(', ')}</div>
-                )}
-              </td>
-              <td>
-                {line.productName} · {line.retailer}
-                <div className="small-note">{line.sku}</div>
-              </td>
-              <td>
-                {line.quantity} → {line.purchaseUnits} {line.purchaseUnits === 1 ? 'unit' : 'units'}
-              </td>
-              <td>{money(line.lineTotalMinor, line.currency)}</td>
-              <td>
-                {shortDate(line.observedAt)} · {line.freshness}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      <p className="small-note">
-        Subtotal {money(plan.totals.subtotalMinor, plan.totals.currency)}
-        {plan.totals.shippingMinor > 0 &&
-          ` + est. shipping ${money(plan.totals.shippingMinor, plan.totals.currency)}`}
-        ; tax excluded. Shipping is an estimate.
-      </p>
-      {plan.notes
-        .filter((note) => note.startsWith('No acceptable'))
-        .map((note) => (
-          <p key={note} className="small-note">
-            {note}
-          </p>
-        ))}
-      {plan.rejected.length > 0 && (
-        <p className="small-note">
-          <button className="link-button" onClick={() => setShowRejected(!showRejected)}>
-            {showRejected ? 'Hide' : 'Show'} {plan.rejected.length} rejected candidates
-          </button>
-        </p>
-      )}
-      {showRejected && (
-        <ul>
-          {plan.rejected.map((candidate) => (
-            <li key={candidate.offerId}>
-              <span className="small-note">
-                {candidate.productId}: {candidate.reasons.join('; ')}
-              </span>
-            </li>
-          ))}
-        </ul>
-      )}
+      <PurchasePlanView plan={artifact.payload} />
       <p className="small-note">
         {artifact.lifecycle === 'accepted'
           ? 'Accepted.'

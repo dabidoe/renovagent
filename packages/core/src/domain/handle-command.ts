@@ -11,6 +11,7 @@ import {
 } from '../research/property-research.js';
 import { canonicalValue } from './quantities.js';
 import { handlePlanning } from '../planning/commands.js';
+import { validateCheckoutReview, validatePurchasePlan } from '../commerce/validate.js';
 import { handleWorkflow, finishRunsForDecision } from './workflow.js';
 import {
   commandSchema,
@@ -463,6 +464,10 @@ export function handleCommand(
       if (p.inputRefs.some((ref) => ref.kind === 'artifact' && ref.id === p.artifactId))
         throw new DomainError('VALIDATION', 'Artifact cannot depend on itself');
       validateTasks(command);
+      if (p.content.kind === 'purchase-plan')
+        validatePurchasePlan(state, project.id, p.artifactId, p.content, p.inputRefs);
+      if (p.content.kind === 'checkout-review')
+        validateCheckoutReview(state, project.id, p.artifactId, p.content, p.inputRefs);
       if (p.content.kind === 'conversation-plan')
         validateConversationPlan(state, project.id, p.content);
       (state.artifacts[p.artifactId] ||= []).push({

@@ -91,11 +91,16 @@ test('catalog recall covers search, SKU lookup, and price history', { skip: !uri
     const found = await store.search('faucet');
     assert.ok(found.products.some((p) => p.id === 'van-fau-mid'));
     assert.ok(found.offers.length >= 3);
-    const bySku = await store.offersFor([], { sku: 'FW-SKU-VC30-H' });
+    const bySku = await store.offersFor(undefined, { sku: 'FW-SKU-VC30-H' });
     assert.equal(bySku.offers.length, 1);
     assert.equal(bySku.products[0].id, 'van-cab-high');
-    const byRetailer = await store.offersFor([], { retailer: 'Nobody' });
+    const byRetailer = await store.offersFor(undefined, { retailer: 'Nobody' });
     assert.equal(byRetailer.offers.length, 0);
+    // An empty candidate list is an empty answer, never the whole catalog.
+    const none = await store.offersFor([]);
+    assert.deepEqual(none, { products: [], offers: [], observations: [] });
+    const nonsense = await store.search('zzqxnonexistent');
+    assert.equal(nonsense.offers.length, 0);
     const history = await store.history('offer-van-cab-builder');
     assert.equal(history.length, 1);
     assert.equal(history[0].source, 'example-import');
@@ -359,5 +364,43 @@ test('catalog HTTP honors sessions and gates imports by operator token', { skip:
       delete process.env.RENOVAGENT_CATALOG_OPERATOR;
       await new Promise((resolve) => server.close(resolve));
     }
+  }),
+);
+
+test('a conflicting import writes nothing from any collection', { skip: !uri }, () =>
+  withDb(async (db) => {
+    const store = new CatalogStore(db);
+    await store.ensureIndexes();
+    await store.importBatch(vanityCatalog);
+    const before = {
+      products: await store.products.countDocuments(),
+      offers: await store.offers.countDocuments(),
+      observations: await store.observations.countDocuments(),
+    };
+    const newProduct = { ...vanityCatalog.products[0], id: 'van-new-product', model: 'NEW-1' };
+    const changedOffer = { ...vanityCatalog.offers[0], sku: 'CHANGED-SKU' };
+    await assert.rejects(
+      store.importBatch({ products: [newProduct], offers: [changedOffer], observations: [] }),
+      /different content/,
+    );
+    // A unique-index race (new offer ID, existing identity) also rolls back earlier inserts.
+    const duplicateIdentity = { ...vanityCatalog.offers[0], id: 'offer-duplicate-identity' };
+    const freshOffer = { ...vanityCatalog.offers[0], id: 'offer-fresh', productId: newProduct.id };
+    await assert.rejects(
+      store.importBatch({
+        products: [newProduct],
+        offers: [freshOffer, duplicateIdentity],
+        observations: [],
+      }),
+      /duplicates an existing offer/,
+    );
+    assert.deepEqual(
+      {
+        products: await store.products.countDocuments(),
+        offers: await store.offers.countDocuments(),
+        observations: await store.observations.countDocuments(),
+      },
+      before,
+    );
   }),
 );

@@ -7,12 +7,19 @@ import {
   commandSchema,
   id,
   type Artifact,
+  type Command,
   type Fact,
   type Workspace,
 } from '@renovagent/contracts';
 import { MongoWorkspaceRepository, OWNER } from './repository.js';
 import { CatalogStore } from './catalog.js';
-import { buildCheckoutReview, referenceCurrent } from '@renovagent/core';
+import {
+  buildCheckoutReview,
+  buildTierPlans,
+  fingerprint,
+  referenceCurrent,
+  type PricedOffer,
+} from '@renovagent/core';
 import { startAgentProject } from './agent-projects.js';
 import type { McpAccess } from './mcp-access.js';
 import { workspaceMongoConfig } from './database-config.js';
@@ -119,6 +126,75 @@ function uncertainties(state: Workspace, facts: Fact[], artifacts: Artifact[], p
         freshness: artifact.freshness,
       })),
   };
+}
+
+// Core checks commerce arithmetic against the referenced artifacts; only the
+// catalog can confirm that offers, prices and product fit are real. Agent
+// commerce proposals are rebuilt from the catalog and must match exactly.
+async function verifyCommerceProposal(
+  catalog: CatalogStore | undefined,
+  workspace: Workspace,
+  command: Command,
+): Promise<void> {
+  if (command.type !== 'ProposeArtifact') return;
+  const content = command.payload.content;
+  if (content.kind !== 'purchase-plan' && content.kind !== 'checkout-review') return;
+  if (!catalog)
+    throw new DomainError('VALIDATION', 'Catalog is unavailable to verify this commerce proposal');
+  const mismatch = (what: string) =>
+    new DomainError(
+      'VALIDATION',
+      `${what} does not match the current catalog; rebuild it from catalog data before proposing`,
+    );
+  if (content.kind === 'purchase-plan') {
+    const bom = workspace.artifacts[content.bomRef.id]?.find(
+      (artifact) => artifact.revision === content.bomRef.revision,
+    );
+    if (bom?.payload.kind !== 'bom')
+      throw new DomainError('VALIDATION', 'Purchase plan must name an existing BOM artifact');
+    const productIds = [...new Set(bom.payload.items.flatMap((item) => item.candidateProductIds))];
+    const found = await catalog.offersFor(productIds);
+    const products = new Map(found.products.map((product) => [product.id, product]));
+    const observations = new Map(found.observations.map((obs) => [obs.offerId, obs]));
+    const priced: PricedOffer[] = [];
+    for (const offer of found.offers) {
+      const product = products.get(offer.productId);
+      const observation = observations.get(offer.id);
+      if (product && observation) priced.push({ offer, product, observation });
+    }
+    const rebuilt = buildTierPlans(bom.payload, priced).find((plan) => plan.tier === content.tier);
+    // Whole-payload comparison: notes and rejections are displayed too, so an
+    // agent cannot add unverified claims to them. Only the build time may differ.
+    if (
+      !rebuilt ||
+      fingerprint({
+        kind: 'purchase-plan',
+        ...rebuilt,
+        bomRef: content.bomRef,
+        builtAt: content.builtAt,
+      }) !== fingerprint(content)
+    )
+      throw mismatch('Purchase plan');
+    return;
+  }
+  const ref = content.purchasePlanRef;
+  const plan = workspace.artifacts[ref.id]?.find((artifact) => artifact.revision === ref.revision);
+  if (plan?.payload.kind !== 'purchase-plan')
+    throw new DomainError('VALIDATION', 'Checkout review must reference a purchase plan');
+  const found = await catalog.offersFor([
+    ...new Set(plan.payload.lines.map((line) => line.productId)),
+  ]);
+  const tags = content.groups.flatMap((group) =>
+    group.cartUrl ? [new URL(group.cartUrl).searchParams.get('AssociateTag')] : [],
+  );
+  const associateTag = tags.find((tag): tag is string => !!tag);
+  const rebuilt = buildCheckoutReview(
+    plan.payload,
+    { id: plan.id, revision: plan.revision },
+    new Map(found.offers.map((offer) => [offer.id, offer])),
+    { ...(associateTag ? { associateTag } : {}), builtAt: content.builtAt },
+  );
+  if (fingerprint(rebuilt) !== fingerprint(content)) throw mismatch('Checkout review');
 }
 
 export function createWorkspaceMcpServer(
@@ -345,6 +421,10 @@ export function createWorkspaceMcpServer(
                 'FORBIDDEN',
                 `Capability limit: ${command.type} is not proposal-grade. The agent cannot record facts, accept decisions, or release work.`,
               );
+          }
+          if (parsed.some((command) => command.type === 'ProposeArtifact')) {
+            const { workspace } = await repository.read();
+            for (const command of parsed) await verifyCommerceProposal(catalog, workspace, command);
           }
           const results = await repository.execute(parsed);
           return text({

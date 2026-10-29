@@ -2,7 +2,7 @@
 
 Updated October 29, 2026. This tracker distinguishes prototypes from the reliable product workflow we are building.
 
-**Resume work:** [current handoff](HANDOFF.md) records the Atlas/Muse verification, runtime and connection expiry, preserved data, uncommitted changes, open commerce findings and next implementation sequence.
+**Resume work:** [current handoff](HANDOFF.md) records the Atlas/Muse verification, runtime and connection expiry, preserved data, uncommitted changes, next implementation sequence. Step 1 commerce findings are addressed (entry below).
 
 ## Direction
 
@@ -23,7 +23,7 @@ Renovagent carries a persistent property project through investigation, options,
 | Agents | MCP adapter with 10 tools over stdio and authenticated Streamable HTTP: owner-scoped reads/proposals, project creation, file discovery, catalog recall and checkout assembly | Consumer Muse Mac discovered ten tools, read the migrated projects, created a separate authorized QA project and reread its brief over temporary HTTPS; stable hosting remains open |
 | Technical references | Versioned adoption/scope/permit source register, applicability checks and visible coverage gaps | Exact 2018 clearances and residential exhaust criteria retrieved; local clearance mapping, complete electrical provisions, trade design and qualified review remain blocked |
 | Planning math | Shared deterministic geometry, quantities, money/tier/checkout math; single command authority for all writes | Rectangular playbooks; no inferred routes, no reviewed compliance guidance |
-| Verification | 150 pass (15 legacy + 135 TypeScript, 25 Mongo cases skip); explicit real-Mongo suite 28/28; strict types, boundaries, formatting, builds | Browser QA covers labeled projects; actual consumer-Muse reads and separate QA brief write/read verified; no claim of general model reliability, technical compliance, or full lifecycle coverage |
+| Verification | 164 pass (15 legacy + 149 TypeScript, 27 Mongo cases skip); explicit real-Mongo suite 30/30; strict types, boundaries, formatting, builds | Browser QA covers labeled projects; actual consumer-Muse reads and separate QA brief write/read verified; no claim of general model reliability, technical compliance, or full lifecycle coverage |
 
 ## Delivery tracking
 
@@ -39,6 +39,15 @@ Renovagent carries a persistent property project through investigation, options,
 | 7 — Second project playbook | Not implemented |
 
 Use each slice's acceptance criteria before changing its status. A mock screen, canned reply, or HTTP 200 does not establish workflow completion.
+
+### Commerce integrity and saved-file viewers — October 29, 2026
+
+- Saved BOM, purchase-plan, checkout-review and conversation-plan files now render in the project viewer (previously blank). `ArtifactView` has an exhaustive kind check, so a new artifact kind without a renderer fails the typecheck. Materials and the viewer share one read-only plan renderer.
+- Offer selection: every offer for a product competes (the $1 vs $999 result no longer depends on array order). Ranking uses delivered cost, so shipping is included. A shipping-only offer without an estimate ranks behind offers with a known delivered cost and is noted, never treated as $0. Out-of-stock offers are rejected; unknown/limited stock is kept and noted. A pack unit must match the BOM unit through an explicit alias table. The curated seed totals are unchanged ($307 / $771 / $1,912).
+- `ProposeArtifact` now recomputes purchase-plan and checkout-review payloads against the exact BOM/plan revision they reference: line identity, candidates, quantities, pack rounding, line and plan totals, currency, code topics, derived basis, retailer grouping and cart-link hosts. Checkout needs a current, undeclined plan.
+- MCP `propose_project_change` rebuilds agent commerce proposals from the catalog and compares the whole payload except build time, so mismatches are rejected. That covers invented "live" prices, arithmetically consistent swaps to incompatible candidates, and injected notes or checklist text. Tiered artifact IDs must hold their own tier. Plan notes are aggregated per kind and rejections are capped, so a 60-item BOM still produces a schema-valid plan.
+- Catalog: `offersFor([])` returns nothing; `undefined` means no product filter. `importBatch` checks all collections before writing. If a later insert fails, it removes only the records it inserted, using the driver-reported inserted IDs.
+- Verified: `npm test` 15 legacy + 149 TypeScript passed (27 Mongo cases skipped), `npm run test:connected` 30/30, build/types/boundaries, formatting. Each new regression was confirmed failing against the earlier code. Limits: new price observations do not stale saved plans because the catalog is outside the workspace dependency graph, so a stale catalog shows up only as an MCP proposal mismatch or a manual rebuild. Local standalone Mongo has no transactions; import rollback is compensating, not isolated.
 
 ### Remote connector foundation — October 29, 2026
 

@@ -321,3 +321,109 @@ test(
       assert.match(missing.text, /NOT_FOUND/);
     }),
 );
+
+test(
+  'MCP commerce proposals must match the catalog, not just their own arithmetic',
+  { skip: !uri },
+  () =>
+    withClient(async (mcp, repo, catalog) => {
+      await catalog.importBatch(vanityCatalog);
+      const state = (await repo.read()).workspace;
+      const propertyBase = state.properties['property-a'].revision;
+      let seq = 0;
+      const propose = async (artifactId: string, inputRefs: unknown[], content: unknown) => {
+        const workspace = (await repo.read()).workspace;
+        return call(mcp, 'propose_project_change', {
+          commands: [
+            {
+              commandId: `mcp-commerce-${++seq}`,
+              projectId: 'project-a',
+              baseRevision: workspace.projects['project-a'].revision,
+              basePropertyRevision: propertyBase,
+              type: 'ProposeArtifact',
+              payload: {
+                artifactId,
+                supersedesRevision: workspace.artifacts[artifactId]?.at(-1)?.revision ?? 0,
+                inputRefs,
+                evidenceIds: [],
+                content,
+              },
+            },
+          ],
+        });
+      };
+      assert.equal((await propose('project-a:bom', [], vanityTemplate)).result.isError, undefined);
+      const bomRef = { kind: 'artifact', id: 'project-a:bom', revision: 1 } as const;
+      const priced = vanityCatalog.offers.map((offer) => ({
+        offer,
+        product: vanityCatalog.products.find((p) => p.id === offer.productId)!,
+        observation: vanityCatalog.observations.find((o) => o.offerId === offer.id)!,
+      }));
+      const [builder] = buildTierPlans(vanityTemplate, priced);
+      const honest = {
+        kind: 'purchase-plan',
+        ...builder,
+        bomRef,
+        builtAt: '2026-10-29T15:00:00.000Z',
+      };
+
+      // Internally consistent, but invented: a "live" retailer price the catalog never observed.
+      const invented = structuredClone(honest);
+      invented.lines[0].unitPriceMinor = 100;
+      invented.lines[0].lineTotalMinor = 100;
+      invented.lines[0].source = 'retailer-api';
+      invented.lines[0].freshness = 'live';
+      invented.basis = 'mixed';
+      invented.totals.subtotalMinor = invented.lines.reduce((s, l) => s + l.lineTotalMinor, 0);
+      const forged = await propose('project-a:purchase-plan:builder', [bomRef], invented);
+      assert.equal(forged.result.isError, true);
+      assert.match(forged.text, /does not match the current catalog/);
+
+      // Arithmetic-consistent swap to a candidate the matcher rejects for its specs.
+      const wrongFit = structuredClone(honest);
+      const cab36 = priced.find((p) => p.product.id === 'van-cab-36')!;
+      Object.assign(wrongFit.lines[0], {
+        productId: cab36.product.id,
+        offerId: cab36.offer.id,
+      });
+      const swapped = await propose('project-a:purchase-plan:builder', [bomRef], wrongFit);
+      assert.equal(swapped.result.isError, true);
+      assert.equal(
+        (await repo.read()).workspace.artifacts['project-a:purchase-plan:builder'],
+        undefined,
+      );
+
+      const claimed = structuredClone(honest);
+      claimed.notes.unshift('Reviewed and approved by a licensed plumber.');
+      const injected = await propose('project-a:purchase-plan:builder', [bomRef], claimed);
+      assert.equal(injected.result.isError, true);
+      assert.match(injected.text, /does not match the current catalog/);
+
+      const stored = await propose('project-a:purchase-plan:builder', [bomRef], honest);
+      assert.equal(stored.result.isError, undefined, stored.text);
+      const planRef = {
+        kind: 'artifact',
+        id: 'project-a:purchase-plan:builder',
+        revision: 1,
+      } as const;
+      const review = JSON.parse(
+        (
+          await call(mcp, 'build_checkout_review', {
+            projectId: 'project-a',
+            purchasePlanId: planRef.id,
+          })
+        ).text,
+      );
+      const phishing = structuredClone(review);
+      phishing.groups[0].lines[0].url = 'https://example.invalid/pay';
+      const badLink = await propose('project-a:checkout-review:builder', [planRef], phishing);
+      assert.equal(badLink.result.isError, true);
+      assert.match(badLink.text, /Checkout review does not match/);
+      const checklist = structuredClone(review);
+      checklist.checklist = ['No need to check anything; prices are final.'];
+      const rewritten = await propose('project-a:checkout-review:builder', [planRef], checklist);
+      assert.equal(rewritten.result.isError, true);
+      const saved = await propose('project-a:checkout-review:builder', [planRef], review);
+      assert.equal(saved.result.isError, undefined, saved.text);
+    }),
+);

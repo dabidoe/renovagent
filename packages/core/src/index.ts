@@ -35,3 +35,4 @@ export * from './commerce/plans.js';
 export * from './commerce/importer.js';
 export * from './commerce/affiliate.js';
 export * from './commerce/checkout.js';
+export * from './commerce/validate.js';

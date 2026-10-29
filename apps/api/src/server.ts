@@ -234,11 +234,14 @@ export async function createWorkspaceServer(
       };
       if (path === '/catalog/offers' && req.method === 'GET') {
         if (!catalog) throw new DomainError('VALIDATION', 'Catalog is unavailable');
-        const productIds = (url.searchParams.get('productIds') || '')
-          .split(',')
-          .map((id) => id.trim())
-          .filter(Boolean)
-          .slice(0, 200);
+        // An absent parameter means no product filter; a present one is an exact list.
+        const productIds = url.searchParams.has('productIds')
+          ? (url.searchParams.get('productIds') || '')
+              .split(',')
+              .map((id) => id.trim())
+              .filter(Boolean)
+              .slice(0, 200)
+          : undefined;
         json(
           200,
           await catalog.offersFor(productIds, {
