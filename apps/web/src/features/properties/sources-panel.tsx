@@ -1,4 +1,4 @@
-import { type Workspace, type Fact } from '@unpermitted/contracts';
+import { type Workspace, type Fact } from '@renovagent/contracts';
 import { WorkspaceController, projectFacts } from '../../app/workspace-controller.js';
 import { factText } from '../../app/presentation.js';
 import { Glyph } from '../../components/glyph.js';

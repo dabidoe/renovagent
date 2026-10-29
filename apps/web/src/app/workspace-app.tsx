@@ -1,7 +1,7 @@
 import { InventoryWorkbench } from '../features/work/inventory-workbench.js';
-import { homeInventory } from '@unpermitted/core';
+import { homeInventory } from '@renovagent/core';
 import { HomePlan } from '../features/work/home-plan.js';
-import { scopePlanningCoverage } from '@unpermitted/core';
+import { scopePlanningCoverage } from '@renovagent/core';
 import { CandidateMeasurementsPanel } from '../features/work/candidate-measurements.js';
 import { ScopePlannerEntry } from '../features/work/scope-planner.js';
 import { PropertyIntake } from '../features/intake/property-intake.js';
@@ -15,15 +15,18 @@ import { Media } from '../features/properties/media.js';
 import { RunCard } from '../features/activity/run-card.js';
 import { Composer } from '../features/conversation/composer.js';
 import { useState, useEffect, useRef, useSyncExternalStore } from 'react';
-import { type Artifact, type Fact, type WorkKind } from '@unpermitted/contracts';
-import { latest, workLabels, photoQuestions } from '@unpermitted/core';
+import { type Artifact, type Fact, type WorkKind } from '@renovagent/contracts';
+import { latest, workLabels, photoQuestions } from '@renovagent/core';
 import {
   WorkspaceController,
   defaultView,
   projectFacts,
   projectRuns,
+  clearStoredMode,
 } from './workspace-controller.js';
 import { artifactTitle } from '../features/work/artifact-view.js';
+import { PurchasePlans } from '../features/commerce/purchase-plans.js';
+import { signInUrlFor, signOutAccount } from '../adapters/http/project-repository.js';
 import {
   previewLegacyImport,
   LEGACY_STORAGE_KEY,
@@ -34,6 +37,7 @@ export function App({ controller }: { controller: WorkspaceController }) {
     workspace: state,
     busy,
     error,
+    auth,
   } = useSyncExternalStore(controller.subscribe, controller.getSnapshot);
   const active = state.activeProjectId || Object.keys(state.projects)[0] || '';
   const project = state.projects[active];
@@ -61,9 +65,9 @@ export function App({ controller }: { controller: WorkspaceController }) {
   useEffect(() => {
     // A landing-page brief is a draft for a new project, never a write to the active home.
     try {
-      const brief = sessionStorage.getItem('unpermitted.project-brief');
+      const brief = sessionStorage.getItem('renovagent.project-brief');
       if (brief) {
-        sessionStorage.removeItem('unpermitted.project-brief');
+        sessionStorage.removeItem('renovagent.project-brief');
         setStartPrompt(brief.slice(0, 300));
         setModal('new');
       }
@@ -87,6 +91,15 @@ export function App({ controller }: { controller: WorkspaceController }) {
         scopePlanningCoverage(state, active).supported,
     );
   const [localError, setLocalError] = useState('');
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('auth') === 'error') {
+      params.delete('auth');
+      const query = params.size ? `?${params}` : '';
+      window.history.replaceState(null, '', `${window.location.pathname}${query}`);
+      setLocalError('Google sign-in failed. Check the server configuration and try again.');
+    }
+  }, []);
   const [importPreview, setImportPreview] = useState<LegacyImportPreview | null>(null);
   const facts = project ? projectFacts(state, active) : [];
   const runs = project ? projectRuns(state, active) : [];
@@ -250,13 +263,13 @@ export function App({ controller }: { controller: WorkspaceController }) {
             setWorkOpen(false);
             setShowRecent(false);
           }}
-          aria-label="Unpermitted home"
+          aria-label="Renovagent home"
         >
           <span className="prompt-brand-symbol">
             <Glyph name="home" />
           </span>
           <span>
-            unpermitted<span className="brand-period">.</span>
+            renovagent<span className="brand-period">.</span>
           </span>
         </button>
         <button
@@ -269,7 +282,33 @@ export function App({ controller }: { controller: WorkspaceController }) {
           </span>
           <Glyph name="chevron" />
         </button>
+        {controller.connected && auth.email && (
+          <span className="prompt-account">
+            {auth.email}
+            <button
+              className="link-button subtle"
+              onClick={async () => {
+                await signOutAccount().catch(() => {});
+                clearStoredMode();
+                window.location.reload();
+              }}
+            >
+              Sign out
+            </button>
+          </span>
+        )}
       </header>
+      {auth.required && (
+        <div className="error-banner" role="alert">
+          <span>{error || 'Sign in to reconnect your shared workspace.'}</span>
+          {(auth.providers.length ? auth.providers : ['google']).map((provider) => (
+            <a key={provider} className="link-button" href={signInUrlFor(provider)}>
+              Sign in with {provider === 'meta' ? 'Meta' : 'Google'}
+            </a>
+          ))}
+          <button onClick={() => controller.clearError()}>Dismiss</button>
+        </div>
+      )}
       {(error || localError) && (
         <div className="error-banner" role="alert">
           <span>{error || localError}</span>
@@ -746,19 +785,24 @@ export function App({ controller }: { controller: WorkspaceController }) {
       )}
       {modal === 'materials' && (
         <Modal title="Materials" onClose={() => setModal(null)}>
-          <div className="prompt-empty">
-            <span className="prompt-empty-icon">
-              <Glyph name="materials" />
-            </span>
-            <h3>A shopping list with a reason behind every item.</h3>
-            <p>
-              Materials will follow the selected scope, measurements and specifications. Detailed
-              supplier comparison isn’t connected yet.
-            </p>
-            <button className="primary" onClick={openPlan}>
-              Review the current plan <Glyph name="right" />
-            </button>
-          </div>
+          {controller.connected && project ? (
+            <PurchasePlans controller={controller} projectId={project.id} />
+          ) : (
+            <div className="prompt-empty">
+              <span className="prompt-empty-icon">
+                <Glyph name="materials" />
+              </span>
+              <h3>A shopping list with a reason behind every item.</h3>
+              <p>
+                {project
+                  ? 'Connect the workspace to compare catalog offers and build tiered purchase plans.'
+                  : 'Choose a home first, then compare catalog offers and build tiered purchase plans.'}
+              </p>
+              <button className="primary" onClick={openPlan}>
+                Review the current plan <Glyph name="right" />
+              </button>
+            </div>
+          )}
         </Modal>
       )}
       {modal === 'contractors' && (
@@ -770,7 +814,8 @@ export function App({ controller }: { controller: WorkspaceController }) {
             <h3>Good help starts with a clear scope.</h3>
             <p>
               Review what needs doing before requesting quotes. Local contractor search, credential
-              checks and outreach aren’t connected yet.
+              checks and outreach aren’t connected yet. Tiered purchase plans can already be
+              accepted or declined from Materials.
             </p>
             <button className="primary" onClick={openPlan}>
               Review the current scope <Glyph name="right" />

@@ -13,13 +13,13 @@ import {
   type PhotoReview,
   validatePropertyResearch,
   photoPlanningSchema,
-} from '@unpermitted/contracts';
+} from '@renovagent/contracts';
 import {
   applyPhotoReview,
   photoInspectionPrompt,
   validateInspectionBatch,
   validateResearchForJob,
-} from '@unpermitted/core';
+} from '@renovagent/core';
 import { museResultFromEvents } from './muse-property-research.js';
 const manifestSchema = z
   .object({
@@ -310,7 +310,7 @@ export async function refineExistingPhotoReview(file: string, output: string, sc
   if (!base.photoReview) throw Error('No attached-image review to refine');
   const evidence = output + '.evidence';
   await mkdir(evidence);
-  const temp = await mkdtemp(join(tmpdir(), 'unpermitted-photo-planning-'));
+  const temp = await mkdtemp(join(tmpdir(), 'renovagent-photo-planning-'));
   try {
     const goal = scopeGoal || base.photoReview.planning?.goal || base.photoReview.goal;
     if (!goal) throw Error('Provide --goal for a review without a saved project scope.');
@@ -350,7 +350,7 @@ export async function runPhotoReview(
   }
   const evidence = outputFile + '.evidence';
   await mkdir(evidence); // exclusive directory: never mix runs
-  const temp = await mkdtemp(join(tmpdir(), 'unpermitted-photo-inputs-'));
+  const temp = await mkdtemp(join(tmpdir(), 'renovagent-photo-inputs-'));
   const review: PhotoReview = {
     method: 'muse-attached-images',
     reviewedAt: new Date().toISOString(),

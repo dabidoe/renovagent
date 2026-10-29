@@ -1,11 +1,11 @@
-import { type Workspace } from '@unpermitted/contracts';
+import { type Workspace } from '@renovagent/contracts';
 import {
   photoQuestions,
   scopeQuestionBindings,
   referenceCurrent,
   candidateMeasurement,
   scopePlanningCoverage,
-} from '@unpermitted/core';
+} from '@renovagent/core';
 
 /** Presentation of current records only. Never infers preferences from free text. */
 export function homePlanModel(state: Workspace, projectId: string) {

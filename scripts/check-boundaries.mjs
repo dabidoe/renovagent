@@ -17,7 +17,7 @@ async function walk(directory) {
 }
 for (const [directory, allowed] of [
   ['packages/contracts/src', ['zod']],
-  ['packages/core/src', ['@unpermitted/contracts']],
+  ['packages/core/src', ['@renovagent/contracts']],
 ]) {
   const root = resolve(directory);
   for (const file of await walk(root)) {

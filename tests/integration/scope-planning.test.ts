@@ -6,7 +6,7 @@ import {
   validatePropertyResearch,
   type Command,
   type ArtifactPayload,
-} from '@unpermitted/contracts';
+} from '@renovagent/contracts';
 import {
   scopeAnswerRefs,
   photoQuestions,
@@ -15,7 +15,7 @@ import {
   scopePlanningCoverage,
   validateScopeSequence,
   referenceCurrent,
-} from '@unpermitted/core';
+} from '@renovagent/core';
 import { Scenario, context, openTestRepo } from '../foundation-helpers.js';
 function setup() {
   const s = new Scenario();

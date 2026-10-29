@@ -1,4 +1,4 @@
-import { DomainError, type FactValue } from '@unpermitted/contracts';
+import { DomainError, type FactValue } from '@renovagent/contracts';
 export function canonicalValue(value: FactValue): FactValue {
   if (value.kind !== 'quantity') return value;
   const factors = {

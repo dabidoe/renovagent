@@ -1,11 +1,11 @@
 {
-  "name": "@unpermitted/web-foundation",
+  "name": "@renovagent/web-foundation",
   "version": "0.1.0",
   "private": true,
   "type": "module",
   "exports": "./src/index.ts",
   "dependencies": {
-    "@unpermitted/contracts": "*",
-    "@unpermitted/core": "*"
+    "@renovagent/contracts": "*",
+    "@renovagent/core": "*"
   }
 }

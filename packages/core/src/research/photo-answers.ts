@@ -3,7 +3,7 @@ import {
   type Workspace,
   type Command,
   type CommandContext,
-} from '@unpermitted/contracts';
+} from '@renovagent/contracts';
 import { referenceCurrent, resolveRef } from '../domain/invalidate.js';
 import { addMessage } from '../domain/workflow.js';
 export const photoAnswerId = (researchId: string, revision: number, index: number) =>

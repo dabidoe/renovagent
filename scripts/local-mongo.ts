@@ -10,7 +10,7 @@ const mongo = new MongoMemoryServer({
     port: 27018,
     ip: '127.0.0.1',
     dbPath,
-    dbName: 'unpermitted_workspace',
+    dbName: 'renovagent_workspace',
     storageEngine: 'wiredTiger',
   },
 });

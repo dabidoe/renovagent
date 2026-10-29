@@ -1,5 +1,5 @@
 import { scopeRecipeVersion } from '../research/scope-recipe.js';
-import { type Artifact } from '@unpermitted/contracts';
+import { type Artifact } from '@renovagent/contracts';
 import { sourceSetVersion } from './sources.js';
 import { localProfileVersion } from './locality.js';
 import { halfBathPlaybookVersion } from './playbook.js';

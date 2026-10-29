@@ -5,7 +5,7 @@ import {
   type Command,
   type CommandContext,
   type InputRef,
-} from '@unpermitted/contracts';
+} from '@renovagent/contracts';
 import { referenceCurrent, resolveRef } from '../domain/invalidate.js';
 import { addMessage } from '../domain/workflow.js';
 export const inventoryId = (pid: string) => `${pid}:photo-inventory`;

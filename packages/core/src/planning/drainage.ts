@@ -1,4 +1,4 @@
-import { type PlanningInputs, type ArtifactPayload } from '@unpermitted/contracts';
+import { type PlanningInputs, type ArtifactPayload } from '@renovagent/contracts';
 import { assessCode } from './playbook.js';
 import { missingSources } from './applicability.js';
 import { mm } from './calculators.js';

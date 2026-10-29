@@ -1,4 +1,4 @@
-import { type PlanningInputs, type ArtifactPayload } from '@unpermitted/contracts';
+import { type PlanningInputs, type ArtifactPayload } from '@renovagent/contracts';
 import { resolveLocalContext } from './locality.js';
 import { technicalRequirements } from './requirements.js';
 import { determineCodeBasis, coveredHalfBath, missingSources } from './applicability.js';

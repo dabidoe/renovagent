@@ -2,7 +2,7 @@ import { readFile, writeFile, mkdtemp, rm, access } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
-import { photoInventorySchema, validatePropertyResearch } from '@unpermitted/contracts';
+import { photoInventorySchema, validatePropertyResearch } from '@renovagent/contracts';
 import { imageBytes } from './muse-photo-review.js';
 import { museResultFromEvents } from './muse-property-research.js';
 import { runMuse } from './muse-provider.js';
@@ -103,7 +103,7 @@ export async function runInventory(
     ? representatives
     : research.photoReview.photos.filter((p) => p.status === 'reviewed').slice(0, 4);
   if (!photos.length) throw Error('No supported reviewed photos found');
-  const temp = await mkdtemp(join(tmpdir(), 'unpermitted-inventory-'));
+  const temp = await mkdtemp(join(tmpdir(), 'renovagent-inventory-'));
   try {
     const args = [
       'exec',

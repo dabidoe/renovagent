@@ -1,8 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { IDBFactory } from 'fake-indexeddb';
-import { DomainError } from '@unpermitted/contracts';
-import { handleCommand } from '@unpermitted/core';
+import { DomainError } from '@renovagent/contracts';
+import { handleCommand } from '@renovagent/core';
 import { IndexedDbProjectRepository } from '../../apps/web/src/adapters/indexeddb/project-repository.js';
 import { WorkspaceController } from '../../apps/web/src/app/workspace-controller.js';
 import { context, Scenario } from '../foundation-helpers.js';

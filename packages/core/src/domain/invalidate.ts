@@ -2,7 +2,7 @@ import { planningFactSignature } from '../planning/fact-context.js';
 import { technicalVersionCurrent } from '../planning/versions.js';
 import { taskReadiness } from '../planning/calculators.js';
 import { inputSignature } from './input-context.js';
-import { type Workspace, type InputRef, type Artifact, DomainError } from '@unpermitted/contracts';
+import { type Workspace, type InputRef, type Artifact, DomainError } from '@renovagent/contracts';
 export const latest = <T>(versions: T[] | undefined): T | undefined => versions?.at(-1);
 export function resolveRef(state: Workspace, projectId: string, ref: InputRef) {
   const project = state.projects[projectId];

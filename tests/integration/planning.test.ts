@@ -6,7 +6,7 @@ import {
   emptyPlanningInputs,
   type PlanningInputs,
   planningGroups,
-} from '@unpermitted/contracts';
+} from '@renovagent/contracts';
 import {
   latest,
   fingerprint,
@@ -14,7 +14,7 @@ import {
   taskViews,
   referenceCurrent,
   sourceSetVersion,
-} from '@unpermitted/core';
+} from '@renovagent/core';
 import { measured } from '../../fixtures/projects/technical-reference.js';
 import { Scenario, openTestRepo, context } from '../foundation-helpers.js';
 function setup() {

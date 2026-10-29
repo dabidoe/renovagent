@@ -5,14 +5,14 @@ import {
   type PlanningGroup,
   planningGroups,
   planningInputsSchema,
-} from '@unpermitted/contracts';
+} from '@renovagent/contracts';
 import {
   readPlanningInputs,
   planningId,
   latest,
   technicalSources,
   halfBathPlaybookVersion,
-} from '@unpermitted/core';
+} from '@renovagent/core';
 import { type WorkspaceController } from '../../app/workspace-controller.js';
 export function PlanningPanel({
   state,
@@ -42,7 +42,7 @@ export function PlanningPanel({
     latest(state.artifacts[planningId(projectId, 'site')])?.payload.kind === 'planning-inputs'
       ? (
           latest(state.artifacts[planningId(projectId, 'site')])!.payload as Extract<
-            import('@unpermitted/contracts').ArtifactPayload,
+            import('@renovagent/contracts').ArtifactPayload,
             { kind: 'planning-inputs' }
           >
         ).basis

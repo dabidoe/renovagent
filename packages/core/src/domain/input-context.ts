@@ -1,4 +1,4 @@
-import { type Workspace, type InputRef } from '@unpermitted/contracts';
+import { type Workspace, type InputRef } from '@renovagent/contracts';
 export function captureInputs(state: Workspace, projectId: string): InputRef[] {
   const project = state.projects[projectId];
   const facts = Object.values(state.facts)

@@ -2,7 +2,7 @@ import {
   type Workspace,
   type PropertyResearch,
   validatePropertyResearch,
-} from '@unpermitted/contracts';
+} from '@renovagent/contracts';
 export const researchJobId = (projectId: string, factId: string, revision: number) =>
   `${projectId}:property:${factId}:${revision}`;
 export function validateResearchForJob(raw: unknown, address: string, jobId: string) {

@@ -1,4 +1,4 @@
-import { type PropertyResearch } from '@unpermitted/contracts';
+import { type PropertyResearch } from '@renovagent/contracts';
 export function PhotoReviewSummary({ research }: { research: PropertyResearch }) {
   const review = research.photoReview;
   if (!review) return null;

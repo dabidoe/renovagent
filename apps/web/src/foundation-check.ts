@@ -7,14 +7,14 @@ import {
   type LegacyImportPreview,
 } from './adapters/fixtures/import-legacy.js';
 import { foundationScenario } from '../../../fixtures/projects/foundation-scenario.js';
-import { DomainError, type Command } from '@unpermitted/contracts';
+import { DomainError, type Command } from '@renovagent/contracts';
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
 const params = new URLSearchParams(location.search);
 if (!params.has('check')) {
   params.set('check', crypto.randomUUID());
   history.replaceState(null, '', `${location.pathname}?${params}`);
 }
-const name = `unpermitted-foundation-check:${params.get('check')}`;
+const name = `renovagent-foundation-check:${params.get('check')}`;
 const context = { ownerId: 'local-foundation-check', now: new Date().toISOString() };
 let repo = await IndexedDbProjectRepository.open({ name, ownerId: context.ownerId });
 function check(message: string, pass: boolean) {

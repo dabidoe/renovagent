@@ -6,7 +6,7 @@ import {
   type Command,
   type CommandContext,
   type InputRef,
-} from '@unpermitted/contracts';
+} from '@renovagent/contracts';
 import { geometry, mm } from '../planning/calculators.js';
 import { referenceCurrent, resolveRef } from '../domain/invalidate.js';
 import { propertyAddress } from './property-research.js';

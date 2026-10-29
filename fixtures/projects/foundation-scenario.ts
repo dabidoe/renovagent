@@ -1,5 +1,5 @@
-import { emptyWorkspace, type Command, type CommandContext } from '@unpermitted/contracts';
-import { handleCommand } from '@unpermitted/core';
+import { emptyWorkspace, type Command, type CommandContext } from '@renovagent/contracts';
+import { handleCommand } from '@renovagent/core';
 export function foundationScenario(context: CommandContext) {
   let state = emptyWorkspace(context.ownerId),
     sequence = 0;

@@ -6,7 +6,7 @@ October 29, 2026 · Proposal, not implementation evidence
 
 ## Recommendation
 
-Make Unpermitted feel like a persistent workspace for a house: identify the home, choose a project, describe what you want, and inspect the work produced. The opening experience should answer three questions immediately: **Which house am I working on? What are we trying to do? What happens next?**
+Make Renovagent feel like a persistent workspace for a house: identify the home, choose a project, describe what you want, and inspect the work produced. The opening experience should answer three questions immediately: **Which house am I working on? What are we trying to do? What happens next?**
 
 Keep the existing React/TypeScript, domain commands, revision history, repository interfaces and bounded Muse photo jobs. Redesign the information hierarchy around them. Add procurement and contractor workflows as durable artifacts, not extra chat personas or decorative tabs.
 
@@ -116,7 +116,7 @@ Keep Muse behind the current Node provider boundary. Generalize the photo-job pa
 
 For the first real conversation loop: accept a request → resolve house/project/context → ask a necessary question or start a supported job → validate a proposal → show changed artifacts → obtain any required acceptance. New claims remain proposals; the assistant cannot overwrite source facts, approve itself or mark inspections passed.
 
-MCP has two possible roles: exposing Unpermitted project tools to an external agent, and consuming approved external tools from the application's worker. Neither is required to make the existing Muse integration useful. MCP standardizes context/tool exchange; application orchestration and authority remain our responsibility. [Official architecture](https://modelcontextprotocol.io/docs/learn/architecture).
+MCP has two possible roles: exposing Renovagent project tools to an external agent, and consuming approved external tools from the application's worker. Neither is required to make the existing Muse integration useful. MCP standardizes context/tool exchange; application orchestration and authority remain our responsibility. [Official architecture](https://modelcontextprotocol.io/docs/learn/architecture).
 
 Implement external read tools first (`list_homes`, `get_project`, `get_scope`, `get_material_plan`), then bounded proposal/job tools through the same application services. Scope every tool to the authenticated workspace. Do not expose generic Mongo writes or reuse the old demo MCP planner. Test cross-account reads, stale proposals, malicious retrieved text, cancellation and retries before enabling remote access.
 

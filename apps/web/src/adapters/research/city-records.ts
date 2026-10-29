@@ -1,4 +1,4 @@
-import { type PropertyResearch } from '@unpermitted/contracts';
+import { type PropertyResearch } from '@renovagent/contracts';
 export type CityCandidate = { parcel_number: string; location: string; [key: string]: unknown };
 export function phillyQuery(address: string) {
   const suffixes: Record<string, string> = {

@@ -3,14 +3,14 @@ import {
   workspaceSchema,
   type CommandContext,
   type CommandResult,
-} from '@unpermitted/contracts';
-import type { AttachmentBlob, ProjectRepository } from '@unpermitted/core';
+} from '@renovagent/contracts';
+import type { AttachmentBlob, ProjectRepository } from '@renovagent/core';
 export async function workspaceRequest(path: string, body?: unknown) {
   const response = await fetch(`/api/workspace${path}`, {
     method: body === undefined ? 'GET' : 'POST',
     credentials: 'same-origin',
     headers: {
-      'X-Unpermitted-Client': 'workspace',
+      'X-Renovagent-Client': 'workspace',
       ...(body === undefined ? {} : { 'Content-Type': 'application/json' }),
     },
     body: body === undefined ? undefined : JSON.stringify(body),
@@ -35,10 +35,31 @@ function decodeBlobs(blobs: { id: string; mediaType: string; data: string }[]): 
     blob: new Blob([Uint8Array.from(atob(b.data), (c) => c.charCodeAt(0))], { type: b.mediaType }),
   }));
 }
+export type SessionInfo = {
+  mode: string;
+  signedIn?: boolean;
+  user?: { email: string };
+  providers?: string[];
+  muse?: boolean;
+};
+export const signInUrlFor = (provider: string) => `/api/workspace/auth/${provider}`;
+export async function accountStatus(): Promise<SessionInfo> {
+  return workspaceRequest('/auth/me');
+}
+export async function signOutAccount(): Promise<void> {
+  await workspaceRequest('/auth/logout', {});
+}
 export class HttpProjectRepository implements ProjectRepository {
+  session: SessionInfo = { mode: 'local-single-owner' };
   static async open() {
-    await workspaceRequest('/session');
-    return new HttpProjectRepository();
+    const session = (await workspaceRequest('/session')) as SessionInfo;
+    if (session.mode === 'account' && !session.signedIn)
+      throw new DomainError('FORBIDDEN', 'Sign in to use the shared workspace', {
+        providers: session.providers ?? [],
+      });
+    const repository = new HttpProjectRepository();
+    repository.session = session;
+    return repository;
   }
   async read() {
     return workspaceSchema.parse(await workspaceRequest(''));
@@ -62,7 +83,7 @@ export class HttpProjectRepository implements ProjectRepository {
   async exportBackup() {
     const data = await workspaceRequest('/backup');
     return {
-      format: 'unpermitted-local-backup' as const,
+      format: 'renovagent-local-backup' as const,
       schemaVersion: 1 as const,
       workspace: workspaceSchema.parse(data.workspace),
       blobs: decodeBlobs(data.blobs),
@@ -71,7 +92,7 @@ export class HttpProjectRepository implements ProjectRepository {
   async exportRecoveryBundle() {
     const backup = await this.exportBackup();
     return {
-      format: 'unpermitted-local-recovery' as const,
+      format: 'renovagent-local-recovery' as const,
       databaseVersion: 1,
       rawWorkspace: backup.workspace,
       blobs: backup.blobs,

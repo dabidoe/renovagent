@@ -1,6 +1,6 @@
 import { MeasuredSketch } from './measured-sketch.js';
-import { type Artifact, type Workspace } from '@unpermitted/contracts';
-import { taskReadiness, referenceCurrent } from '@unpermitted/core';
+import { type Artifact, type Workspace } from '@renovagent/contracts';
+import { taskReadiness, referenceCurrent } from '@renovagent/core';
 export function PlanningView({ artifact, state }: { artifact: Artifact; state?: Workspace }) {
   const p = artifact.payload;
   switch (p.kind) {

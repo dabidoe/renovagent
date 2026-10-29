@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { planningInputsSchema } from '@unpermitted/contracts';
-import { assessCode, electricalPath } from '@unpermitted/core';
+import { planningInputsSchema } from '@renovagent/contracts';
+import { assessCode, electricalPath } from '@renovagent/core';
 import { measured } from '../../fixtures/projects/technical-reference.js';
 export function scopedElectrical() {
   const p = measured();

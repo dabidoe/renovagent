@@ -1,4 +1,4 @@
-# Unpermitted.ai
+# Renovagent
 
 **From renovation idea to a quote-ready plan.**
 
@@ -8,7 +8,7 @@ A persistent project for your house, your AI agent, and the people doing the wor
 
 ## The idea
 
-Tell your agent what you want to improve. Unpermitted should turn that brief into a specific scope, traceable materials, and comparable supplier offers and contractor quotes. Your agent and the website work from the same project record.
+Tell your agent what you want to improve. Renovagent should turn that brief into a specific scope, traceable materials, and comparable supplier offers and contractor quotes. Your agent and the website work from the same project record.
 
 The website stays simple: a prompt, a home selector, and project tools when you need them. The durable project is the product; chat is one way to use it.
 
@@ -20,8 +20,10 @@ This is an early development project. The current local working tree includes:
 - A prompt-first workspace with house, plan, history, and evidence tools.
 - Shared deterministic planning calculations and downstream invalidation when facts change.
 - An optional local MongoDB/API mode with bounded Muse photo-analysis jobs.
+- Optional Google/Meta sign-in with per-owner workspaces (needs your OAuth clients; see the accounts doc).
+- A demo commerce catalog with tiered purchase plans and contractor review (example prices only).
 
-General messages are saved notes, not live agent conversations. Standard-agent access to the current workspace, live supplier pricing, contractor verification, purchasing, and hosted customer accounts are **not implemented**. The older MCP demo uses a different project model.
+General messages are saved notes, not live agent conversations. A local stdio MCP adapter exposes workspace reads and proposal-grade commands to standard agent clients; live supplier pricing, contractor verification, purchasing, hosted MCP transport, and hosted customer accounts are **not implemented**. The older MCP demo uses a different project model.
 
 See [current implementation and limits](docs/architecture/connected-muse-and-mongo.md) and [the external-agent contract](docs/architecture/prompt-first-workspace.md).
 

@@ -2,9 +2,9 @@ import { CandidateMeasurementView } from './candidate-measurements.js';
 import { ScopePlanningView } from './scope-planner.js';
 import { type WorkspaceController } from '../../app/workspace-controller.js';
 import { PhotoReviewSummary } from '../intake/photo-review-summary.js';
-import { researchForArtifact, questionsForReviewedPhoto } from '@unpermitted/core';
+import { researchForArtifact, questionsForReviewedPhoto } from '@renovagent/core';
 import { PlanningView } from '../technical/planning-view.js';
-import { type Workspace, type Artifact } from '@unpermitted/contracts';
+import { type Workspace, type Artifact } from '@renovagent/contracts';
 export const artifactTitles: Record<Artifact['payload']['kind'], string> = {
   'conversation-plan': 'Conversation planning proposal',
   'photo-inventory': 'Visual home inventory',
@@ -29,6 +29,8 @@ export const artifactTitles: Record<Artifact['payload']['kind'], string> = {
   'material-plan': 'Material requirements',
   estimate: 'Estimate basis',
   'evidence-index': 'Evidence collection',
+  bom: 'Bill of materials',
+  'purchase-plan': 'Purchase plan',
 };
 export function artifactTitle(artifact: Artifact) {
   if (artifact.payload.kind === 'candidate-measurements')

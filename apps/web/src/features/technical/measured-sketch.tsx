@@ -1,5 +1,5 @@
-import { type Artifact, type Workspace } from '@unpermitted/contracts';
-import { mm } from '@unpermitted/core';
+import { type Artifact, type Workspace } from '@renovagent/contracts';
+import { mm } from '@renovagent/core';
 export function MeasuredSketch({ artifact, state }: { artifact: Artifact; state?: Workspace }) {
   const records = artifact.inputRefs.flatMap((r) =>
     r.kind === 'artifact'

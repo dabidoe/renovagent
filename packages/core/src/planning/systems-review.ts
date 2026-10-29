@@ -1,4 +1,4 @@
-import { type PlanningInputs, type ArtifactPayload } from '@unpermitted/contracts';
+import { type PlanningInputs, type ArtifactPayload } from '@renovagent/contracts';
 import { electricalReview } from './electrical.js';
 import { missingSources, coveredHalfBath, determineCodeBasis } from './applicability.js';
 type Check = Extract<ArtifactPayload, { kind: 'code-assessment' }>['checks'][number];

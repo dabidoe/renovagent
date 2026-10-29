@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, type FormEvent } from 'react';
-import { type Workspace } from '@unpermitted/contracts';
-import { photoQuestions, workLabels } from '@unpermitted/core';
+import { type Workspace } from '@renovagent/contracts';
+import { photoQuestions, workLabels } from '@renovagent/core';
 import { WorkspaceController, projectRuns } from '../../app/workspace-controller.js';
 import { Glyph } from '../../components/glyph.js';
 export function Composer({

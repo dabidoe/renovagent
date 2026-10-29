@@ -6,7 +6,7 @@ import {
   type PropertyResearch,
   validatePropertyResearch,
   validatePhotoReview,
-} from '@unpermitted/contracts';
+} from '@renovagent/contracts';
 import {
   applyPhotoReview,
   validateInspectionBatch,
@@ -15,7 +15,7 @@ import {
   researchJobId,
   researchForArtifact,
   propertyMarkdown,
-} from '@unpermitted/core';
+} from '@renovagent/core';
 import { photoOutputSchemaForIds, publicPhotoHost } from '../../scripts/muse-photo-review.js';
 import { Scenario, openTestRepo, context } from '../foundation-helpers.js';
 function receipt(count = 35): PhotoReview {

@@ -2,8 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { IDBFactory } from 'fake-indexeddb';
-import { validatePropertyResearch } from '@unpermitted/contracts';
-import { photoQuestions, researchJobId, referenceCurrent, handleCommand } from '@unpermitted/core';
+import { validatePropertyResearch } from '@renovagent/contracts';
+import { photoQuestions, researchJobId, referenceCurrent, handleCommand } from '@renovagent/core';
 import { Scenario, context, openTestRepo } from '../foundation-helpers.js';
 function setup() {
   const s = new Scenario();

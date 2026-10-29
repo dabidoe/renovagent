@@ -13,7 +13,7 @@ The first connection previews project scope and copies the whole IndexedDB snaps
 - `npm run dev:connected` supervises the persistent local Mongo runtime, API and Vite preview. Stop separately started copies before using it.
 - Alternatively run `npm run dev:mongo`, `npm run dev:api` and `npm run dev` separately.
 - Mongo listens on `127.0.0.1:27018`; the API listens on `127.0.0.1:4000`; Vite stays at `127.0.0.1:8741` and proxies `/api`.
-- `WORKSPACE_MONGODB_URI` can select another database. The default is `mongodb://127.0.0.1:27018/unpermitted_workspace`. Legacy server settings/routes are not reused.
+- `WORKSPACE_MONGODB_URI` can select another database. The default is `mongodb://127.0.0.1:27018/renovagent_workspace`. Legacy server settings/routes are not reused.
 - `MUSE_API_KEY` remains Node-only, using the existing process/server/.env/root .env lookup and stdin handoff to the installed Muse CLI. Neither credentials nor the local API session token are bundled into the frontend.
 
 The Mongo launcher uses the `mongodb-memory-server-core` binary manager to run **real MongoDB 8.0.16 with persistent WiredTiger files** at `.local/mongo`. Despite the library name, app data is not kept in an ephemeral test database. Shutdown disables cleanup, restart uses the same dbPath, and the port is fixed. The binary downloads from MongoDB's distribution service on first start. `.local/` is ignored by Git and contains private database files, session material and bounded job evidence; it must be backed up separately.

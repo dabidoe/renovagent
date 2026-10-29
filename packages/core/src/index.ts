@@ -28,3 +28,8 @@ export * from './research/candidate-measurements.js';
 
 export * from './research/home-inventory.js';
 export * from './research/conversation.js';
+export * from './local-uploads.js';
+export * from './commerce/matching.js';
+export * from './commerce/pricing.js';
+export * from './commerce/plans.js';
+export * from './commerce/importer.js';

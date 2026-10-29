@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { IDBFactory } from 'fake-indexeddb';
-import { type Command, DomainError } from '@unpermitted/contracts';
+import { type Command, DomainError } from '@renovagent/contracts';
 import { context, createCommand, Scenario, openTestRepo } from '../foundation-helpers.js';
 import { IndexedDbProjectRepository } from '../../apps/web/src/adapters/indexeddb/project-repository.js';
 import {

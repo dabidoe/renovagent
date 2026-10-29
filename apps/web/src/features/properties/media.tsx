@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { type Workspace } from '@unpermitted/contracts';
+import { type Workspace } from '@renovagent/contracts';
 import { WorkspaceController } from '../../app/workspace-controller.js';
 import { Glyph } from '../../components/glyph.js';
 export function Media({

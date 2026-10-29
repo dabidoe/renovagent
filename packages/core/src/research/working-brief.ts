@@ -7,7 +7,7 @@ import {
   type CommandContext,
   type InputRef,
   type Artifact,
-} from '@unpermitted/contracts';
+} from '@renovagent/contracts';
 import { propertyAddress } from './property-research.js';
 import { inputSignature } from '../domain/input-context.js';
 import { fingerprint } from '../domain/canonical-json.js';

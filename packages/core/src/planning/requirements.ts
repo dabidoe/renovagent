@@ -1,4 +1,4 @@
-import { requirementSchema } from '@unpermitted/contracts';
+import { requirementSchema } from '@renovagent/contracts';
 export const technicalRequirements = [
   {
     id: 'adopted-path',

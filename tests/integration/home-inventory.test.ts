@@ -3,14 +3,14 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { IDBFactory } from 'fake-indexeddb';
-import { validatePropertyResearch, type Command } from '@unpermitted/contracts';
+import { validatePropertyResearch, type Command } from '@renovagent/contracts';
 import {
   homeInventory,
   inventoryDirections,
   inventoryDirectionId,
   referenceCurrent,
   researchJobId,
-} from '@unpermitted/core';
+} from '@renovagent/core';
 import { Scenario, context, openTestRepo } from '../foundation-helpers.js';
 import { WorkspaceController } from '../../apps/web/src/app/workspace-controller.js';
 const receipt = JSON.parse(

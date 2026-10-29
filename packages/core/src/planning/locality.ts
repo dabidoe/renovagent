@@ -1,4 +1,4 @@
-import { type PlanningInputs, type LocalContext } from '@unpermitted/contracts';
+import { type PlanningInputs, type LocalContext } from '@renovagent/contracts';
 export const localProfileVersion = 'local-context/1.0';
 export function resolveLocalContext(context: PlanningInputs['context']): LocalContext {
   const l = context.locality,

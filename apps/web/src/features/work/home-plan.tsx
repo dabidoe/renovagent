@@ -4,14 +4,14 @@ import {
   type Workspace,
   type Artifact,
   type CandidateSurvey,
-} from '@unpermitted/contracts';
+} from '@renovagent/contracts';
 import {
   mm,
   candidateCheck,
   propertyAddress,
   scopeAnswerRefs,
   candidateSurveyRefs,
-} from '@unpermitted/core';
+} from '@renovagent/core';
 import { type WorkspaceController } from '../../app/workspace-controller.js';
 import { PropertyIntake } from '../intake/property-intake.js';
 import { CandidateMeasurementsPanel } from './candidate-measurements.js';

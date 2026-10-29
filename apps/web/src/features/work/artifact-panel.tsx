@@ -1,6 +1,6 @@
 import { ScopePlannerEntry } from './scope-planner.js';
-import { type Workspace, type Artifact } from '@unpermitted/contracts';
-import { latest, photoQuestions } from '@unpermitted/core';
+import { type Workspace, type Artifact } from '@renovagent/contracts';
+import { latest, photoQuestions } from '@renovagent/core';
 import { WorkspaceController, defaultView, projectRuns } from '../../app/workspace-controller.js';
 import { factText } from '../../app/presentation.js';
 import { Glyph } from '../../components/glyph.js';

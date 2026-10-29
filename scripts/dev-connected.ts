@@ -24,7 +24,7 @@ start(['--import', 'tsx', 'scripts/local-mongo.ts']);
 let ready = false;
 for (let attempt = 0; attempt < 120 && !stopping; attempt++) {
   const client = new MongoClient(
-    process.env.WORKSPACE_MONGODB_URI || 'mongodb://127.0.0.1:27018/unpermitted_workspace',
+    process.env.WORKSPACE_MONGODB_URI || 'mongodb://127.0.0.1:27018/renovagent_workspace',
     { serverSelectionTimeoutMS: 500 },
   );
   try {

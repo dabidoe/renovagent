@@ -1,8 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { DomainError } from '@unpermitted/contracts';
-import { taskViews } from '@unpermitted/core';
+import { DomainError } from '@renovagent/contracts';
+import { taskViews } from '@renovagent/core';
 import { Scenario } from '../foundation-helpers.js';
 const ref = (kind: 'fact' | 'artifact' | 'evidence', id: string, revision = 1) => ({
   kind,

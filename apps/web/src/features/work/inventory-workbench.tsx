@@ -1,12 +1,13 @@
 import { ConnectedPhotos } from '../intake/connected-photos.js';
 import { useRef, useState, type FormEvent } from 'react';
-import { type Artifact, type Workspace, type Command } from '@unpermitted/contracts';
+import { type Artifact, type Workspace, type Command } from '@renovagent/contracts';
 import {
   homeInventory,
   inventoryDirections,
   referenceCurrent,
   researchForArtifact,
-} from '@unpermitted/core';
+  isLocalUploadUrl,
+} from '@renovagent/core';
 import { type WorkspaceController } from '../../app/workspace-controller.js';
 import { PropertyIntake } from '../intake/property-intake.js';
 import './inventory-workbench.css';
@@ -176,7 +177,7 @@ export function InventoryWorkbench(props: Props) {
               <>
                 <img
                   src={controller.photoUrl(photo.imageUrl, dimensions.sha256)}
-                  alt={`Original ${photo.imageUrl.startsWith('https://uploads.unpermitted.invalid/') ? 'uploaded' : 'listing'} view: ${photo.roomType}; model regions are approximate`}
+                  alt={`Original ${isLocalUploadUrl(photo.imageUrl) ? 'uploaded' : 'listing'} view: ${photo.roomType}; model regions are approximate`}
                   referrerPolicy="no-referrer"
                   onError={() => setFailed(true)}
                 />
@@ -221,7 +222,7 @@ export function InventoryWorkbench(props: Props) {
             ) : (
               <div className="iv-load">
                 <span>
-                  {photo?.imageUrl.startsWith('https://uploads.unpermitted.invalid/')
+                  {isLocalUploadUrl(photo?.imageUrl ?? '')
                     ? 'YOUR UPLOADED PHOTOGRAPH'
                     : 'ACTUAL LISTING PHOTOGRAPHY'}
                 </span>
@@ -242,7 +243,7 @@ export function InventoryWorkbench(props: Props) {
                   {failed ? 'Retry source image' : 'Load source photo →'}
                 </button>
                 <small>
-                  {photo?.imageUrl.startsWith('https://uploads.unpermitted.invalid/')
+                  {isLocalUploadUrl(photo?.imageUrl ?? '')
                     ? 'Private uploaded image · rights unverified. No image is added to exports.'
                     : 'External source images · rights unverified. No image is added to exports.'}
                 </small>
@@ -257,16 +258,14 @@ export function InventoryWorkbench(props: Props) {
             {photo && (
               <a
                 href={
-                  photo.pageUrl.startsWith('https://uploads.unpermitted.invalid/')
+                  isLocalUploadUrl(photo.pageUrl)
                     ? controller.photoUrl(photo.imageUrl)
                     : photo.pageUrl
                 }
                 target="_blank"
                 rel="noreferrer"
               >
-                {photo.pageUrl.startsWith('https://uploads.unpermitted.invalid/')
-                  ? 'Uploaded original ↗'
-                  : 'Listing source ↗'}
+                {isLocalUploadUrl(photo.pageUrl) ? 'Uploaded original ↗' : 'Listing source ↗'}
               </a>
             )}
           </div>

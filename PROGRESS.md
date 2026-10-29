@@ -1,4 +1,4 @@
-# Project status — Unpermitted.ai
+# Project status — Renovagent
 
 Updated October 27, 2026. This tracker distinguishes prototypes from the reliable product workflow we are building.
 
@@ -119,6 +119,37 @@ Muse inspected all 35 Bingham listing images in five accepted attachment batches
 - Replaced the permanent dashboard/sidebar with a centered prompt, compact house/project context and on-demand dialogs for house tools, saved plans, history, sources and activity. Kept revision-specific outputs, saved drafts, photo question responses and existing controller/repository commands.
 - Materials and contractors have explicit empty states; general messages remain saved notes. Muse photo analysis remains connected locally. Standard Muse-agent access through current-workspace MCP is a recorded requirement, not an enabled integration. See [implementation, verification and Muse client boundary](docs/architecture/prompt-first-workspace.md).
 - Verification: regular tests passed (139 passed, five Mongo cases skipped); the explicit real-Mongo suite passed all six cases, covering the skipped cases. Builds, types, boundaries and changed-file formatting passed. Browser checks covered desktop and 390/360-pixel phone layouts, house/plan dialogs, project switching, Escape, and QA draft persistence through refresh. Actual owner facts/preferences were not changed; the original QA draft was restored.
+
+### Commerce catalog and tiered purchase plans — October 29, 2026
+
+- Built the first shopping slice: shared catalog collections with duplicate-proof imports, deterministic compatibility matching and delivered-cost math, three tier plans (Builder grade / Mid-tier / High-end) for a Philadelphia vanity replacement, and contractor accept/decline on versioned purchase plans. Every plan line carries code topics for verification; rejections persist with reasons.
+- All seed prices are explicitly labeled demo examples (fictional retailers, historical observations); nothing is purchasable and fixture plans carry a persistent warning. No live retail, tax, checkout, or per-line approvals.
+- Verification: 5 domain scenarios with exact tier totals ($307 / $771 / $1,912) plus 2 integration scenarios (idempotent import, conflicts, session/operator gates); `npm test` (15 + 129, 13 skip) and `npm run test:connected` (14) pass with builds, types, boundaries, and formatting. Live double-seed confirmed no dupes. See [commerce catalog](docs/architecture/commerce-catalog.md).
+
+### Rename to Renovagent and scope reconciliation — October 29, 2026
+
+- Renamed the product to Renovagent (per the preferred spelling in the new scope doc): `@renovagent/*` packages, UI brand, titles, wire header/cookies, MCP name, env vars, and current docs. Legacy demo, historical evidence, and the original vision file keep the old name as record.
+- Preserved persisted data across the rename: localStorage key with old-key fallback, one-time Mongo copy from `unpermitted_workspace` to `renovagent_workspace` on first boot (probe-verified: 7 projects, 3 blobs, 2 jobs, then cleaned up), and dual-host upload-URL routing so pre-rename photo records keep working. IndexedDB name stays frozen (no safe copy path); GitHub remote rename is an owner action.
+- Reconciled the new product/technical docs with implemented slices: most MVP intake/planning/code items exist; catalog/pricing/purchase-plans are the first unbuilt block. Recorded the split model — shared reference collections plus per-owner workspace aggregates — adapted backlog, and open-decision recommendations in [renovagent-reconciliation](docs/architecture/renovagent-reconciliation.md).
+- Verification: `npm test` (15 legacy + 124, 11 skip), `npm run test:connected` (12), builds, strict types, boundaries, and full formatting (including 6 pre-existing failures) pass.
+
+### Meta login and Muse app assessment — October 29, 2026
+
+- Added Meta (Facebook Login) sign-in alongside Google: provider-scoped identities with no email-based auto-merge, `appsecret_proof`-verified Graph identity, per-provider sign-in buttons, and stubbed Meta coverage in the account suite. Setup needs the owner's Meta app with the loopback redirect URI; public `email` use needs App Review.
+- Researched the consumer Muse integration surface: custom connectors via hosted Streamable-HTTP MCP are the feasible path, but Muse's cloud cannot reach loopback, so real integration needs the hosted backend (endpoint, TLS, our OAuth server). Verdict, sources, and sequencing are in [the assessment](docs/architecture/muse-app-integration.md).
+- Verification: `npm test` passes (15 legacy + 124, 11 Mongo cases skip); `npm run test:connected` passes (12); builds, strict types, boundaries, and formatting pass. Live provider round-trips still need the owner's OAuth clients.
+
+### Accounts and Google login — October 29, 2026
+
+- Added optional account mode to the current API: Google authorization-code login with ID-token verification, 30-day server sessions, per-owner workspace aggregates with cross-owner isolation, explicit local-to-account adoption on first connect, and per-owner photo workers. Default local single-owner behavior is unchanged when Google credentials are absent.
+- Web app falls back to local records with a sign-in banner instead of a dead-end error, and shows the signed-in email with sign-out in the header. No passwords are stored; Meta login and the legacy demo's bcrypt/Firebase stubs are untouched.
+- Verification: two new HTTP-level integration scenarios with stubbed Google (redirect, callback, adoption, isolation, bad-state rejection, logout, unchanged local mode) in `npm run test:connected` (11 passed); `npm test` passes (15 legacy + 124, 10 Mongo cases skip); builds, strict types, boundaries, and formatting pass. The live Google round-trip needs the owner's OAuth client; setup steps and limits are in [accounts and Google login](docs/architecture/accounts-and-google-login.md). Magic-link agent pairing is the recorded next step; shopping/contractor agents do not exist yet.
+
+### Current-workspace MCP adapter — October 29, 2026
+
+- Implemented the recorded standard-agent requirement as a local stdio MCP server (`apps/api/src/mcp.ts`, `npm run serve:mcp`) over the shared Mongo repository. Five tools: `list_homes`, `list_projects`, `get_project_context`, `get_artifact`, and `propose_project_change` (allowlisted to `ProposeArtifact`, `SaveDraft`, `AppendMessage`; fact recording, decision acceptance, and work release return an explicit capability limit).
+- Verified three ways: three maintained integration scenarios over a real MCP client on isolated temp databases; a raw JSON-RPC stdio probe (discovery, empty reads, unknown-project and capability-limit errors); and a live headless `muse exec` run that listed the seeded home and summarized the goal with zero database writes. See [implementation, connection config, and limits](docs/architecture/mcp-workspace-adapter.md).
+- Verification: `npm test` passes (15 legacy + 124 TypeScript, 8 Mongo cases skip without the test URI); `npm run test:connected` now covers both suites (9 passed); builds, strict types, boundaries, and formatting pass. Local single-owner stdio only; hosted transport, MCP job tools, and purchasing remain future work.
 
 ### Minimal opening and GitHub presentation — October 29, 2026
 

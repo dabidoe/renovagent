@@ -179,7 +179,7 @@ Target the following small set before building the workspace screens. These are 
 | `packages/core/src/domain/invalidate.ts` | Reverse dependencies and transitive freshness/readiness impact |
 | `apps/web/src/adapters/indexeddb/project-repository.ts` | Local transactional persistence of snapshots, command results and events |
 | `apps/web/src/adapters/indexeddb/migrations.ts` | Versioned database migrations with rollback/export recovery path |
-| `apps/web/src/adapters/fixtures/import-legacy.ts` | Explicit mapping from current `unpermitted-opening-v1` data; unknown fields remain unknown |
+| `apps/web/src/adapters/fixtures/import-legacy.ts` | Explicit mapping from current `renovagent-opening-v1` data; unknown fields remain unknown |
 | `tests/contracts/project.test.ts` | External input and migration validation |
 | `tests/integration/local-project.test.ts` | Two-project restore, atomic updates, duplicate commands and revision conflicts |
 | `tests/domain/invalidation.test.ts` | Reference change scenario plus unrelated/missing/cyclic reference cases |

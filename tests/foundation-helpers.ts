@@ -4,8 +4,8 @@ import {
   type CommandContext,
   type ArtifactPayload,
   emptyWorkspace,
-} from '@unpermitted/contracts';
-import { handleCommand } from '@unpermitted/core';
+} from '@renovagent/contracts';
+import { handleCommand } from '@renovagent/core';
 import { IndexedDbProjectRepository } from '../apps/web/src/adapters/indexeddb/project-repository.js';
 export const context: CommandContext = { ownerId: 'owner-test', now: '2026-10-27T00:00:00.000Z' };
 export const createCommand = (projectId = 'project-a', newProperty = true): Command => ({

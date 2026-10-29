@@ -1,4 +1,4 @@
-import { type PlanningInputs, type ArtifactPayload } from '@unpermitted/contracts';
+import { type PlanningInputs, type ArtifactPayload } from '@renovagent/contracts';
 import { technicalSources, sourceCaptureDate } from './sources.js';
 import { resolveLocalContext } from './locality.js';
 type Basis = NonNullable<Extract<ArtifactPayload, { kind: 'code-assessment' }>['codeBasis']>;

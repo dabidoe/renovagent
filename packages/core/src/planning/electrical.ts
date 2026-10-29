@@ -1,4 +1,4 @@
-import { type ArtifactPayload, type PlanningInputs } from '@unpermitted/contracts';
+import { type ArtifactPayload, type PlanningInputs } from '@renovagent/contracts';
 import { coveredHalfBath, determineCodeBasis, missingSources } from './applicability.js';
 type Check = Extract<ArtifactPayload, { kind: 'code-assessment' }>['checks'][number];
 export const electricalPathSources = [

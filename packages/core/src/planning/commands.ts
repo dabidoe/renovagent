@@ -9,7 +9,7 @@ import {
   type CommandContext,
   type ArtifactPayload,
   type InputRef,
-} from '@unpermitted/contracts';
+} from '@renovagent/contracts';
 import { fingerprint } from '../domain/canonical-json.js';
 import { latest } from '../domain/invalidate.js';
 import {

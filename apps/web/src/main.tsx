@@ -1,5 +1,5 @@
 import { createRoot } from 'react-dom/client';
-import { WorkspaceController } from './app/workspace-controller.js';
+import { WorkspaceController, storedMode } from './app/workspace-controller.js';
 import { App } from './app/workspace-app.js';
 import './styles/workspace.css';
 import './styles/prompt-workspace.css';
@@ -11,7 +11,7 @@ WorkspaceController.open()
     root.render(
       <main className="storage-error">
         <h1>
-          {localStorage.getItem('unpermitted-storage-mode') === 'mongo'
+          {storedMode() === 'mongo'
             ? 'Your connected workspace is unavailable.'
             : 'Your local records need attention.'}
         </h1>

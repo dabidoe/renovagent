@@ -7,8 +7,8 @@ import {
   workspaceSchema,
   type Workspace,
   type CommandResult,
-} from '@unpermitted/contracts';
-import { handleCommand, validateWorkspaceIntegrity } from '@unpermitted/core';
+} from '@renovagent/contracts';
+import { handleCommand, validateWorkspaceIntegrity } from '@renovagent/core';
 export const OWNER = 'local-homeowner';
 export type StoredBlob = { id: string; mediaType: string; data: string };
 export type PhotoJob = {
@@ -43,9 +43,9 @@ export type Aggregate = {
   jobs: PhotoJob[];
 };
 const bytes = (b: StoredBlob) => Buffer.from(b.data, 'base64');
-export function checkedWorkspace(raw: unknown) {
+export function checkedWorkspace(raw: unknown, ownerId = OWNER) {
   const state = workspaceSchema.parse(migrateWorkspace(raw));
-  if (state.ownerId !== OWNER) throw new DomainError('FORBIDDEN', 'Workspace owner mismatch');
+  if (state.ownerId !== ownerId) throw new DomainError('FORBIDDEN', 'Workspace owner mismatch');
   validateWorkspaceIntegrity(state);
   return state;
 }
@@ -71,24 +71,53 @@ export function validateBlobs(state: Workspace, blobs: StoredBlob[]) {
   }
 }
 export class MongoWorkspaceRepository {
-  constructor(readonly collection: Collection<Aggregate>) {}
+  constructor(
+    readonly collection: Collection<Aggregate>,
+    readonly ownerId: string = OWNER,
+  ) {}
+  forUser(userId: string) {
+    return new MongoWorkspaceRepository(this.collection, userId);
+  }
+  async ensure() {
+    await this.collection.updateOne(
+      { _id: this.ownerId },
+      {
+        $setOnInsert: { version: 0, workspace: emptyWorkspace(this.ownerId), blobs: [], jobs: [] },
+      },
+      { upsert: true },
+    );
+  }
   static async connect(uri: string) {
     const client = new MongoClient(uri, { serverSelectionTimeoutMS: 5000 });
     await client.connect();
     const repository = new MongoWorkspaceRepository(
       client.db().collection<Aggregate>('workspace_aggregates'),
     );
-    await repository.collection.updateOne(
-      { _id: OWNER },
-      { $setOnInsert: { version: 0, workspace: emptyWorkspace(OWNER), blobs: [], jobs: [] } },
-      { upsert: true },
-    );
+    await repository.ensure();
+    await repository.adoptLegacyDatabase(client);
     return { repository, client };
   }
+  // One-time rename adoption: if the new default database is empty but the
+  // pre-rename database holds the local workspace, copy it once. Custom
+  // database names and per-user aggregates are never touched.
+  private async adoptLegacyDatabase(client: MongoClient) {
+    if (this.ownerId !== OWNER || client.db().databaseName !== 'renovagent_workspace') return;
+    if (Object.keys((await this.read()).workspace.projects).length) return;
+    const legacy = await client
+      .db('unpermitted_workspace')
+      .collection<Aggregate>('workspace_aggregates')
+      .findOne({ _id: OWNER });
+    if (!legacy || !Object.keys(legacy.workspace.projects).length) return;
+    await this.update((doc) => {
+      doc.workspace = legacy.workspace;
+      doc.blobs = legacy.blobs;
+      doc.jobs = legacy.jobs;
+    });
+  }
   async read() {
-    const doc = await this.collection.findOne({ _id: OWNER });
+    const doc = await this.collection.findOne({ _id: this.ownerId });
     if (!doc) throw new DomainError('STORAGE', 'Workspace is unavailable');
-    checkedWorkspace(doc.workspace);
+    checkedWorkspace(doc.workspace, this.ownerId);
     return doc;
   }
   async update<T>(apply: (doc: Aggregate) => T): Promise<T> {
@@ -96,7 +125,7 @@ export class MongoWorkspaceRepository {
       const doc = await this.read(),
         version = doc.version;
       const result = apply(doc);
-      checkedWorkspace(doc.workspace);
+      checkedWorkspace(doc.workspace, this.ownerId);
       // Embed snapshot, idempotency records, events, attachments and jobs in ONE atomic CAS.
       // This bounded local increment does not need replica-set multi-document transactions.
       if (Buffer.byteLength(JSON.stringify(doc)) > 14 * 1024 * 1024)
@@ -105,13 +134,13 @@ export class MongoWorkspaceRepository {
           'Workspace exceeds the 14 MB local Mongo aggregate limit. Original state was preserved.',
         );
       doc.version = version + 1;
-      const saved = await this.collection.replaceOne({ _id: OWNER, version }, doc);
+      const saved = await this.collection.replaceOne({ _id: this.ownerId, version }, doc);
       if (saved.modifiedCount === 1) return result;
     }
     throw new DomainError('CONFLICT', 'Workspace changed; reload and retry');
   }
   async importWorkspace(raw: unknown, blobs: StoredBlob[]) {
-    const state = checkedWorkspace(raw);
+    const state = checkedWorkspace(raw, this.ownerId);
     validateBlobs(state, blobs);
     return this.update((doc) => {
       if (Object.keys(doc.workspace.projects).length || doc.jobs.length)
@@ -130,7 +159,7 @@ export class MongoWorkspaceRepository {
       const results: CommandResult[] = [];
       for (const command of commands) {
         const outcome = handleCommand(state, command, {
-          ownerId: OWNER,
+          ownerId: this.ownerId,
           now: new Date().toISOString(),
         });
         state = outcome.state;

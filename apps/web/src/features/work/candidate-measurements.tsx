@@ -4,14 +4,14 @@ import {
   type CandidateSurvey,
   type Workspace,
   type Artifact,
-} from '@unpermitted/contracts';
+} from '@renovagent/contracts';
 import {
   candidateRoles,
   candidateMeasurement,
   candidateCheck,
   propertyAddress,
   referenceCurrent,
-} from '@unpermitted/core';
+} from '@renovagent/core';
 import { type WorkspaceController } from '../../app/workspace-controller.js';
 const fieldLabels = {
   width: 'Width',

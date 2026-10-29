@@ -7,8 +7,8 @@ import { MongoWorkspaceRepository, OWNER, type Aggregate } from '../../apps/api/
 import { requestPhotoJob, publishPhotoJob, PhotoWorker } from '../../apps/api/src/photo-jobs.js';
 import { createWorkspaceServer } from '../../apps/api/src/server.js';
 import { Scenario } from '../foundation-helpers.js';
-import { researchJobId, homeInventory } from '@unpermitted/core';
-import { type PropertyResearch } from '@unpermitted/contracts';
+import { researchJobId, homeInventory } from '@renovagent/core';
+import { type PropertyResearch } from '@renovagent/contracts';
 const uri = process.env.TEST_WORKSPACE_MONGO_URI;
 function setup() {
   const s = new Scenario();
@@ -61,9 +61,9 @@ async function withRepo(
 ) {
   const client = new MongoClient(uri!);
   await client.connect();
-  const db = client.db(`unpermitted_test_${randomUUID().replaceAll('-', '')}`);
+  const db = client.db(`renovagent_test_${randomUUID().replaceAll('-', '')}`);
   const repo = new MongoWorkspaceRepository(db.collection<Aggregate>('workspace_aggregates'));
-  const { emptyWorkspace } = await import('@unpermitted/contracts');
+  const { emptyWorkspace } = await import('@renovagent/contracts');
   await repo.collection.insertOne({
     _id: OWNER,
     version: 0,
@@ -244,7 +244,7 @@ test(
       const address = server.address();
       if (!address || typeof address === 'string') throw Error('No address');
       const base = `http://127.0.0.1:${address.port}/api/workspace`;
-      const headers = { Host: '127.0.0.1:4000', 'X-Unpermitted-Client': 'workspace' };
+      const headers = { Host: '127.0.0.1:4000', 'X-Renovagent-Client': 'workspace' };
       try {
         assert.equal((await fetch(base, { headers })).status, 403);
         assert.equal(
@@ -343,7 +343,7 @@ test(
 );
 
 test('bounded photo refresh keeps earlier source references discoverable without claiming they were refreshed', async () => {
-  const { savedPhotoReferences } = await import('@unpermitted/core');
+  const { savedPhotoReferences } = await import('@renovagent/core');
   const { s, research } = setup();
   const subset = { ...research, photoReview: undefined, images: research.images.slice(0, 1) };
   s.artifact(

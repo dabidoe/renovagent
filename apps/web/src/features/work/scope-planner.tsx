@@ -1,12 +1,12 @@
 import { CandidateMeasurementsPanel } from './candidate-measurements.js';
-import { type Artifact, type ArtifactPayload, type Workspace } from '@unpermitted/contracts';
+import { type Artifact, type ArtifactPayload, type Workspace } from '@renovagent/contracts';
 import {
   scopeAnswerRefs,
   candidateSurveyRefs,
   scopePlanningCoverage,
   researchForArtifact,
   referenceCurrent,
-} from '@unpermitted/core';
+} from '@renovagent/core';
 import { type WorkspaceController } from '../../app/workspace-controller.js';
 import { PhotoReviewSummary } from '../intake/photo-review-summary.js';
 const safe = (work: Promise<unknown>) => void work.catch(() => {});

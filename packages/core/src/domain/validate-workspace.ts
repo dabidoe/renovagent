@@ -1,4 +1,4 @@
-import { photoInventorySchema, type Workspace, DomainError } from '@unpermitted/contracts';
+import { photoInventorySchema, type Workspace, DomainError } from '@renovagent/contracts';
 import { resolveRef, validateArtifactGraph } from './invalidate.js';
 export function validateWorkspaceIntegrity(state: Workspace) {
   const require = (value: unknown, message: string): void => {

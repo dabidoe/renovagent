@@ -1,7 +1,7 @@
 import { measured } from '../../fixtures/projects/technical-reference.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { emptyPlanningInputs, planningInputsSchema } from '@unpermitted/contracts';
+import { emptyPlanningInputs, planningInputsSchema } from '@renovagent/contracts';
 import {
   mm,
   geometry,
@@ -11,7 +11,7 @@ import {
   halfBathTasks,
   taskReadiness,
   validateTaskGraph,
-} from '@unpermitted/core';
+} from '@renovagent/core';
 
 const trace = (p: ReturnType<typeof geometry> | ReturnType<typeof takeoff>, label: string) =>
   p.traces.find((t) => t.label === label)!.value;

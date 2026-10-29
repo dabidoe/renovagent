@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { runMuse } from './muse-provider.js';
 import { fileURLToPath } from 'node:url';
-import { validateResearchForJob, musePropertyPrompt } from '@unpermitted/core';
+import { validateResearchForJob, musePropertyPrompt } from '@renovagent/core';
 export function museResultFromEvents(text: string) {
   let terminal: { terminal?: string; text?: string; reason?: string } | undefined;
   for (const line of text.split('\n')) {
@@ -66,7 +66,7 @@ export async function runMusePropertyJob(jobFile: string, outputFile: string) {
   )
     throw Error('Unsupported research job. Export a fresh job from the app.');
   // Rebuild the bounded prompt; exported prompt strings are never executable commands.
-  const directory = await mkdtemp(join(tmpdir(), 'unpermitted-muse-'));
+  const directory = await mkdtemp(join(tmpdir(), 'renovagent-muse-'));
   try {
     const promptFile = join(directory, 'prompt.md');
     const context =

@@ -6,9 +6,9 @@ import {
   valueSchema,
   emptyWorkspace,
   DomainError,
-} from '@unpermitted/contracts';
+} from '@renovagent/contracts';
 import { Scenario, createCommand, context } from '../foundation-helpers.js';
-import { handleCommand } from '@unpermitted/core';
+import { handleCommand } from '@renovagent/core';
 
 test('schemas reject unsupported versions, non-finite quantities, incompatible units, and injected authority', () => {
   assert.equal(

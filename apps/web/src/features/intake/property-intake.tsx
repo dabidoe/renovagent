@@ -1,7 +1,7 @@
 import { ConnectedPhotos } from './connected-photos.js';
 import { PhotoReviewSummary } from './photo-review-summary.js';
 import { useEffect, useRef, useState } from 'react';
-import { type Artifact, type Workspace } from '@unpermitted/contracts';
+import { type Artifact, type Workspace } from '@renovagent/contracts';
 import {
   latest,
   propertyAddress,
@@ -11,7 +11,7 @@ import {
   photoReviewJob,
   questionsForReviewedPhoto,
   imageReferenceKind,
-} from '@unpermitted/core';
+} from '@renovagent/core';
 import { type WorkspaceController } from '../../app/workspace-controller.js';
 import {
   cityResearch,

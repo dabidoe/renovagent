@@ -24,6 +24,12 @@
   gap: 24px;
   padding: 24px 36px;
 }
+.prompt-account {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
 .prompt-brand {
   display: flex;
   align-items: center;

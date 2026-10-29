@@ -1,4 +1,4 @@
-import type { CommandContext, CommandResult, Workspace } from '@unpermitted/contracts';
+import type { CommandContext, CommandResult, Workspace } from '@renovagent/contracts';
 export type AttachmentBlob = { id: string; blob: Blob };
 export interface ProjectRepository {
   read(): Promise<Workspace>;
@@ -14,13 +14,13 @@ export interface ProjectRepository {
   ): Promise<CommandResult[]>;
   readBlob(id: string): Promise<Blob | undefined>;
   exportBackup(): Promise<{
-    format: 'unpermitted-local-backup';
+    format: 'renovagent-local-backup';
     schemaVersion: 1;
     workspace: Workspace;
     blobs: AttachmentBlob[];
   }>;
   exportRecoveryBundle(): Promise<{
-    format: 'unpermitted-local-recovery';
+    format: 'renovagent-local-recovery';
     databaseVersion: number;
     rawWorkspace: unknown;
     blobs: AttachmentBlob[];

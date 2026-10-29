@@ -14,7 +14,7 @@ import {
   researchForArtifact,
   validateResearchForJob,
   latest,
-} from '@unpermitted/core';
+} from '@renovagent/core';
 import { cityResearch, phillyQuery } from '../../apps/web/src/adapters/research/city-records.js';
 import {
   museResultFromEvents,

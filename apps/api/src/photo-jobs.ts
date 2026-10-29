@@ -8,18 +8,19 @@ import {
   type PropertyResearch,
   type Command,
   type Workspace,
-} from '@unpermitted/contracts';
+} from '@renovagent/contracts';
 import {
   latest,
   propertyAddress,
   researchJobId,
   handleCommand,
   savedPhotoReferences,
-} from '@unpermitted/core';
+  localUploadUrl,
+} from '@renovagent/core';
 import { runPhotoReview, imageBytes } from '../../../scripts/muse-photo-review.js';
 import { runInventory } from '../../../scripts/muse-inventory.js';
 import { withMuseBudget } from '../../../scripts/muse-provider.js';
-import { MongoWorkspaceRepository, OWNER, type PhotoJob, type Aggregate } from './repository.js';
+import { MongoWorkspaceRepository, type PhotoJob, type Aggregate } from './repository.js';
 const root = resolve('.local/photo-jobs');
 export const jobRequestSchema = z
   .object({
@@ -133,7 +134,7 @@ export async function requestPhotoJob(repo: MongoWorkspaceRepository, raw: unkno
         !/^image\/(jpeg|png|webp)$/.test(attachment.mediaType)
       )
         throw new DomainError('VALIDATION', 'Choose a project JPEG, PNG or WebP attachment');
-      const url = `https://uploads.unpermitted.invalid/${id}`;
+      const url = localUploadUrl(id);
       const photoId = `upload-${photos.length + 1}`;
       base.sources.push({
         id: photoId,
@@ -230,7 +231,7 @@ export function publishPhotoJob(
   ];
   for (const cmd of commands)
     doc.workspace = handleCommand(doc.workspace, cmd, {
-      ownerId: OWNER,
+      ownerId: doc.workspace.ownerId,
       now: new Date().toISOString(),
     }).state;
   job.status = 'succeeded';

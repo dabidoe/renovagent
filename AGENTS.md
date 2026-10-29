@@ -1,8 +1,8 @@
 # Project implementation direction
 
-Unpermitted.ai is a full home improvement workflow product. The half bath is the first reference scenario, not a hardcoded domain boundary. A conversational brief is the first artifact, not the destination.
+Renovagent is a full home improvement workflow product. The half bath is the first reference scenario, not a hardcoded domain boundary. A conversational brief is the first artifact, not the destination.
 
-Before architecture or substantial feature work, read `docs/architecture/README.md` and the relevant linked specifications. Current implementation status is in `PROGRESS.md`; earlier vision/checklists are historical. Architecture files describe the target and must not be treated as already implemented.
+Before architecture or substantial feature work, read `docs/architecture/README.md` and the relevant linked specifications. Product direction is in `docs/RENOVAGENT_PRODUCT_SCOPE.md` with the engineering plan in `docs/RENOVAGENT_TECHNICAL_ARCHITECTURE.md`; their mapping to implemented slices is in `docs/architecture/renovagent-reconciliation.md`. Current implementation status is in `PROGRESS.md`; earlier vision/checklists are historical. Architecture files describe the target and must not be treated as already implemented.
 
 ## Build principles
 

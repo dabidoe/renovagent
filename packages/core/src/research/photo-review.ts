@@ -5,7 +5,7 @@ import {
   photoInspectionSchema,
   validatePhotoReview,
   validatePropertyResearch,
-} from '@unpermitted/contracts';
+} from '@renovagent/contracts';
 export function validateInspectionBatch(raw: unknown, ids: string[]): PhotoInspection[] {
   if (!raw || typeof raw !== 'object' || !('photos' in raw) || !Array.isArray(raw.photos))
     throw Error('Muse did not return a photo batch');
@@ -126,7 +126,7 @@ export function questionsForReviewedPhoto(review: PhotoReview, id: string) {
 // Keep discoverable source photos available after a bounded subset is refreshed.
 // Each entry retains its original research revision; this does not mark old observations refreshed.
 export function savedPhotoReferences(
-  state: import('@unpermitted/contracts').Workspace,
+  state: import('@renovagent/contracts').Workspace,
   projectId: string,
 ) {
   const address = Object.values(state.facts)

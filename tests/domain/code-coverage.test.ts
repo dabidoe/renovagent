@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { emptyPlanningInputs, planningInputsSchema } from '@unpermitted/contracts';
+import { emptyPlanningInputs, planningInputsSchema } from '@renovagent/contracts';
 import {
   assessCode,
   assessDrainage,
@@ -9,7 +9,7 @@ import {
   resolveLocalContext,
   missingSources,
   technicalSources,
-} from '@unpermitted/core';
+} from '@renovagent/core';
 import { measured } from '../../fixtures/projects/technical-reference.js';
 test('new complete filings use mandatory edition while incomplete dates cannot select one', () => {
   const c = measured().context;

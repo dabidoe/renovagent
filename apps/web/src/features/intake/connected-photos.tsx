@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { latest, savedPhotoReferences } from '@unpermitted/core';
-import type { Workspace } from '@unpermitted/contracts';
+import { latest, savedPhotoReferences } from '@renovagent/core';
+import type { Workspace } from '@renovagent/contracts';
 import type { WorkspaceController } from '../../app/workspace-controller.js';
 import { workspaceRequest } from '../../adapters/http/project-repository.js';
 type Job = {

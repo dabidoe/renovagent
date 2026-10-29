@@ -1,13 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { emptyCandidateSurvey, validatePropertyResearch } from '@unpermitted/contracts';
+import { emptyCandidateSurvey, validatePropertyResearch } from '@renovagent/contracts';
 import {
   photoQuestions,
   scopeAnswerRefs,
   candidateSurveyRefs,
   researchJobId,
-} from '@unpermitted/core';
+} from '@renovagent/core';
 import { Scenario } from '../foundation-helpers.js';
 import { homePlanModel } from '../../apps/web/src/features/work/home-plan-model.js';
 function setup(reverseQuestions = false) {

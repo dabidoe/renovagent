@@ -1,4 +1,4 @@
-import { DomainError } from '@unpermitted/contracts';
+import { DomainError } from '@renovagent/contracts';
 export const DATABASE_VERSION = 2;
 // Upgrade transactions are browser-managed: an aborted upgrade leaves the old database intact.
 // Never delete/recreate the database as an error-recovery shortcut. Export before a future data-shape migration.

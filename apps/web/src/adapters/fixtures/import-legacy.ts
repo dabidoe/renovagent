@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { DomainError, type Command } from '@unpermitted/contracts';
-import type { AttachmentBlob } from '@unpermitted/core';
+import { DomainError, type Command } from '@renovagent/contracts';
+import type { AttachmentBlob } from '@renovagent/core';
 export const LEGACY_STORAGE_KEY = 'unpermitted-opening-v1';
 const legacySchema = z
   .object({

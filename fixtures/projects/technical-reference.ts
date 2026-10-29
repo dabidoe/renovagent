@@ -1,4 +1,4 @@
-import { emptyPlanningInputs, type PlanningInputs } from '@unpermitted/contracts';
+import { emptyPlanningInputs, type PlanningInputs } from '@renovagent/contracts';
 // Synthetic measurements and user-selected specifications; never a real survey or code minimum.
 export function measured(): PlanningInputs {
   const p = emptyPlanningInputs();

@@ -10,7 +10,7 @@ import {
   type CommandContext,
   type InputRef,
   type Workspace,
-} from '@unpermitted/contracts';
+} from '@renovagent/contracts';
 import { captureInputs, inputSignature } from '../domain/input-context.js';
 import { fingerprint } from '../domain/canonical-json.js';
 import { referenceCurrent, resolveRef } from '../domain/invalidate.js';

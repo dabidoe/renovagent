@@ -3,8 +3,8 @@ import {
   workspaceRequest,
   encodeBlobs,
 } from '../adapters/http/project-repository.js';
-import { inventoryImportSchema } from '@unpermitted/contracts';
-import { type CandidateSurvey, type InputRef } from '@unpermitted/contracts';
+import { inventoryImportSchema } from '@renovagent/contracts';
+import { type CandidateSurvey, type InputRef } from '@renovagent/contracts';
 import {
   type Workspace,
   type PlanningInputs,
@@ -15,16 +15,19 @@ import {
   type WorkKind,
   type Run,
   type Fact,
+  type BomPayload,
   DomainError,
-} from '@unpermitted/contracts';
+} from '@renovagent/contracts';
 import {
   propertyAddress,
   researchJobId,
   validateResearchForJob,
   type ProjectRepository,
   type AttachmentBlob,
+  type BuiltPlan,
   latest,
-} from '@unpermitted/core';
+  isLocalUploadUrl,
+} from '@renovagent/core';
 import { IndexedDbProjectRepository } from '../adapters/indexeddb/project-repository.js';
 import {
   blobDigest,
@@ -32,13 +35,40 @@ import {
   type LegacyImportPreview,
 } from '../adapters/fixtures/import-legacy.js';
 const uid = (prefix: string) => `${prefix}:${crypto.randomUUID()}`;
+const STORAGE_MODE_KEY = 'renovagent-storage-mode';
+const LEGACY_STORAGE_MODE_KEY = 'unpermitted-storage-mode';
+export const storedMode = () =>
+  localStorage.getItem(STORAGE_MODE_KEY) ?? localStorage.getItem(LEGACY_STORAGE_MODE_KEY);
+export const setStoredMode = (mode: string) => {
+  localStorage.setItem(STORAGE_MODE_KEY, mode);
+  localStorage.removeItem(LEGACY_STORAGE_MODE_KEY);
+};
+export const clearStoredMode = () => {
+  localStorage.removeItem(STORAGE_MODE_KEY);
+  localStorage.removeItem(LEGACY_STORAGE_MODE_KEY);
+};
 export const defaultView: ProjectView = {
   surface: 'overview',
   artifactRef: null,
   tab: 'work',
   stage: 'brief',
 };
-export type Snapshot = { workspace: Workspace; busy: boolean; error: string | null };
+export type Snapshot = {
+  workspace: Workspace;
+  busy: boolean;
+  error: string | null;
+  auth: { required: boolean; email: string | null; providers: string[] };
+};
+const noAuth = () => ({ required: false, email: null as string | null, providers: [] as string[] });
+const needsSignIn = (error: unknown) =>
+  error instanceof DomainError && error.code === 'FORBIDDEN' && error.message.startsWith('Sign in');
+const signInProviders = (error: unknown): string[] => {
+  if (!(error instanceof DomainError)) return [];
+  const providers = (error.details as { providers?: unknown }).providers;
+  return Array.isArray(providers)
+    ? providers.filter((p): p is string => typeof p === 'string')
+    : [];
+};
 export class WorkspaceController {
   private listeners = new Set<() => void>();
   private queue: Promise<unknown> = Promise.resolve();
@@ -47,7 +77,7 @@ export class WorkspaceController {
     public repository: ProjectRepository,
     state: Workspace,
   ) {
-    this.snapshot = { workspace: state, busy: false, error: null };
+    this.snapshot = { workspace: state, busy: false, error: null, auth: noAuth() };
   }
   get connected() {
     return this.repository instanceof HttpProjectRepository;
@@ -68,10 +98,28 @@ export class WorkspaceController {
         const saved = await remote.read();
         this.repository.close();
         this.repository = remote;
-        localStorage.setItem('unpermitted-storage-mode', 'mongo');
-        this.emit({ workspace: saved });
+        setStoredMode('mongo');
+        this.emit({
+          workspace: saved,
+          auth: {
+            required: false,
+            email: remote.session.user?.email ?? null,
+            providers: remote.session.providers ?? [],
+          },
+        });
       } catch (error) {
-        this.emit({ error: error instanceof Error ? error.message : 'Cannot connect to Mongo' });
+        this.emit({
+          error: error instanceof Error ? error.message : 'Cannot connect to Mongo',
+          ...(needsSignIn(error)
+            ? {
+                auth: {
+                  required: true,
+                  email: null as string | null,
+                  providers: signInProviders(error),
+                },
+              }
+            : {}),
+        });
         throw error;
       } finally {
         this.emit({ busy: false });
@@ -82,17 +130,42 @@ export class WorkspaceController {
   }
   photoUrl(url: string, sha256?: string) {
     if (this.connected && sha256) return `/api/workspace/photo-assets/${sha256}`;
-    if (!this.connected || !url.startsWith('https://uploads.unpermitted.invalid/')) return url;
+    if (!this.connected || !isLocalUploadUrl(url)) return url;
     const evidence = this.snapshot.workspace.evidence[url.split('/').at(-1)!];
     const id = evidence?.source.attachment?.blobId;
     return id ? `/api/workspace/blobs/${encodeURIComponent(id)}` : url;
   }
   static async open() {
-    if (localStorage.getItem('unpermitted-storage-mode') === 'mongo') {
-      const repository = await HttpProjectRepository.open();
-      return new WorkspaceController(repository, await repository.read());
+    if (storedMode() === 'mongo') {
+      try {
+        const repository = await HttpProjectRepository.open();
+        const controller = new WorkspaceController(repository, await repository.read());
+        controller.emit({
+          auth: {
+            required: false,
+            email: repository.session.user?.email ?? null,
+            providers: repository.session.providers ?? [],
+          },
+        });
+        return controller;
+      } catch (error) {
+        if (!needsSignIn(error)) throw error;
+        const repository = await IndexedDbProjectRepository.open({
+          // Frozen pre-rename storage name: renaming the database would orphan
+          // existing browser records with no safe copy path.
+          name: 'unpermitted-workspace',
+          ownerId: 'local-homeowner',
+        });
+        const controller = new WorkspaceController(repository, await repository.read());
+        controller.emit({
+          error: 'Sign in to reconnect your shared workspace.',
+          auth: { required: true, email: null, providers: signInProviders(error) },
+        });
+        return controller;
+      }
     }
     const repository = await IndexedDbProjectRepository.open({
+      // Frozen pre-rename storage name: see above.
       name: 'unpermitted-workspace',
       ownerId: 'local-homeowner',
     });
@@ -109,7 +182,7 @@ export class WorkspaceController {
     this.snapshot = { ...this.snapshot, ...patch };
     this.listeners.forEach((l) => l());
   }
-  clearError = () => this.emit({ error: null });
+  clearError = () => this.emit({ error: null, auth: { ...this.snapshot.auth, required: false } });
   async refresh() {
     await this.queue;
     this.emit({ workspace: await this.repository.read(), error: null });
@@ -613,6 +686,53 @@ export class WorkspaceController {
         artifactRef: run.outputRef,
         stage: run.kind,
       });
+  }
+  proposeBom(projectId: string, bom: BomPayload) {
+    return this.mutate((state) => {
+      const artifactId = `${projectId}:bom`;
+      const old = latest(state.artifacts[artifactId]);
+      return {
+        commands: [
+          this.command(state, projectId, 'ProposeArtifact', {
+            artifactId,
+            supersedesRevision: old?.revision || 0,
+            inputRefs: [],
+            evidenceIds: [],
+            content: bom,
+          }),
+        ],
+        value: undefined,
+      };
+    });
+  }
+  proposePurchasePlans(
+    projectId: string,
+    bomRef: { id: string; revision: number },
+    plans: BuiltPlan[],
+  ) {
+    return this.mutate((state) => {
+      const base = state.projects[projectId]?.revision || 0;
+      const commands = plans.map((plan, index) => {
+        const artifactId = `${projectId}:purchase-plan:${plan.tier}`;
+        const old = latest(state.artifacts[artifactId]);
+        return {
+          ...this.command(state, projectId, 'ProposeArtifact', {
+            artifactId,
+            supersedesRevision: old?.revision || 0,
+            inputRefs: [{ kind: 'artifact', id: bomRef.id, revision: bomRef.revision }],
+            evidenceIds: [],
+            content: {
+              kind: 'purchase-plan',
+              ...plan,
+              bomRef: { kind: 'artifact', id: bomRef.id, revision: bomRef.revision },
+              builtAt: new Date().toISOString(),
+            },
+          }),
+          baseRevision: base + index,
+        };
+      });
+      return { commands, value: undefined };
+    });
   }
   decide(projectId: string, artifactId: string, revision: number, reject = false) {
     return this.mutate((state) => ({

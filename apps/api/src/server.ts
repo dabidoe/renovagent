@@ -2,17 +2,43 @@ import { createServer, type IncomingMessage } from 'node:http';
 import { randomBytes, timingSafeEqual, createHash } from 'node:crypto';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { z } from 'zod';
-import { DomainError } from '@unpermitted/contracts';
+import { DomainError } from '@renovagent/contracts';
 import { MongoWorkspaceRepository } from './repository.js';
 import { PhotoWorker, requestPhotoJob, publicJob, type StoredPhotoJob } from './photo-jobs.js';
+import {
+  AccountService,
+  ACCOUNT_COOKIE,
+  accountCookie,
+  clearAccountCookie,
+  googleConfigFromEnv,
+  metaConfigFromEnv,
+  type OAuthProvider,
+} from './accounts.js';
 import { configuredMuseKey } from '../../../scripts/muse-provider.js';
+import { CatalogStore } from './catalog.js';
 export async function createWorkspaceServer(
   repository: MongoWorkspaceRepository,
   token: string,
   providerConfigured: boolean,
+  accounts?: AccountService,
+  catalog?: CatalogStore,
 ) {
-  const worker = new PhotoWorker(repository);
-  await worker.recover();
+  const accountMode = Boolean(accounts);
+  const workers = new Map<string, PhotoWorker>();
+  async function workerFor(repo: MongoWorkspaceRepository) {
+    let worker = workers.get(repo.ownerId);
+    if (!worker) {
+      worker = new PhotoWorker(repo);
+      workers.set(repo.ownerId, worker);
+      await worker.recover();
+    }
+    return worker;
+  }
+  if (!accountMode) await workerFor(repository);
+  else {
+    for (const id of await repository.collection.distinct('_id'))
+      await workerFor(repository.forUser(id));
+  }
   const origins = new Set(['http://127.0.0.1:8741', 'http://localhost:8741']);
   const blobSchema = z
     .object({
@@ -75,32 +101,150 @@ export async function createWorkspaceServer(
         throw new DomainError('FORBIDDEN', 'Only the local workspace origin is allowed');
       const url = new URL(req.url || '/', 'http://127.0.0.1:4000');
       const path = url.pathname.replace(/^\/api\/workspace/, '');
-      if (req.method === 'POST' && req.headers['x-unpermitted-client'] !== 'workspace')
+      if (req.method === 'POST' && req.headers['x-renovagent-client'] !== 'workspace')
         throw new DomainError('FORBIDDEN', 'Workspace request header required');
+      const cookies = Object.fromEntries(
+        (req.headers.cookie || '')
+          .split(';')
+          .map((v) => v.trim().split('='))
+          .filter((p): p is [string, string] => p.length === 2),
+      );
+      const oauthStart = path.match(/^\/auth\/(google|meta)$/);
+      if (oauthStart && req.method === 'GET') {
+        const provider = oauthStart[1] as OAuthProvider;
+        if (!accounts || !accounts.providers().includes(provider))
+          throw new DomainError(
+            'VALIDATION',
+            `Sign-in with ${provider} is not configured on this server`,
+          );
+        const started = provider === 'google' ? accounts.googleAuthUrl() : accounts.metaAuthUrl();
+        res.writeHead(302, { Location: started.url });
+        res.end();
+        return;
+      }
+      const oauthCallback = path.match(/^\/auth\/(google|meta)\/callback$/);
+      if (oauthCallback && req.method === 'GET') {
+        const provider = oauthCallback[1] as OAuthProvider;
+        if (!accounts || !accounts.providers().includes(provider))
+          throw new DomainError(
+            'VALIDATION',
+            `Sign-in with ${provider} is not configured on this server`,
+          );
+        const state = url.searchParams.get('state') || '',
+          code = url.searchParams.get('code') || '';
+        if (!code || !accounts.consumeState(state, provider)) {
+          res.writeHead(302, { Location: '/?auth=error' });
+          res.end();
+          return;
+        }
+        try {
+          const login = await accounts.completeLogin(provider, code);
+          await repository.forUser(login.user._id).ensure();
+          res.writeHead(302, { Location: '/', 'Set-Cookie': accountCookie(login.token, false) });
+        } catch {
+          res.writeHead(302, { Location: '/?auth=error' });
+        }
+        res.end();
+        return;
+      }
+      if (path === '/auth/me' && req.method === 'GET') {
+        if (!accounts) {
+          json(200, { mode: 'local-single-owner', signedIn: false });
+          return;
+        }
+        const user = await accounts.getSession(cookies[ACCOUNT_COOKIE] || '');
+        json(
+          200,
+          user
+            ? {
+                mode: 'account',
+                signedIn: true,
+                user: { email: user.email },
+                providers: accounts.providers(),
+              }
+            : { mode: 'account', signedIn: false, providers: accounts.providers() },
+        );
+        return;
+      }
+      if (path === '/auth/logout' && req.method === 'POST') {
+        if (accounts) await accounts.destroySession(cookies[ACCOUNT_COOKIE] || '');
+        res.writeHead(200, {
+          'Content-Type': 'application/json',
+          'Set-Cookie': clearAccountCookie(),
+        });
+        res.end(JSON.stringify({ ok: true }));
+        return;
+      }
       if (path === '/session' && req.method === 'GET') {
-        if (req.headers['x-unpermitted-client'] !== 'workspace')
+        if (req.headers['x-renovagent-client'] !== 'workspace')
           throw new DomainError('FORBIDDEN', 'Workspace request header required');
+        if (accountMode) {
+          const user = await accounts!.getSession(cookies[ACCOUNT_COOKIE] || '');
+          json(
+            200,
+            user
+              ? {
+                  mode: 'account',
+                  signedIn: true,
+                  user: { email: user.email },
+                  providers: accounts!.providers(),
+                  mongo: true,
+                  muse: providerConfigured,
+                }
+              : {
+                  mode: 'account',
+                  signedIn: false,
+                  providers: accounts!.providers(),
+                  mongo: true,
+                  muse: providerConfigured,
+                },
+          );
+          return;
+        }
         res.setHeader(
           'Set-Cookie',
-          `unpermitted_local=${token}; HttpOnly; SameSite=Strict; Path=/api/workspace`,
+          `renovagent_local=${token}; HttpOnly; SameSite=Strict; Path=/api/workspace`,
         );
         await repository.read();
         json(200, { mode: 'local-single-owner', mongo: true, muse: providerConfigured });
         return;
       }
-      const candidate =
-        req.headers.cookie
-          ?.split(';')
-          .map((v) => v.trim())
-          .find((v) => v.startsWith('unpermitted_local='))
-          ?.slice('unpermitted_local='.length) || '';
-      if (
-        candidate.length !== token.length ||
-        !timingSafeEqual(Buffer.from(candidate), Buffer.from(token))
-      )
-        throw new DomainError('FORBIDDEN', 'Open the local workspace session first');
+      let activeRepo = repository;
+      if (accountMode) {
+        const user = await accounts!.getSession(cookies[ACCOUNT_COOKIE] || '');
+        if (!user) throw new DomainError('FORBIDDEN', 'Sign in to use the shared workspace');
+        activeRepo = repository.forUser(user._id);
+      } else {
+        const candidate = cookies['renovagent_local'] || '';
+        if (
+          candidate.length !== token.length ||
+          !timingSafeEqual(Buffer.from(candidate), Buffer.from(token))
+        )
+          throw new DomainError('FORBIDDEN', 'Open the local workspace session first');
+      }
+      const activeWorker = await workerFor(activeRepo);
+      if (path === '/catalog/offers' && req.method === 'GET') {
+        if (!catalog) throw new DomainError('VALIDATION', 'Catalog is unavailable');
+        const productIds = (url.searchParams.get('productIds') || '')
+          .split(',')
+          .map((id) => id.trim())
+          .filter(Boolean)
+          .slice(0, 200);
+        json(200, await catalog.offersFor(productIds, url.searchParams.get('region') || undefined));
+        return;
+      }
+      if (path === '/catalog/import' && req.method === 'POST') {
+        if (!catalog) throw new DomainError('VALIDATION', 'Catalog is unavailable');
+        if (accountMode) {
+          const expected = process.env.RENOVAGENT_CATALOG_OPERATOR || '';
+          if (!expected || req.headers['x-renovagent-operator'] !== expected)
+            throw new DomainError('FORBIDDEN', 'Catalog import needs the operator token');
+        }
+        json(200, await catalog.importBatch(await body(req)));
+        return;
+      }
       if (path === '' && req.method === 'GET') {
-        json(200, (await repository.read()).workspace);
+        json(200, (await activeRepo.read()).workspace);
         return;
       }
       if (path === '/commands' && req.method === 'POST') {
@@ -111,7 +255,7 @@ export async function createWorkspaceServer(
           })
           .strict()
           .parse(await body(req));
-        json(200, await repository.execute(data.commands, data.blobs));
+        json(200, await activeRepo.execute(data.commands, data.blobs));
         return;
       }
       if (path === '/import' && req.method === 'POST') {
@@ -119,18 +263,31 @@ export async function createWorkspaceServer(
           .object({ workspace: z.unknown(), blobs: z.array(blobSchema) })
           .strict()
           .parse(await body(req));
-        json(200, await repository.importWorkspace(data.workspace, data.blobs));
+        let workspace = data.workspace;
+        if (accountMode && workspace && typeof workspace === 'object') {
+          // Explicit local-to-account transfer: the incoming workspace is adopted
+          // by the signed-in owner. Local mode keeps strict owner matching.
+          const adopted = workspace as Record<string, unknown>;
+          const properties = adopted.properties as
+            | Record<string, Record<string, unknown>>
+            | undefined;
+          if (properties)
+            for (const key of Object.keys(properties))
+              properties[key] = { ...properties[key], ownerId: activeRepo.ownerId };
+          workspace = { ...adopted, ownerId: activeRepo.ownerId };
+        }
+        json(200, await activeRepo.importWorkspace(workspace, data.blobs));
         return;
       }
       if (path === '/backup' && req.method === 'GET') {
-        const doc = await repository.read();
+        const doc = await activeRepo.read();
         json(200, { workspace: doc.workspace, blobs: doc.blobs });
         return;
       }
       const asset = path.match(/^\/photo-assets\/([a-f0-9]{64})$/);
       if (asset && req.method === 'GET') {
         const hash = asset[1],
-          doc = await repository.read();
+          doc = await activeRepo.read();
         const photo = Object.values(doc.workspace.artifacts)
           .flatMap((versions) =>
             versions.flatMap((a) =>
@@ -168,7 +325,7 @@ export async function createWorkspaceServer(
       }
       if (path.startsWith('/blobs/') && req.method === 'GET') {
         const id = decodeURIComponent(path.slice('/blobs/'.length)),
-          doc = await repository.read();
+          doc = await activeRepo.read();
         if (!Object.values(doc.workspace.evidence).some((e) => e.source.attachment?.blobId === id))
           throw new DomainError('NOT_FOUND', 'Attachment not found');
         const blob = doc.blobs.find((b) => b.id === id);
@@ -182,7 +339,7 @@ export async function createWorkspaceServer(
         return;
       }
       if (path === '/photo-jobs' && req.method === 'GET') {
-        const doc = await repository.read();
+        const doc = await activeRepo.read();
         json(
           200,
           doc.jobs.filter((j) => j.projectId === url.searchParams.get('projectId')).map(publicJob),
@@ -192,14 +349,14 @@ export async function createWorkspaceServer(
       if (path === '/photo-jobs' && req.method === 'POST') {
         if (!providerConfigured)
           throw new DomainError('VALIDATION', 'Configure MUSE_API_KEY on the server first');
-        const job = await requestPhotoJob(repository, await body(req));
+        const job = await requestPhotoJob(activeRepo, await body(req));
         json(202, publicJob(job));
-        void worker.tick();
+        void activeWorker.tick();
         return;
       }
       const cancel = path.match(/^\/photo-jobs\/([a-f0-9-]{36})\/cancel$/);
       if (cancel && req.method === 'POST') {
-        await worker.cancel(cancel[1]);
+        await activeWorker.cancel(cancel[1]);
         json(200, { cancelled: true });
         return;
       }
@@ -224,9 +381,11 @@ export async function createWorkspaceServer(
       );
     }
   });
-  const interval = setInterval(() => void worker.tick().catch(() => {}), 3000);
+  const interval = setInterval(() => {
+    for (const worker of workers.values()) void worker.tick().catch(() => {});
+  }, 3000);
   server.on('close', () => clearInterval(interval));
-  return { server, worker };
+  return { server, workers };
 }
 if (process.argv[1]?.endsWith('/apps/api/src/server.ts')) {
   await mkdir('.local', { recursive: true, mode: 0o700 });
@@ -238,22 +397,34 @@ if (process.argv[1]?.endsWith('/apps/api/src/server.ts')) {
     await writeFile('.local/api-session', token, { mode: 0o600, flag: 'wx' });
   }
   const { repository, client } = await MongoWorkspaceRepository.connect(
-    process.env.WORKSPACE_MONGODB_URI || 'mongodb://127.0.0.1:27018/unpermitted_workspace',
+    process.env.WORKSPACE_MONGODB_URI || 'mongodb://127.0.0.1:27018/renovagent_workspace',
   );
-  const { server, worker } = await createWorkspaceServer(
+  const google = googleConfigFromEnv();
+  const meta = metaConfigFromEnv();
+  const accounts =
+    google || meta
+      ? new AccountService(client.db(), {
+          ...(google ? { google } : {}),
+          ...(meta ? { meta } : {}),
+        })
+      : undefined;
+  const catalog = new CatalogStore(client.db());
+  await catalog.ensureIndexes();
+  const { server, workers } = await createWorkspaceServer(
     repository,
     token,
     Boolean(await configuredMuseKey()),
+    accounts,
+    catalog,
   );
   server.listen(4000, '127.0.0.1', () =>
     console.log(
-      'Workspace API ready on 127.0.0.1:4000; Mongo persistence enabled; local single-owner mode',
+      `Workspace API ready on 127.0.0.1:4000; Mongo persistence enabled; ${accounts ? `account mode (${accounts.providers().join(' + ')} sign-in)` : 'local single-owner mode'}`,
     ),
   );
   const stop = () =>
     server.close(() => {
-      void worker
-        .shutdown()
+      void Promise.all([...workers.values()].map((worker) => worker.shutdown()))
         .then(() => client.close())
         .then(() => process.exit(0));
     });

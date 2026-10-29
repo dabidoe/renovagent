@@ -1,4 +1,4 @@
-import { sourceRecordSchema } from '@unpermitted/contracts';
+import { sourceRecordSchema } from '@renovagent/contracts';
 // Captured metadata/paraphrases only; hashes do not identify remote full-text snapshots.
 export const sourceSetVersion = 'philadelphia-half-bath-2026-10-27.6';
 export const technicalSources = [

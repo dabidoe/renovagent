@@ -1,4 +1,4 @@
-# Build architecture — Unpermitted.ai
+# Build architecture — Renovagent
 
 Status: implementation baseline; Slices 1–2 and local Slice 3 core implemented; technical review gate open · October 27, 2026
 
@@ -59,3 +59,11 @@ The [Hutchinson photo inventory](photo-inventory.md) adds real Muse region propo
 The [connected Muse and Mongo increment](connected-muse-and-mongo.md) adds a loopback-only single-owner API, persistent Mongo workspace, explicit local transfer and real in-app photo jobs. It preserves the same command/revision/invalidation authority. General agent conversation remains simulated; full hosted Slice 4 and technical review are not complete.
 
 The [prompt-first workspace](prompt-first-workspace.md) replaces the dashboard opening with a centered prompt and on-demand project tools. It records the requirement for standard Muse clients to share the current application services through a future MCP adapter; that adapter is not connected by the UI change.
+
+The [local MCP adapter](mcp-workspace-adapter.md) implements that requirement for local stdio: workspace reads plus proposal-grade commands over the shared repository, verified with a live headless client. Hosted transport, job tools, and purchasing remain future work.
+
+[Accounts and Google login](accounts-and-google-login.md) adds optional account mode to the API: Google and Meta sign-in, per-owner workspaces, sessions, and a sign-in web surface. Password login, hosted deployment, and agent pairing remain future work.
+
+The [Muse app integration assessment](muse-app-integration.md) records how the consumer Muse agent connects to third-party services and what we must build (hosted Streamable-HTTP MCP + OAuth) before that path unblocks.
+
+The [commerce catalog](commerce-catalog.md) adds shared products/offers/pricing with duplicate-proof imports, deterministic tiered purchase plans, and contractor accept/decline. Seed prices are labeled demo examples; live retail integration is future work.

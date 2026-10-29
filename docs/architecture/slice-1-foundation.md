@@ -67,7 +67,7 @@ Real browser checks at `http://127.0.0.1:8741/foundation.html` passed: two proje
 4. Use **Preview existing project** to inspect the legacy import warnings/counts. **Import a separate project** explicitly copies it into this check database and leaves the source localStorage value unchanged.
 5. Use a new `/foundation.html` URL without a `check` parameter for another clean verification run. No diagnostic deletes existing databases.
 
-The application repository can be imported from `@unpermitted/web-foundation`; contracts/core use their workspace package names. TypeScript source exports are intended for Vite/tsx in this local slice, not a published Node package. Emitted/package distribution contracts will be established with server integration.
+The application repository can be imported from `@renovagent/web-foundation`; contracts/core use their workspace package names. TypeScript source exports are intended for Vite/tsx in this local slice, not a published Node package. Emitted/package distribution contracts will be established with server integration.
 
 ## Limits and next boundary
 

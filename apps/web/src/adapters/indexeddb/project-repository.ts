@@ -6,13 +6,13 @@ import {
   type CommandContext,
   type CommandResult,
   type Workspace,
-} from '@unpermitted/contracts';
+} from '@renovagent/contracts';
 import {
   validateWorkspaceIntegrity,
   handleCommand,
   type AttachmentBlob,
   type ProjectRepository,
-} from '@unpermitted/core';
+} from '@renovagent/core';
 import { openDatabase } from './migrations.js';
 const requestValue = <T>(request: IDBRequest<T>): Promise<T> =>
   new Promise((resolve, reject) => {
@@ -179,7 +179,7 @@ export class IndexedDbProjectRepository implements ProjectRepository {
     const values = requestValue(tx.objectStore('blobs').getAll());
     const [snapshot, ids, blobs] = await Promise.all([raw, keys, values]);
     return {
-      format: 'unpermitted-local-backup' as const,
+      format: 'renovagent-local-backup' as const,
       schemaVersion: 1 as const,
       workspace: this.parse(snapshot),
       blobs: ids.map((id, i) => ({ id: String(id), blob: blobs[i] as Blob })),
@@ -196,7 +196,7 @@ export class IndexedDbProjectRepository implements ProjectRepository {
     if (rawWorkspace && (typeof rawWorkspace !== 'object' || rawWorkspace.ownerId !== this.ownerId))
       throw new DomainError('FORBIDDEN', 'Cannot export another owner’s recovery data');
     return {
-      format: 'unpermitted-local-recovery' as const,
+      format: 'renovagent-local-recovery' as const,
       databaseVersion: this.db.version,
       rawWorkspace: rawWorkspace as unknown,
       blobs: ids.map((id, i) => ({ id: String(id), blob: values[i] as Blob })),

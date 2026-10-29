@@ -1,5 +1,5 @@
-import { type Run } from '@unpermitted/contracts';
-import { workLabels } from '@unpermitted/core';
+import { type Run } from '@renovagent/contracts';
+import { workLabels } from '@renovagent/core';
 import { WorkspaceController } from '../../app/workspace-controller.js';
 import { stateLabel } from '../../app/presentation.js';
 import { Glyph } from '../../components/glyph.js';

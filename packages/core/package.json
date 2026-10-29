@@ -1,10 +1,10 @@
 {
-  "name": "@unpermitted/core",
+  "name": "@renovagent/core",
   "version": "0.1.0",
   "private": true,
   "type": "module",
   "exports": "./src/index.ts",
   "dependencies": {
-    "@unpermitted/contracts": "*"
+    "@renovagent/contracts": "*"
   }
 }

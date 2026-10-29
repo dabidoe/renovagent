@@ -7,7 +7,7 @@ import {
   validatePropertyResearch,
   type CandidateSurvey,
   type Command,
-} from '@unpermitted/contracts';
+} from '@renovagent/contracts';
 import {
   candidateCheck,
   candidateMeasurement,
@@ -16,7 +16,7 @@ import {
   researchJobId,
   handleCommand,
   referenceCurrent,
-} from '@unpermitted/core';
+} from '@renovagent/core';
 import { Scenario, context, openTestRepo } from '../foundation-helpers.js';
 function setup() {
   const s = new Scenario();
