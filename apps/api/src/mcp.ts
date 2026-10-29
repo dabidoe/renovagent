@@ -18,9 +18,9 @@ import {
   buildTierPlans,
   fingerprint,
   referenceCurrent,
-  type PricedOffer,
 } from '@renovagent/core';
 import { startAgentProject } from './agent-projects.js';
+import { draftProjectScope } from './scope-drafts.js';
 import type { McpAccess } from './mcp-access.js';
 import { workspaceMongoConfig } from './database-config.js';
 
@@ -41,6 +41,7 @@ const CAPABILITIES = {
     'list_project_files',
     'get_artifact',
     'start_project',
+    'draft_scope',
     'propose_project_change',
     'search_catalog',
     'get_offer_history',
@@ -138,6 +139,23 @@ async function verifyCommerceProposal(
 ): Promise<void> {
   if (command.type !== 'ProposeArtifact') return;
   const content = command.payload.content;
+  if (content.kind === 'bom') {
+    // Candidates must be catalog products of the item's own category, so a
+    // proposal cannot route an item to an unrelated (or nonexistent) product.
+    if (!catalog) return;
+    const ids = [...new Set(content.items.flatMap((item) => item.candidateProductIds))];
+    const categories = new Map(
+      (await catalog.productsByIds(ids)).map((product) => [product.id, product.category]),
+    );
+    for (const item of content.items)
+      for (const productId of item.candidateProductIds)
+        if (categories.get(productId) !== item.category)
+          throw new DomainError(
+            'VALIDATION',
+            `BOM item ${item.id}: candidate ${productId} is not a catalog ${item.category} product`,
+          );
+    return;
+  }
   if (content.kind !== 'purchase-plan' && content.kind !== 'checkout-review') return;
   if (!catalog)
     throw new DomainError('VALIDATION', 'Catalog is unavailable to verify this commerce proposal');
@@ -152,16 +170,9 @@ async function verifyCommerceProposal(
     );
     if (bom?.payload.kind !== 'bom')
       throw new DomainError('VALIDATION', 'Purchase plan must name an existing BOM artifact');
-    const productIds = [...new Set(bom.payload.items.flatMap((item) => item.candidateProductIds))];
-    const found = await catalog.offersFor(productIds);
-    const products = new Map(found.products.map((product) => [product.id, product]));
-    const observations = new Map(found.observations.map((obs) => [obs.offerId, obs]));
-    const priced: PricedOffer[] = [];
-    for (const offer of found.offers) {
-      const product = products.get(offer.productId);
-      const observation = observations.get(offer.id);
-      if (product && observation) priced.push({ offer, product, observation });
-    }
+    const priced = await catalog.pricedOffers([
+      ...new Set(bom.payload.items.flatMap((item) => item.candidateProductIds)),
+    ]);
     const rebuilt = buildTierPlans(bom.payload, priced).find((plan) => plan.tier === content.tier);
     // Whole-payload comparison: notes and rejections are displayed too, so an
     // agent cannot add unverified claims to them. Only the build time may differ.
@@ -208,7 +219,8 @@ export function createWorkspaceMcpServer(
     transports: [options.transport ?? 'stdio'],
     access: canPropose ? 'propose' : 'read',
     tools: CAPABILITIES.tools.filter(
-      (name) => canPropose || !['start_project', 'propose_project_change'].includes(name),
+      (name) =>
+        canPropose || !['start_project', 'draft_scope', 'propose_project_change'].includes(name),
     ),
     proposalCommands: canPropose ? CAPABILITIES.proposalCommands : [],
     limits: [
@@ -363,6 +375,61 @@ export function createWorkspaceMcpServer(
       async (input) => {
         try {
           return text(await startAgentProject(repository, input));
+        } catch (error) {
+          failure(error);
+        }
+      },
+    );
+
+  if (canPropose)
+    server.tool(
+      'draft_scope',
+      'Draft a project\'s scope and complete materials list from a versioned recipe: work packages, every supporting part, quantity basis, conditional items and sources. Works with nothing measured; pass only values the person actually gave, and amount null for "I don\'t know". Returns at most two next questions. Also proposes a bill of materials for the catalog-priceable items. Reuse requestId for retries.',
+      {
+        requestId: id.describe(
+          'Stable unique request identifier, reused only for identical retries',
+        ),
+        projectId: id,
+        recipeId: z.enum(['bathroom-refresh']),
+        packageIds: z
+          .array(
+            z.enum([
+              'vanity',
+              'toilet',
+              'floor-tile',
+              'paint',
+              'exhaust-fan',
+              'service-work',
+              'removal-protection',
+            ]),
+          )
+          .min(1)
+          .max(7)
+          .describe('Work the person asked for; removal and protection are added automatically'),
+        request: z.string().trim().min(1).max(2000).describe('The request, relayed verbatim'),
+        reported: z
+          .array(
+            z
+              .object({
+                key: z.enum([
+                  'floorLengthFt',
+                  'floorWidthFt',
+                  'ceilingHeightFt',
+                  'vanityWidthIn',
+                  'toiletRoughInIn',
+                ]),
+                amount: z.number().positive().max(10000).nullable(),
+                unit: z.enum(['ft', 'in', 'm', 'cm']),
+              })
+              .strict(),
+          )
+          .max(10)
+          .default([]),
+      },
+      { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+      async (input) => {
+        try {
+          return text(await draftProjectScope(repository, catalog, input));
         } catch (error) {
           failure(error);
         }

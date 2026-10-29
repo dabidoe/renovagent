@@ -36,3 +36,5 @@ export * from './commerce/importer.js';
 export * from './commerce/affiliate.js';
 export * from './commerce/checkout.js';
 export * from './commerce/validate.js';
+export * from './scope/draft-scope.js';
+export * from './scope/bathroom-refresh.js';

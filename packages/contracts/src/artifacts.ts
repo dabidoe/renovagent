@@ -5,6 +5,7 @@ import { projectOptionsSchema, projectWorkPlanSchema } from './scope-planning.js
 import { z } from 'zod';
 import { id, ref, stamp } from './common.js';
 import { propertyResearchSchema } from './property-research.js';
+import { scopeDraftSchema } from './scope-draft.js';
 import { planningPayloads } from './planning.js';
 import {
   bomPayloadSchema,
@@ -104,6 +105,7 @@ export const artifactPayloadSchema = z.discriminatedUnion('kind', [
   bomPayloadSchema,
   purchasePlanPayloadSchema,
   checkoutReviewPayloadSchema,
+  scopeDraftSchema,
 ]);
 export const artifactSchema = z
   .object({

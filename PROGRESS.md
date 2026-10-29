@@ -20,10 +20,10 @@ Renovagent carries a persistent property project through investigation, options,
 | Connected backend | Loopback API + selectable local/cluster Mongo: per-owner workspaces, real in-app Muse photo jobs, sessions, catalog, submissions; shared server-side database selection | Public HTTPS hosting and production hardening remain open |
 | Accounts | Optional Google/Meta sign-in with per-owner workspaces, explicit local adoption, sign-in web surface | No passwords; live round-trips need the owner's OAuth clients |
 | Commerce | Shared catalog with duplicate-proof imports, tiered purchase plans, contractor accept/decline, checkout reviews, price submissions with review quarantine | Seed prices are labeled demo examples; affiliate feeds need the owner's accounts; no live inventory, tax, or checkout |
-| Agents | MCP adapter with 10 tools over stdio and authenticated Streamable HTTP: owner-scoped reads/proposals, project creation, file discovery, catalog recall and checkout assembly | Consumer Muse Mac discovered ten tools, read the migrated projects, created a separate authorized QA project and reread its brief over temporary HTTPS; stable hosting remains open |
+| Agents | MCP adapter with 11 tools over stdio and authenticated Streamable HTTP: owner-scoped reads/proposals, project creation, recipe scope/materials drafts, file discovery, catalog recall and checkout assembly | Consumer Muse Mac discovered ten tools, read the migrated projects, created a separate authorized QA project and reread its brief over temporary HTTPS; stable hosting remains open |
 | Technical references | Versioned adoption/scope/permit source register, applicability checks and visible coverage gaps | Exact 2018 clearances and residential exhaust criteria retrieved; local clearance mapping, complete electrical provisions, trade design and qualified review remain blocked |
 | Planning math | Shared deterministic geometry, quantities, money/tier/checkout math; single command authority for all writes | Rectangular playbooks; no inferred routes, no reviewed compliance guidance |
-| Verification | 164 pass (15 legacy + 149 TypeScript, 27 Mongo cases skip); explicit real-Mongo suite 30/30; strict types, boundaries, formatting, builds | Browser QA covers labeled projects; actual consumer-Muse reads and separate QA brief write/read verified; no claim of general model reliability, technical compliance, or full lifecycle coverage |
+| Verification | 174 pass (15 legacy + 159 TypeScript, 28 Mongo cases skip); explicit real-Mongo suite 31/31; strict types, boundaries, formatting, builds | Browser QA covers labeled projects; actual consumer-Muse reads and separate QA brief write/read verified; no claim of general model reliability, technical compliance, or full lifecycle coverage |
 
 ## Delivery tracking
 
@@ -39,6 +39,14 @@ Renovagent carries a persistent property project through investigation, options,
 | 7 — Second project playbook | Not implemented |
 
 Use each slice's acceptance criteria before changing its status. A mock screen, canned reply, or HTTP 200 does not establish workflow completion.
+
+### Scope and materials draft from casual intent — October 29, 2026
+
+- New validated `DraftScope` command and versioned `bathroom-refresh` v1 recipe compile a `scope-draft` artifact: seven work packages, 31 requirements when all are included (purpose, specification, quantity basis, status, blocking inputs, sources), conditional site-dependent items, and a clearly unset tile overage allowance. Nothing measured still yields the full list; only dependent quantities wait.
+- Inputs: recorded facts take precedence and stale the draft when corrected; relayed values stay unverified inside the artifact; "I don't know" is retained and not re-asked. At most two questions, ranked by what they unblock.
+- MCP `draft_scope` (11 tools now) runs the command, proposes a BOM for catalog-priceable items and builds tier plans server-side, all referencing their exact inputs (draft → BOM → plan → checkout staleness). Muse gets demo-labeled materials subtotals for the priced items plus a coverage line; labor, permits, tax, delivery and disposal are stated as not priced. Agents cannot propose a `scope-draft` directly, a BOM citing a draft must match its requirements, and MCP BOM candidates must belong to the item's category. Website viewer added; Materials no longer offers the fixed vanity template when a draft exists.
+- Sources: Kohler service-kit instructions and Broan fan instructions fetched and quoted; tile overage left unset because published guidance (search summary only) varies about 5–35%. No allowance is quantified. Details: [scope draft](docs/architecture/scope-draft.md).
+- Verified: `npm test` 15 legacy + 159 TypeScript passed (28 Mongo cases skipped), `npm run test:connected` 31/31, build/types/boundaries, formatting. Limits: one recipe; demo catalog prices only the vanity package; the website views drafts but cannot create them; the running API/MCP processes need a restart to serve this.
 
 ### Commerce integrity and saved-file viewers — October 29, 2026
 

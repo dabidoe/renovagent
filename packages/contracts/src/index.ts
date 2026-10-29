@@ -18,3 +18,4 @@ export * from './candidate-measurements.js';
 export * from './home-inventory.js';
 export * from './conversation-plan.js';
 export * from './catalog.js';
+export * from './scope-draft.js';

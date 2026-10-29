@@ -1,12 +1,14 @@
 import {
   DomainError,
   type Artifact,
+  type BomPayload,
   type CheckoutReviewPayload,
   type InputRef,
   type PurchasePlanPayload,
   type Workspace,
 } from '@renovagent/contracts';
 import { referenceCurrent, resolveRef } from '../domain/invalidate.js';
+import { fingerprint } from '../domain/canonical-json.js';
 import { planBasis } from './plans.js';
 import { purchaseUnits } from './pricing.js';
 
@@ -166,4 +168,38 @@ export function validateCheckoutReview(
     review.totals.currency !== plan.totals.currency
   )
     invalid('Checkout review totals differ from the purchase plan');
+}
+
+// A BOM that cites a scope draft must carry that draft's own requirements:
+// same identity, quantity, unit, category and compatibility constraints. It
+// can omit requirements (they stay unpriced) but cannot loosen or invent them.
+export function validateBomFromScope(
+  state: Workspace,
+  projectId: string,
+  bom: BomPayload,
+  inputRefs: InputRef[],
+): void {
+  const drafts = inputRefs.flatMap((ref) => {
+    if (ref.kind !== 'artifact') return [];
+    const source = resolveRef(state, projectId, ref) as Artifact;
+    return source.payload.kind === 'scope-draft' ? [source.payload] : [];
+  });
+  if (!drafts.length) return;
+  if (drafts.length > 1) invalid('A BOM may cite one scope draft');
+  const requirements = new Map(drafts[0].requirements.map((r) => [r.id, r]));
+  for (const item of bom.items) {
+    const requirement = requirements.get(item.id);
+    const at = `BOM item ${item.id}`;
+    if (!requirement) invalid(`${at} is not a requirement of the cited scope draft`);
+    if (!requirement.catalog || requirement.status !== 'quantified')
+      invalid(`${at} is not ready to price in the cited scope draft`);
+    if (
+      item.quantity !== requirement.quantity ||
+      item.unit !== requirement.unit ||
+      item.category !== requirement.catalog.category ||
+      fingerprint(item.constraints) !== fingerprint(requirement.catalog.constraints) ||
+      fingerprint(item.codeTopics) !== fingerprint(requirement.codeTopics)
+    )
+      invalid(`${at} differs from the cited scope draft requirement`);
+  }
 }

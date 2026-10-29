@@ -11,7 +11,12 @@ import {
 } from '../research/property-research.js';
 import { canonicalValue } from './quantities.js';
 import { handlePlanning } from '../planning/commands.js';
-import { validateCheckoutReview, validatePurchasePlan } from '../commerce/validate.js';
+import {
+  validateBomFromScope,
+  validateCheckoutReview,
+  validatePurchasePlan,
+} from '../commerce/validate.js';
+import { handleDraftScope } from '../scope/draft-scope.js';
 import { handleWorkflow, finishRunsForDecision } from './workflow.js';
 import {
   commandSchema,
@@ -210,6 +215,7 @@ export function handleCommand(
       return { state, result, duplicate: false };
     }
     const workflow =
+      handleDraftScope(state, command, context) ||
       handleScopePlanning(state, command, context) ||
       handlePlanning(state, command, context) ||
       handleWorkflow(state, command, context);
@@ -342,7 +348,9 @@ export function handleCommand(
           'project-work-plan',
           'candidate-measurements',
           'candidate-checks',
+          'scope-draft',
         ].includes(p.content.kind) ||
+        p.artifactId === `${project.id}:scope-draft` ||
         p.artifactId.startsWith(`${project.id}:inventory-direction:`) ||
         p.artifactId === `${project.id}:photo-inventory` ||
         p.artifactId.startsWith(`${project.id}:survey:`) ||
@@ -355,6 +363,7 @@ export function handleCommand(
             'project-work-plan',
             'candidate-measurements',
             'candidate-checks',
+            'scope-draft',
           ].includes(old.payload.kind))
       )
         throw new DomainError('VALIDATION', 'Use validated project option/plan commands');
@@ -464,6 +473,7 @@ export function handleCommand(
       if (p.inputRefs.some((ref) => ref.kind === 'artifact' && ref.id === p.artifactId))
         throw new DomainError('VALIDATION', 'Artifact cannot depend on itself');
       validateTasks(command);
+      if (p.content.kind === 'bom') validateBomFromScope(state, project.id, p.content, p.inputRefs);
       if (p.content.kind === 'purchase-plan')
         validatePurchasePlan(state, project.id, p.artifactId, p.content, p.inputRefs);
       if (p.content.kind === 'checkout-review')

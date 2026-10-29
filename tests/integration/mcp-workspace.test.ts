@@ -427,3 +427,128 @@ test(
       assert.equal(saved.result.isError, undefined, saved.text);
     }),
 );
+
+test(
+  'MCP draft_scope turns a casual request into a full scope with few questions',
+  { skip: !uri },
+  () =>
+    withClient(async (mcp, repo, catalog) => {
+      await catalog.importBatch(vanityCatalog);
+      const vague = JSON.parse(
+        (
+          await call(mcp, 'draft_scope', {
+            requestId: 'muse-bath-1',
+            projectId: 'project-a',
+            recipeId: 'bathroom-refresh',
+            packageIds: ['vanity', 'toilet', 'floor-tile', 'paint', 'exhaust-fan'],
+            request: 'How much for this bathroom?',
+          })
+        ).text,
+      );
+      assert.equal(vague.replay, false);
+      assert.equal(vague.draftRef.revision, 1);
+      assert.ok(vague.requirements.total >= 25);
+      assert.ok(vague.requirements.quantified >= 8);
+      assert.equal(vague.nextQuestions.length, 2);
+      assert.match(vague.nextQuestions[0], /long and wide/);
+      // No vanity width yet: the cabinet and top cannot be catalog-matched.
+      assert.ok(vague.requirements.catalogPriceable < 5);
+
+      const replay = JSON.parse(
+        (
+          await call(mcp, 'draft_scope', {
+            requestId: 'muse-bath-1',
+            projectId: 'project-a',
+            recipeId: 'bathroom-refresh',
+            packageIds: ['vanity', 'toilet', 'floor-tile', 'paint', 'exhaust-fan'],
+            request: 'How much for this bathroom?',
+          })
+        ).text,
+      );
+      assert.equal(replay.replay, true);
+      assert.equal((await repo.read()).workspace.artifacts['project-a:scope-draft'].length, 1);
+
+      const answered = JSON.parse(
+        (
+          await call(mcp, 'draft_scope', {
+            requestId: 'muse-bath-2',
+            projectId: 'project-a',
+            recipeId: 'bathroom-refresh',
+            packageIds: ['vanity', 'toilet', 'floor-tile', 'paint', 'exhaust-fan'],
+            request: 'How much for this bathroom? It is about 8 by 5, vanity 30 inches.',
+            reported: [
+              { key: 'floorLengthFt', amount: 8, unit: 'ft' },
+              { key: 'floorWidthFt', amount: 5, unit: 'ft' },
+              { key: 'vanityWidthIn', amount: 30, unit: 'in' },
+              { key: 'ceilingHeightFt', amount: null, unit: 'ft' },
+            ],
+          })
+        ).text,
+      );
+      assert.equal(answered.draftRef.revision, 2);
+      assert.equal(answered.requirements.catalogPriceable, 5);
+      // Muse gets materials subtotals for the priced items, labeled as demo prices.
+      assert.deepEqual(
+        answered.materialsPricing.map((p: { materialsSubtotal: string }) => p.materialsSubtotal),
+        ['$307.00', '$771.00', '$1912.00'],
+      );
+      assert.match(answered.materialsPricing[0].priceBasis, /demo example prices/);
+      assert.match(answered.coverage, /cover 5 of \d+ requirements/);
+      assert.match(answered.coverage, /labor and installation/);
+      assert.deepEqual(answered.nextQuestions, [
+        'Behind the toilet, how far is it from the wall to the center of the floor bolts (the rough-in)?',
+      ]);
+      const state = (await repo.read()).workspace;
+      const bom = state.artifacts['project-a:bom'].at(-1)!;
+      assert.deepEqual(bom.inputRefs, [answered.draftRef]);
+      // The first BOM depended on draft revision 1 and is now stale.
+      assert.notEqual(state.artifacts['project-a:bom'][0].freshness, 'current');
+      const plan = state.artifacts['project-a:purchase-plan:builder'].at(-1)!;
+      assert.deepEqual(plan.inputRefs, [answered.bomRef]);
+
+      // Reusing a requestId with a changed request drafts anew instead of replaying.
+      const changed = JSON.parse(
+        (
+          await call(mcp, 'draft_scope', {
+            requestId: 'muse-bath-2',
+            projectId: 'project-a',
+            recipeId: 'bathroom-refresh',
+            packageIds: ['toilet'],
+            request: 'Actually just the toilet.',
+          })
+        ).text,
+      );
+      assert.equal(changed.replay, false);
+      assert.equal(changed.draftRef.revision, 3);
+      assert.equal(changed.materialsPricing.length, 0);
+
+      // A hand-written BOM cannot route an item to a product of another category.
+      const workspace = (await repo.read()).workspace;
+      const wrongCategory = await call(mcp, 'propose_project_change', {
+        commands: [
+          {
+            commandId: 'mcp-wrong-category-bom',
+            projectId: 'project-a',
+            baseRevision: workspace.projects['project-a'].revision,
+            basePropertyRevision: workspace.properties['property-a'].revision,
+            type: 'ProposeArtifact',
+            payload: {
+              artifactId: 'project-a:other-bom',
+              supersedesRevision: 0,
+              inputRefs: [],
+              evidenceIds: [],
+              content: {
+                ...vanityTemplate,
+                items: [{ ...vanityTemplate.items[0], candidateProductIds: ['van-fau-mid'] }],
+              },
+            },
+          },
+        ],
+      });
+      assert.equal(wrongCategory.result.isError, true);
+      assert.match(wrongCategory.text, /not a catalog vanity-cabinet product/);
+
+      // Relayed numbers never became recorded facts.
+      assert.ok(!Object.values(state.facts).some((v) => v.at(-1)!.key === 'finishedLength'));
+    }),
+);

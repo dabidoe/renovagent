@@ -6,6 +6,7 @@ import { id, ref, revision } from './common.js';
 import { valueSchema, assertionSchema, evidenceInputSchema } from './facts.js';
 import { workKindSchema, viewSchema, photoReplySchema } from './workflow.js';
 import { artifactPayloadSchema } from './artifacts.js';
+import { draftScopePayloadSchema } from './scope-draft.js';
 const envelope = {
   commandId: id,
   projectId: id,
@@ -69,6 +70,9 @@ export const commandSchema = z.discriminatedUnion('type', [
         })
         .strict(),
     })
+    .strict(),
+  z
+    .object({ ...envelope, type: z.literal('DraftScope'), payload: draftScopePayloadSchema })
     .strict(),
   z
     .object({

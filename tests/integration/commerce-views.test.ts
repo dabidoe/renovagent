@@ -64,3 +64,27 @@ test('saved BOM, purchase-plan and checkout-review artifacts render their conten
   assert.match(checkout, /Before you pay/);
   assert.match(checkout, /\$307\.00/);
 });
+
+test('a saved scope draft renders packages, open quantities, conditions and sources', async () => {
+  const { Scenario } = await import('../foundation-helpers.js');
+  const s = new Scenario();
+  s.create();
+  s.apply(
+    s.command('DraftScope', {
+      recipeId: 'bathroom-refresh',
+      packageIds: ['toilet', 'floor-tile'],
+      request: 'How much for this bathroom?',
+      reported: [],
+      expectedDraftRevision: 0,
+    }),
+  );
+  const html = render(s.state.artifacts['project-a:scope-draft'].at(-1)!.payload);
+  assert.match(html, /Draft scope · recipe bathroom-refresh v1/);
+  assert.match(html, /Floor tile/);
+  assert.match(html, /Needs a measurement/);
+  assert.match(html, /Allowance unset/);
+  assert.match(html, /If: Only if the existing flange/);
+  assert.match(html, /search excerpt 2026-10-29, document not opened/);
+  assert.match(html, /Next useful questions/);
+  assert.doesNotMatch(html, /Wall paint/);
+});

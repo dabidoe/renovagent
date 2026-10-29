@@ -9,7 +9,12 @@ import {
   type PriceSubmission,
   type Product,
 } from '@renovagent/contracts';
-import { checkCatalogReferences, sameRecord, validateCatalogImport } from '@renovagent/core';
+import {
+  checkCatalogReferences,
+  sameRecord,
+  validateCatalogImport,
+  type PricedOffer,
+} from '@renovagent/core';
 
 // Shared reference data: one catalog for all owners. Writes are curated
 // imports (operator-gated at the HTTP layer), never agent prose. Re-importing
@@ -179,6 +184,35 @@ export class CatalogStore {
       .limit(50)
       .toArray();
     return this.offersFor(products.map((p) => p.id));
+  }
+
+  // Latest-priced offers for products, joined for the plan engine.
+  async pricedOffers(productIds: string[]): Promise<PricedOffer[]> {
+    const found = await this.offersFor(productIds);
+    const products = new Map(found.products.map((product) => [product.id, product]));
+    const observations = new Map(found.observations.map((obs) => [obs.offerId, obs]));
+    const priced: PricedOffer[] = [];
+    for (const offer of found.offers) {
+      const product = products.get(offer.productId);
+      const observation = observations.get(offer.id);
+      if (product && observation) priced.push({ offer, product, observation });
+    }
+    return priced;
+  }
+
+  async productsByIds(ids: string[]): Promise<Product[]> {
+    if (!ids.length) return [];
+    return this.products.find({ id: { $in: ids.slice(0, 2000) } }).toArray();
+  }
+
+  // Candidate products for scope requirements, by catalog category.
+  async productsInCategories(categories: string[]): Promise<Product[]> {
+    if (!categories.length) return [];
+    return this.products
+      .find({ category: { $in: categories.slice(0, 50) } })
+      .sort({ id: 1 })
+      .limit(500)
+      .toArray();
   }
 
   async history(offerId: string, limit = 50): Promise<PriceObservation[]> {
