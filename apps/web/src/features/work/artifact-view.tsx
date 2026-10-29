@@ -34,6 +34,8 @@ export const artifactTitles: Record<Artifact['payload']['kind'], string> = {
   'checkout-review': 'Checkout review',
 };
 export function artifactTitle(artifact: Artifact) {
+  if (artifact.payload.kind === 'project-brief' && artifact.id.endsWith(':agent-brief'))
+    return 'Project brief';
   if (artifact.payload.kind === 'candidate-measurements')
     return `Measurements · ${artifact.payload.survey.label}`;
   if (artifact.payload.kind === 'candidate-checks')

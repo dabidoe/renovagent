@@ -2,6 +2,8 @@
 
 Status: Slices 1–2, local Slice 3 core, loopback Slice 4 (API/Mongo/jobs/accounts/MCP) and Slice 5 commerce planning implemented; technical review gate and hosting open · October 29, 2026
 
+**Active hackathon implementation sequence:** [Muse-first project workflow](hackathon-implementation-plan.md). The four–five-day plan covers casual intake, room recognition, visual design alternatives with cost breakdowns, full material requirements, contractor/inspection scope, shopping and receipts. It records planned work and acceptance gates, not completed capabilities.
+
 This is the canonical build plan. It supersedes the original ten-day feature checklist and the intake-only interpretation of the opening design. Most of these documents describe the target architecture. [Slice 1](slice-1-foundation.md) and [Slice 2](slice-2-workspace.md) evidence identify the foundation and local workspace now built. [Slice 3](slice-3-technical-core.md) records the deterministic technical core and its open review/coverage gates.
 
 ## Product we are building
@@ -64,9 +66,13 @@ The [prompt-first workspace](prompt-first-workspace.md) replaces the dashboard o
 
 The [local MCP adapter](mcp-workspace-adapter.md) implements that requirement for local stdio: workspace reads plus proposal-grade commands over the shared repository, verified with a live headless client. Hosted transport, job tools, and purchasing remain future work.
 
+The [Atlas migration](atlas-migration.md) preserves the seven original projects, history, attachments, completed jobs, catalog and private photo inputs in the configured cluster. Application processes remain local.
+
+The [remote MCP connector](remote-mcp-connector.md) adds an authenticated Streamable-HTTP listener, owner-scoped expiring grants, casual project creation and saved-file discovery. Cluster/local database selection is shared with the web API. Real HTTP/Mongo checks pass; the consumer Muse Mac app discovered ten tools and read all seven migrated projects through a one-hour HTTPS test. It also created a separately authorized QA project and reread its brief, independently verified in Atlas. Stable hosting remains open.
+
 [Accounts and Google login](accounts-and-google-login.md) adds optional account mode to the API: Google and Meta sign-in, per-owner workspaces, sessions, and a sign-in web surface. Password login, hosted deployment, and agent pairing remain future work.
 
-The [Muse app integration assessment](muse-app-integration.md) records how the consumer Muse agent connects to third-party services and what we must build (hosted Streamable-HTTP MCP + OAuth) before that path unblocks.
+The earlier [Muse app integration assessment](muse-app-integration.md) records the original hosted-MCP/OAuth proposal. The later [remote connector evidence](remote-mcp-connector.md) supersedes its unverified connection assumption: consumer Muse API-key pairing, reads and a separate QA brief write/read now work through temporary HTTPS.
 
 The [commerce catalog](commerce-catalog.md) adds shared products/offers/pricing with duplicate-proof imports, deterministic tiered purchase plans, and contractor accept/decline. Seed prices are labeled demo examples; live retail integration is future work.
 

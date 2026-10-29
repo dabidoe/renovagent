@@ -21,6 +21,7 @@ import { runPhotoReview, imageBytes } from '../../../scripts/muse-photo-review.j
 import { runInventory } from '../../../scripts/muse-inventory.js';
 import { withMuseBudget } from '../../../scripts/muse-provider.js';
 import { MongoWorkspaceRepository, type PhotoJob, type Aggregate } from './repository.js';
+import { PhotoJobFiles } from './photo-job-files.js';
 const root = resolve('.local/photo-jobs');
 export const jobRequestSchema = z
   .object({
@@ -250,7 +251,10 @@ export class PhotoWorker {
   private readonly workerId = randomUUID();
   private abort?: AbortController;
   private activeId?: string;
-  constructor(private repo: MongoWorkspaceRepository) {}
+  constructor(
+    private repo: MongoWorkspaceRepository,
+    private files?: PhotoJobFiles,
+  ) {}
   async recover() {
     await this.repo.update((doc) => {
       for (const job of doc.jobs)
@@ -373,8 +377,15 @@ export class PhotoWorker {
       const index = job.photos.findIndex((p) => p.imageUrl === url);
       if (index < 0) throw Error('Image outside job scope');
       const file = join(dir, `input-${index}.json`);
+      const remote = await this.files?.get(this.repo.ownerId, job.id, `input-${index}.json`);
+      if (remote) {
+        const b = JSON.parse(remote);
+        return { ...b, bytes: Buffer.from(b.data, 'base64') };
+      }
       if (await exists(file)) {
-        const b = JSON.parse(await readFile(file, 'utf8'));
+        const text = await readFile(file, 'utf8');
+        await this.files?.put(this.repo.ownerId, job.id, `input-${index}.json`, text);
+        const b = JSON.parse(text);
         return { ...b, bytes: Buffer.from(b.data, 'base64') };
       }
       const uploaded = job.uploads[url] && doc.blobs.find((b) => b.id === job.uploads[url]);
@@ -398,6 +409,12 @@ export class PhotoWorker {
           height: dims.height,
         }),
         { flag: 'wx', mode: 0o600 },
+      );
+      await this.files?.put(
+        this.repo.ownerId,
+        job.id,
+        `input-${index}.json`,
+        await readFile(file, 'utf8'),
       );
       return image;
     };

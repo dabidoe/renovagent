@@ -426,7 +426,7 @@ export function InventoryWorkbench(props: Props) {
       <footer className="hp-footer">
         Muse analyzed source photos ·{' '}
         {controller.connected
-          ? 'saved in local Mongo · backend connected'
+          ? 'saved in connected workspace'
           : 'saved on this device · backend off'}{' '}
         · no measurements, technical approval or construction release inferred
       </footer>

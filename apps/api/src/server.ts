@@ -16,19 +16,22 @@ import {
 } from './accounts.js';
 import { configuredMuseKey } from '../../../scripts/muse-provider.js';
 import { CatalogStore } from './catalog.js';
+import { workspaceMongoConfig } from './database-config.js';
+import { PhotoJobFiles } from './photo-job-files.js';
 export async function createWorkspaceServer(
   repository: MongoWorkspaceRepository,
   token: string,
   providerConfigured: boolean,
   accounts?: AccountService,
   catalog?: CatalogStore,
+  photoFiles?: PhotoJobFiles,
 ) {
   const accountMode = Boolean(accounts);
   const workers = new Map<string, PhotoWorker>();
   async function workerFor(repo: MongoWorkspaceRepository) {
     let worker = workers.get(repo.ownerId);
     if (!worker) {
-      worker = new PhotoWorker(repo);
+      worker = new PhotoWorker(repo, photoFiles);
       workers.set(repo.ownerId, worker);
       await worker.recover();
     }
@@ -369,7 +372,8 @@ export async function createWorkspaceServer(
           if (index < 0) continue;
           try {
             const cached = JSON.parse(
-              await readFile(`.local/photo-jobs/${job.id}/input-${index}.json`, 'utf8'),
+              (await photoFiles?.get(activeRepo.ownerId, job.id, `input-${index}.json`)) ??
+                (await readFile(`.local/photo-jobs/${job.id}/input-${index}.json`, 'utf8')),
             );
             const data = Buffer.from(cached.data, 'base64');
             if (createHash('sha256').update(data).digest('hex') !== hash) continue;
@@ -464,9 +468,8 @@ if (process.argv[1]?.endsWith('/apps/api/src/server.ts')) {
     token = randomBytes(32).toString('hex');
     await writeFile('.local/api-session', token, { mode: 0o600, flag: 'wx' });
   }
-  const { repository, client } = await MongoWorkspaceRepository.connect(
-    process.env.WORKSPACE_MONGODB_URI || 'mongodb://127.0.0.1:27018/renovagent_workspace',
-  );
+  const database = await workspaceMongoConfig();
+  const { repository, client } = await MongoWorkspaceRepository.connect(database.uri);
   const google = googleConfigFromEnv();
   const meta = metaConfigFromEnv();
   const accounts =
@@ -484,10 +487,11 @@ if (process.argv[1]?.endsWith('/apps/api/src/server.ts')) {
     Boolean(await configuredMuseKey()),
     accounts,
     catalog,
+    new PhotoJobFiles(client.db()),
   );
   server.listen(4000, '127.0.0.1', () =>
     console.log(
-      `Workspace API ready on 127.0.0.1:4000; Mongo persistence enabled; ${accounts ? `account mode (${accounts.providers().join(' + ')} sign-in)` : 'local single-owner mode'}`,
+      `Workspace API ready on 127.0.0.1:4000; Mongo ${database.target} selected (${database.source}); ${accounts ? `account mode (${accounts.providers().join(' + ')} sign-in)` : 'local single-owner mode'}`,
     ),
   );
   const stop = () =>

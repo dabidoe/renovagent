@@ -390,7 +390,7 @@ export function Composer({
       {!compact && (
         <p className="composer-note">
           {controller.connected
-            ? 'Saved in your local Mongo workspace. Photo analysis is available in the house tools; messages do not run a live assistant.'
+            ? 'Saved in your connected workspace. Photo analysis is available in the house tools; messages do not run a live assistant.'
             : 'Saved on this device. Connect through the house tools to enable Muse photo analysis.'}
         </p>
       )}

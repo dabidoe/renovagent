@@ -1,11 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { randomUUID } from 'node:crypto';
+import { randomUUID, createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { MongoClient } from 'mongodb';
 import { MongoWorkspaceRepository, OWNER, type Aggregate } from '../../apps/api/src/repository.js';
 import { requestPhotoJob, publishPhotoJob, PhotoWorker } from '../../apps/api/src/photo-jobs.js';
 import { createWorkspaceServer } from '../../apps/api/src/server.js';
+import { PhotoJobFiles } from '../../apps/api/src/photo-job-files.js';
+import type { StoredPhotoJob } from '../../apps/api/src/photo-jobs.js';
 import { Scenario } from '../foundation-helpers.js';
 import { researchJobId, homeInventory } from '@renovagent/core';
 import { type PropertyResearch } from '@renovagent/contracts';
@@ -56,6 +58,113 @@ const inventory = JSON.parse(
     'utf8',
   ),
 ).inventory;
+
+test(
+  'authorized photos render from private Mongo inputs without any local cache and reject unrelated hashes',
+  { skip: !uri },
+  () =>
+    withRepo(async (repo, client) => {
+      const { s, research } = setup();
+      const data = Buffer.from(
+        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII=',
+        'base64',
+      );
+      const sha256 = createHash('sha256').update(data).digest('hex');
+      const photo = research.photoReview!.photos[0];
+      const state = mongoState(s.state);
+      const artifact = state.artifacts['project-a:property-research'].at(-1)!;
+      if (artifact.payload.kind !== 'property-research') throw Error('Wrong test artifact');
+      artifact.payload.photoReview!.photos[0].sha256 = sha256;
+      const jobId = randomUUID();
+      await repo.importWorkspace(state, []);
+      await repo.update((doc) => {
+        doc.jobs = [
+          {
+            id: jobId,
+            requestId: randomUUID(),
+            projectId: 'project-a',
+            photoIds: [photo.id],
+            status: 'succeeded',
+            stage: 'Complete',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            attempts: 1,
+            input: {
+              addressId: 'propertyAddress',
+              addressRevision: 1,
+              goalId: 'goal',
+              goalRevision: 1,
+              researchRevision: 1,
+              inventoryRevision: 0,
+            },
+            error: null,
+            cancelRequested: false,
+            base: research,
+            goal: 'Synthetic image storage check',
+            uploads: {},
+            photos: [
+              {
+                id: photo.id,
+                imageUrl: photo.imageUrl!,
+                sourceId: photo.sourceId!,
+                pageUrl: photo.pageUrl!,
+                locator: 'test',
+              },
+            ],
+          } as StoredPhotoJob,
+        ];
+      });
+      const files = new PhotoJobFiles(client.db(repo.collection.dbName));
+      await files.put(
+        repo.ownerId,
+        jobId,
+        'input-0.json',
+        JSON.stringify({
+          extension: 'png',
+          sha256,
+          data: data.toString('base64'),
+          width: 1,
+          height: 1,
+        }),
+      );
+      const { server } = await createWorkspaceServer(
+        repo,
+        'synthetic-private-image-token',
+        false,
+        undefined,
+        undefined,
+        files,
+      );
+      await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
+      const address = server.address();
+      if (!address || typeof address === 'string') throw Error('No address');
+      const base = `http://127.0.0.1:${address.port}/api/workspace`,
+        headers = { Host: '127.0.0.1:4000', 'X-Renovagent-Client': 'workspace' };
+      try {
+        assert.equal((await fetch(`${base}/photo-assets/${sha256}`, { headers })).status, 403);
+        const session = await fetch(base + '/session', { headers });
+        const auth = { ...headers, Cookie: session.headers.get('set-cookie')!.split(';')[0] };
+        const image = await fetch(`${base}/photo-assets/${sha256}`, {
+          headers: auth,
+          redirect: 'manual',
+        });
+        assert.equal(image.status, 200);
+        assert.equal(image.headers.get('content-type'), 'image/png');
+        assert.deepEqual(Buffer.from(await image.arrayBuffer()), data);
+        assert.equal(
+          (
+            await fetch(`${base}/photo-assets/${'0'.repeat(64)}`, {
+              headers: auth,
+              redirect: 'manual',
+            })
+          ).status,
+          404,
+        );
+      } finally {
+        await new Promise<void>((resolve) => server.close(() => resolve()));
+      }
+    }),
+);
 async function withRepo(
   fn: (repo: MongoWorkspaceRepository, client: MongoClient) => Promise<void>,
 ) {

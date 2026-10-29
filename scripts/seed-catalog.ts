@@ -6,6 +6,7 @@ import { readFile } from 'node:fs/promises';
 import { MongoClient } from 'mongodb';
 import { CatalogStore } from '../apps/api/src/catalog.js';
 import { vanityCatalog } from '../fixtures/catalog/vanity-philadelphia.js';
+import { workspaceMongoConfig } from '../apps/api/src/database-config.js';
 
 const option = (name: string) => {
   const flag = process.argv.findIndex((arg) => arg === `--${name}`);
@@ -14,10 +15,7 @@ const option = (name: string) => {
     (flag >= 0 ? process.argv[flag + 1] : undefined)
   );
 };
-const uri =
-  option('uri') ??
-  process.env.WORKSPACE_MONGODB_URI ??
-  'mongodb://127.0.0.1:27018/renovagent_workspace';
+const uri = option('uri') ?? (await workspaceMongoConfig()).uri;
 const file = option('file');
 const batch = file ? JSON.parse(await readFile(file, 'utf8')) : vanityCatalog;
 const client = new MongoClient(uri);

@@ -1,5 +1,6 @@
 import { spawn, type ChildProcess } from 'node:child_process';
 import { MongoClient } from 'mongodb';
+import { workspaceMongoConfig } from '../apps/api/src/database-config.js';
 const children: ChildProcess[] = [];
 let stopping = false;
 const stop = () => {
@@ -20,13 +21,12 @@ const start = (args: string[]) => {
   });
   return child;
 };
-start(['--import', 'tsx', 'scripts/local-mongo.ts']);
+const database = await workspaceMongoConfig();
+console.log(`Connected workspace uses Mongo ${database.target} (${database.source}).`);
+if (database.target === 'local') start(['--import', 'tsx', 'scripts/local-mongo.ts']);
 let ready = false;
 for (let attempt = 0; attempt < 120 && !stopping; attempt++) {
-  const client = new MongoClient(
-    process.env.WORKSPACE_MONGODB_URI || 'mongodb://127.0.0.1:27018/renovagent_workspace',
-    { serverSelectionTimeoutMS: 500 },
-  );
+  const client = new MongoClient(database.uri, { serverSelectionTimeoutMS: 500 });
   try {
     await client.connect();
     ready = true;

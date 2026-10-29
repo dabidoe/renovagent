@@ -4,7 +4,7 @@
 
 A persistent project for your house, your AI agent, and the people doing the work. Collect the evidence, define the job, and keep decisions connected as the project changes.
 
-[Product direction](docs/design/agent-first-product.md) · [Architecture](docs/architecture/README.md) · [Build status](PROGRESS.md)
+[Product direction](docs/design/agent-first-product.md) · [Architecture](docs/architecture/README.md) · [Build status](PROGRESS.md) · [Current handoff](HANDOFF.md)
 
 ## The idea
 
@@ -19,13 +19,14 @@ This is an early development project. The current local working tree includes:
 - Persistent projects, source evidence, versioned artifacts, and saved drafts.
 - A prompt-first workspace with house, plan, history, and evidence tools.
 - Shared deterministic planning calculations and downstream invalidation when facts change.
-- An optional local MongoDB/API mode with bounded Muse photo-analysis jobs.
+- A connected MongoDB/API workspace with bounded Muse photo-analysis jobs; API and MCP share the configured Atlas cluster.
+- An authenticated MCP connector, tested in the consumer Muse Mac app: discover projects, start a separate project and save/read its proposed brief.
 - Optional Google/Meta sign-in with per-owner workspaces (needs your OAuth clients; see the accounts doc).
 - A demo commerce catalog with tiered purchase plans and contractor review (example prices only).
 
-General messages are saved notes, not live agent conversations. A local stdio MCP adapter exposes workspace reads and proposal-grade commands to standard agent clients; live supplier pricing, contractor verification, purchasing, hosted MCP transport, and hosted customer accounts are **not implemented**. The older MCP demo uses a different project model.
+General messages in the website are saved notes; the tested consumer Muse connection uses the shared MCP tools. Both local stdio and authenticated Streamable HTTP expose owner-scoped reads and proposals. The one-hour HTTPS test uses a temporary tunnel; stable hosting, live supplier pricing, contractor verification, purchasing and hosted customer accounts remain open. The older MCP demo uses a different project model.
 
-See [current implementation and limits](docs/architecture/connected-muse-and-mongo.md) and [the external-agent contract](docs/architecture/prompt-first-workspace.md).
+See [current implementation and limits](docs/architecture/connected-muse-and-mongo.md), [Atlas migration](docs/architecture/atlas-migration.md) and [consumer Muse connection evidence](docs/architecture/remote-mcp-connector.md).
 
 ## Run locally
 
@@ -36,13 +37,15 @@ npm run dev
 
 Open [the workspace](http://127.0.0.1:8741/) or [the landing page](http://127.0.0.1:8741/landing.html). The default workspace uses this browser's IndexedDB; no account is required.
 
-For the optional connected local workspace:
+For the connected workspace (API and frontend still run locally):
 
 ```bash
 npm run dev:connected
 ```
 
 Follow the [connected setup guide](docs/architecture/connected-muse-and-mongo.md) for MongoDB, server-only credentials, explicit data transfer, and current limits. The static website cannot run these local services.
+
+The connected launcher uses the configured `MONGODB_URI` cluster by default. See [database selection](docs/architecture/remote-mcp-connector.md#database-selection) for explicit local mode; selecting a database does not synchronize or merge it with another copy.
 
 ## How it fits together
 

@@ -2,9 +2,13 @@
 
 Updated October 29, 2026. This tracker distinguishes prototypes from the reliable product workflow we are building.
 
+**Resume work:** [current handoff](HANDOFF.md) records the Atlas/Muse verification, runtime and connection expiry, preserved data, uncommitted changes, open commerce findings and next implementation sequence.
+
 ## Direction
 
 Renovagent carries a persistent property project through investigation, options, technical resolution, procurement, preparation, coordination, execution, and handover. Chat directs the work; versioned project artifacts hold the results. The half bath is the reference workflow, not the product boundary.
+
+**Active next implementation plan:** [Muse-first hackathon workflow](docs/architecture/hackathon-implementation-plan.md), October 29. Targets a useful first draft from casual language/photos/inspiration, visual room alternatives with cost breakdowns, full project materials, contractor and inspection scope, shopping and receipt reconciliation in four–five working days. A living-room refresh/flooring example demonstrates visual option selection alongside the bathroom workflow. Standard consumer Muse integration is a required acceptance gate. This is planned work; implementation status below is unchanged.
 
 **Canonical build plan:** [architecture index](docs/architecture/README.md). **Product direction:** [scope](docs/RENOVAGENT_PRODUCT_SCOPE.md) and [technical plan](docs/RENOVAGENT_TECHNICAL_ARCHITECTURE.md), mapped to slices in [reconciliation](docs/architecture/renovagent-reconciliation.md). **Implemented foundation:** [Slice 1 evidence and boundaries](docs/architecture/slice-1-foundation.md). **Workspace:** [Slice 2 implementation](docs/architecture/slice-2-workspace.md). **Technical core:** [Slice 3 implementation](docs/architecture/slice-3-technical-core.md), [local coverage and open review gate](docs/architecture/local-context-and-code-coverage.md).
 
@@ -13,13 +17,13 @@ Renovagent carries a persistent property project through investigation, options,
 | Area | Current state | Important limit |
 |---|---|---|
 | Local frontend | Prompt-first React/Vite workspace on IndexedDB or connected Mongo: projects, conversation/work surfaces, artifacts/revisions, decisions, sources, drafts, activity | Labeled agent fixtures where noted; no reviewed compliance guidance. Original frontend retained at `/legacy.html` |
-| Connected backend | Loopback API + local Mongo: per-owner workspaces, real in-app Muse photo jobs, sessions, catalog, submissions | Local only: no TLS, hosting, quotas, or production hardening |
+| Connected backend | Loopback API + selectable local/cluster Mongo: per-owner workspaces, real in-app Muse photo jobs, sessions, catalog, submissions; shared server-side database selection | Public HTTPS hosting and production hardening remain open |
 | Accounts | Optional Google/Meta sign-in with per-owner workspaces, explicit local adoption, sign-in web surface | No passwords; live round-trips need the owner's OAuth clients |
 | Commerce | Shared catalog with duplicate-proof imports, tiered purchase plans, contractor accept/decline, checkout reviews, price submissions with review quarantine | Seed prices are labeled demo examples; affiliate feeds need the owner's accounts; no live inventory, tax, or checkout |
-| Agents | Local stdio MCP adapter (8 tools: reads, proposals, catalog search/history, checkout assembly), verified with a live headless client | Hosted Streamable-HTTP transport needs the hosted backend |
+| Agents | MCP adapter with 10 tools over stdio and authenticated Streamable HTTP: owner-scoped reads/proposals, project creation, file discovery, catalog recall and checkout assembly | Consumer Muse Mac discovered ten tools, read the migrated projects, created a separate authorized QA project and reread its brief over temporary HTTPS; stable hosting remains open |
 | Technical references | Versioned adoption/scope/permit source register, applicability checks and visible coverage gaps | Exact 2018 clearances and residential exhaust criteria retrieved; local clearance mapping, complete electrical provisions, trade design and qualified review remain blocked |
 | Planning math | Shared deterministic geometry, quantities, money/tier/checkout math; single command authority for all writes | Rectangular playbooks; no inferred routes, no reviewed compliance guidance |
-| Verification | 146 pass (15 legacy + 131 TypeScript, 17 Mongo cases skip); explicit real-Mongo suite 18/18; strict types, boundaries, formatting, builds | Browser QA covers labeled projects; no claim of general model reliability, technical compliance, or full lifecycle coverage |
+| Verification | 150 pass (15 legacy + 135 TypeScript, 25 Mongo cases skip); explicit real-Mongo suite 28/28; strict types, boundaries, formatting, builds | Browser QA covers labeled projects; actual consumer-Muse reads and separate QA brief write/read verified; no claim of general model reliability, technical compliance, or full lifecycle coverage |
 
 ## Delivery tracking
 
@@ -35,6 +39,19 @@ Renovagent carries a persistent property project through investigation, options,
 | 7 — Second project playbook | Not implemented |
 
 Use each slice's acceptance criteria before changing its status. A mock screen, canned reply, or HTTP 200 does not establish workflow completion.
+
+### Remote connector foundation — October 29, 2026
+
+- Added authenticated Streamable HTTP beside the existing stdio adapter, owner-scoped expiring/revocable read/proposal grants, casual project creation and saved-file discovery. Ten tools now share repository/domain rules; project intake records a proposed brief without inventing physical facts or an estimate.
+- Unified API/MCP/catalog/launcher database selection around the configured `MONGODB_URI` cluster and explicit `MONGODB_URI_LOCAL` mode. Database selection itself does not merge or synchronize records. The owner subsequently authorized migration: seven original projects were located in the pre-rename local database and copied to Atlas with history, attachments, catalog and private job inputs; see the migration evidence below.
+- Verified 148 regular tests (23 Mongo scenarios skipped without the explicit URI), 24/24 real HTTP/Mongo integration cases, strict types, boundaries, formatting and production builds. The owner-authorized temporary HTTPS/Muse Mac test subsequently completed authenticated discovery of ten tools and reads of all seven migrated projects; the separately authorized QA project/brief write/read check also passed with independent Atlas verification; stable hosting remains open. See [implementation and connection steps](docs/architecture/remote-mcp-connector.md).
+
+### Atlas migration — October 29, 2026
+
+- Moved all seven existing projects, 41 artifact identities with revisions, three attachments, two completed photo jobs, 17 products/offers/price observations each and 25 private job files to the configured Atlas cluster in a single transaction. Private source/destination EJSON backup and post-copy hash verification retained; local originals unchanged.
+- Consumer Muse Mac discovered ten tools, read the seven original projects, then created and reread one separately authorized QA living-room brief at revision 1. Atlas independently confirmed its IDs/content and unchanged original domain records. There are now eight projects including the labeled QA project.
+- API/MCP share the cluster. Private photo inputs now live in owner-scoped Mongo storage and new jobs persist their input bytes there; the live website served all five cached inputs with matching hashes. App processes and future provider checkpoint execution remain local. This is storage migration, not hosted deployment.
+- Added conflict/active-job/orphan-catalog/checksum/owner guards and a cloud-only image HTTP scenario. Connected tests 28/28; regular tests 150 passed with 25 Mongo scenarios skipped; types, boundaries, formatting and builds passed. See [migration mechanism, backup and limits](docs/architecture/atlas-migration.md).
 
 ## Historical material
 

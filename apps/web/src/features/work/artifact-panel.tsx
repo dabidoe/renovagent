@@ -97,7 +97,10 @@ export function ArtifactPanel({
                         ? 'Sourced research · unreviewed'
                         : selected.id.endsWith(':working-brief')
                           ? 'Compiled from saved inputs'
-                          : 'Simulated output'}
+                          : selected.payload.kind === 'project-brief' &&
+                              selected.id.endsWith(':agent-brief')
+                            ? 'Saved project intent · unreviewed'
+                            : 'Simulated output'}
         </span>
         <span
           className={`status ${selected.freshness === 'stale' ? 'warning-status' : 'muted-status'}`}

@@ -5,16 +5,20 @@ import { z } from 'zod';
 import {
   DomainError,
   commandSchema,
+  id,
   type Artifact,
   type Fact,
   type Workspace,
 } from '@renovagent/contracts';
 import { MongoWorkspaceRepository, OWNER } from './repository.js';
 import { CatalogStore } from './catalog.js';
-import { buildCheckoutReview } from '@renovagent/core';
+import { buildCheckoutReview, referenceCurrent } from '@renovagent/core';
+import { startAgentProject } from './agent-projects.js';
+import type { McpAccess } from './mcp-access.js';
+import { workspaceMongoConfig } from './database-config.js';
 
 export const MCP_SERVER_NAME = 'renovagent-workspace';
-export const MCP_SERVER_VERSION = '0.1.0';
+export const MCP_SERVER_VERSION = '0.2.0';
 
 // Agent proposals may suggest new work, drafts, and conversation notes. They must
 // not record source facts, accept decisions, or release work; those stay
@@ -27,7 +31,9 @@ const CAPABILITIES = {
     'list_homes',
     'list_projects',
     'get_project_context',
+    'list_project_files',
     'get_artifact',
+    'start_project',
     'propose_project_change',
     'search_catalog',
     'get_offer_history',
@@ -118,13 +124,37 @@ function uncertainties(state: Workspace, facts: Fact[], artifacts: Artifact[], p
 export function createWorkspaceMcpServer(
   repository: MongoWorkspaceRepository,
   catalog?: CatalogStore,
+  options: { access?: McpAccess; transport?: 'stdio' | 'streamable-http' } = {},
 ) {
-  const server = new McpServer({ name: MCP_SERVER_NAME, version: MCP_SERVER_VERSION });
+  const canPropose = options.access !== 'read';
+  const capabilities = {
+    ...CAPABILITIES,
+    transports: [options.transport ?? 'stdio'],
+    access: canPropose ? 'propose' : 'read',
+    tools: CAPABILITIES.tools.filter(
+      (name) => canPropose || !['start_project', 'propose_project_change'].includes(name),
+    ),
+    proposalCommands: canPropose ? CAPABILITIES.proposalCommands : [],
+    limits: [
+      options.transport === 'streamable-http'
+        ? 'One authenticated owner workspace per connector credential; no cross-owner discovery.'
+        : CAPABILITIES.limits[0],
+      ...CAPABILITIES.limits.slice(1),
+    ],
+  };
+  const server = new McpServer(
+    { name: MCP_SERVER_NAME, version: MCP_SERVER_VERSION },
+    {
+      instructions:
+        'Renovagent keeps durable home-improvement projects. Start with list_homes/list_projects or start_project for a new user request. Use list_project_files to discover saved work, then get_artifact to inspect exact revisions. Develop useful proposed work from project evidence. Keep unknown facts and prices explicit. Project creation stores intent only; it does not analyze photos or produce an estimate. Never claim a proposal is professional approval or a passed inspection.',
+    },
+  );
 
   server.tool(
     'list_homes',
-    'List the homes (properties) in this local workspace.',
+    'List the homes (properties) in the authorized workspace.',
     {},
+    { readOnlyHint: true, openWorldHint: false },
     async () => {
       try {
         const { workspace } = await repository.read();
@@ -146,8 +176,9 @@ export function createWorkspaceMcpServer(
 
   server.tool(
     'list_projects',
-    'List projects in this local workspace, optionally filtered to one home.',
-    { propertyId: z.string().min(1).max(160).optional() },
+    'List projects in the authorized workspace, optionally filtered to one home.',
+    { propertyId: id.optional() },
+    { readOnlyHint: true, openWorldHint: false },
     async ({ propertyId }) => {
       try {
         const { workspace } = await repository.read();
@@ -172,7 +203,8 @@ export function createWorkspaceMcpServer(
   server.tool(
     'get_project_context',
     'Read a project goal, current facts, uncertainties, evidence metadata, input revisions, and capabilities.',
-    { projectId: z.string().min(1).max(160) },
+    { projectId: id },
+    { readOnlyHint: true, openWorldHint: false },
     async ({ projectId }) => {
       try {
         const { workspace } = await repository.read();
@@ -194,7 +226,14 @@ export function createWorkspaceMcpServer(
           uncertainties: uncertainties(workspace, facts, artifacts, projectId),
           evidence: evidenceMetadata(workspace, property.id, projectId),
           revisions: { project: project.revision, property: property.revision },
-          capabilities: CAPABILITIES,
+          files: artifacts.map(({ id, revision, lifecycle, freshness, payload }) => ({
+            id,
+            revision,
+            kind: payload.kind,
+            lifecycle,
+            freshness,
+          })),
+          capabilities,
         });
       } catch (error) {
         failure(error);
@@ -203,12 +242,65 @@ export function createWorkspaceMcpServer(
   );
 
   server.tool(
+    'list_project_files',
+    'Discover the saved files of one project: IDs, exact revisions, kinds, freshness and decision status. Read a file with get_artifact. Does not generate work.',
+    { projectId: id },
+    { readOnlyHint: true, openWorldHint: false },
+    async ({ projectId }) => {
+      try {
+        const { workspace } = await repository.read();
+        if (!workspace.projects[projectId]) throw new DomainError('NOT_FOUND', 'Unknown project');
+        return text(
+          projectArtifacts(workspace, projectId).map((artifact) => ({
+            artifactRef: { kind: 'artifact', id: artifact.id, revision: artifact.revision },
+            kind: artifact.payload.kind,
+            lifecycle: artifact.lifecycle,
+            freshness: artifact.freshness,
+            createdAt: artifact.createdAt,
+            inputRefs: artifact.inputRefs,
+          })),
+        );
+      } catch (error) {
+        failure(error);
+      }
+    },
+  );
+
+  if (canPropose)
+    server.tool(
+      'start_project',
+      'Start a durable project from a user request, without requiring an address, measurements or chosen products. Saves a proposed brief only. Reuse requestId for retries; omit propertyId for a new home or use a home returned by list_homes. Does not produce a renovation plan or estimate.',
+      {
+        requestId: id.describe(
+          'Stable unique request identifier, reused only for identical retries',
+        ),
+        name: z.string().trim().min(1).max(300),
+        brief: z
+          .string()
+          .trim()
+          .min(1)
+          .max(4000)
+          .describe('The user request relayed by the agent; saved as an unverified proposal'),
+        propertyId: id.optional(),
+      },
+      { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+      async (input) => {
+        try {
+          return text(await startAgentProject(repository, input));
+        } catch (error) {
+          failure(error);
+        }
+      },
+    );
+
+  server.tool(
     'get_artifact',
     'Read one artifact revision with its freshness, evidence, and limitations. Defaults to the latest revision; historical views stay pinned.',
     {
-      artifactId: z.string().min(1).max(160),
+      artifactId: id,
       revision: z.number().int().positive().optional(),
     },
+    { readOnlyHint: true, openWorldHint: false },
     async ({ artifactId, revision }) => {
       try {
         const { workspace } = await repository.read();
@@ -236,33 +328,35 @@ export function createWorkspaceMcpServer(
     },
   );
 
-  server.tool(
-    'propose_project_change',
-    'Propose bounded changes as validated workspace commands. Only ProposeArtifact, SaveDraft, and AppendMessage are accepted; repeated commandIds do not duplicate effects.',
-    {
-      commands: z.array(z.unknown()).min(1).max(20),
-    },
-    async ({ commands }) => {
-      try {
-        const parsed = commands.map((command) => commandSchema.parse(command));
-        for (const command of parsed) {
-          if (!(PROPOSAL_ALLOWLIST as readonly string[]).includes(command.type))
-            throw new DomainError(
-              'FORBIDDEN',
-              `Capability limit: ${command.type} is not proposal-grade. The agent cannot record facts, accept decisions, or release work.`,
-            );
+  if (canPropose)
+    server.tool(
+      'propose_project_change',
+      'Propose bounded changes as validated workspace commands. Only ProposeArtifact, SaveDraft, and AppendMessage are accepted; repeated commandIds do not duplicate effects.',
+      {
+        commands: z.array(z.unknown()).min(1).max(20),
+      },
+      { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+      async ({ commands }) => {
+        try {
+          const parsed = commands.map((command) => commandSchema.parse(command));
+          for (const command of parsed) {
+            if (!(PROPOSAL_ALLOWLIST as readonly string[]).includes(command.type))
+              throw new DomainError(
+                'FORBIDDEN',
+                `Capability limit: ${command.type} is not proposal-grade. The agent cannot record facts, accept decisions, or release work.`,
+              );
+          }
+          const results = await repository.execute(parsed);
+          return text({
+            accepted: true,
+            results,
+            note: 'Stored proposal only. Customer approval and qualified review remain distinct.',
+          });
+        } catch (error) {
+          failure(error);
         }
-        const results = await repository.execute(parsed);
-        return text({
-          accepted: true,
-          results,
-          note: 'Stored proposal only. Customer approval and qualified review remain distinct.',
-        });
-      } catch (error) {
-        failure(error);
-      }
-    },
-  );
+      },
+    );
 
   server.tool(
     'search_catalog',
@@ -271,6 +365,7 @@ export function createWorkspaceMcpServer(
       query: z.string().min(1).max(200),
       category: z.string().min(1).max(120).optional(),
     },
+    { readOnlyHint: true, openWorldHint: false },
     async ({ query, category }) => {
       try {
         if (!catalog) throw new DomainError('VALIDATION', 'Catalog is unavailable');
@@ -285,9 +380,10 @@ export function createWorkspaceMcpServer(
     'get_offer_history',
     'Read the dated price history of one catalog offer, newest first.',
     {
-      offerId: z.string().min(1).max(160),
+      offerId: id,
       limit: z.number().int().min(1).max(200).optional(),
     },
+    { readOnlyHint: true, openWorldHint: false },
     async ({ offerId, limit }) => {
       try {
         if (!catalog) throw new DomainError('VALIDATION', 'Catalog is unavailable');
@@ -302,10 +398,11 @@ export function createWorkspaceMcpServer(
     'build_checkout_review',
     'Assemble a checkout review (retailer carts plus a customer double-check list) from a stored purchase plan. Computation only; nothing is stored or purchased. Propose it with propose_project_change to save it.',
     {
-      projectId: z.string().min(1).max(160),
-      purchasePlanId: z.string().min(1).max(160),
+      projectId: id,
+      purchasePlanId: id,
       associateTag: z.string().min(1).max(60).optional(),
     },
+    { readOnlyHint: true, openWorldHint: false },
     async ({ projectId, purchasePlanId, associateTag }) => {
       try {
         if (!catalog) throw new DomainError('VALIDATION', 'Catalog is unavailable');
@@ -318,6 +415,18 @@ export function createWorkspaceMcpServer(
           .find((record) => record.projectId === projectId);
         if (!plan || plan.payload.kind !== 'purchase-plan')
           throw new DomainError('NOT_FOUND', `Unknown purchase plan ${purchasePlanId}`);
+        if (
+          plan.lifecycle === 'rejected' ||
+          !referenceCurrent(workspace, projectId, {
+            kind: 'artifact',
+            id: plan.id,
+            revision: plan.revision,
+          })
+        )
+          throw new DomainError(
+            'STALE',
+            'Rebuild and review the current purchase plan before preparing checkout',
+          );
         const productIds = [...new Set(plan.payload.lines.map((line) => line.productId))];
         const found = await catalog.offersFor(productIds);
         const offers = new Map(found.offers.map((offer) => [offer.id, offer]));
@@ -338,18 +447,17 @@ export function createWorkspaceMcpServer(
   return server;
 }
 
-function mongoUri() {
+async function mongoUri() {
   const flag = process.argv.findIndex((arg) => arg === '--uri');
   const value =
     process.argv.find((arg) => arg.startsWith('--uri='))?.slice('--uri='.length) ??
     (flag >= 0 ? process.argv[flag + 1] : undefined) ??
-    process.env.RENOVAGENT_MONGO_URI;
-  if (!value) throw new Error('Set RENOVAGENT_MONGO_URI or pass --uri <mongodb-uri>');
+    (await workspaceMongoConfig()).uri;
   return value;
 }
 
 async function main() {
-  const { repository, client } = await MongoWorkspaceRepository.connect(mongoUri());
+  const { repository, client } = await MongoWorkspaceRepository.connect(await mongoUri());
   await repository.read();
   const catalog = new CatalogStore(client.db());
   await catalog.ensureIndexes();

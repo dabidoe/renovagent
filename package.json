@@ -18,9 +18,12 @@
     "muse:property": "node --import tsx scripts/muse-property-research.ts",
     "dev:api": "node --import tsx apps/api/src/server.ts",
     "serve:mcp": "node --import tsx apps/api/src/mcp.ts",
+    "serve:mcp:http": "node --import tsx apps/api/src/mcp-http.ts",
+    "mcp:access": "node --import tsx scripts/mcp-access.ts",
+    "migrate:cluster": "node --import tsx scripts/migrate-to-cluster.ts",
     "dev:mongo": "node --import tsx scripts/local-mongo.ts",
     "dev:connected": "node --import tsx scripts/dev-connected.ts",
-    "test:connected": "TEST_WORKSPACE_MONGO_URI=mongodb://127.0.0.1:27018/renovagent_workspace node --import tsx --test tests/integration/connected-workspace.test.ts tests/integration/mcp-workspace.test.ts tests/integration/accounts.test.ts tests/integration/catalog.test.ts",
+    "test:connected": "TEST_WORKSPACE_MONGO_URI=mongodb://127.0.0.1:27018/renovagent_workspace node --import tsx --test tests/integration/connected-workspace.test.ts tests/integration/mcp-workspace.test.ts tests/integration/mcp-http.test.ts tests/integration/cluster-migration.test.ts tests/integration/accounts.test.ts tests/integration/catalog.test.ts",
     "seed:catalog": "node --import tsx scripts/seed-catalog.ts",
     "build:pages": "npm run build && node scripts/package-pages.mjs"
   },

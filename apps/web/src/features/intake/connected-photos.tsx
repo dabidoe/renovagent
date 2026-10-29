@@ -86,9 +86,9 @@ export function ConnectedPhotos({
         <>
           <p>
             Connect {Object.keys(state.projects).length} projects, their revision history and saved
-            attachments to the local Mongo backend. The IndexedDB original stays on this device. If
-            Mongo already has a workspace, that saved workspace opens without overwriting either
-            copy.
+            attachments to the connected Mongo workspace. The IndexedDB original stays on this
+            device. If Mongo already has a workspace, that saved workspace opens without overwriting
+            either copy.
           </p>
           <button
             disabled={busy}
