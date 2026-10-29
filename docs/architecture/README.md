@@ -55,3 +55,7 @@ The [candidate measurement increment](candidate-measurements.md) connects separa
 The [home-centered planning rebuild](home-centered-planning.md) replaces the supported listing project's document-first overview with property evidence, a working study proposal and a focused durable next action. It preserves the foundation and keeps generated layout design, qualified review and backend execution explicitly outside the implemented increment.
 
 The [Hutchinson photo inventory](photo-inventory.md) adds real Muse region proposals, selectable photo elements and separate durable user direction. It records the living-room half-bath goal and reported existing basement bath. Model execution remains an external Node handoff; Mongo and in-app execution are not connected.
+
+The [connected Muse and Mongo increment](connected-muse-and-mongo.md) adds a loopback-only single-owner API, persistent Mongo workspace, explicit local transfer and real in-app photo jobs. It preserves the same command/revision/invalidation authority. General agent conversation remains simulated; full hosted Slice 4 and technical review are not complete.
+
+The [prompt-first workspace](prompt-first-workspace.md) replaces the dashboard opening with a centered prompt and on-demand project tools. It records the requirement for standard Muse clients to share the current application services through a future MCP adapter; that adapter is not connected by the UI change.

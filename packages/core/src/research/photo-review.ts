@@ -122,3 +122,56 @@ export function questionsForReviewedPhoto(review: PhotoReview, id: string) {
       ?.questions.filter((question) => question.trim().endsWith('?')) || []
   );
 }
+
+// Keep discoverable source photos available after a bounded subset is refreshed.
+// Each entry retains its original research revision; this does not mark old observations refreshed.
+export function savedPhotoReferences(
+  state: import('@unpermitted/contracts').Workspace,
+  projectId: string,
+) {
+  const address = Object.values(state.facts)
+    .map((v) => v.at(-1)!)
+    .find(
+      (f) =>
+        f.key === 'propertyAddress' &&
+        f.propertyId === state.projects[projectId]?.propertyId &&
+        f.projectId === null,
+    );
+  if (!address) return [];
+  const jobId = `${projectId}:property:${address.id}:${address.revision}`;
+  const refs = new Map<
+    string,
+    {
+      id: string;
+      sourceId: string;
+      pageUrl: string;
+      imageUrl: string;
+      locator?: string;
+      roomType?: string;
+      researchRevision: number;
+      source: PropertyResearch['sources'][number];
+    }
+  >();
+  for (const artifact of state.artifacts[`${projectId}:property-research`] || []) {
+    const data = artifact.payload;
+    if (data.kind !== 'property-research' || data.jobId !== jobId) continue;
+    for (const p of data.photoReview?.photos || data.images) {
+      const source = data.sources.find((s) => s.id === p.sourceId);
+      if (!p.imageUrl || !source || ('blockedReason' in p && p.blockedReason)) {
+        refs.delete(p.id);
+        continue;
+      }
+      refs.set(p.id, {
+        id: p.id,
+        sourceId: p.sourceId,
+        pageUrl: p.pageUrl,
+        imageUrl: p.imageUrl,
+        locator: p.locator,
+        roomType: 'roomType' in p ? p.roomType : undefined,
+        researchRevision: artifact.revision,
+        source,
+      });
+    }
+  }
+  return [...refs.values()];
+}

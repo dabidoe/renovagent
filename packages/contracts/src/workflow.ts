@@ -46,7 +46,7 @@ export const messageSchema = z
     id,
     projectId: id,
     role: z.enum(['user', 'assistant', 'system']),
-    mode: z.enum(['user', 'simulated', 'system']),
+    mode: z.enum(['user', 'simulated', 'system', 'muse']),
     text: z.string().min(1).max(8000),
     evidenceIds: z.array(id),
     artifactRefs: z.array(ref),

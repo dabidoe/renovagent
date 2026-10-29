@@ -1,3 +1,5 @@
+import { inputSignature } from './input-context.js';
+import { validateConversationPlan } from '../research/conversation.js';
 import { handleHomeInventory } from '../research/home-inventory.js';
 import { handleScopePlanning } from '../research/scope-planning.js';
 import { answerPhotoQuestion } from '../research/photo-answers.js';
@@ -461,6 +463,7 @@ export function handleCommand(
       if (p.inputRefs.some((ref) => ref.kind === 'artifact' && ref.id === p.artifactId))
         throw new DomainError('VALIDATION', 'Artifact cannot depend on itself');
       validateTasks(command);
+      if (p.content.kind === 'conversation-plan') validateConversationPlan(state, project.id, p.content);
       (state.artifacts[p.artifactId] ||= []).push({
         schemaVersion: 1,
         id: p.artifactId,
@@ -471,6 +474,7 @@ export function handleCommand(
         inputRefs: p.inputRefs,
         evidenceIds: p.evidenceIds,
         payload: p.content,
+        ...(p.content.kind === 'conversation-plan' ? { contextSignature: inputSignature(state, project.id) } : {}),
         createdAt: context.now,
         acceptedAt: null,
       });
@@ -537,7 +541,7 @@ export function handleCommand(
     command.type === 'SaveCandidateMeasurements' ||
     command.type === 'RecordFact' ||
     command.type === 'AttachEvidence' ||
-    (command.type === 'ProposeArtifact' && command.payload.content.kind === 'property-research')
+    (command.type === 'ProposeArtifact' && ['property-research', 'conversation-plan'].includes(command.payload.content.kind))
   ) {
     const previousBrief = latest(state.artifacts[`${project.id}:working-brief`]);
     const briefId = refreshPropertyBrief(state, project.id, context);

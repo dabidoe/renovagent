@@ -16,3 +16,4 @@ export * from './scope-planning.js';
 export * from './candidate-measurements.js';
 
 export * from './home-inventory.js';
+export * from './conversation-plan.js';

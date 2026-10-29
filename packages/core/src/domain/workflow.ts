@@ -8,7 +8,7 @@ import {
   type ArtifactPayload,
   type Run,
 } from '@unpermitted/contracts';
-import { latest, resolveRef } from './invalidate.js';
+import { latest, resolveRef, referenceCurrent } from './invalidate.js';
 const labels = {
   brief: 'Project brief',
   options: 'Option comparison',
@@ -253,6 +253,14 @@ export function handleWorkflow(
   context: CommandContext,
 ): { type: Workspace['events'][number]['type']; ids: string[] } | null {
   const projectId = command.projectId;
+  if (command.type === 'AppendMuseReply') {
+    const { planRef, messageId } = command.payload;
+    const plan = resolveRef(state, projectId, planRef);
+    if (planRef.kind !== 'artifact' || !('payload' in plan) || plan.payload.kind !== 'conversation-plan' || !referenceCurrent(state, projectId, planRef)) throw new DomainError('STALE', 'Muse reply requires a current conversation plan');
+    if (state.messages.some(m => m.id === messageId)) throw new DomainError('CONFLICT', 'Reply already exists');
+    state.messages.push({ id: messageId, projectId, role: 'assistant', mode: 'muse', text: plan.payload.response, evidenceIds: [], artifactRefs: [planRef], runId: null, at: context.now });
+    return { type: 'MessageAppended', ids: [messageId] };
+  }
   if (command.type === 'AppendMessage') {
     addMessage(state, projectId, command.payload.messageId, command.payload.text, context, {
       user: true,

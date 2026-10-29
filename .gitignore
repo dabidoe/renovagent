@@ -4,3 +4,7 @@ dist/
 server/.env
 
 .foundation-build/
+
+.local/
+pages-dist/
+atlas-credentials.env

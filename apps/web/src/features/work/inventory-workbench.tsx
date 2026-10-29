@@ -1,3 +1,4 @@
+import { ConnectedPhotos } from '../intake/connected-photos.js';
 import { useRef, useState, type FormEvent } from 'react';
 import { type Artifact, type Workspace, type Command } from '@unpermitted/contracts';
 import {
@@ -141,10 +142,11 @@ export function InventoryWorkbench(props: Props) {
       )}
       {!current && (
         <div className="iv-stale" role="alert">
-          The source context changed. These are historical observations. Import current research and
-          regions before saving new direction.
+          The source context changed. These are historical observations. Run a fresh Muse analysis
+          or import current research and regions before saving new direction.
         </div>
       )}
+      <ConnectedPhotos controller={controller} state={state} projectId={projectId} />
       <div className="iv-layout">
         <div className="iv-visual">
           <nav className="iv-rooms" aria-label="Annotated rooms">
@@ -173,8 +175,8 @@ export function InventoryWorkbench(props: Props) {
             {loaded && photo && !failed ? (
               <>
                 <img
-                  src={photo.imageUrl}
-                  alt={`Original listing view: ${photo.roomType}; model regions are approximate`}
+                  src={controller.photoUrl(photo.imageUrl, dimensions.sha256)}
+                  alt={`Original ${photo.imageUrl.startsWith('https://uploads.unpermitted.invalid/') ? 'uploaded' : 'listing'} view: ${photo.roomType}; model regions are approximate`}
                   referrerPolicy="no-referrer"
                   onError={() => setFailed(true)}
                 />
@@ -218,7 +220,11 @@ export function InventoryWorkbench(props: Props) {
               </>
             ) : (
               <div className="iv-load">
-                <span>ACTUAL LISTING PHOTOGRAPHY</span>
+                <span>
+                  {photo?.imageUrl.startsWith('https://uploads.unpermitted.invalid/')
+                    ? 'YOUR UPLOADED PHOTOGRAPH'
+                    : 'ACTUAL LISTING PHOTOGRAPHY'}
+                </span>
                 <h2>
                   See the home.
                   <br />
@@ -233,10 +239,12 @@ export function InventoryWorkbench(props: Props) {
                   }}
                   disabled={!photo}
                 >
-                  {failed ? 'Retry source image' : 'Load listing photos →'}
+                  {failed ? 'Retry source image' : 'Load source photo →'}
                 </button>
                 <small>
-                  External source images · rights unverified. No image is added to exports.
+                  {photo?.imageUrl.startsWith('https://uploads.unpermitted.invalid/')
+                    ? 'Private uploaded image · rights unverified. No image is added to exports.'
+                    : 'External source images · rights unverified. No image is added to exports.'}
                 </small>
               </div>
             )}
@@ -247,8 +255,18 @@ export function InventoryWorkbench(props: Props) {
               Approximate regions · not a measured drawing
             </span>
             {photo && (
-              <a href={photo.pageUrl} target="_blank" rel="noreferrer">
-                Listing source ↗
+              <a
+                href={
+                  photo.pageUrl.startsWith('https://uploads.unpermitted.invalid/')
+                    ? controller.photoUrl(photo.imageUrl)
+                    : photo.pageUrl
+                }
+                target="_blank"
+                rel="noreferrer"
+              >
+                {photo.pageUrl.startsWith('https://uploads.unpermitted.invalid/')
+                  ? 'Uploaded original ↗'
+                  : 'Listing source ↗'}
               </a>
             )}
           </div>
@@ -336,7 +354,11 @@ export function InventoryWorkbench(props: Props) {
               Source image hash: {dimensions.sha256.slice(0, 16)}…
             </p>
             {photo && (
-              <a href={photo.imageUrl} target="_blank" rel="noreferrer">
+              <a
+                href={controller.photoUrl(photo.imageUrl, dimensions.sha256)}
+                target="_blank"
+                rel="noreferrer"
+              >
                 Open original image ↗
               </a>
             )}
@@ -403,8 +425,11 @@ export function InventoryWorkbench(props: Props) {
       />
       {error && <p role="alert">{error}</p>}
       <footer className="hp-footer">
-        Muse analyzed source photos · decisions saved on this device · backend off · no
-        measurements, technical approval or construction release inferred
+        Muse analyzed source photos ·{' '}
+        {controller.connected
+          ? 'saved in local Mongo · backend connected'
+          : 'saved on this device · backend off'}{' '}
+        · no measurements, technical approval or construction release inferred
       </footer>
     </div>
   );

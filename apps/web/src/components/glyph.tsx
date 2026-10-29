@@ -21,6 +21,34 @@ export function Glyph({ name }: { name: string }) {
       </>
     ),
     menu: <path d="M4 6h16M4 12h16M4 18h16" />,
+    chevron: <path d="m8 10 4 4 4-4" />,
+    history: (
+      <>
+        <path d="M3 11a9 9 0 1 1 2.6 7M3 4v7h7" />
+        <path d="M12 7v5l3 2" />
+      </>
+    ),
+    plan: (
+      <>
+        <path d="m3 4 6-1 6 2 6-1v16l-6 1-6-2-6 1ZM9 3v16M15 5v16" />
+      </>
+    ),
+    materials: (
+      <>
+        <path d="m3 7 9-4 9 4-9 4-9-4Zm0 0v10l9 4 9-4V7M12 11v10M7.5 5 16 9" />
+      </>
+    ),
+    people: (
+      <>
+        <circle cx="9" cy="8" r="3" />
+        <path d="M3 21v-3a6 6 0 0 1 12 0v3M16 5a3 3 0 0 1 0 6M18 15a5 5 0 0 1 3 5" />
+      </>
+    ),
+    connection: (
+      <>
+        <path d="m10 13 4-4M8 15l-1 1a3.5 3.5 0 0 1-5-5l4-4a3.5 3.5 0 0 1 5 0m2 2 1-1a3.5 3.5 0 0 1 5 5l-4 4a3.5 3.5 0 0 1-5 0" />
+      </>
+    ),
   };
   return (
     <svg

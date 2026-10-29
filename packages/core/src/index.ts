@@ -27,3 +27,4 @@ export { scopeRecipeVersion, scopeQuestionBindings } from './research/scope-reci
 export * from './research/candidate-measurements.js';
 
 export * from './research/home-inventory.js';
+export * from './research/conversation.js';

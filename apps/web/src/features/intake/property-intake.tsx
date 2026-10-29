@@ -1,3 +1,4 @@
+import { ConnectedPhotos } from './connected-photos.js';
 import { PhotoReviewSummary } from './photo-review-summary.js';
 import { useEffect, useRef, useState } from 'react';
 import { type Artifact, type Workspace } from '@unpermitted/contracts';
@@ -93,6 +94,7 @@ export function PropertyIntake({
   const maps = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
   return (
     <section className="property-intake">
+      <ConnectedPhotos controller={controller} state={state} projectId={projectId} />
       <div className="intake-progress" aria-label="Project workflow">
         <span className="active">
           01 <b>Your place</b>
@@ -445,7 +447,11 @@ export function PropertyIntake({
                   </small>
                 </div>
               )}
-              <small>File handoff · Muse is not running in this app · backend off</small>
+              <small>
+                {controller.connected
+                  ? 'Connected Muse photo jobs available above · manual handoff remains optional'
+                  : 'File handoff · backend off'}
+              </small>
               {research && (
                 <small>
                   Export includes the current unreviewed sourced record, so Muse can build on what

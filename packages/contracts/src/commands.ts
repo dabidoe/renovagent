@@ -13,6 +13,7 @@ const envelope = {
   basePropertyRevision: revision.optional(),
 };
 export const commandSchema = z.discriminatedUnion('type', [
+  z.object({ ...envelope, type: z.literal('AppendMuseReply'), payload: z.object({ messageId: id, planRef: ref }).strict() }).strict(),
   z
     .object({
       ...envelope,

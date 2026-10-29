@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
 import { lookup } from 'node:dns/promises';
 import { isIP } from 'node:net';
+import { request as httpsRequest } from 'node:https';
 import { runMuse } from './muse-provider.js';
 import { z } from 'zod';
 import {
@@ -142,7 +143,9 @@ export function publicPhotoHost(address: string) {
       a === 127 ||
       (a === 169 && b === 254) ||
       (a === 172 && b >= 16 && b <= 31) ||
-      (a === 192 && b === 168) ||
+      (a === 192 && (b === 168 || b === 0 || b === 2)) ||
+      (a === 198 && (b === 18 || b === 19 || b === 51)) ||
+      (a === 203 && b === 0) ||
       a >= 224 ||
       (a === 100 && b >= 64 && b <= 127)
     );
@@ -162,29 +165,41 @@ export async function imageBytes(url: string) {
   const addresses = await lookup(parsed.hostname, { all: true });
   if (!addresses.length || addresses.some((a) => !publicPhotoHost(a.address)))
     throw Error('Photo host resolves to a non-public address');
-  const response = await fetch(url, {
-    redirect: 'error',
-    credentials: 'omit',
-    referrerPolicy: 'no-referrer',
-    signal: AbortSignal.timeout(30000),
+  // Pin the already-validated DNS address into the TLS request. A second DNS lookup
+  // must not be able to redirect an authorized public URL into the private network.
+  const response = await new Promise<import('node:http').IncomingMessage>((resolve, reject) => {
+    const pinned = addresses[0];
+    const request = httpsRequest(
+      parsed,
+      {
+        lookup: (_host, options, callback) => {
+          if (options.all) callback(null, [pinned] as never);
+          else callback(null, pinned.address, pinned.family);
+        },
+        signal: AbortSignal.timeout(30000),
+        headers: { Accept: 'image/jpeg,image/png,image/webp' },
+      },
+      resolve,
+    );
+    request.on('error', reject);
+    request.end();
   });
   if (
-    !response.ok ||
-    !/^image\/(jpeg|png|webp)(;|$)/i.test(response.headers.get('content-type') || '')
-  )
+    response.statusCode !== 200 ||
+    !/^image\/(jpeg|png|webp)(;|$)/i.test(String(response.headers['content-type'] || ''))
+  ) {
+    response.destroy();
     throw Error('Source did not return a supported image; no visual claim made');
-  const reader = response.body!.getReader(),
-    chunks: Uint8Array[] = [];
+  }
+  const chunks: Buffer[] = [];
   let size = 0;
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    size += value.length;
+  for await (const chunk of response) {
+    size += chunk.length;
     if (size > 5 * 1024 * 1024) {
-      await reader.cancel();
+      response.destroy();
       throw Error('Photo exceeds 5 MB');
     }
-    chunks.push(value);
+    chunks.push(chunk);
   }
   const bytes = Buffer.concat(chunks);
   const jpeg = bytes[0] === 255 && bytes[1] === 216 && bytes[2] === 255,
@@ -313,6 +328,7 @@ export async function runPhotoReview(
   baseFile: string | undefined,
   outputFile: string,
   resumeEvidence?: string,
+  loadImage: typeof imageBytes = imageBytes,
 ) {
   const job = manifestSchema.parse(JSON.parse(await readFile(jobFile, 'utf8'))),
     base = validateResearchForJob(
@@ -355,7 +371,7 @@ export async function runPhotoReview(
         sha256: string;
       }[] = [];
       for (const [index, photo] of batch.entries()) {
-        const image = await imageBytes(photo.imageUrl),
+        const image = await loadImage(photo.imageUrl),
           path = join(temp, `attachment-${index + 1}.${image.extension}`);
         await writeFile(path, image.bytes);
         attachments.push({ photo, path, sha256: image.sha256 });

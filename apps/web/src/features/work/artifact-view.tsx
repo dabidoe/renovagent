@@ -6,6 +6,7 @@ import { researchForArtifact, questionsForReviewedPhoto } from '@unpermitted/cor
 import { PlanningView } from '../technical/planning-view.js';
 import { type Workspace, type Artifact } from '@unpermitted/contracts';
 export const artifactTitles: Record<Artifact['payload']['kind'], string> = {
+  'conversation-plan': 'Conversation planning proposal',
   'photo-inventory': 'Visual home inventory',
   'inventory-direction': 'Your element direction',
   'candidate-measurements': 'Candidate measurement record',

@@ -9,12 +9,20 @@ export function Composer({
   projectId,
   busy,
   notesOnly = false,
+  compact = false,
+  onSent,
+  showQuestions = false,
+  onOpenTools,
 }: {
   controller: WorkspaceController;
   state: Workspace;
   projectId: string;
   busy: boolean;
   notesOnly?: boolean;
+  compact?: boolean;
+  onSent?: () => void;
+  showQuestions?: boolean;
+  onOpenTools?: () => void;
 }) {
   const questions = notesOnly ? [] : photoQuestions(state, projectId);
   const savedReply = notesOnly ? undefined : state.drafts[projectId]?.photoReply;
@@ -98,6 +106,7 @@ export function Composer({
         );
       else await controller.sendMessage(projectId, text, draftIds);
       setText('');
+      onSent?.();
     } catch {
       /* Controller preserves the unsent text and exposes the error. */
     }
@@ -115,7 +124,7 @@ export function Composer({
   }
   return (
     <form
-      className="conversation-composer"
+      className={`conversation-composer ${compact ? 'prompt-composer' : ''}`}
       onSubmit={send}
       onDragOver={(e) => e.preventDefault()}
       onDrop={(e) => {
@@ -131,8 +140,12 @@ export function Composer({
           </button>
         </p>
       )}
-      {questions.length > 0 && (
-        <div className="photo-question-context">
+      {questions.length > 0 && (!compact || showQuestions || questionId) && (
+        <details
+          className="photo-question-context"
+          open={questionId || showQuestions ? true : undefined}
+        >
+          <summary>Questions from your photos</summary>
           <div className="photo-question-heading">
             <strong>From your listing photos</strong>
             <span>
@@ -260,7 +273,7 @@ export function Composer({
               </p>
             </>
           )}
-        </div>
+        </details>
       )}
       {waiting.length > 0 && !question && (
         <label className="reply-context">
@@ -300,7 +313,7 @@ export function Composer({
         </div>
       ))}
       <label className="sr-only" htmlFor="project-message">
-        Message your planning guide
+        Your project message
       </label>
       <textarea
         id="project-message"
@@ -313,7 +326,7 @@ export function Composer({
               ? 'Your direction, or what you still need to find out…'
               : reply
                 ? 'Add the missing detail, or say “unknown”…'
-                : 'Add context, or answer a workflow question…'
+                : 'Describe an idea, add a detail, or share a photo…'
         }
         onChange={(e) => {
           setText(e.target.value);
@@ -327,15 +340,23 @@ export function Composer({
         }}
       />
       <div className="composer-controls">
-        <button
-          type="button"
-          className="link-button"
-          onClick={() => input.current?.click()}
-          disabled={fileBusy}
-        >
-          <Glyph name="plus" />
-          {fileBusy ? 'Saving file…' : 'Photo or document'}
-        </button>
+        <div className="composer-attachments">
+          <button
+            type="button"
+            className="link-button"
+            onClick={() => input.current?.click()}
+            disabled={fileBusy}
+          >
+            <Glyph name="plus" />
+            {fileBusy ? 'Saving file…' : 'Photo or document'}
+          </button>
+          {onOpenTools && (
+            <button type="button" className="link-button" onClick={onOpenTools}>
+              <Glyph name="menu" />
+              Tools
+            </button>
+          )}
+        </div>
         <button
           className="send"
           type="submit"
@@ -366,10 +387,13 @@ export function Composer({
           {error}
         </p>
       )}
-      <p className="composer-note">
-        Saved on this device. Uploads aren’t analyzed here. External Muse reviews are imported.
-        Backend off.
-      </p>
+      {!compact && (
+        <p className="composer-note">
+          {controller.connected
+            ? 'Saved in your local Mongo workspace. Photo analysis is available in the house tools; messages do not run a live assistant.'
+            : 'Saved on this device. Connect through the house tools to enable Muse photo analysis.'}
+        </p>
+      )}
     </form>
   );
 }

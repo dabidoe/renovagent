@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { mkdtemp, writeFile, chmod, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { runMuse } from '../../scripts/muse-provider.js';
+import { runMuse, withMuseBudget } from '../../scripts/muse-provider.js';
 test('Muse credentials use stdin, never argv, and are redacted from provider output and failures', async () => {
   const directory = await mkdtemp(join(tmpdir(), 'muse-auth-test-'));
   const previousPath = process.env.PATH,
@@ -13,11 +13,19 @@ test('Muse credentials use stdin, never argv, and are redacted from provider out
     const script = join(directory, 'muse');
     await writeFile(
       script,
-      `#!${process.execPath}\nlet input='';process.stdin.on('data',d=>input+=d);process.stdin.on('end',()=>{if(process.argv.includes('--fail')){process.stderr.write('rejected credential '+input.trim());process.exitCode=2;}else process.stdout.write(JSON.stringify({args:process.argv.slice(2),received:input.trim()}));});\n`,
+      `#!${process.execPath}\nlet input='';process.stdin.on('data',d=>input+=d);process.stdin.on('end',()=>{if(process.argv.includes('--hang')){setInterval(()=>{},1000);return;}if(process.argv.includes('--fail')){process.stderr.write('rejected credential '+input.trim());process.exitCode=2;}else process.stdout.write(JSON.stringify({args:process.argv.slice(2),received:input.trim()}));});\n`,
     );
     await chmod(script, 0o755);
     process.env.PATH = directory + ':' + previousPath;
     process.env.MUSE_API_KEY = fakeKey;
+    const cancelled = new AbortController();
+    const pending = withMuseBudget(cancelled.signal, 1, () => runMuse(['exec', '--hang'], 5000));
+    setTimeout(() => cancelled.abort(), 100);
+    await assert.rejects(pending, /cancelled/);
+    await assert.rejects(
+      withMuseBudget(new AbortController().signal, 0, () => runMuse(['exec'], 5000)),
+      /budget exhausted/,
+    );
     const result = JSON.parse(await runMuse(['exec', '--json'], 5000));
     assert.deepEqual(result.args, ['exec', '--json', '--api-key-stdin']);
     assert.equal(result.received, '[REDACTED]');

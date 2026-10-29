@@ -1,3 +1,4 @@
+import { conversationPlanSchema } from './conversation-plan.js';
 import { photoInventoryPayloadSchema, inventoryDirectionSchema } from './home-inventory.js';
 import { candidateMeasurementsSchema, candidateChecksSchema } from './candidate-measurements.js';
 import { projectOptionsSchema, projectWorkPlanSchema } from './scope-planning.js';
@@ -24,6 +25,7 @@ const task = z
   .strict();
 export const artifactPayloadSchema = z.discriminatedUnion('kind', [
   ...planningPayloads,
+  conversationPlanSchema,
   photoInventoryPayloadSchema,
   inventoryDirectionSchema,
   candidateMeasurementsSchema,

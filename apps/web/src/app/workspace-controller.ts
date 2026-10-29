@@ -1,3 +1,8 @@
+import {
+  HttpProjectRepository,
+  workspaceRequest,
+  encodeBlobs,
+} from '../adapters/http/project-repository.js';
 import { inventoryImportSchema } from '@unpermitted/contracts';
 import { type CandidateSurvey, type InputRef } from '@unpermitted/contracts';
 import {
@@ -39,12 +44,54 @@ export class WorkspaceController {
   private queue: Promise<unknown> = Promise.resolve();
   private snapshot: Snapshot;
   constructor(
-    readonly repository: ProjectRepository,
+    public repository: ProjectRepository,
     state: Workspace,
   ) {
     this.snapshot = { workspace: state, busy: false, error: null };
   }
+  get connected() {
+    return this.repository instanceof HttpProjectRepository;
+  }
+  connectBackend() {
+    const work = this.queue.then(async () => {
+      this.emit({ busy: true, error: null });
+      try {
+        const remote = await HttpProjectRepository.open();
+        const current = await remote.read();
+        if (!Object.keys(current.projects).length) {
+          const backup = await this.repository.exportBackup();
+          await workspaceRequest('/import', {
+            workspace: backup.workspace,
+            blobs: await encodeBlobs(backup.blobs),
+          });
+        }
+        const saved = await remote.read();
+        this.repository.close();
+        this.repository = remote;
+        localStorage.setItem('unpermitted-storage-mode', 'mongo');
+        this.emit({ workspace: saved });
+      } catch (error) {
+        this.emit({ error: error instanceof Error ? error.message : 'Cannot connect to Mongo' });
+        throw error;
+      } finally {
+        this.emit({ busy: false });
+      }
+    });
+    this.queue = work.catch(() => {});
+    return work;
+  }
+  photoUrl(url: string, sha256?: string) {
+    if (this.connected && sha256) return `/api/workspace/photo-assets/${sha256}`;
+    if (!this.connected || !url.startsWith('https://uploads.unpermitted.invalid/')) return url;
+    const evidence = this.snapshot.workspace.evidence[url.split('/').at(-1)!];
+    const id = evidence?.source.attachment?.blobId;
+    return id ? `/api/workspace/blobs/${encodeURIComponent(id)}` : url;
+  }
   static async open() {
+    if (localStorage.getItem('unpermitted-storage-mode') === 'mongo') {
+      const repository = await HttpProjectRepository.open();
+      return new WorkspaceController(repository, await repository.read());
+    }
     const repository = await IndexedDbProjectRepository.open({
       name: 'unpermitted-workspace',
       ownerId: 'local-homeowner',

@@ -572,8 +572,10 @@ export function HomePlan(props: Props) {
         </div>
       )}
       <footer className="hp-footer">
-        Saved on this device · Backend off · Imported Muse evidence + local study templates · No
-        live assistant
+        {controller.connected
+          ? 'Saved in local Mongo · connected photo analysis available in property research'
+          : 'Saved on this device · Backend off'}{' '}
+        · Muse evidence + local study templates · No live assistant
       </footer>
     </div>
   );

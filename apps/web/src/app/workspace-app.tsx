@@ -39,16 +39,43 @@ export function App({ controller }: { controller: WorkspaceController }) {
   const project = state.projects[active];
   const view = state.views[active] || defaultView;
   const [modal, setModal] = useState<
-    'new' | 'import' | 'facts' | 'about' | 'projects' | 'archive' | null
+    | 'new'
+    | 'import'
+    | 'facts'
+    | 'about'
+    | 'projects'
+    | 'archive'
+    | 'history'
+    | 'tools'
+    | 'materials'
+    | 'contractors'
+    | 'connections'
+    | null
   >(null);
   const [editingFact, setEditingFact] = useState<Fact | undefined>();
   const [sourceId, setSourceId] = useState<string | null>(null);
-  const [split, setSplit] = useState(32);
-  const [notesOpen, setNotesOpen] = useState(false);
+  const [workOpen, setWorkOpen] = useState(false);
+  const [showRecent, setShowRecent] = useState(false);
+  const [showQuestions, setShowQuestions] = useState(false);
+  const [startPrompt, setStartPrompt] = useState('');
+  useEffect(() => {
+    // A landing-page brief is a draft for a new project, never a write to the active home.
+    try {
+      const brief = sessionStorage.getItem('unpermitted.project-brief');
+      if (brief) {
+        sessionStorage.removeItem('unpermitted.project-brief');
+        setStartPrompt(brief.slice(0, 300));
+        setModal('new');
+      }
+    } catch {
+      // The normal workspace remains usable when session storage is unavailable.
+    }
+  }, []);
+
   const inventoryOverview = Boolean(
     project &&
       view.surface === 'overview' &&
-      ['brief', 'options', 'plan'].includes(view.stage) &&
+      view.stage === 'brief' &&
       homeInventory(state, active),
   );
   const homePlanning =
@@ -68,14 +95,23 @@ export function App({ controller }: { controller: WorkspaceController }) {
     ? state.artifacts[view.artifactRef.id]?.find((a) => a.revision === view.artifactRef!.revision)
     : undefined;
   const messages = state.messages.filter((m) => m.projectId === active);
-  const attachments = Object.values(state.evidence).filter(
-    (e) => e.projectId === active && e.source.attachment,
-  );
   const workPane = useRef<HTMLElement>(null);
   useEffect(() => {
     if (workPane.current) workPane.current.scrollTop = 0;
-  }, [active, view.surface, view.stage, view.artifactRef?.id, view.artifactRef?.revision]);
+  }, [
+    active,
+    view.surface,
+    view.stage,
+    view.artifactRef?.id,
+    view.artifactRef?.revision,
+    workOpen,
+  ]);
   const logEnd = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    setWorkOpen(false);
+    setShowRecent(false);
+    setShowQuestions(false);
+  }, [active]);
   useEffect(() => {
     const frame = requestAnimationFrame(() => {
       const log = logEnd.current?.parentElement;
@@ -94,14 +130,16 @@ export function App({ controller }: { controller: WorkspaceController }) {
     setEditingFact(fact);
     setModal('facts');
   };
+  function openWork(patch: Parameters<WorkspaceController['setView']>[1] = {}) {
+    setModal(null);
+    safe(controller.setView(active, { tab: 'work', ...patch }).then(() => setWorkOpen(true)));
+  }
   const openArtifact = (artifact: Artifact) =>
-    safe(
-      controller.setView(active, {
-        surface: 'artifact',
-        artifactRef: { kind: 'artifact', id: artifact.id, revision: artifact.revision },
-        tab: 'work',
-      }),
-    );
+    openWork({
+      surface: 'artifact',
+      artifactRef: { kind: 'artifact', id: artifact.id, revision: artifact.revision },
+      tab: 'work',
+    });
   const openImport = () => {
     setLocalError('');
     try {
@@ -135,647 +173,639 @@ export function App({ controller }: { controller: WorkspaceController }) {
       </div>
     );
   }
-  function navigation() {
+  const currentSource = sourceId ? state.evidence[sourceId] : undefined;
+  function renderMessages(items: typeof messages) {
     return (
-      <>
-        <div className="brand">
-          unpermitted<span>.</span>
-          <small>ai</small>
-        </div>
-        <button className="new-project-button" onClick={() => setModal('new')}>
-          <Glyph name="plus" />
-          New project
-        </button>
-        <p className="nav-caption">{homePlanning ? 'YOUR HOME' : 'YOUR PROJECTS'}</p>
-        {homePlanning ? (
-          <>
-            <div className="hp-sidebar-property">{state.properties[project.propertyId].name}</div>
-            <button className="hp-switch-project" onClick={() => setModal('projects')}>
-              Switch project ↗
-            </button>
-          </>
-        ) : (
-          projectButtons()
-        )}
-        {project && (
-          <>
-            <p className="nav-caption lifecycle-caption">THE PROJECT JOURNEY</p>
-            <nav className="lifecycle-nav" aria-label="Project lifecycle">
-              {stages.slice(0, 3).map((stage, i) => {
-                const run = runs.find((r) => r.kind === stage);
-                return (
-                  <button
-                    key={stage}
-                    className={view.stage === stage ? 'current' : ''}
-                    aria-current={view.stage === stage ? 'step' : undefined}
-                    onClick={() =>
-                      safe(controller.setView(active, { stage, surface: 'overview', tab: 'work' }))
-                    }
-                  >
-                    <span className="stage-index">{String(i + 1).padStart(2, '0')}</span>
-                    <span>
-                      {
-                        [
-                          'Your place',
-                          'The plan',
-                          'Technical checks',
-                          'Prepare the job',
-                          'Coordinate',
-                          'Guide execution',
-                          'Handover',
-                        ][i]
-                      }
-                    </span>
-                    {run && (
-                      <span
-                        className={`stage-state ${run.state === 'succeeded' ? 'reviewed' : 'has-work'}`}
-                      />
-                    )}
-                  </button>
-                );
-              })}
-            </nav>
-            <details className="later-stages">
-              <summary>Prepare, build & hand over</summary>
-              {stages.slice(3).map((stage) => (
-                <button
-                  key={stage}
-                  onClick={() =>
-                    safe(controller.setView(active, { stage, surface: 'overview', tab: 'work' }))
-                  }
-                >
-                  {stageCopy[stage].label}
-                </button>
-              ))}
-            </details>
-            <div className="library-nav">
-              <button onClick={() => setModal('archive')}>
-                <Glyph name="file" />
-                Artifacts<span>{artifactGroups.length}</span>
-              </button>
-              <button
-                onClick={() =>
-                  safe(controller.setView(active, { surface: 'sources', tab: 'work' }))
-                }
-              >
-                <Glyph name="source" />
-                Facts & sources<span>{facts.length + attachments.length}</span>
-              </button>
-              <button
-                onClick={() =>
-                  safe(controller.setView(active, { surface: 'activity', tab: 'work' }))
-                }
-              >
-                <Glyph name="activity" />
-                Activity<span>{runs.length}</span>
-              </button>
+      <div className="prompt-messages">
+        {' '}
+        {items.map((m) => (
+          <article className={`conversation-message ${m.role}`} key={m.id}>
+            <div className="message-label">
+              {m.mode === 'simulated'
+                ? 'Dwang · simulated'
+                : m.mode === 'system'
+                  ? 'Project record'
+                  : m.text.startsWith('[Example')
+                    ? 'Example input'
+                    : 'You'}
             </div>
-          </>
-        )}
-        <footer className="nav-footer">
-          <span>
-            <i />
-            Saved on this device
-          </span>
-          <button className="link-button subtle" onClick={openImport}>
-            Import previous preview
-          </button>
-          <button className="link-button subtle" onClick={() => setModal('about')}>
-            About this workspace
-          </button>
-        </footer>
-      </>
+            <p>{m.text}</p>
+            {m.evidenceIds.map((id) => (
+              <Media key={id} controller={controller} state={state} evidenceId={id} />
+            ))}
+            {m.artifactRefs.map((ref) => (
+              <button
+                key={`${ref.id}:${ref.revision}`}
+                className="message-artifact"
+                onClick={() =>
+                  openWork({
+                    surface: 'artifact',
+                    artifactRef: ref,
+                    tab: 'work',
+                  })
+                }
+              >
+                <Glyph name="file" />
+                <span>
+                  {m.mode === 'system'
+                    ? artifactTitle(
+                        state.artifacts[ref.id].find((a) => a.revision === ref.revision)!,
+                      )
+                    : 'Open saved output'}{' '}
+                  <small>Revision {ref.revision} · exact historical version</small>
+                </span>
+                <Glyph name="right" />
+              </button>
+            ))}
+          </article>
+        ))}
+      </div>
     );
   }
-  const currentSource = sourceId ? state.evidence[sourceId] : undefined;
+  function openPlan() {
+    const priority = ['conversation-plan', 'project-work-plan', 'project-options', 'project-brief'];
+    const candidates = artifactGroups.map((versions) => latest(versions)!);
+    const artifact = priority.flatMap((kind) =>
+      candidates.filter((a) => a.payload.kind === kind),
+    )[0];
+    if (artifact) openArtifact(artifact);
+    else openWork({ stage: 'plan', surface: 'overview' });
+  }
+  const workTitle =
+    view.surface === 'artifact' && selected
+      ? artifactTitle(selected)
+      : view.surface === 'sources'
+        ? 'Facts & sources'
+        : view.surface === 'activity'
+          ? 'Activity'
+          : inventoryOverview
+            ? 'Your house'
+            : stageCopy[view.stage].label;
   return (
-    <div
-      className={`project-workspace ${homePlanning ? 'home-planning-shell' : ''}`}
-      style={{ '--conversation-share': `${split}%` } as React.CSSProperties}
-    >
-      <aside className="workspace-sidebar">{navigation()}</aside>
-      <div className="workspace-main">
-        <header className="project-header">
-          <div className="project-context">
-            <button
-              className="icon-btn mobile-only"
-              aria-label="Open projects"
-              onClick={() => setModal('projects')}
-            >
-              <Glyph name="menu" />
-            </button>
+    <div className="prompt-workspace">
+      <header className="prompt-header">
+        <button
+          className="prompt-brand"
+          onClick={() => {
+            setWorkOpen(false);
+            setShowRecent(false);
+          }}
+          aria-label="Unpermitted home"
+        >
+          <span className="prompt-brand-symbol">
             <Glyph name="home" />
-            <div>
-              <span>
-                {project
-                  ? state.properties[project.propertyId].name
-                  : 'YOUR HOME, YOUR NEXT CHAPTER'}
-              </span>
-              <strong>{project?.name || 'A home improvement workspace'}</strong>
+          </span>
+          <span>
+            unpermitted<span className="brand-period">.</span>
+          </span>
+        </button>
+        <button
+          className="prompt-project-picker"
+          aria-label={project ? `Switch project: ${project.name}` : 'Choose a home'}
+          onClick={() => setModal('projects')}
+        >
+          <span>
+            {project ? state.properties[project.propertyId].name.split(',')[0] : 'Choose a home'}
+          </span>
+          <Glyph name="chevron" />
+        </button>
+      </header>
+      {(error || localError) && (
+        <div className="error-banner" role="alert">
+          <span>{error || localError}</span>
+          <button
+            onClick={() => {
+              controller.clearError();
+              setLocalError('');
+            }}
+          >
+            Dismiss
+          </button>
+          <button onClick={() => safe(controller.refresh())}>Reload records</button>
+        </div>
+      )}
+      <main className={`prompt-main ${showRecent ? 'has-conversation' : ''}`}>
+        <div className="prompt-intro">
+          <h1>What would you like to improve?</h1>
+        </div>
+        {project && showRecent && (
+          <section className="prompt-recent" aria-label="Recent conversation" aria-live="polite">
+            <div className="prompt-section-label">
+              <span>Saved to this project</span>
+              <button onClick={() => setModal('history')}>
+                View history <Glyph name="history" />
+              </button>
             </div>
-          </div>
-          <div className="header-tools">
-            <span className="simulation-badge">
-              <i />
-              {homePlanning ? 'Local workspace · backend off' : 'Local planning · agents simulated'}
-            </span>
-            <button className="text-button" onClick={() => setModal('about')}>
-              How it works
-            </button>
-          </div>
-        </header>
-        {(error || localError) && (
-          <div className="error-banner" role="alert">
-            <span>{error || localError}</span>
-            <button
-              onClick={() => {
-                controller.clearError();
-                setLocalError('');
-              }}
-            >
-              Dismiss
-            </button>
-            <button onClick={() => safe(controller.refresh())}>Reload records</button>
-          </div>
+            {renderMessages(messages.slice(-3))}
+            <div ref={logEnd} />
+          </section>
         )}
-        {!project ? (
-          <main className="workspace-welcome">
-            <div className="welcome-eyebrow">
-              <Glyph name="home" />A WORKSPACE FOR THE WHOLE JOB
-            </div>
-            <h1>
-              From “what if”
-              <br />
-              to <em>work well done.</em>
-            </h1>
-            <p>
-              Investigate the space. Compare the options. Resolve the details.
-              <br />
-              Keep the plan, the work, and the conversation together.
-            </p>
-            <div className="welcome-actions">
-              <button className="primary" onClick={() => setModal('new')}>
-                Start your project <Glyph name="right" />
-              </button>
-              <button
-                className="secondary"
-                disabled={busy}
-                onClick={() => safe(controller.sampleProject())}
-              >
-                {busy ? 'Preparing the example…' : 'Explore a simulated project'}
-              </button>
-            </div>
-            <div className="journey-preview">
-              {[
-                'Understand the property',
-                'Explore & resolve',
-                'Prepare & coordinate',
-                'Build & hand over',
-              ].map((text, i) => (
-                <div key={text}>
-                  <span>0{i + 1}</span>
-                  <strong>{text}</strong>
-                </div>
-              ))}
-            </div>
-            <p className="welcome-disclosure">
-              Local prototype · simulated workflow, real persistence.
-              <br />
-              No model, backend, code verification, or photo analysis connected.
-            </p>
-            <button className="link-button" onClick={openImport}>
-              Bring in your previous preview project →
-            </button>
-          </main>
+        {project ? (
+          <Composer
+            key={active}
+            controller={controller}
+            state={state}
+            projectId={active}
+            busy={busy}
+            compact
+            showQuestions={showQuestions}
+            onOpenTools={() => setModal('tools')}
+            onSent={() => setShowRecent(true)}
+          />
         ) : (
-          <>
-            <div className="mobile-switch" role="group" aria-label="Workspace view">
-              <button
-                aria-pressed={view.tab === 'work'}
-                onClick={() => safe(controller.setView(active, { tab: 'work' }))}
-              >
-                <Glyph name="file" />
-                The work
-              </button>
-              <button
-                aria-pressed={view.tab === 'conversation'}
-                onClick={() => safe(controller.setView(active, { tab: 'conversation' }))}
-              >
-                <Glyph name="chat" />
-                Conversation{runs.some((r) => r.state === 'waiting_for_input') && <i />}
+          <form
+            className="prompt-start"
+            onSubmit={(e) => {
+              e.preventDefault();
+              setModal('new');
+            }}
+          >
+            <label className="sr-only" htmlFor="start-prompt">
+              What would you like to improve?
+            </label>
+            <textarea
+              id="start-prompt"
+              maxLength={300}
+              value={startPrompt}
+              onChange={(e) => setStartPrompt(e.target.value)}
+              placeholder="I’m thinking about updating my kitchen…"
+            />
+            <div>
+              <span>Give your idea a place to grow</span>
+              <button className="send" aria-label="Start a project">
+                <Glyph name="arrow" />
               </button>
             </div>
-            <div
-              className={`workspace-columns mobile-${view.tab} ${homePlanning ? `home-workspace ${notesOpen ? '' : 'home-wide'}` : ''}`}
-            >
-              <main className="work-pane" ref={workPane}>
-                <div className="work-toolbar">
-                  <div className="work-breadcrumb">
-                    <span>THE WORK</span>
-                    <span>/</span>
-                    <strong>
-                      {view.surface === 'sources'
-                        ? 'Facts & sources'
-                        : view.surface === 'activity'
-                          ? 'Activity'
-                          : stageCopy[view.stage].label}
-                    </strong>
-                  </div>
-                  {homePlanning && (
-                    <button
-                      className="home-notes-toggle"
-                      aria-pressed={notesOpen}
-                      onClick={() => setNotesOpen(!notesOpen)}
-                    >
-                      {notesOpen ? 'Close project notes' : 'Project notes ↗'}
-                    </button>
-                  )}
-                  <label className="layout-control">
-                    Split{' '}
-                    <input
-                      type="range"
-                      aria-label="Conversation panel width"
-                      min="30"
-                      max="48"
-                      value={split}
-                      onChange={(e) => setSplit(+e.target.value)}
-                    />
-                  </label>
+          </form>
+        )}
+        {!project && (
+          <button
+            className="prompt-example"
+            disabled={busy}
+            onClick={() => safe(controller.sampleProject())}
+          >
+            {busy ? 'Opening example…' : 'Or explore a clearly labeled example'}{' '}
+            <Glyph name="right" />
+          </button>
+        )}
+        {project && (
+          <p className="prompt-disclosure">Saved project notes · Live chat not connected</p>
+        )}
+      </main>
+      {workOpen && project && (
+        <Modal className="work-dialog" title={workTitle} onClose={() => setWorkOpen(false)}>
+          <main className="work-pane" ref={workPane}>
+            {view.surface === 'artifact' && selected ? (
+              <ArtifactPanel
+                selected={selected}
+                state={state}
+                controller={controller}
+                busy={busy}
+                onSource={setSourceId}
+              />
+            ) : view.surface === 'sources' ? (
+              <SourcesPanel
+                state={state}
+                controller={controller}
+                projectId={active}
+                onEdit={openFacts}
+                onSource={setSourceId}
+              />
+            ) : view.surface === 'activity' ? (
+              <>
+                <div className="surface-heading">
+                  <p className="eyebrow">PERSISTED WORK, NOT A LOADING ANIMATION</p>
+                  <h1>Activity & checkpoints</h1>
+                  <p>
+                    Advance a local fixture, pause for a clarification, retry a failure, or cancel.
+                    Checkpoints and outputs survive refresh.
+                  </p>
                 </div>
-                {view.surface === 'artifact' && selected ? (
-                  <ArtifactPanel
-                    selected={selected}
-                    state={state}
-                    controller={controller}
-                    busy={busy}
-                    onSource={setSourceId}
-                  />
-                ) : view.surface === 'sources' ? (
-                  <SourcesPanel
-                    state={state}
-                    controller={controller}
-                    projectId={active}
-                    onEdit={openFacts}
-                    onSource={setSourceId}
-                  />
-                ) : view.surface === 'activity' ? (
-                  <>
-                    <div className="surface-heading">
-                      <p className="eyebrow">PERSISTED WORK, NOT A LOADING ANIMATION</p>
-                      <h1>Activity & checkpoints</h1>
-                      <p>
-                        Advance a local fixture, pause for a clarification, retry a failure, or
-                        cancel. Checkpoints and outputs survive refresh.
-                      </p>
-                    </div>
-                    {runs.map((run) => (
-                      <RunCard key={run.id} run={run} controller={controller} busy={busy} />
-                    ))}
-                    {!runs.length && (
-                      <p className="empty-copy">
-                        No simulations yet. Choose a stage of the project to request one.
-                      </p>
-                    )}
-                    <h2 className="section-heading">Your decisions</h2>
-                    <div className="decision-history">
-                      {Object.values(state.decisions)
-                        .filter((d) => d.projectId === active)
-                        .reverse()
-                        .map((d) => (
-                          <section key={d.id}>
-                            <span className="eyebrow">
-                              {d.outcome === 'accepted' ? 'ACCEPTED BY YOU' : 'DECLINED BY YOU'}
-                            </span>
-                            <p>
-                              {d.outcome === 'accepted'
-                                ? 'Direction accepted for the project record.'
-                                : 'Proposal declined; its history is retained.'}
-                            </p>
-                            {d.artifactRefs.map((ref) => (
-                              <button
-                                key={ref.id}
-                                className="link-button"
-                                onClick={() =>
-                                  safe(
-                                    controller.setView(active, {
-                                      surface: 'artifact',
-                                      artifactRef: ref,
-                                      tab: 'work',
-                                    }),
-                                  )
-                                }
-                              >
-                                Inspect decision artifact · revision {ref.revision} →
-                              </button>
-                            ))}
-                          </section>
-                        ))}
-                    </div>
-                    <h2 className="section-heading">Project audit trail</h2>
-                    <ol className="audit-list">
-                      {state.events
-                        .filter((e) => e.projectId === active)
-                        .slice()
-                        .reverse()
-                        .slice(0, 35)
-                        .map((e) => (
-                          <li key={e.id}>
-                            <strong>{e.type.replace(/([a-z])([A-Z])/g, '$1 $2')}</strong>
-                            <span>
-                              Project revision {e.projectRevision} ·{' '}
-                              {new Date(e.at).toLocaleTimeString([], {
-                                hour: '2-digit',
-                                minute: '2-digit',
-                              })}
-                            </span>
-                          </li>
-                        ))}
-                    </ol>
-                  </>
-                ) : inventoryOverview ? (
-                  <InventoryWorkbench
-                    key={`${active}:${homeInventory(state, active)?.revision}`}
-                    state={state}
-                    projectId={active}
-                    controller={controller}
-                    busy={busy}
-                    onArtifact={openArtifact}
-                  />
-                ) : homePlanning ? (
-                  <HomePlan
-                    key={active}
-                    state={state}
-                    projectId={active}
-                    controller={controller}
-                    busy={busy}
-                    onArtifact={openArtifact}
-                  />
-                ) : view.stage === 'brief' ? (
-                  <PropertyIntake
-                    key={active}
-                    state={state}
-                    projectId={active}
-                    controller={controller}
-                    busy={busy}
-                    onArtifact={openArtifact}
-                  />
-                ) : (
-                  <>
-                    <div className="surface-heading">
-                      <div className="stage-number">
-                        0{stages.indexOf(view.stage) + 1} / THE PROJECT JOURNEY
-                      </div>
-                      <h1>{stageCopy[view.stage].label}</h1>
-                      <p>{stageCopy[view.stage].description}</p>
-                    </div>
-                    {view.stage === 'technical' && photoQuestions(state, active).length > 0 && (
-                      <CandidateMeasurementsPanel
-                        key={active}
-                        state={state}
-                        projectId={active}
-                        controller={controller}
-                        busy={busy}
-                      />
-                    )}
-                    {view.stage === 'technical' && (
-                      <PlanningPanel
-                        key={active}
-                        state={state}
-                        projectId={active}
-                        controller={controller}
-                        busy={busy}
-                      />
-                    )}
-                    {['options', 'plan'].includes(view.stage) &&
-                      photoQuestions(state, active).length > 0 && (
-                        <ScopePlannerEntry
-                          state={state}
-                          projectId={active}
-                          controller={controller}
-                          busy={busy}
-                        />
-                      )}
-                    {view.stage !== 'technical' &&
-                      !(
-                        ['options', 'plan'].includes(view.stage) &&
-                        photoQuestions(state, active).length > 0
-                      ) && (
-                        <section className="next-work">
-                          <div className="next-work-icon">
-                            <Glyph name="activity" />
-                          </div>
-                          <div>
-                            <span className="eyebrow">A BOUNDED NEXT PIECE OF WORK</span>
-                            <h2>{workLabels[view.stage]}</h2>
-                            <p>
-                              {view.stage === 'options'
-                                ? 'Explore two approaches, identify tradeoffs, and expose what still needs investigation.'
-                                : 'Build an inspectable working artifact from the details recorded so far.'}
-                            </p>
-                            <button
-                              className="primary"
-                              disabled={
-                                busy ||
-                                runs.some(
-                                  (r) =>
-                                    r.kind === view.stage &&
-                                    !['succeeded', 'failed', 'cancelled'].includes(r.state),
-                                )
-                              }
-                              onClick={() => safe(controller.requestWork(active, view.stage))}
-                            >
-                              Start simulated work <Glyph name="right" />
-                            </button>
-                            <span className="small-note">
-                              Local fixture · no AI, web research, or external action
-                            </span>
-                          </div>
-                        </section>
-                      )}
-                    {runs
-                      .filter(
-                        (r) =>
-                          r.kind === view.stage && !['succeeded', 'cancelled'].includes(r.state),
-                      )
-                      .map((r) => (
-                        <RunCard key={r.id} run={r} controller={controller} busy={busy} />
-                      ))}
-                    <div className="section-heading-row">
-                      <h2 className="section-heading">
-                        Project artifacts <span>{artifactGroups.length}</span>
-                      </h2>
-                      <button
-                        className="text-button"
-                        onClick={() => safe(controller.setView(active, { surface: 'sources' }))}
-                      >
-                        Inspect facts & sources →
-                      </button>
-                    </div>
-                    <div className="artifact-library">
-                      {artifactGroups.map((versions) => {
-                        const a = latest(versions)!;
-                        return (
-                          <button
-                            className="artifact-tile"
-                            key={a.id}
-                            onClick={() => openArtifact(a)}
-                          >
-                            <span className="artifact-tile-icon">
-                              <Glyph name="file" />
-                            </span>
-                            <div>
-                              <strong>{artifactTitle(a)}</strong>
-                              <span>
-                                r{a.revision} ·{' '}
-                                {a.freshness === 'stale'
-                                  ? 'Inputs changed'
-                                  : a.lifecycle === 'accepted'
-                                    ? 'Accepted'
-                                    : a.lifecycle === 'rejected'
-                                      ? 'Declined'
-                                      : 'Decision needed'}
-                              </span>
-                            </div>
-                            <Glyph name="right" />
-                          </button>
-                        );
-                      })}
-                      {!artifactGroups.length && (
-                        <div className="empty-artifacts">
-                          <Glyph name="file" />
-                          <p>
-                            The work will land here.
-                            <span>Start a simulation to create your first versioned artifact.</span>
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                    <section className="workspace-facts-preview">
-                      <div>
-                        <p className="eyebrow">THE PROJECT’S STARTING POINT</p>
-                        <h2>A record that grows with the job.</h2>
-                      </div>
-                      <button className="secondary" onClick={() => openFacts()}>
-                        Add a detail
-                      </button>
-                      {facts.slice(0, 3).map((f) => (
-                        <p key={f.id}>
-                          <span>{f.key}</span>
-                          {factText(f)}
-                        </p>
-                      ))}
-                    </section>
-                  </>
+                {runs.map((run) => (
+                  <RunCard key={run.id} run={run} controller={controller} busy={busy} />
+                ))}
+                {!runs.length && (
+                  <p className="empty-copy">
+                    No simulations yet. Choose a stage of the project to request one.
+                  </p>
                 )}
-              </main>
-              <aside className="conversation-pane" aria-label="Project conversation">
-                <header className="conversation-heading">
-                  <div className="dwang-avatar">
-                    d<span>.</span>
+                <h2 className="section-heading">Your decisions</h2>
+                <div className="decision-history">
+                  {Object.values(state.decisions)
+                    .filter((d) => d.projectId === active)
+                    .reverse()
+                    .map((d) => (
+                      <section key={d.id}>
+                        <span className="eyebrow">
+                          {d.outcome === 'accepted' ? 'ACCEPTED BY YOU' : 'DECLINED BY YOU'}
+                        </span>
+                        <p>
+                          {d.outcome === 'accepted'
+                            ? 'Direction accepted for the project record.'
+                            : 'Proposal declined; its history is retained.'}
+                        </p>
+                        {d.artifactRefs.map((ref) => (
+                          <button
+                            key={ref.id}
+                            className="link-button"
+                            onClick={() =>
+                              safe(
+                                controller.setView(active, {
+                                  surface: 'artifact',
+                                  artifactRef: ref,
+                                  tab: 'work',
+                                }),
+                              )
+                            }
+                          >
+                            Inspect decision artifact · revision {ref.revision} →
+                          </button>
+                        ))}
+                      </section>
+                    ))}
+                </div>
+                <h2 className="section-heading">Project audit trail</h2>
+                <ol className="audit-list">
+                  {state.events
+                    .filter((e) => e.projectId === active)
+                    .slice()
+                    .reverse()
+                    .slice(0, 35)
+                    .map((e) => (
+                      <li key={e.id}>
+                        <strong>{e.type.replace(/([a-z])([A-Z])/g, '$1 $2')}</strong>
+                        <span>
+                          Project revision {e.projectRevision} ·{' '}
+                          {new Date(e.at).toLocaleTimeString([], {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </span>
+                      </li>
+                    ))}
+                </ol>
+              </>
+            ) : inventoryOverview ? (
+              <InventoryWorkbench
+                key={`${active}:${homeInventory(state, active)?.revision}`}
+                state={state}
+                projectId={active}
+                controller={controller}
+                busy={busy}
+                onArtifact={openArtifact}
+              />
+            ) : homePlanning ? (
+              <HomePlan
+                key={active}
+                state={state}
+                projectId={active}
+                controller={controller}
+                busy={busy}
+                onArtifact={openArtifact}
+              />
+            ) : view.stage === 'brief' ? (
+              <PropertyIntake
+                key={active}
+                state={state}
+                projectId={active}
+                controller={controller}
+                busy={busy}
+                onArtifact={openArtifact}
+              />
+            ) : (
+              <>
+                <div className="surface-heading">
+                  <div className="stage-number">
+                    0{stages.indexOf(view.stage) + 1} / THE PROJECT JOURNEY
                   </div>
-                  <div>
-                    <strong>{homePlanning ? 'Project notes' : 'Dwang'}</strong>
-                    <span>
-                      {homePlanning
-                        ? 'Saved context · no live assistant'
-                        : 'Your project coordinator'}
-                    </span>
-                  </div>
-                  <span className="simulated-label">Simulated</span>
-                </header>
-                <div className="conversation-log" aria-live="polite" aria-relevant="additions">
-                  <div className="conversation-intro">
-                    <p>
-                      {homePlanning ? (
-                        <>
-                          Notes stay
-                          <br />
-                          <em>with the work.</em>
-                        </>
-                      ) : (
-                        <>
-                          One conversation.
-                          <br />
-                          <em>A whole project behind it.</em>
-                        </>
-                      )}
-                    </p>
-                    <span>
-                      {homePlanning
-                        ? 'Save context and reference files. Focused decisions live beside the proposal; no automated replies run here.'
-                        : 'Request work in the project journey. Keep its context and decisions here.'}
-                    </span>
-                  </div>
-                  {messages.map((m) => (
-                    <article className={`conversation-message ${m.role}`} key={m.id}>
-                      <div className="message-label">
-                        {m.mode === 'simulated'
-                          ? 'Dwang · simulated'
-                          : m.mode === 'system'
-                            ? 'Project record'
-                            : m.text.startsWith('[Example')
-                              ? 'Example input'
-                              : 'You'}
+                  <h1>{stageCopy[view.stage].label}</h1>
+                  <p>{stageCopy[view.stage].description}</p>
+                </div>
+                {view.stage === 'technical' && photoQuestions(state, active).length > 0 && (
+                  <CandidateMeasurementsPanel
+                    key={active}
+                    state={state}
+                    projectId={active}
+                    controller={controller}
+                    busy={busy}
+                  />
+                )}
+                {view.stage === 'technical' && (
+                  <PlanningPanel
+                    key={active}
+                    state={state}
+                    projectId={active}
+                    controller={controller}
+                    busy={busy}
+                  />
+                )}
+                {['options', 'plan'].includes(view.stage) &&
+                  photoQuestions(state, active).length > 0 && (
+                    <ScopePlannerEntry
+                      state={state}
+                      projectId={active}
+                      controller={controller}
+                      busy={busy}
+                    />
+                  )}
+                {view.stage !== 'technical' &&
+                  !(
+                    ['options', 'plan'].includes(view.stage) &&
+                    photoQuestions(state, active).length > 0
+                  ) && (
+                    <section className="next-work">
+                      <div className="next-work-icon">
+                        <Glyph name="activity" />
                       </div>
-                      <p>{m.text}</p>
-                      {m.evidenceIds.map((id) => (
-                        <Media key={id} controller={controller} state={state} evidenceId={id} />
-                      ))}
-                      {m.artifactRefs.map((ref) => (
+                      <div>
+                        <span className="eyebrow">A BOUNDED NEXT PIECE OF WORK</span>
+                        <h2>{workLabels[view.stage]}</h2>
+                        <p>
+                          {view.stage === 'options'
+                            ? 'Explore two approaches, identify tradeoffs, and expose what still needs investigation.'
+                            : 'Build an inspectable working artifact from the details recorded so far.'}
+                        </p>
                         <button
-                          key={`${ref.id}:${ref.revision}`}
-                          className="message-artifact"
-                          onClick={() =>
-                            safe(
-                              controller.setView(active, {
-                                surface: 'artifact',
-                                artifactRef: ref,
-                                tab: 'work',
-                              }),
+                          className="primary"
+                          disabled={
+                            busy ||
+                            runs.some(
+                              (r) =>
+                                r.kind === view.stage &&
+                                !['succeeded', 'failed', 'cancelled'].includes(r.state),
                             )
                           }
+                          onClick={() => safe(controller.requestWork(active, view.stage))}
                         >
-                          <Glyph name="file" />
-                          <span>
-                            {m.mode === 'system'
-                              ? artifactTitle(
-                                  state.artifacts[ref.id].find((a) => a.revision === ref.revision)!,
-                                )
-                              : 'Open saved output'}{' '}
-                            <small>Revision {ref.revision} · exact historical version</small>
-                          </span>
-                          <Glyph name="right" />
+                          Start simulated work <Glyph name="right" />
                         </button>
-                      ))}
-                    </article>
-                  ))}
-                  {runs
-                    .filter((r) => !['succeeded', 'cancelled'].includes(r.state))
-                    .slice(0, 2)
-                    .map((r) => (
-                      <RunCard key={r.id} run={r} controller={controller} busy={busy} compact />
-                    ))}
-                  {!messages.length && (
-                    <p className="small-note">
-                      Imported conversations remain in the original source archive. New messages are
-                      stored here.
-                    </p>
+                        <span className="small-note">
+                          Local fixture · no AI, web research, or external action
+                        </span>
+                      </div>
+                    </section>
                   )}
-                  <div ref={logEnd} />
+                {runs
+                  .filter(
+                    (r) => r.kind === view.stage && !['succeeded', 'cancelled'].includes(r.state),
+                  )
+                  .map((r) => (
+                    <RunCard key={r.id} run={r} controller={controller} busy={busy} />
+                  ))}
+                <div className="section-heading-row">
+                  <h2 className="section-heading">
+                    Project artifacts <span>{artifactGroups.length}</span>
+                  </h2>
+                  <button
+                    className="text-button"
+                    onClick={() => safe(controller.setView(active, { surface: 'sources' }))}
+                  >
+                    Inspect facts & sources →
+                  </button>
                 </div>
-                <Composer
-                  key={active}
-                  controller={controller}
-                  state={state}
-                  projectId={active}
-                  busy={busy}
-                  notesOnly={homePlanning}
-                />
-              </aside>
-            </div>
-          </>
-        )}
-      </div>
+                <div className="artifact-library">
+                  {artifactGroups.map((versions) => {
+                    const a = latest(versions)!;
+                    return (
+                      <button className="artifact-tile" key={a.id} onClick={() => openArtifact(a)}>
+                        <span className="artifact-tile-icon">
+                          <Glyph name="file" />
+                        </span>
+                        <div>
+                          <strong>{artifactTitle(a)}</strong>
+                          <span>
+                            r{a.revision} ·{' '}
+                            {a.freshness === 'stale'
+                              ? 'Inputs changed'
+                              : a.lifecycle === 'accepted'
+                                ? 'Accepted'
+                                : a.lifecycle === 'rejected'
+                                  ? 'Declined'
+                                  : 'Decision needed'}
+                          </span>
+                        </div>
+                        <Glyph name="right" />
+                      </button>
+                    );
+                  })}
+                  {!artifactGroups.length && (
+                    <div className="empty-artifacts">
+                      <Glyph name="file" />
+                      <p>
+                        The work will land here.
+                        <span>Start a simulation to create your first versioned artifact.</span>
+                      </p>
+                    </div>
+                  )}
+                </div>
+                <section className="workspace-facts-preview">
+                  <div>
+                    <p className="eyebrow">THE PROJECT’S STARTING POINT</p>
+                    <h2>A record that grows with the job.</h2>
+                  </div>
+                  <button className="secondary" onClick={() => openFacts()}>
+                    Add a detail
+                  </button>
+                  {facts.slice(0, 3).map((f) => (
+                    <p key={f.id}>
+                      <span>{f.key}</span>
+                      {factText(f)}
+                    </p>
+                  ))}
+                </section>
+              </>
+            )}
+          </main>
+        </Modal>
+      )}
+      {modal === 'history' && (
+        <Modal title="Conversation history" onClose={() => setModal(null)}>
+          {messages.length ? (
+            renderMessages(messages)
+          ) : (
+            <p>No messages yet. Your conversation will stay with this project.</p>
+          )}
+        </Modal>
+      )}
+      {modal === 'tools' && (
+        <Modal title="Your workspace" onClose={() => setModal(null)}>
+          <div className="prompt-menu">
+            <button disabled={!project} onClick={() => setModal('history')}>
+              <Glyph name="history" />
+              <span>
+                Conversation history<small>Saved messages and linked outputs</small>
+              </span>
+              <Glyph name="right" />
+            </button>
+
+            <button
+              disabled={!project}
+              onClick={() => openWork({ stage: 'brief', surface: 'overview' })}
+            >
+              <Glyph name="home" />
+              <span>
+                Your house<small>Photos, rooms and observations</small>
+              </span>
+              <Glyph name="right" />
+            </button>
+            <button disabled={!project} onClick={openPlan}>
+              <Glyph name="plan" />
+              <span>
+                The plan<small>The current saved scope and its evidence</small>
+              </span>
+              <Glyph name="right" />
+            </button>
+            <button disabled={!project} onClick={() => setModal('materials')}>
+              <Glyph name="materials" />
+              <span>
+                Materials<small>Requirements and sourcing</small>
+              </span>
+              <Glyph name="right" />
+            </button>
+            <button disabled={!project} onClick={() => setModal('contractors')}>
+              <Glyph name="people" />
+              <span>
+                Contractors<small>Scope and quote preparation</small>
+              </span>
+              <Glyph name="right" />
+            </button>
+            <button
+              disabled={!project}
+              onClick={() => {
+                setShowQuestions(!showQuestions);
+                setModal(null);
+              }}
+            >
+              <Glyph name="chat" />
+              <span>
+                {showQuestions ? 'Hide photo questions' : 'Questions from photos'}
+                <small>Review what still needs your direction</small>
+              </span>
+              <Glyph name="right" />
+            </button>
+
+            <button onClick={() => setModal('projects')}>
+              <Glyph name="home" />
+              <span>
+                Homes & projects<small>Switch context or start something new</small>
+              </span>
+              <Glyph name="right" />
+            </button>
+            <button disabled={!project} onClick={() => setModal('archive')}>
+              <Glyph name="file" />
+              <span>
+                Saved work<small>Plans, decisions and earlier versions</small>
+              </span>
+              <Glyph name="right" />
+            </button>
+            <button disabled={!project} onClick={() => openWork({ surface: 'sources' })}>
+              <Glyph name="source" />
+              <span>
+                Facts & sources<small>Photos, measurements and supporting evidence</small>
+              </span>
+              <Glyph name="right" />
+            </button>
+            <button disabled={!project} onClick={() => openWork({ surface: 'activity' })}>
+              <Glyph name="activity" />
+              <span>
+                Activity<small>Work requests and project history</small>
+              </span>
+              <Glyph name="right" />
+            </button>
+            <button onClick={() => setModal('connections')}>
+              <Glyph name="connection" />
+              <span>
+                Muse & connections<small>Your project beyond this window</small>
+              </span>
+              <Glyph name="right" />
+            </button>
+          </div>
+          {project && (
+            <label className="prompt-stage-label">
+              Open a project stage
+              <select
+                aria-label="Project stage"
+                value={view.stage}
+                onChange={(e) =>
+                  openWork({ stage: e.target.value as WorkKind, surface: 'overview' })
+                }
+              >
+                {stages.map((stage) => (
+                  <option key={stage} value={stage}>
+                    {stageCopy[stage].label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
+          <div className="prompt-menu-footer">
+            <button onClick={() => setModal('about')}>About this workspace</button>
+            <button onClick={openImport}>Import previous preview</button>
+          </div>
+        </Modal>
+      )}
+      {modal === 'materials' && (
+        <Modal title="Materials" onClose={() => setModal(null)}>
+          <div className="prompt-empty">
+            <span className="prompt-empty-icon">
+              <Glyph name="materials" />
+            </span>
+            <h3>A shopping list with a reason behind every item.</h3>
+            <p>
+              Materials will follow the selected scope, measurements and specifications. Detailed
+              supplier comparison isn’t connected yet.
+            </p>
+            <button className="primary" onClick={openPlan}>
+              Review the current plan <Glyph name="right" />
+            </button>
+          </div>
+        </Modal>
+      )}
+      {modal === 'contractors' && (
+        <Modal title="Contractors" onClose={() => setModal(null)}>
+          <div className="prompt-empty">
+            <span className="prompt-empty-icon">
+              <Glyph name="people" />
+            </span>
+            <h3>Good help starts with a clear scope.</h3>
+            <p>
+              Review what needs doing before requesting quotes. Local contractor search, credential
+              checks and outreach aren’t connected yet.
+            </p>
+            <button className="primary" onClick={openPlan}>
+              Review the current scope <Glyph name="right" />
+            </button>
+          </div>
+        </Modal>
+      )}
+      {modal === 'connections' && (
+        <Modal title="Use your project in Muse" onClose={() => setModal(null)}>
+          <div className="prompt-empty">
+            <span className="prompt-empty-icon">
+              <Glyph name="connection" />
+            </span>
+            <h3>Your agent. The same project.</h3>
+            <p>
+              The web workspace and a standard Muse agent should share the same saved facts, plans
+              and tools through MCP.
+            </p>
+            <p>
+              {controller.connected
+                ? 'Muse photo analysis is connected in this local workspace.'
+                : 'Connect through Your house to enable local Muse photo analysis.'}{' '}
+              General Muse agent access to this workspace is a separate integration and is not
+              enabled by this screen.
+            </p>
+            <button
+              className="secondary"
+              disabled={!project}
+              onClick={() => openWork({ stage: 'brief', surface: 'overview' })}
+            >
+              Open house & photo tools <Glyph name="right" />
+            </button>
+          </div>
+        </Modal>
+      )}
       {modal === 'archive' && (
         <Modal title="Project record" onClose={() => setModal(null)}>
           <p>
@@ -827,7 +857,10 @@ export function App({ controller }: { controller: WorkspaceController }) {
                     address: String(data.get('address')),
                     underway: data.get('underway') === 'on',
                   })
-                  .then(() => setModal(null)),
+                  .then(() => {
+                    setModal(null);
+                    setStartPrompt('');
+                  }),
               );
             }}
           >
@@ -848,6 +881,7 @@ export function App({ controller }: { controller: WorkspaceController }) {
               What do you have in mind?
               <textarea
                 name="goal"
+                defaultValue={startPrompt}
                 required
                 maxLength={300}
                 placeholder="The work you want to do, and what matters to you."
@@ -967,62 +1001,12 @@ export function App({ controller }: { controller: WorkspaceController }) {
         </Modal>
       )}
       {modal === 'projects' && (
-        <Modal title="Your projects" onClose={() => setModal(null)}>
+        <Modal title="Homes & projects" onClose={() => setModal(null)}>
           {projectButtons()}
-          <button className="primary" onClick={() => setModal('new')}>
+          <button className="primary prompt-new-project" onClick={() => setModal('new')}>
             <Glyph name="plus" />
             New project
           </button>
-          {project && (
-            <div className="mobile-project-tools">
-              <button
-                className="secondary"
-                onClick={() => {
-                  safe(controller.setView(active, { surface: 'sources', tab: 'work' }));
-                  setModal(null);
-                }}
-              >
-                Facts & sources
-              </button>
-              <button
-                className="secondary"
-                onClick={() => {
-                  safe(controller.setView(active, { surface: 'activity', tab: 'work' }));
-                  setModal(null);
-                }}
-              >
-                Activity
-              </button>
-              <select
-                aria-label="Project stage"
-                value={view.stage}
-                onChange={(e) => {
-                  safe(
-                    controller.setView(active, {
-                      stage: e.target.value as WorkKind,
-                      surface: 'overview',
-                      tab: 'work',
-                    }),
-                  );
-                  setModal(null);
-                }}
-              >
-                {stages.map((stage) => (
-                  <option value={stage} key={stage}>
-                    {stageCopy[stage].label}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
-          <div className="mobile-project-tools">
-            <button className="link-button" onClick={() => setModal('about')}>
-              About this workspace
-            </button>
-            <button className="link-button" onClick={openImport}>
-              Import previous preview
-            </button>
-          </div>
         </Modal>
       )}
       {modal === 'import' && importPreview && (
@@ -1067,17 +1051,21 @@ export function App({ controller }: { controller: WorkspaceController }) {
             <div className="simulation-explainer">
               <strong>What is real here</strong>
               <p>
-                Local persistence, source files, project switching, revision history, decisions,
-                stale-output detection, and workflow checkpoints.
+                {controller.connected
+                  ? 'Mongo persistence and real Muse photo analysis through the local backend, alongside'
+                  : 'Local persistence alongside'}{' '}
+                source files, project switching, revision history, decisions, stale-output detection
+                and workflow checkpoints.
               </p>
               <strong>What is simulated</strong>
               <p>
-                All agent replies and produced planning artifacts follow local fixtures. Advance the
-                steps explicitly. There is no AI reasoning, image/document analysis, code research,
-                live pricing, professional approval, or external action.
+                The general agent conversation and workflow demonstrations still use labeled
+                fixtures. Muse photo observations and planning questions are real model proposals.
+                Technical review, live pricing, professional approval and physical-work release
+                remain unavailable.
               </p>
             </div>
-            <a href="/legacy.html">Open the earlier preview</a>
+            <a href="./legacy.html">Open the earlier preview</a>
           </div>
         </Modal>
       )}

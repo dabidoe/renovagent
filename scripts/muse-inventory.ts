@@ -76,6 +76,7 @@ export async function runInventory(
   galleryPath: string,
   output: string,
   revision: number,
+  loadImage: typeof imageBytes = imageBytes,
 ) {
   for (const file of [output, output + '.receipt.json']) {
     try {
@@ -92,12 +93,15 @@ export async function runInventory(
     width: number;
     height: number;
   }[];
-  const photos = ['kitchen', 'living', 'bathroom', 'basement'].flatMap((room) => {
+  const representatives = ['kitchen', 'living', 'bathroom', 'basement'].flatMap((room) => {
     const photo = research.photoReview!.photos.find(
       (p) => p.roomType === room && p.status === 'reviewed',
     );
     return photo ? [photo] : [];
   });
+  const photos = representatives.length
+    ? representatives
+    : research.photoReview.photos.filter((p) => p.status === 'reviewed').slice(0, 4);
   if (!photos.length) throw Error('No supported reviewed photos found');
   const temp = await mkdtemp(join(tmpdir(), 'unpermitted-inventory-'));
   try {
@@ -121,7 +125,7 @@ export async function runInventory(
       '2',
     ];
     for (const [i, photo] of photos.entries()) {
-      const image = await imageBytes(photo.imageUrl);
+      const image = await loadImage(photo.imageUrl);
       if (image.sha256 !== photo.sha256)
         throw Error('Source image bytes changed since the room review');
       const file = join(temp, `source-${i + 1}.${image.extension}`);

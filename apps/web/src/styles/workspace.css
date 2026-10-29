@@ -3519,3 +3519,75 @@ td {
     grid-template-columns: minmax(0, 1fr);
   }
 }
+.connected-photos {
+  margin: 16px 0 22px;
+  padding: 18px 22px;
+  border: 1px solid #d8dcd2;
+  background: #f3f5ec;
+  border-radius: 8px;
+}
+.connected-photos summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+.connected-photos summary span {
+  font-size: 11px;
+  font-weight: 400;
+  margin-left: 14px;
+  color: #526451;
+}
+.connected-photos p {
+  max-width: 800px;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.connected-photos button {
+  padding: 10px 16px;
+  border: 1px solid #586e5c;
+  border-radius: 5px;
+  background: #354e42;
+  color: white;
+  cursor: pointer;
+}
+.connected-photos button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.photo-job-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 18px 0;
+}
+.photo-job-choices label {
+  font-size: 12px;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  padding: 8px;
+  border: 1px solid #d3d8cd;
+  border-radius: 4px;
+}
+.photo-job-upload {
+  display: block;
+  font-size: 12px;
+  margin: 18px 0;
+}
+.photo-job-upload input {
+  display: block;
+  margin-top: 7px;
+}
+.connected-photos article {
+  margin-top: 14px;
+  padding: 12px;
+  border-top: 1px solid #d3d8cd;
+  font-size: 12px;
+}
+.connected-photos article small {
+  display: block;
+  margin: 6px 0;
+}
+.connected-photos article button {
+  font-size: 11px;
+  padding: 6px 10px;
+}

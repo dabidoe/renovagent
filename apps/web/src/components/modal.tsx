@@ -5,11 +5,13 @@ export function Modal({
   children,
   onClose,
   error,
+  className = '',
 }: {
   title: string;
   children: ReactNode;
   onClose: () => void;
   error?: string | null;
+  className?: string;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   useEffect(() => {
@@ -23,7 +25,7 @@ export function Modal({
   return (
     <dialog
       ref={ref}
-      className="workspace-dialog"
+      className={`workspace-dialog ${className}`}
       onCancel={(e) => {
         e.preventDefault();
         onClose();
@@ -32,7 +34,6 @@ export function Modal({
     >
       <header>
         <div>
-          <p className="eyebrow">YOUR LOCAL WORKSPACE</p>
           <h2>{title}</h2>
         </div>
         <button className="icon-btn" onClick={onClose} aria-label="Close dialog">

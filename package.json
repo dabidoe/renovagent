@@ -15,12 +15,18 @@
     "format:foundation": "prettier --write \"packages/**/*.ts\" \"apps/**/*.{ts,tsx,css}\" \"fixtures/**/*.ts\" \"tests/**/*.ts\" \"scripts/*.{mjs,ts}\" vite.foundation.config.ts foundation.html",
     "format:check": "prettier --check \"packages/**/*.ts\" \"apps/**/*.{ts,tsx,css}\" \"fixtures/**/*.ts\" \"tests/**/*.ts\" \"scripts/*.{mjs,ts}\" vite.foundation.config.ts foundation.html",
     "muse:photos": "node --import tsx scripts/muse-photo-review.ts",
-    "muse:property": "node --import tsx scripts/muse-property-research.ts"
+    "muse:property": "node --import tsx scripts/muse-property-research.ts",
+    "dev:api": "node --import tsx apps/api/src/server.ts",
+    "dev:mongo": "node --import tsx scripts/local-mongo.ts",
+    "dev:connected": "node --import tsx scripts/dev-connected.ts",
+    "test:connected": "TEST_WORKSPACE_MONGO_URI=mongodb://127.0.0.1:27018/unpermitted_workspace node --import tsx --test tests/integration/connected-workspace.test.ts",
+    "build:pages": "npm run build && node scripts/package-pages.mjs"
   },
   "devDependencies": {
     "@types/react": "19.2.0",
     "@types/react-dom": "19.2.0",
     "fake-indexeddb": "6.2.4",
+    "mongodb-memory-server-core": "^11.3.0",
     "prettier": "3.6.2",
     "tsx": "4.23.15",
     "typescript": "5.9.3",
@@ -28,6 +34,8 @@
   },
   "dependencies": {
     "firebase": "^13.1.0",
+    "image-size": "^2.0.4",
+    "mongodb": "^7.7.0",
     "react": "19.2.0",
     "react-dom": "19.2.0"
   },
