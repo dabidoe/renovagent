@@ -1,8 +1,12 @@
+import { randomBytes } from 'node:crypto';
 import type { Collection, Db } from 'mongodb';
 import {
   DomainError,
+  priceSubmissionSchema,
+  type Money,
   type Offer,
   type PriceObservation,
+  type PriceSubmission,
   type Product,
 } from '@renovagent/contracts';
 import { checkCatalogReferences, sameRecord, validateCatalogImport } from '@renovagent/core';
@@ -14,11 +18,13 @@ export class CatalogStore {
   readonly products: Collection<Product>;
   readonly offers: Collection<Offer>;
   readonly observations: Collection<PriceObservation>;
+  readonly submissions: Collection<PriceSubmission>;
 
   constructor(db: Db) {
     this.products = db.collection<Product>('catalog_products');
     this.offers = db.collection<Offer>('retailer_offers');
     this.observations = db.collection<PriceObservation>('price_observations');
+    this.submissions = db.collection<PriceSubmission>('price_submissions');
   }
 
   async ensureIndexes() {
@@ -27,6 +33,9 @@ export class CatalogStore {
       { unique: true },
     );
     await this.observations.createIndex({ offerId: 1, observedAt: 1, source: 1 }, { unique: true });
+    await this.products.createIndex({ name: 'text', manufacturer: 'text', model: 'text' });
+    await this.offers.createIndex({ sku: 1, retailer: 1 });
+    await this.submissions.createIndex({ offerId: 1, status: 1 });
   }
 
   async importBatch(raw: unknown): Promise<{
@@ -103,14 +112,20 @@ export class CatalogStore {
 
   async offersFor(
     productIds: string[],
-    region?: string,
+    filters: { region?: string; sku?: string; retailer?: string } = {},
   ): Promise<{
     products: Product[];
     offers: Offer[];
     observations: PriceObservation[];
   }> {
     const offers = await this.offers
-      .find({ productId: { $in: productIds }, ...(region ? { fulfillmentRegion: region } : {}) })
+      .find({
+        ...(productIds.length ? { productId: { $in: productIds } } : {}),
+        ...(filters.region ? { fulfillmentRegion: filters.region } : {}),
+        ...(filters.sku ? { sku: filters.sku } : {}),
+        ...(filters.retailer ? { retailer: filters.retailer } : {}),
+      })
+      .limit(200)
       .toArray();
     const products = await this.products
       .find({ id: { $in: [...new Set(offers.map((o) => o.productId))] } })
@@ -123,6 +138,143 @@ export class CatalogStore {
     for (const observation of all)
       if (!latest.has(observation.offerId)) latest.set(observation.offerId, observation);
     return { products, offers, observations: [...latest.values()] };
+  }
+
+  async search(
+    query: string,
+    category?: string,
+  ): Promise<{ products: Product[]; offers: Offer[]; observations: PriceObservation[] }> {
+    if (!query.trim()) throw new DomainError('VALIDATION', 'Search needs a query');
+    const products = await this.products
+      .find({ $text: { $search: query }, ...(category ? { category } : {}) })
+      .limit(50)
+      .toArray();
+    return this.offersFor(products.map((p) => p.id));
+  }
+
+  async history(offerId: string, limit = 50): Promise<PriceObservation[]> {
+    return this.observations
+      .find({ offerId })
+      .sort({ observedAt: -1 })
+      .limit(Math.min(Math.max(limit, 1), 200))
+      .toArray();
+  }
+
+  // User-submitted shelf/receipt prices. Local mode records immediately (the
+  // owner is the operator); account mode quarantines for operator review.
+  async submitObservation(
+    observerId: string,
+    raw: {
+      offerId: string;
+      observedAt?: string;
+      unitPrice: Money;
+      stock: PriceSubmission['stock'];
+      shippingEstimate?: Money;
+      note?: string;
+    },
+    options: { autoApprove: boolean },
+  ): Promise<{ submission: PriceSubmission; observationId: string | null }> {
+    const offer = await this.offers.findOne({ id: raw.offerId });
+    if (!offer) throw new DomainError('NOT_FOUND', `Unknown offer ${raw.offerId}`);
+    const observedAt = raw.observedAt ?? new Date().toISOString();
+    if (Date.parse(observedAt) > Date.now() + 5 * 60 * 1000)
+      throw new DomainError('VALIDATION', 'Observation time cannot be in the future');
+    const pending = await this.submissions.findOne({
+      offerId: raw.offerId,
+      observerId,
+      observedAt,
+      status: 'pending',
+    });
+    if (pending) return { submission: pending, observationId: null };
+    const submission = priceSubmissionSchema.parse({
+      schemaVersion: 1,
+      id: `sub:${randomBytes(12).toString('hex')}`,
+      offerId: raw.offerId,
+      observerId,
+      observedAt,
+      unitPrice: raw.unitPrice,
+      stock: raw.stock,
+      ...(raw.shippingEstimate ? { shippingEstimate: raw.shippingEstimate } : {}),
+      ...(raw.note ? { note: raw.note } : {}),
+      status: options.autoApprove ? 'approved' : 'pending',
+      ...(options.autoApprove ? { reviewedAt: new Date().toISOString() } : {}),
+    });
+    await this.submissions.insertOne({ ...submission, _id: submission.id } as never);
+    if (!options.autoApprove) return { submission, observationId: null };
+    const observationId = await this.recordApproved(submission);
+    return { submission, observationId };
+  }
+
+  async reviewSubmission(
+    id: string,
+    approve: boolean,
+    reason?: string,
+  ): Promise<{ submission: PriceSubmission; observationId: string | null }> {
+    const submission = await this.submissions.findOne({ id });
+    if (!submission) throw new DomainError('NOT_FOUND', `Unknown submission ${id}`);
+    if (submission.status !== 'pending')
+      throw new DomainError('CONFLICT', 'Submission was already reviewed');
+    const reviewedAt = new Date().toISOString();
+    if (!approve) {
+      await this.submissions.updateOne(
+        { id },
+        { $set: { status: 'rejected', reviewedAt, ...(reason ? { reason } : {}) } },
+      );
+      return {
+        submission: {
+          ...submission,
+          status: 'rejected',
+          reviewedAt,
+          ...(reason ? { reason } : {}),
+        },
+        observationId: null,
+      };
+    }
+    const observationId = await this.recordApproved(submission);
+    await this.submissions.updateOne(
+      { id },
+      {
+        $set: {
+          status: 'approved',
+          reviewedAt,
+          ...(observationId ? {} : { reason: 'Already recorded' }),
+        },
+      },
+    );
+    return {
+      submission: {
+        ...submission,
+        status: 'approved',
+        reviewedAt,
+        ...(observationId ? {} : { reason: 'Already recorded' }),
+      },
+      observationId,
+    };
+  }
+
+  // Approval appends one manual-entry observation unless the same fact is
+  // already recorded, preserving the no-duplicate guarantee.
+  private async recordApproved(submission: PriceSubmission): Promise<string | null> {
+    const existing = await this.observations.findOne({
+      offerId: submission.offerId,
+      observedAt: submission.observedAt,
+      source: 'manual-entry',
+    });
+    if (existing) return null;
+    const observation: PriceObservation = {
+      schemaVersion: 1,
+      id: `obs:${randomBytes(12).toString('hex')}`,
+      offerId: submission.offerId,
+      observedAt: submission.observedAt,
+      unitPrice: submission.unitPrice,
+      stock: submission.stock,
+      ...(submission.shippingEstimate ? { shippingEstimate: submission.shippingEstimate } : {}),
+      source: 'manual-entry',
+      freshness: 'recent',
+      ...(submission.note ? { note: submission.note } : {}),
+    };
+    await this.observations.insertOne({ ...observation, _id: observation.id } as never);
+    return observation.id;
   }
 }
 

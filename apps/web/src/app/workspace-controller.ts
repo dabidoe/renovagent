@@ -16,6 +16,7 @@ import {
   type Run,
   type Fact,
   type BomPayload,
+  type CheckoutReviewPayload,
   DomainError,
 } from '@renovagent/contracts';
 import {
@@ -732,6 +733,24 @@ export class WorkspaceController {
         };
       });
       return { commands, value: undefined };
+    });
+  }
+  proposeCheckoutReview(projectId: string, tier: string, review: CheckoutReviewPayload) {
+    return this.mutate((state) => {
+      const artifactId = `${projectId}:checkout-review:${tier}`;
+      const old = latest(state.artifacts[artifactId]);
+      return {
+        commands: [
+          this.command(state, projectId, 'ProposeArtifact', {
+            artifactId,
+            supersedesRevision: old?.revision || 0,
+            inputRefs: [review.purchasePlanRef],
+            evidenceIds: [],
+            content: review,
+          }),
+        ],
+        value: undefined,
+      };
     });
   }
   decide(projectId: string, artifactId: string, revision: number, reject = false) {

@@ -33,3 +33,5 @@ export * from './commerce/matching.js';
 export * from './commerce/pricing.js';
 export * from './commerce/plans.js';
 export * from './commerce/importer.js';
+export * from './commerce/affiliate.js';
+export * from './commerce/checkout.js';

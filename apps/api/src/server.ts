@@ -2,7 +2,7 @@ import { createServer, type IncomingMessage } from 'node:http';
 import { randomBytes, timingSafeEqual, createHash } from 'node:crypto';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { z } from 'zod';
-import { DomainError } from '@renovagent/contracts';
+import { DomainError, moneySchema } from '@renovagent/contracts';
 import { MongoWorkspaceRepository } from './repository.js';
 import { PhotoWorker, requestPhotoJob, publicJob, type StoredPhotoJob } from './photo-jobs.js';
 import {
@@ -223,6 +223,12 @@ export async function createWorkspaceServer(
           throw new DomainError('FORBIDDEN', 'Open the local workspace session first');
       }
       const activeWorker = await workerFor(activeRepo);
+      const requireOperator = () => {
+        if (!accountMode) return;
+        const expected = process.env.RENOVAGENT_CATALOG_OPERATOR || '';
+        if (!expected || req.headers['x-renovagent-operator'] !== expected)
+          throw new DomainError('FORBIDDEN', 'Catalog curation needs the operator token');
+      };
       if (path === '/catalog/offers' && req.method === 'GET') {
         if (!catalog) throw new DomainError('VALIDATION', 'Catalog is unavailable');
         const productIds = (url.searchParams.get('productIds') || '')
@@ -230,17 +236,79 @@ export async function createWorkspaceServer(
           .map((id) => id.trim())
           .filter(Boolean)
           .slice(0, 200);
-        json(200, await catalog.offersFor(productIds, url.searchParams.get('region') || undefined));
+        json(
+          200,
+          await catalog.offersFor(productIds, {
+            region: url.searchParams.get('region') || undefined,
+            sku: url.searchParams.get('sku') || undefined,
+            retailer: url.searchParams.get('retailer') || undefined,
+          }),
+        );
+        return;
+      }
+      if (path === '/catalog/search' && req.method === 'GET') {
+        if (!catalog) throw new DomainError('VALIDATION', 'Catalog is unavailable');
+        json(
+          200,
+          await catalog.search(
+            url.searchParams.get('q') || '',
+            url.searchParams.get('category') || undefined,
+          ),
+        );
+        return;
+      }
+      const history = path.match(/^\/catalog\/offers\/([^/]+)\/history$/);
+      if (history && req.method === 'GET') {
+        if (!catalog) throw new DomainError('VALIDATION', 'Catalog is unavailable');
+        const limit = Number(url.searchParams.get('limit') || 50);
+        json(
+          200,
+          await catalog.history(
+            decodeURIComponent(history[1]),
+            Number.isFinite(limit) ? limit : 50,
+          ),
+        );
         return;
       }
       if (path === '/catalog/import' && req.method === 'POST') {
         if (!catalog) throw new DomainError('VALIDATION', 'Catalog is unavailable');
-        if (accountMode) {
-          const expected = process.env.RENOVAGENT_CATALOG_OPERATOR || '';
-          if (!expected || req.headers['x-renovagent-operator'] !== expected)
-            throw new DomainError('FORBIDDEN', 'Catalog import needs the operator token');
-        }
+        requireOperator();
         json(200, await catalog.importBatch(await body(req)));
+        return;
+      }
+      if (path === '/catalog/submissions' && req.method === 'POST') {
+        if (!catalog) throw new DomainError('VALIDATION', 'Catalog is unavailable');
+        const data = z
+          .object({
+            offerId: z.string().min(1).max(160),
+            observedAt: z.string().max(40).optional(),
+            unitPrice: moneySchema,
+            stock: z.enum(['in_stock', 'limited', 'out_of_stock', 'unknown']),
+            shippingEstimate: moneySchema.optional(),
+            note: z.string().max(500).optional(),
+          })
+          .strict()
+          .parse(await body(req));
+        json(
+          201,
+          await catalog.submitObservation(activeRepo.ownerId, data, {
+            autoApprove: !accountMode,
+          }),
+        );
+        return;
+      }
+      const review = path.match(/^\/catalog\/submissions\/([^/]+)\/review$/);
+      if (review && req.method === 'POST') {
+        if (!catalog) throw new DomainError('VALIDATION', 'Catalog is unavailable');
+        requireOperator();
+        const data = z
+          .object({ approve: z.boolean(), reason: z.string().max(500).optional() })
+          .strict()
+          .parse(await body(req));
+        json(
+          200,
+          await catalog.reviewSubmission(decodeURIComponent(review[1]), data.approve, data.reason),
+        );
         return;
       }
       if (path === '' && req.method === 'GET') {

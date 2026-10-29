@@ -1,24 +1,25 @@
 # Project status — Renovagent
 
-Updated October 27, 2026. This tracker distinguishes prototypes from the reliable product workflow we are building.
+Updated October 29, 2026. This tracker distinguishes prototypes from the reliable product workflow we are building.
 
 ## Direction
 
-A home improvement agent that carries a persistent property project through investigation, options, technical resolution, preparation, coordination, execution, and handover. Chat directs the work; versioned project artifacts hold the results. The half bath is the reference workflow, not the product boundary.
+Renovagent carries a persistent property project through investigation, options, technical resolution, procurement, preparation, coordination, execution, and handover. Chat directs the work; versioned project artifacts hold the results. The half bath is the reference workflow, not the product boundary.
 
-**Canonical build plan:** [architecture index](docs/architecture/README.md). **Implemented foundation:** [Slice 1 evidence and boundaries](docs/architecture/slice-1-foundation.md). **Workspace:** [Slice 2 implementation](docs/architecture/slice-2-workspace.md). **Technical core:** [Slice 3 implementation](docs/architecture/slice-3-technical-core.md), [local coverage and open review gate](docs/architecture/local-context-and-code-coverage.md).
+**Canonical build plan:** [architecture index](docs/architecture/README.md). **Product direction:** [scope](docs/RENOVAGENT_PRODUCT_SCOPE.md) and [technical plan](docs/RENOVAGENT_TECHNICAL_ARCHITECTURE.md), mapped to slices in [reconciliation](docs/architecture/renovagent-reconciliation.md). **Implemented foundation:** [Slice 1 evidence and boundaries](docs/architecture/slice-1-foundation.md). **Workspace:** [Slice 2 implementation](docs/architecture/slice-2-workspace.md). **Technical core:** [Slice 3 implementation](docs/architecture/slice-3-technical-core.md), [local coverage and open review gate](docs/architecture/local-context-and-code-coverage.md).
 
 ## What currently exists
 
 | Area | Current state | Important limit |
 |---|---|---|
-| Local frontend | Durable React/Vite workspace: projects, conversation/work surfaces, artifacts/revisions, decisions, sources, drafts and activity | Real deterministic technical core plus labeled agent fixtures; no in-app model or backend. External Muse research uses an explicit file handoff. Original frontend retained at `/legacy.html` |
-| Design | Fieldnotes direction applied to the project workspace, desktop split and phone work/conversation switch | Technical calculation/source/coverage viewers now exist; qualified review and broader technical coverage remain open |
-| Technical references | Versioned adoption/scope/permit source register, applicability checks and visible coverage gaps | Primary local scope/permit locators and rule-based candidate applicability exist; local method/permit/transition provisions and source-quality guards exist; exact 2018 publisher clearances and residential exhaust criteria now retrieved; local clearance mapping, complete electrical provisions, trade design and qualified review remain blocked |
-| Planning math | Shared deterministic geometry, selected floor quantities, package/inventory and minor-unit cost calculations; duplicate server demo formula removed | One explicit rectangular half-bath playbook; no inferred routes/prices, complete BOM or reviewed compliance guidance |
-| Server | Express/TypeScript/MongoDB auth/project/MCP scaffolding present | Not connected to current opening; no durable agent runs, evidence model, or complete command/gate enforcement |
-| Verification | 109 tests pass, strict TypeScript, import boundaries, formatting and builds; desktop/phone workspace, resume and history paths checked in browser | One public-property Muse handoff evaluated; no claim of general model reliability, server readiness, technical compliance, or full lifecycle coverage |
-| Architecture/foundation | Shared contracts/core packages, transactional IndexedDB, revisions/idempotency, invalidation, legacy import and recovery implemented beside the preview | Product UI is integrated; fixture run checkpoints are durable. Real agent workers and server integration remain planned |
+| Local frontend | Prompt-first React/Vite workspace on IndexedDB or connected Mongo: projects, conversation/work surfaces, artifacts/revisions, decisions, sources, drafts, activity | Labeled agent fixtures where noted; no reviewed compliance guidance. Original frontend retained at `/legacy.html` |
+| Connected backend | Loopback API + local Mongo: per-owner workspaces, real in-app Muse photo jobs, sessions, catalog, submissions | Local only: no TLS, hosting, quotas, or production hardening |
+| Accounts | Optional Google/Meta sign-in with per-owner workspaces, explicit local adoption, sign-in web surface | No passwords; live round-trips need the owner's OAuth clients |
+| Commerce | Shared catalog with duplicate-proof imports, tiered purchase plans, contractor accept/decline, checkout reviews, price submissions with review quarantine | Seed prices are labeled demo examples; affiliate feeds need the owner's accounts; no live inventory, tax, or checkout |
+| Agents | Local stdio MCP adapter (8 tools: reads, proposals, catalog search/history, checkout assembly), verified with a live headless client | Hosted Streamable-HTTP transport needs the hosted backend |
+| Technical references | Versioned adoption/scope/permit source register, applicability checks and visible coverage gaps | Exact 2018 clearances and residential exhaust criteria retrieved; local clearance mapping, complete electrical provisions, trade design and qualified review remain blocked |
+| Planning math | Shared deterministic geometry, quantities, money/tier/checkout math; single command authority for all writes | Rectangular playbooks; no inferred routes, no reviewed compliance guidance |
+| Verification | 146 pass (15 legacy + 131 TypeScript, 17 Mongo cases skip); explicit real-Mongo suite 18/18; strict types, boundaries, formatting, builds | Browser QA covers labeled projects; no claim of general model reliability, technical compliance, or full lifecycle coverage |
 
 ## Delivery tracking
 
@@ -28,9 +29,9 @@ A home improvement agent that carries a persistent property project through inve
 | 1 — Durable project foundation | Implemented and tested alongside current preview; see linked acceptance evidence |
 | 2 — Working project workspace | Implemented with durable local fixtures and desktop/phone browser checks; see linked evidence |
 | 3 — Technical planning core | Local deterministic core implemented; exact-source/trade coverage and qualified technical review gate remain open |
-| 4 — Connected durable agent workflow | Not implemented; backend remains deferred |
-| 5 — Job preparation and coordination | Not implemented; old demo outputs are examples |
-| 6 — Execution, change control, handover | Not implemented |
+| 4 — Connected durable agent workflow | Partial: loopback API/Mongo, photo jobs, accounts, local MCP done; hosted transport and general agent workflow open |
+| 5 — Job preparation and coordination | Partial: catalog, tiered plans, checkout reviews done; scheduling, contractor accounts, tax, live retail open |
+| 6 — Execution, change control, handover | Not implemented; receipt accounting and contractor accountability specified only |
 | 7 — Second project playbook | Not implemented |
 
 Use each slice's acceptance criteria before changing its status. A mock screen, canned reply, or HTTP 200 does not establish workflow completion.
@@ -119,6 +120,20 @@ Muse inspected all 35 Bingham listing images in five accepted attachment batches
 - Replaced the permanent dashboard/sidebar with a centered prompt, compact house/project context and on-demand dialogs for house tools, saved plans, history, sources and activity. Kept revision-specific outputs, saved drafts, photo question responses and existing controller/repository commands.
 - Materials and contractors have explicit empty states; general messages remain saved notes. Muse photo analysis remains connected locally. Standard Muse-agent access through current-workspace MCP is a recorded requirement, not an enabled integration. See [implementation, verification and Muse client boundary](docs/architecture/prompt-first-workspace.md).
 - Verification: regular tests passed (139 passed, five Mongo cases skipped); the explicit real-Mongo suite passed all six cases, covering the skipped cases. Builds, types, boundaries and changed-file formatting passed. Browser checks covered desktop and 390/360-pixel phone layouts, house/plan dialogs, project switching, Escape, and QA draft persistence through refresh. Actual owner facts/preferences were not changed; the original QA draft was restored.
+
+### Agent procurement and checkout handoff — October 29, 2026
+
+- Added MCP catalog tools (`search_catalog`, `get_offer_history`, computation-only `build_checkout_review`) so agents search the verified corpus first; verified-corpus-plus-agent-live-check is the recorded pattern. Materials plans gained one-click checkout-review preparation.
+- `checkout-review` artifacts group plans by retailer with product URLs, Amazon add-to-cart links for ASIN offers, an explicit customer double-check list, and authorization recorded via decision. Agent assembles, human checks out — never the reverse.
+- Researched the corpus: Amazon Associates links-first (API gated on sales), Wayfair via CJ, UPC lookup APIs for identity, manufacturer curation for spec attributes. Multi-retailer affiliate rows tested.
+- Specified (not built): receipt OCR → project accounting and contractor accountability (hours, claim-vs-evidence checks, timelines, templated contracts). See [agent procurement and checkout](docs/architecture/agent-procurement-checkout.md).
+- Verification: checkout/cart-URL scenarios, MCP catalog tools over a seeded store, stdio probe re-run (8 tools); `npm test` (15 + 131, 17 skip), `test:connected` (18), builds, types, boundaries, formatting pass.
+
+### Real retail pricing access — October 29, 2026
+
+- Decided the lawful path after research: no public HD/Lowe's API exists and scraping violates terms, so pricing comes from authorized affiliate feeds (Impact for Home Depot, CJ for Lowe's) plus verified manual observations; scraper APIs rejected for now. Owner must apply for affiliate accounts.
+- Built the plumbing: deterministic affiliate-row normalization, product text search, SKU/retailer lookup, per-offer price history, store fields, and user price submissions quarantined until operator review (local mode records immediately). File-based operator imports via `seed-catalog --file`.
+- Verification: affiliate normalization plus quarantine-lifecycle scenarios; `npm test` (15 + 130, 15 skip) and `npm run test:connected` (16) pass with builds, types, boundaries, formatting. See [retail pricing access](docs/architecture/retail-pricing-access.md).
 
 ### Commerce catalog and tiered purchase plans — October 29, 2026
 

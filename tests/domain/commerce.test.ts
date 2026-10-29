@@ -1,10 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  buildCheckoutReview,
   buildTierPlans,
   checkCatalogReferences,
   lineTotalMinor,
   matchConstraints,
+  normalizeAffiliateRows,
   purchaseUnits,
   sameRecord,
   validateCatalogImport,
@@ -106,6 +108,122 @@ test('catalog import validation rejects duplicates and dangling references', () 
   );
   assert.equal(sameRecord({ id: 'a' }, { id: 'a', _id: 'a' }), true);
   assert.equal(sameRecord({ id: 'a' }, { id: 'b' }), false);
+});
+
+test('affiliate rows normalize deterministically with priced observations', () => {
+  const rows = [
+    {
+      retailer: 'Home Depot',
+      sku: '1001234',
+      name: 'Builder Single-Hole Faucet',
+      brand: 'FixtureWorks',
+      price: 39.98,
+      currency: 'USD',
+      availability: 'in_stock',
+    },
+    { retailer: 'Home Depot', sku: '1001235', name: 'Unpriced trim kit' },
+  ];
+  const first = normalizeAffiliateRows(rows, {
+    region: '19148',
+    observedAt: '2026-10-29T16:00:00Z',
+  });
+  const second = normalizeAffiliateRows(rows, {
+    region: '19148',
+    observedAt: '2026-10-29T16:00:00Z',
+  });
+  assert.deepEqual(first, second);
+  assert.equal(first.products.length, 2);
+  assert.equal(first.offers.length, 2);
+  assert.equal(first.observations.length, 1);
+  assert.equal(first.observations[0].unitPrice.amountMinor, 3998);
+  assert.equal(first.observations[0].source, 'retailer-api');
+  assert.equal(first.observations[0].freshness, 'recent');
+  assert.doesNotThrow(() => validateCatalogImport(first));
+  assert.throws(
+    () =>
+      normalizeAffiliateRows([{ retailer: 'x' }], {
+        region: '19148',
+        observedAt: '2026-10-29T16:00:00Z',
+      }),
+    /row 0 invalid/,
+  );
+  const multi = normalizeAffiliateRows(
+    [
+      {
+        retailer: 'Amazon',
+        sku: 'B0C1234567',
+        name: 'Single-hole faucet',
+        price: 42.5,
+        currency: 'USD',
+      },
+      {
+        retailer: 'Wayfair',
+        sku: 'W00123456',
+        name: 'Single-hole faucet',
+        price: 45.0,
+        currency: 'USD',
+      },
+      {
+        retailer: "Lowe's",
+        sku: '987654',
+        name: 'Single-hole faucet',
+        price: 41.98,
+        currency: 'USD',
+      },
+    ],
+    { region: '19148', observedAt: '2026-10-29T16:00:00Z' },
+  );
+  assert.equal(multi.products.length, 3);
+  assert.equal(multi.offers.length, 3);
+  assert.equal(multi.observations.length, 3);
+  assert.doesNotThrow(() => validateCatalogImport(multi));
+});
+
+test('checkout review groups retailers and builds Amazon cart links only for ASINs', () => {
+  const [builder] = buildTierPlans(vanityTemplate, pricedSeed());
+  const plan = {
+    kind: 'purchase-plan' as const,
+    ...builder,
+    bomRef: { kind: 'artifact' as const, id: 'project-a:bom', revision: 1 },
+    builtAt: '2026-10-29T15:00:00.000Z',
+  };
+  const offers = new Map(vanityCatalog.offers.map((o) => [o.id, o]));
+  const review = buildCheckoutReview(
+    plan,
+    { id: 'project-a:purchase-plan:builder', revision: 1 },
+    offers,
+    {
+      builtAt: '2026-10-29T18:00:00.000Z',
+    },
+  );
+  assert.equal(review.groups.length, 1);
+  assert.equal(review.groups[0].cartUrl, undefined);
+  assert.equal(review.totals.subtotalMinor, 30700);
+  assert.equal(review.authorizationRequired, true);
+  assert.ok(review.checklist.length >= 5);
+  assert.match(review.notes.join(' '), /demo or unverified/);
+
+  const amazonLines = plan.lines.map((line) => ({ ...line, retailer: 'Amazon' }));
+  const amazonSkus = ['B0C1234567', 'B0C2345678', 'B0C3456789', 'B0C4567890', 'B0C5678901'];
+  amazonLines.forEach((line, i) => (line.sku = amazonSkus[i]));
+  const amazon = buildCheckoutReview(
+    { ...plan, lines: amazonLines },
+    { id: 'project-a:purchase-plan:builder', revision: 1 },
+    offers,
+    { associateTag: 'renovagent-20', builtAt: '2026-10-29T18:00:00.000Z' },
+  );
+  assert.ok(amazon.groups[0].cartUrl?.startsWith('https://www.amazon.com/gp/aws/cart/add.html?'));
+  assert.match(amazon.groups[0].cartUrl!, /ASIN\.1=B0C1234567/);
+  assert.match(amazon.groups[0].cartUrl!, /AssociateTag=renovagent-20/);
+
+  amazonLines[0].sku = 'not-an-asin';
+  const mixed = buildCheckoutReview(
+    { ...plan, lines: amazonLines },
+    { id: 'project-a:purchase-plan:builder', revision: 1 },
+    offers,
+    { builtAt: '2026-10-29T18:00:00.000Z' },
+  );
+  assert.equal(mixed.groups[0].cartUrl, undefined);
 });
 
 test('bom and purchase-plan artifacts flow through propose and accept', () => {

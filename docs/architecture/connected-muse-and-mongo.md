@@ -38,7 +38,9 @@ After validation, one aggregate commit proposes the new research, imports the re
 
 ## Local access boundary
 
-This runtime binds to loopback, uses a private HttpOnly SameSite cookie, restricts host/origin/fetch-site, requires a custom workspace header for session creation and mutations, and validates request size, collection structure and schemas. Attachments, job metadata and cached image reads require the same local session. Public image retrieval requires HTTPS, checks all resolved addresses, pins the accepted address into TLS, rejects redirects and bounds time/bytes/type. Uploads are resolved from the authorized project, never fetched through their virtual URL.
+This runtime binds to loopback, uses a private HttpOnly SameSite cookie, restricts host/origin/fetch-site, requires a custom workspace header for session creation and mutations, and validates request size, collection structure and schemas. Attachments, job metadata and cached image reads require the same local session. Supporting endpoints: `GET /backup` (workspace + blobs export), `GET /photo-assets/:sha256` (hash-addressed cached bytes), `GET /blobs/:id` (evidence attachments). Public image retrieval requires HTTPS, checks all resolved addresses, pins the accepted address into TLS, rejects redirects and bounds time/bytes/type. Uploads are resolved from the authorized project, never fetched through their virtual URL.
+
+Account mode, per-owner workspaces, and sign-in came later; see [accounts](accounts-and-google-login.md).
 
 This is **not production account authentication**. Multi-user identities, TLS, hosted secrets, provider quotas/billing, storage retention, restore automation and deployment hardening remain open. Dependency audit still reports five pre-existing advisories in the legacy Firebase/grpc chain and Zod; this increment adds request/structure budgets and remains loopback-only. It does not claim production security clearance or complete Slice 4 acceptance.
 

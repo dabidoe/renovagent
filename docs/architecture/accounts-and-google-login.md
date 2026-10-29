@@ -23,7 +23,8 @@ login was explicitly deferred; no passwords are stored anywhere.
   account (owner remap at import). The local original stays intact.
 - The web app shows one sign-in button per configured provider, falls back
   to local records instead of a dead-end error page, and shows the signed-in
-  email with sign-out in the header.
+  email with sign-out in the header. Session state is readable at
+  `GET /auth/me`; `POST /auth/logout` destroys the session and clears the cookie.
 - Photo jobs keep working per owner: each account aggregate gets its own
   worker, pre-warmed at boot.
 

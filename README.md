@@ -47,7 +47,7 @@ Follow the [connected setup guide](docs/architecture/connected-muse-and-mongo.md
 ## How it fits together
 
 ```text
-Web workspace       External agents (planned)
+Web workspace       External agents (local MCP)
        \                    /
         Shared application services
                     |

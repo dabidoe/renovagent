@@ -42,6 +42,8 @@ export const offerSchema = z
     retailer: z.string().min(1).max(200),
     sku: z.string().min(1).max(120),
     fulfillmentRegion: z.string().min(1).max(120),
+    storeId: z.string().min(1).max(60).optional(),
+    storeName: z.string().min(1).max(200).optional(),
     url: z.string().url().max(2000).optional(),
     fulfillment: z.enum(['pickup', 'shipping', 'both']),
     tier: tierSchema,
@@ -167,6 +169,105 @@ export const purchasePlanPayloadSchema = z
   })
   .strict();
 export type PurchasePlanPayload = z.infer<typeof purchasePlanPayloadSchema>;
+
+export const priceSubmissionSchema = z
+  .object({
+    schemaVersion: z.literal(1),
+    id,
+    offerId: id,
+    observerId: id,
+    observedAt: stamp,
+    unitPrice: moneySchema,
+    stock: z.enum(['in_stock', 'limited', 'out_of_stock', 'unknown']),
+    shippingEstimate: moneySchema.optional(),
+    note: z.string().max(500).optional(),
+    status: z.enum(['pending', 'approved', 'rejected']),
+    reviewedAt: stamp.optional(),
+    reason: z.string().max(500).optional(),
+  })
+  .strict();
+export type PriceSubmission = z.infer<typeof priceSubmissionSchema>;
+
+// Minimal normalized row for authorized affiliate/catalog feeds (Impact, CJ,
+// retailer exports). Feed-specific fetching maps into this shape first.
+export const affiliateRowSchema = z
+  .object({
+    retailer: z.string().min(1).max(200),
+    sku: z.string().min(1).max(120),
+    name: z.string().min(1).max(300),
+    brand: z.string().max(200).optional(),
+    model: z.string().max(200).optional(),
+    upc: z.string().max(30).optional(),
+    url: z.string().url().max(2000).optional(),
+    price: z.number().nonnegative().finite().optional(),
+    currency: z
+      .string()
+      .regex(/^[A-Z]{3}$/)
+      .optional(),
+    availability: z.enum(['in_stock', 'limited', 'out_of_stock', 'unknown']).optional(),
+    region: z.string().min(1).max(120).optional(),
+    tier: tierSchema.optional(),
+    productId: id.optional(),
+  })
+  .strict();
+export type AffiliateRow = z.infer<typeof affiliateRowSchema>;
+
+export const checkoutLineSchema = z
+  .object({
+    bomItemId: id,
+    offerId: id,
+    productId: id,
+    productName: z.string().min(1).max(300),
+    retailer: z.string().min(1).max(200),
+    sku: z.string().min(1).max(120),
+    url: z.string().url().max(2000).optional(),
+    quantity: z.number().positive().finite(),
+    purchaseUnits: z.number().int().positive(),
+    unitPriceMinor: z.number().int().nonnegative(),
+    lineTotalMinor: z.number().int().nonnegative(),
+    currency: z.string().regex(/^[A-Z]{3}$/),
+    observedAt: stamp,
+    freshness: freshnessSchema,
+    source: observationSourceSchema,
+  })
+  .strict();
+export type CheckoutLine = z.infer<typeof checkoutLineSchema>;
+
+// The agent assembles; the human checks out. This artifact is the handoff:
+// grouped retailer carts plus an explicit double-check list. Accepting it
+// (via decision) records the customer's authorization to purchase.
+export const checkoutReviewPayloadSchema = z
+  .object({
+    kind: z.literal('checkout-review'),
+    purchasePlanRef: ref,
+    groups: z
+      .array(
+        z
+          .object({
+            retailer: z.string().min(1).max(200),
+            lines: z.array(checkoutLineSchema).min(1).max(200),
+            subtotalMinor: z.number().int().nonnegative(),
+            currency: z.string().regex(/^[A-Z]{3}$/),
+            cartUrl: z.string().url().max(2000).optional(),
+          })
+          .strict(),
+      )
+      .min(1)
+      .max(20),
+    totals: z
+      .object({
+        subtotalMinor: z.number().int().nonnegative(),
+        currency: z.string().regex(/^[A-Z]{3}$/),
+        taxExcluded: z.literal(true),
+      })
+      .strict(),
+    checklist: z.array(z.string().min(1).max(500)).min(1).max(20),
+    authorizationRequired: z.literal(true),
+    builtAt: stamp,
+    notes: z.array(z.string().max(500)).max(20),
+  })
+  .strict();
+export type CheckoutReviewPayload = z.infer<typeof checkoutReviewPayloadSchema>;
 
 export const catalogImportSchema = z
   .object({

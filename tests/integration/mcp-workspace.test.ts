@@ -6,8 +6,11 @@ import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { MongoWorkspaceRepository, OWNER, type Aggregate } from '../../apps/api/src/repository.js';
 import { createWorkspaceMcpServer } from '../../apps/api/src/mcp.js';
+import { CatalogStore } from '../../apps/api/src/catalog.js';
 import { Scenario } from '../foundation-helpers.js';
 import { emptyWorkspace, type Command } from '@renovagent/contracts';
+import { buildTierPlans } from '@renovagent/core';
+import { vanityCatalog, vanityTemplate } from '../../fixtures/catalog/vanity-philadelphia.js';
 
 const uri = process.env.TEST_WORKSPACE_MONGO_URI;
 
@@ -35,7 +38,9 @@ function setup() {
 const mongoState = (state: Scenario['state']) =>
   JSON.parse(JSON.stringify(state).replaceAll('owner-test', OWNER));
 
-async function withClient(fn: (client: Client, repo: MongoWorkspaceRepository) => Promise<void>) {
+async function withClient(
+  fn: (client: Client, repo: MongoWorkspaceRepository, catalog: CatalogStore) => Promise<void>,
+) {
   const client = new MongoClient(uri!);
   await client.connect();
   const db = client.db(`renovagent_mcp_test_${randomUUID().replaceAll('-', '')}`);
@@ -49,12 +54,14 @@ async function withClient(fn: (client: Client, repo: MongoWorkspaceRepository) =
       jobs: [],
     });
     await repo.importWorkspace(mongoState(setup().state), []);
-    const server = createWorkspaceMcpServer(repo);
+    const catalog = new CatalogStore(db);
+    await catalog.ensureIndexes();
+    const server = createWorkspaceMcpServer(repo, catalog);
     const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
     const mcp = new Client({ name: 'mcp-test-client', version: '0.0.0' });
     await Promise.all([server.connect(serverTransport), mcp.connect(clientTransport)]);
     try {
-      await fn(mcp, repo);
+      await fn(mcp, repo, catalog);
     } finally {
       await mcp.close();
       await server.close();
@@ -212,6 +219,104 @@ test(
       assert.match(stale.text, /CONFLICT/);
 
       const missing = await call(mcp, 'get_artifact', { artifactId: 'missing' });
+      assert.equal(missing.result.isError, true);
+      assert.match(missing.text, /NOT_FOUND/);
+    }),
+);
+
+test('MCP catalog tools search products and read price history', { skip: !uri }, () =>
+  withClient(async (mcp, _repo, catalog) => {
+    await catalog.importBatch(vanityCatalog);
+    const found = JSON.parse((await call(mcp, 'search_catalog', { query: 'faucet' })).text);
+    assert.ok(found.products.some((p: { id: string }) => p.id === 'van-fau-mid'));
+    assert.ok(found.offers.every((o: { productId: string }) => o.productId.startsWith('van-fau')));
+    assert.ok(
+      found.observations.every(
+        (o: { freshness: string; source: string }) => o.freshness && o.source,
+      ),
+    );
+    const history = JSON.parse(
+      (await call(mcp, 'get_offer_history', { offerId: 'offer-van-fau-builder' })).text,
+    );
+    assert.equal(history.length, 1);
+    assert.equal(history[0].unitPrice.amountMinor, 3900);
+  }),
+);
+
+test(
+  'MCP builds a checkout review from a stored purchase plan without storing it',
+  { skip: !uri },
+  () =>
+    withClient(async (mcp, repo, catalog) => {
+      await catalog.importBatch(vanityCatalog);
+      const state = (await repo.read()).workspace;
+      const base = state.projects['project-a'].revision;
+      const propertyBase = state.properties['property-a'].revision;
+      await repo.execute([
+        {
+          commandId: 'mcp-test-bom',
+          projectId: 'project-a',
+          baseRevision: base,
+          basePropertyRevision: propertyBase,
+          type: 'ProposeArtifact',
+          payload: {
+            artifactId: 'project-a:bom',
+            supersedesRevision: 0,
+            inputRefs: [],
+            evidenceIds: [],
+            content: vanityTemplate,
+          },
+        },
+      ]);
+      const priced = vanityCatalog.offers.map((offer) => ({
+        offer,
+        product: vanityCatalog.products.find((p) => p.id === offer.productId)!,
+        observation: vanityCatalog.observations.find((o) => o.offerId === offer.id)!,
+      }));
+      const [builder] = buildTierPlans(vanityTemplate, priced);
+      await repo.execute([
+        {
+          commandId: 'mcp-test-plan',
+          projectId: 'project-a',
+          baseRevision: base + 1,
+          basePropertyRevision: propertyBase,
+          type: 'ProposeArtifact',
+          payload: {
+            artifactId: 'project-a:purchase-plan:builder',
+            supersedesRevision: 0,
+            inputRefs: [{ kind: 'artifact', id: 'project-a:bom', revision: 1 }],
+            evidenceIds: [],
+            content: {
+              kind: 'purchase-plan',
+              ...builder,
+              bomRef: { kind: 'artifact', id: 'project-a:bom', revision: 1 },
+              builtAt: '2026-10-29T15:00:00.000Z',
+            },
+          },
+        },
+      ]);
+      const review = JSON.parse(
+        (
+          await call(mcp, 'build_checkout_review', {
+            projectId: 'project-a',
+            purchasePlanId: 'project-a:purchase-plan:builder',
+          })
+        ).text,
+      );
+      assert.equal(review.kind, 'checkout-review');
+      assert.equal(review.groups.length, 1);
+      assert.equal(review.totals.subtotalMinor, 30700);
+      assert.equal(review.authorizationRequired, true);
+      assert.ok(review.checklist.length >= 5);
+      // Computation only: nothing new was stored.
+      assert.equal(
+        (await repo.read()).workspace.artifacts['project-a:checkout-review:builder'],
+        undefined,
+      );
+      const missing = await call(mcp, 'build_checkout_review', {
+        projectId: 'project-a',
+        purchasePlanId: 'project-a:purchase-plan:mid',
+      });
       assert.equal(missing.result.isError, true);
       assert.match(missing.text, /NOT_FOUND/);
     }),

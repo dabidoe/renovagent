@@ -2,10 +2,11 @@ import { useState } from 'react';
 import type { WorkspaceController } from '../../app/workspace-controller.js';
 import { workspaceRequest } from '../../adapters/http/project-repository.js';
 import { vanityTemplate } from '../../../../../fixtures/catalog/vanity-philadelphia.js';
-import { buildTierPlans, latest, type PricedOffer } from '@renovagent/core';
+import { buildCheckoutReview, buildTierPlans, latest, type PricedOffer } from '@renovagent/core';
 import {
   tierLabels,
   type Artifact,
+  type CheckoutReviewPayload,
   type Offer,
   type PriceObservation,
   type Product,
@@ -116,22 +117,45 @@ export function PurchasePlans({
               No purchase plans yet. Rebuild to match compatible offers at three tiers.
             </p>
           )}
-          {plans.map(
-            ({ tier, artifact }) =>
-              artifact && (
-                <PlanCard
-                  key={tier}
-                  tier={tier}
-                  artifact={artifact}
-                  onDecide={(reject) =>
-                    void run(`decide-${tier}`, () =>
-                      controller.decide(projectId, artifact.id, artifact.revision, reject),
-                    )
-                  }
-                  busy={busy === `decide-${tier}`}
-                />
-              ),
-          )}
+          {plans.map(({ tier, artifact }) => {
+            if (!artifact) return null;
+            const reviewRecord = latest(state.artifacts[`${projectId}:checkout-review:${tier}`]);
+            const review =
+              reviewRecord?.payload.kind === 'checkout-review'
+                ? (reviewRecord as Artifact & { payload: CheckoutReviewPayload })
+                : null;
+            return (
+              <PlanCard
+                key={tier}
+                tier={tier}
+                artifact={artifact}
+                review={review}
+                onDecide={(reject) =>
+                  void run(`decide-${tier}`, () =>
+                    controller.decide(projectId, artifact.id, artifact.revision, reject),
+                  )
+                }
+                busy={busy === `decide-${tier}`}
+                onCheckout={() =>
+                  void run(`checkout-${tier}`, async () => {
+                    const productIds = [
+                      ...new Set(artifact.payload.lines.map((line) => line.productId)),
+                    ];
+                    const catalog = (await workspaceRequest(
+                      `/catalog/offers?productIds=${productIds.map(encodeURIComponent).join(',')}`,
+                    )) as { offers: Offer[] };
+                    const reviewPayload = buildCheckoutReview(
+                      artifact.payload,
+                      { id: artifact.id, revision: artifact.revision },
+                      new Map(catalog.offers.map((offer) => [offer.id, offer])),
+                    );
+                    await controller.proposeCheckoutReview(projectId, tier, reviewPayload);
+                  })
+                }
+                checkoutBusy={busy === `checkout-${tier}`}
+              />
+            );
+          })}
         </>
       )}
     </div>
@@ -141,13 +165,19 @@ export function PurchasePlans({
 function PlanCard({
   tier,
   artifact,
+  review,
   onDecide,
   busy,
+  onCheckout,
+  checkoutBusy,
 }: {
   tier: Tier;
   artifact: Artifact & { payload: PurchasePlanPayload };
+  review: (Artifact & { payload: CheckoutReviewPayload }) | null;
   onDecide: (reject: boolean) => void;
   busy: boolean;
+  onCheckout: () => void;
+  checkoutBusy: boolean;
 }) {
   const plan = artifact.payload;
   const [showRejected, setShowRejected] = useState(false);
@@ -246,6 +276,24 @@ function PlanCard({
           </button>
         </div>
       )}
+      <p className="small-note">
+        {review ? (
+          <>
+            Checkout review r{review.revision} saved
+            {review.lifecycle !== 'proposed' ? ` · ${review.lifecycle}` : ''}. Open it in the
+            Project record, check out at the retailer, and accept it to record your authorization.
+          </>
+        ) : (
+          'No checkout review yet.'
+        )}{' '}
+        <button className="link-button" disabled={checkoutBusy} onClick={onCheckout}>
+          {checkoutBusy
+            ? 'Preparing…'
+            : review
+              ? 'Rebuild checkout review'
+              : 'Prepare checkout review'}
+        </button>
+      </p>
     </section>
   );
 }

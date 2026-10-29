@@ -6,7 +6,11 @@ import { z } from 'zod';
 import { id, ref, stamp } from './common.js';
 import { propertyResearchSchema } from './property-research.js';
 import { planningPayloads } from './planning.js';
-import { bomPayloadSchema, purchasePlanPayloadSchema } from './catalog.js';
+import {
+  bomPayloadSchema,
+  checkoutReviewPayloadSchema,
+  purchasePlanPayloadSchema,
+} from './catalog.js';
 const line = z
   .object({
     description: z.string().min(1),
@@ -99,6 +103,7 @@ export const artifactPayloadSchema = z.discriminatedUnion('kind', [
     .strict(),
   bomPayloadSchema,
   purchasePlanPayloadSchema,
+  checkoutReviewPayloadSchema,
 ]);
 export const artifactSchema = z
   .object({

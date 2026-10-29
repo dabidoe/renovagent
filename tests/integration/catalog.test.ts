@@ -58,7 +58,7 @@ test('catalog import is idempotent, conflict-safe, and reference-checked', { ski
       /unknown offer/,
     );
 
-    const latest = await store.offersFor(['van-cab-builder'], '19148');
+    const latest = await store.offersFor(['van-cab-builder'], { region: '19148' });
     assert.equal(latest.offers.length, 1);
     assert.equal(latest.products.length, 1);
     assert.equal(latest.observations.length, 1);
@@ -75,11 +75,146 @@ test('catalog import is idempotent, conflict-safe, and reference-checked', { ski
         },
       ],
     });
-    const refreshed = await store.offersFor(['van-cab-builder'], '19148');
+    const refreshed = await store.offersFor(['van-cab-builder'], { region: '19148' });
     assert.equal(refreshed.observations.length, 1);
     assert.equal(refreshed.observations[0].unitPrice.amountMinor, 13900);
-    const otherRegion = await store.offersFor(['van-cab-builder'], '00000');
+    const otherRegion = await store.offersFor(['van-cab-builder'], { region: '00000' });
     assert.equal(otherRegion.offers.length, 0);
+  }),
+);
+
+test('catalog recall covers search, SKU lookup, and price history', { skip: !uri }, () =>
+  withDb(async (db) => {
+    const store = new CatalogStore(db);
+    await store.ensureIndexes();
+    await store.importBatch(vanityCatalog);
+    const found = await store.search('faucet');
+    assert.ok(found.products.some((p) => p.id === 'van-fau-mid'));
+    assert.ok(found.offers.length >= 3);
+    const bySku = await store.offersFor([], { sku: 'FW-SKU-VC30-H' });
+    assert.equal(bySku.offers.length, 1);
+    assert.equal(bySku.products[0].id, 'van-cab-high');
+    const byRetailer = await store.offersFor([], { retailer: 'Nobody' });
+    assert.equal(byRetailer.offers.length, 0);
+    const history = await store.history('offer-van-cab-builder');
+    assert.equal(history.length, 1);
+    assert.equal(history[0].source, 'example-import');
+  }),
+);
+
+test('price submissions quarantine until review and never duplicate facts', { skip: !uri }, () =>
+  withDb(async (db) => {
+    const store = new CatalogStore(db);
+    await store.ensureIndexes();
+    await store.importBatch(vanityCatalog);
+    const observedAt = '2026-10-29T17:00:00Z';
+    const first = await store.submitObservation(
+      'user:alice',
+      {
+        offerId: 'offer-van-fau-builder',
+        observedAt,
+        unitPrice: { amountMinor: 4298, currency: 'USD' },
+        stock: 'in_stock',
+        note: 'Shelf tag, Oregon Ave store',
+      },
+      { autoApprove: false },
+    );
+    assert.equal(first.submission.status, 'pending');
+    assert.equal(first.observationId, null);
+    // Re-submit is idempotent while pending.
+    const replay = await store.submitObservation(
+      'user:alice',
+      {
+        offerId: 'offer-van-fau-builder',
+        observedAt,
+        unitPrice: { amountMinor: 4298, currency: 'USD' },
+        stock: 'in_stock',
+      },
+      { autoApprove: false },
+    );
+    assert.equal(replay.submission.id, first.submission.id);
+    // Pending submissions are invisible to pricing reads.
+    assert.equal((await store.history('offer-van-fau-builder')).length, 1);
+
+    const approved = await store.reviewSubmission(first.submission.id, true);
+    assert.equal(approved.submission.status, 'approved');
+    assert.ok(approved.observationId);
+    const history = await store.history('offer-van-fau-builder');
+    assert.equal(history.length, 2);
+    assert.equal(history[0].source, 'manual-entry');
+
+    // A second observer's identical fact approves without duplicating.
+    const duplicate = await store.submitObservation(
+      'user:bob',
+      {
+        offerId: 'offer-van-fau-builder',
+        observedAt,
+        unitPrice: { amountMinor: 4298, currency: 'USD' },
+        stock: 'in_stock',
+      },
+      { autoApprove: false },
+    );
+    const reviewed = await store.reviewSubmission(duplicate.submission.id, true);
+    assert.equal(reviewed.observationId, null);
+    assert.equal(reviewed.submission.reason, 'Already recorded');
+    assert.equal((await store.history('offer-van-fau-builder')).length, 2);
+
+    const rejected = await store.submitObservation(
+      'user:mallory',
+      {
+        offerId: 'offer-van-fau-builder',
+        observedAt: '2026-10-29T18:00:00Z',
+        unitPrice: { amountMinor: 1, currency: 'USD' },
+        stock: 'in_stock',
+      },
+      { autoApprove: false },
+    );
+    const declined = await store.reviewSubmission(
+      rejected.submission.id,
+      false,
+      'Implausible price',
+    );
+    assert.equal(declined.submission.status, 'rejected');
+    assert.equal((await store.history('offer-van-fau-builder')).length, 2);
+
+    await assert.rejects(
+      store.submitObservation(
+        'user:alice',
+        {
+          offerId: 'no-such-offer',
+          unitPrice: { amountMinor: 100, currency: 'USD' },
+          stock: 'unknown',
+        },
+        { autoApprove: false },
+      ),
+      /Unknown offer/,
+    );
+    await assert.rejects(
+      store.submitObservation(
+        'user:alice',
+        {
+          offerId: 'offer-van-fau-builder',
+          observedAt: '2999-01-01T00:00:00Z',
+          unitPrice: { amountMinor: 100, currency: 'USD' },
+          stock: 'unknown',
+        },
+        { autoApprove: false },
+      ),
+      /future/,
+    );
+    // Local mode records immediately: the owner is the operator.
+    const direct = await store.submitObservation(
+      'local-homeowner',
+      {
+        offerId: 'offer-van-drain-builder',
+        observedAt,
+        unitPrice: { amountMinor: 1199, currency: 'USD' },
+        stock: 'in_stock',
+      },
+      { autoApprove: true },
+    );
+    assert.equal(direct.submission.status, 'approved');
+    assert.ok(direct.observationId);
   }),
 );
 
@@ -158,6 +293,68 @@ test('catalog HTTP honors sessions and gates imports by operator token', { skip:
         await fetch(`${base}/catalog/offers?productIds=van-cab-builder`, { headers: session })
       ).json();
       assert.equal(filled.offers.length, 1);
+      const bySku = await (
+        await fetch(`${base}/catalog/offers?sku=FW-SKU-VF1-B`, { headers: session })
+      ).json();
+      assert.equal(bySku.offers.length, 1);
+      const search = await (
+        await fetch(`${base}/catalog/search?q=faucet`, { headers: session })
+      ).json();
+      assert.ok(search.products.some((p: { id: string }) => p.id === 'van-fau-mid'));
+      const history = await (
+        await fetch(`${base}/catalog/offers/offer-van-fau-builder/history`, { headers: session })
+      ).json();
+      assert.equal(history.length, 1);
+
+      const submit = await fetch(`${base}/catalog/submissions`, {
+        method: 'POST',
+        headers: { ...session, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          offerId: 'offer-van-fau-builder',
+          observedAt: '2026-10-29T17:30:00Z',
+          unitPrice: { amountMinor: 4198, currency: 'USD' },
+          stock: 'in_stock',
+          note: 'Endcap display',
+        }),
+      });
+      assert.equal(submit.status, 201);
+      const pending = await submit.json();
+      assert.equal(pending.submission.status, 'pending');
+      assert.equal(
+        (
+          await (
+            await fetch(`${base}/catalog/offers/offer-van-fau-builder/history`, {
+              headers: session,
+            })
+          ).json()
+        ).length,
+        1,
+      );
+
+      const reviewDenied = await fetch(
+        `${base}/catalog/submissions/${pending.submission.id}/review`,
+        {
+          method: 'POST',
+          headers: { ...session, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ approve: true }),
+        },
+      );
+      assert.equal(reviewDenied.status, 403);
+      const review = await fetch(`${base}/catalog/submissions/${pending.submission.id}/review`, {
+        method: 'POST',
+        headers: {
+          ...session,
+          'Content-Type': 'application/json',
+          'X-Renovagent-Operator': 'test-operator-token',
+        },
+        body: JSON.stringify({ approve: true }),
+      });
+      assert.equal(review.status, 200);
+      const approved = await (
+        await fetch(`${base}/catalog/offers/offer-van-fau-builder/history`, { headers: session })
+      ).json();
+      assert.equal(approved.length, 2);
+      assert.equal(approved[0].source, 'manual-entry');
     } finally {
       delete process.env.RENOVAGENT_CATALOG_OPERATOR;
       await new Promise((resolve) => server.close(resolve));

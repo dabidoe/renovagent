@@ -31,6 +31,7 @@ export const artifactTitles: Record<Artifact['payload']['kind'], string> = {
   'evidence-index': 'Evidence collection',
   bom: 'Bill of materials',
   'purchase-plan': 'Purchase plan',
+  'checkout-review': 'Checkout review',
 };
 export function artifactTitle(artifact: Artifact) {
   if (artifact.payload.kind === 'candidate-measurements')

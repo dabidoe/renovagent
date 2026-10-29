@@ -6,7 +6,7 @@ and a live headless Muse client run.
 
 ## What was built
 
-`apps/api/src/mcp.ts` exposes the connected workspace through five MCP tools,
+`apps/api/src/mcp.ts` exposes the connected workspace through eight MCP tools,
 served over stdio for a local agent client:
 
 | Tool | Result and authority |
@@ -15,6 +15,8 @@ served over stdio for a local agent client:
 | `get_project_context` | Goal, current facts, uncertainties, evidence metadata (no bytes), input revisions, capabilities |
 | `get_artifact` | One artifact revision with freshness and limitations; historical views stay pinned |
 | `propose_project_change` | Allowlisted commands (`ProposeArtifact`, `SaveDraft`, `AppendMessage`) through shared validation and atomic CAS; anything else returns an explicit capability limit |
+| `search_catalog` / `get_offer_history` | Shared products with offers, latest dated prices, and price history |
+| `build_checkout_review` | Computation-only checkout assembly from a stored plan; stores nothing |
 
 Reads and proposals share the web app's repository (`MongoWorkspaceRepository`),
 revision checks, idempotency records, and receipts. Calculations stay in core;

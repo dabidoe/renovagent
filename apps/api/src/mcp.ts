@@ -10,6 +10,8 @@ import {
   type Workspace,
 } from '@renovagent/contracts';
 import { MongoWorkspaceRepository, OWNER } from './repository.js';
+import { CatalogStore } from './catalog.js';
+import { buildCheckoutReview } from '@renovagent/core';
 
 export const MCP_SERVER_NAME = 'renovagent-workspace';
 export const MCP_SERVER_VERSION = '0.1.0';
@@ -27,12 +29,16 @@ const CAPABILITIES = {
     'get_project_context',
     'get_artifact',
     'propose_project_change',
+    'search_catalog',
+    'get_offer_history',
+    'build_checkout_review',
   ],
   proposalCommands: [...PROPOSAL_ALLOWLIST],
   limits: [
     'Local single-owner workspace only; no cross-owner discovery.',
     'Proposals cannot approve themselves, record source facts, or release work.',
-    'Photo jobs and purchasing are not exposed over MCP in this increment.',
+    'Photo jobs are not exposed over MCP in this increment.',
+    'Catalog prices are dated observations; the agent must surface freshness and never present them as live checkout totals.',
   ],
 } as const;
 
@@ -109,7 +115,10 @@ function uncertainties(state: Workspace, facts: Fact[], artifacts: Artifact[], p
   };
 }
 
-export function createWorkspaceMcpServer(repository: MongoWorkspaceRepository) {
+export function createWorkspaceMcpServer(
+  repository: MongoWorkspaceRepository,
+  catalog?: CatalogStore,
+) {
   const server = new McpServer({ name: MCP_SERVER_NAME, version: MCP_SERVER_VERSION });
 
   server.tool(
@@ -255,6 +264,77 @@ export function createWorkspaceMcpServer(repository: MongoWorkspaceRepository) {
     },
   );
 
+  server.tool(
+    'search_catalog',
+    'Search shared catalog products with their offers and latest dated prices. Every price carries retailer, observed time, source, and freshness; never present one as a live checkout total.',
+    {
+      query: z.string().min(1).max(200),
+      category: z.string().min(1).max(120).optional(),
+    },
+    async ({ query, category }) => {
+      try {
+        if (!catalog) throw new DomainError('VALIDATION', 'Catalog is unavailable');
+        return text(await catalog.search(query, category));
+      } catch (error) {
+        failure(error);
+      }
+    },
+  );
+
+  server.tool(
+    'get_offer_history',
+    'Read the dated price history of one catalog offer, newest first.',
+    {
+      offerId: z.string().min(1).max(160),
+      limit: z.number().int().min(1).max(200).optional(),
+    },
+    async ({ offerId, limit }) => {
+      try {
+        if (!catalog) throw new DomainError('VALIDATION', 'Catalog is unavailable');
+        return text(await catalog.history(offerId, limit ?? 50));
+      } catch (error) {
+        failure(error);
+      }
+    },
+  );
+
+  server.tool(
+    'build_checkout_review',
+    'Assemble a checkout review (retailer carts plus a customer double-check list) from a stored purchase plan. Computation only; nothing is stored or purchased. Propose it with propose_project_change to save it.',
+    {
+      projectId: z.string().min(1).max(160),
+      purchasePlanId: z.string().min(1).max(160),
+      associateTag: z.string().min(1).max(60).optional(),
+    },
+    async ({ projectId, purchasePlanId, associateTag }) => {
+      try {
+        if (!catalog) throw new DomainError('VALIDATION', 'Catalog is unavailable');
+        const { workspace } = await repository.read();
+        if (!workspace.projects[projectId])
+          throw new DomainError('NOT_FOUND', `Unknown project ${projectId}`);
+        const records = workspace.artifacts[purchasePlanId] ?? [];
+        const plan = [...records]
+          .sort((a, b) => b.revision - a.revision)
+          .find((record) => record.projectId === projectId);
+        if (!plan || plan.payload.kind !== 'purchase-plan')
+          throw new DomainError('NOT_FOUND', `Unknown purchase plan ${purchasePlanId}`);
+        const productIds = [...new Set(plan.payload.lines.map((line) => line.productId))];
+        const found = await catalog.offersFor(productIds);
+        const offers = new Map(found.offers.map((offer) => [offer.id, offer]));
+        return text(
+          buildCheckoutReview(
+            plan.payload,
+            { id: plan.id, revision: plan.revision },
+            offers,
+            associateTag ? { associateTag } : {},
+          ),
+        );
+      } catch (error) {
+        failure(error);
+      }
+    },
+  );
+
   return server;
 }
 
@@ -271,7 +351,9 @@ function mongoUri() {
 async function main() {
   const { repository, client } = await MongoWorkspaceRepository.connect(mongoUri());
   await repository.read();
-  const server = createWorkspaceMcpServer(repository);
+  const catalog = new CatalogStore(client.db());
+  await catalog.ensureIndexes();
+  const server = createWorkspaceMcpServer(repository, catalog);
   const transport = new StdioServerTransport();
   const shutdown = async () => {
     await transport.close().catch(() => {});

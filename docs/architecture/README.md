@@ -1,6 +1,6 @@
 # Build architecture — Renovagent
 
-Status: implementation baseline; Slices 1–2 and local Slice 3 core implemented; technical review gate open · October 27, 2026
+Status: Slices 1–2, local Slice 3 core, loopback Slice 4 (API/Mongo/jobs/accounts/MCP) and Slice 5 commerce planning implemented; technical review gate and hosting open · October 29, 2026
 
 This is the canonical build plan. It supersedes the original ten-day feature checklist and the intake-only interpretation of the opening design. Most of these documents describe the target architecture. [Slice 1](slice-1-foundation.md) and [Slice 2](slice-2-workspace.md) evidence identify the foundation and local workspace now built. [Slice 3](slice-3-technical-core.md) records the deterministic technical core and its open review/coverage gates.
 
@@ -42,7 +42,7 @@ A user can give the agent work to do, watch its real progress, inspect a produce
 
 **Slices 1 and 2 are implemented and tested locally.** See the [foundation evidence](slice-1-foundation.md) and [workspace evidence](slice-2-workspace.md). The main frontend now uses durable commands/repositories, typed artifact viewers, decisions, and explicit simulated runs. The old frontend remains available at `/legacy.html`.
 
-The [Slice 3 local core](slice-3-technical-core.md) now supplies deterministic calculations, source/applicability records and gated plans. Its [local coverage and authority follow-up](local-context-and-code-coverage.md) separates exact sources, filing basis, local methods and future commerce/contractor evidence. The [coverage matrix](technical-coverage.md) keeps exact-source and qualified-review gaps open. Slice 3 is not complete as reviewed technical guidance. Backend deployment, credentials, external commitments, and real model work remain outside the current local workflow.
+The [Slice 3 local core](slice-3-technical-core.md) now supplies deterministic calculations, source/applicability records and gated plans. Its [local coverage and authority follow-up](local-context-and-code-coverage.md) separates exact sources, filing basis, local methods and future commerce/contractor evidence. The [coverage matrix](technical-coverage.md) keeps exact-source and qualified-review gaps open. Slice 3 is not complete as reviewed technical guidance. Hosted deployment, production credentials, and external commitments remain outside the loopback-connected workflow.
 
 The [clearance and systems follow-up](slice-3-clearances-and-systems.md) records the latest exact-source recovery, electrical/exhaust observations and blocked review checks.
 
@@ -51,6 +51,8 @@ The [local clearance mapping and selected electrical increment](slice-3-local-ma
 The [address-first intake and Muse handoff](property-intake-and-muse.md) records the local research export/import path. This is not connected Slice 4 agent execution.
 
 The [candidate measurement increment](candidate-measurements.md) connects separate saved location surveys to supported geometry, option dependencies and sequenced work. Unsupported feasibility and construction release remain blocked.
+
+The [answer-driven options increment](answer-driven-options-and-work-plan.md) compiles literal answers into conditional project options and a ten-stage sequenced work plan with dependency-tracked invalidation.
 
 The [home-centered planning rebuild](home-centered-planning.md) replaces the supported listing project's document-first overview with property evidence, a working study proposal and a focused durable next action. It preserves the foundation and keeps generated layout design, qualified review and backend execution explicitly outside the implemented increment.
 
@@ -67,3 +69,9 @@ The [local MCP adapter](mcp-workspace-adapter.md) implements that requirement fo
 The [Muse app integration assessment](muse-app-integration.md) records how the consumer Muse agent connects to third-party services and what we must build (hosted Streamable-HTTP MCP + OAuth) before that path unblocks.
 
 The [commerce catalog](commerce-catalog.md) adds shared products/offers/pricing with duplicate-proof imports, deterministic tiered purchase plans, and contractor accept/decline. Seed prices are labeled demo examples; live retail integration is future work.
+
+[Real retail pricing](retail-pricing-access.md) decides the lawful access path (affiliate feeds plus verified manual observations, no scraping) and implements recall, user submissions with review quarantine, and feed normalization.
+
+[Agent procurement and checkout](agent-procurement-checkout.md) adds MCP catalog search, multi-retailer affiliate mapping, the customer checkout handoff, the corpus strategy, and the specified accounting and contractor slices.
+
+The [Renovagent reconciliation](renovagent-reconciliation.md) maps the product scope and technical plan onto implemented slices, records the rename, and adapts the catalog/backlog plan.
