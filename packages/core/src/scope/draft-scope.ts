@@ -78,13 +78,36 @@ export function scopeRecipeCurrent(recipe: { id: string; version: number }): boo
 
 export const scopeDraftId = (projectId: string) => `${projectId}:scope-draft`;
 
-const INPUTS: { key: ScopeInputKey; label: string; unit: 'ft' | 'in'; factKey?: string }[] = [
+const INPUTS: {
+  key: ScopeInputKey;
+  label: string;
+  unit: ScopeInput['unit'];
+  factKey?: string;
+  // Floor-plan measurements come only from recorded facts, never relayed.
+  factOnly?: boolean;
+}[] = [
   { key: 'floorLengthFt', label: 'Floor length', unit: 'ft', factKey: 'finishedLength' },
   { key: 'floorWidthFt', label: 'Floor width', unit: 'ft', factKey: 'finishedWidth' },
   { key: 'ceilingHeightFt', label: 'Ceiling height', unit: 'ft', factKey: 'ceilingHeight' },
   { key: 'vanityWidthIn', label: 'Vanity width', unit: 'in' },
   { key: 'toiletRoughInIn', label: 'Toilet rough-in', unit: 'in' },
+  {
+    key: 'floorAreaSqFt',
+    label: 'Floor area',
+    unit: 'sq ft',
+    factKey: 'floorArea',
+    factOnly: true,
+  },
+  {
+    key: 'floorPerimeterFt',
+    label: 'Floor perimeter',
+    unit: 'ft',
+    factKey: 'floorPerimeter',
+    factOnly: true,
+  },
 ];
+// Canonical fact amounts (mm, mm²) per display unit.
+const FROM_CANONICAL = { in: 25.4, ft: 304.8, 'sq ft': 92903.04 } as const;
 
 // Every measurement fact a draft can read. A draft compiled before one of
 // these exists has no inputRef to it, so the factContext signature is what
@@ -96,16 +119,17 @@ export const scopeFactSignature = (state: Workspace, projectId: string) =>
 const TO_INCHES = { in: 1, ft: 12, cm: 1 / 2.54, m: 100 / 2.54 } as const;
 const round = (value: number) => Math.round(value * 100) / 100;
 
-// Workspace facts win over relayed values. Facts are stored canonically in mm.
-function currentFact(state: Workspace, projectId: string, key: string) {
+// Workspace facts win over relayed values. Facts are stored canonically in mm (mm²).
+function currentFact(state: Workspace, projectId: string, key: string, unit: ScopeInput['unit']) {
   const project = state.projects[projectId];
+  const dimension = unit === 'sq ft' ? 'area' : 'length';
   const matches = Object.values(state.facts)
     .map((versions) => versions.at(-1)!)
     .filter(
       (fact) =>
         fact.key === key &&
         fact.value.kind === 'quantity' &&
-        fact.value.dimension === 'length' &&
+        fact.value.dimension === dimension &&
         fact.assertion !== 'unknown' &&
         fact.propertyId === project.propertyId &&
         (fact.projectId === null || fact.projectId === projectId),
@@ -128,15 +152,17 @@ export function resolveScopeInputs(state: Workspace, projectId: string, reported
   const inputs: ScopeInput[] = [];
   const inputRefs: InputRef[] = [];
   const limits: string[] = [];
-  for (const { factKey, ...input } of INPUTS) {
-    const fact = factKey ? currentFact(state, projectId, factKey) : undefined;
+  for (const { factKey, factOnly, ...input } of INPUTS) {
+    const fact = factKey ? currentFact(state, projectId, factKey, input.unit) : undefined;
     const relayed = reported.get(input.key);
+    if (factOnly && relayed)
+      throw new DomainError('VALIDATION', `${input.label} comes only from a recorded floor plan`);
     const relayedAmount =
       relayed && relayed.amount !== null
         ? round((relayed.amount * TO_INCHES[relayed.unit]) / (input.unit === 'ft' ? 12 : 1))
         : null;
     if (fact && fact.value.kind === 'quantity') {
-      const amount = round(fact.value.amount / (input.unit === 'ft' ? 304.8 : 25.4));
+      const amount = round(fact.value.amount / FROM_CANONICAL[input.unit]);
       const ref = { kind: 'fact' as const, id: fact.id, revision: fact.revision };
       values[input.key] = amount;
       inputRefs.push(ref);
@@ -145,6 +171,9 @@ export function resolveScopeInputs(state: Workspace, projectId: string, reported
         limits.push(
           `${input.label}: the recorded fact (${amount} ${input.unit}) was used instead of the relayed ${relayedAmount} ${input.unit}.`,
         );
+    } else if (factOnly) {
+      // Floor-plan inputs appear only once a plan is recorded; length × width is the ask.
+      continue;
     } else if (relayedAmount !== null) {
       values[input.key] = relayedAmount;
       inputs.push({ ...input, amount: relayedAmount, source: 'agent-relayed' });
@@ -165,12 +194,15 @@ export function valuesFromInputs(inputs: ScopeInput[]): RecipeValues {
   return values;
 }
 export function reportedFromInputs(inputs: ScopeInput[]): Reported {
-  return inputs.flatMap((input) =>
-    input.source === 'agent-relayed'
-      ? [{ key: input.key, amount: input.amount, unit: input.unit }]
-      : input.source === 'reported-unknown'
-        ? [{ key: input.key, amount: null, unit: input.unit }]
-        : [],
+  return inputs.flatMap(({ key, amount, unit, source }) =>
+    // Floor-plan inputs (sq ft) are fact-only and never relayed.
+    unit === 'sq ft'
+      ? []
+      : source === 'agent-relayed'
+        ? [{ key, amount, unit }]
+        : source === 'reported-unknown'
+          ? [{ key, amount: null, unit }]
+          : [],
   );
 }
 

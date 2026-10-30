@@ -1,6 +1,6 @@
 # Room measurement capture
 
-Status: step 1 implemented (local); step 2 not started.
+Status: steps 1 and 2 implemented (local).
 
 ## Why
 
@@ -67,14 +67,43 @@ browser session.
 Scope drafts saved before this change have no `factContext`; re-draft them once
 so later measurements stale them.
 
-## Step 2 — RoomPlan scan import (not started)
+## Step 2 — Floor plan import (implemented)
 
-1. Spike: scan one room on a LiDAR iPhone and confirm a RoomPlan JSON export can
-   be obtained. Kill criterion: no real export file in about an hour → drop.
-2. Server-side parser: walls → floor length/width and ceiling height; openings
-   kept as notes.
-3. Parsed values are proposed dimensions the person reviews and saves through
-   step 1. A scan never writes facts directly.
+OpenPlan3D (`laanlabs/openPlan3D`, MIT; the old `theLodgeBots/open3dFloorplan`
+URL redirects there) exports a RoomPlan-shaped JSON and imports raw Apple
+RoomPlan `CapturedRoom` JSON. One importer therefore covers iPhone LiDAR scans
+and plans drawn or corrected in OpenPlan3D's 2D/3D editor. We integrate through
+the file, not by porting its SvelteKit editor; the card links out to it.
+
+- Core: `summarizeFloorPlan` (`packages/core/src/scope/floor-plan.ts`) is pure
+  and runs in the browser. Floor area and perimeter come from scanned floor
+  polygons (shoelace), else from walls that close exactly one loop (OpenPlan3D
+  exports carry `floors: []`). Transform conventions follow OpenPlan3D's
+  importer. Returns metric values plus wall count, spaces, openings, scan
+  confidence and notes.
+- No invented defaults: OpenPlan3D falls back to a 280 cm wall height; we do
+  not. Disagreeing wall heights (beyond 5 cm) or missing heights leave ceiling
+  height unknown with the range shown. A scan covering several spaces keeps the
+  total floor area but drops the outline perimeter, which omits interior walls.
+- Openings are listed, not deducted: paint stays gross (overbuys slightly).
+- New project facts `floorArea` (area) and `floorPerimeter` (length). Recipes
+  (bathroom and living room, now v2) use them in place of length × width for
+  floor area, perimeter, wall area and the fan's room-size check, so L-shaped
+  rooms come out right. These inputs are fact-only: `DraftScope` rejects them
+  as relayed values, and drafts list them only once recorded.
+- Web: "Import floor plan" in the room card fills the form for review; saving is
+  the confirmation. The original JSON is attached as `application/json`
+  evidence, so the full geometry (walls, openings, positions) is preserved for
+  later use, and every recorded dimension cites it.
+- Verified: `tests/domain/floor-plan.test.ts` (rectangle, L-shape, multi-space,
+  height disagreement, OpenPlan3D wall loop, rejection, import → draft
+  quantities); controller evidence test; parsed OpenPlan3D's own sample scan
+  (`test-roomplan.json`: 47.74 m² over four spaces, perimeter and height left
+  unknown). Not yet tested on a scan from our own iPhone; Apple publishes no
+  accuracy figure. Not verified in a live browser.
+
+Next: split multi-space scans into rooms (OpenPlan3D's room detection), a
+geometry artifact for the full plan, and an MCP read tool over it.
 
 ## Out of scope
 

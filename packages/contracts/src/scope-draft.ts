@@ -13,6 +13,9 @@ export const scopeInputKeySchema = z.enum([
   'ceilingHeightFt',
   'vanityWidthIn',
   'toiletRoughInIn',
+  // From a confirmed floor plan; read from recorded facts only, never relayed.
+  'floorAreaSqFt',
+  'floorPerimeterFt',
 ]);
 export type ScopeInputKey = z.infer<typeof scopeInputKeySchema>;
 
@@ -30,7 +33,7 @@ export const scopeInputSchema = z
     key: scopeInputKeySchema,
     label: z.string().min(1).max(120),
     amount: z.number().positive().finite().nullable(),
-    unit: z.enum(['ft', 'in']),
+    unit: z.enum(['ft', 'in', 'sq ft']),
     // workspace-fact: a recorded fact revision (see factRef). agent-relayed: a
     // value the agent passed along, unverified. reported-unknown: the person
     // said "I don't know" (not asked again). not-provided: not yet asked.

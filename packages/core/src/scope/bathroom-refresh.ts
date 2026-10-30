@@ -2,7 +2,7 @@ import type { ScopeDraft, ScopeInputKey, ScopeRequirement } from '@renovagent/co
 import {
   count,
   floorArea,
-  missing,
+  floorSizeMissing,
   perimeter,
   req,
   wallArea,
@@ -16,7 +16,7 @@ export type { RecipeValues } from './recipe-kit.js';
 // each requirement. It never supplies physical defaults: an unknown dimension
 // leaves the dependent quantity null, and product-specific rates (coverage,
 // airflow) wait for a selected product's published data.
-export const bathroomRefreshRecipe = { id: 'bathroom-refresh', version: 1 } as const;
+export const bathroomRefreshRecipe = { id: 'bathroom-refresh', version: 2 } as const;
 
 export const bathroomPackages = [
   {
@@ -60,7 +60,7 @@ export const bathroomPackages = [
 export const bathroomSources: ScopeDraft['sources'] = [
   {
     id: 'recipe-bathroom-refresh-1',
-    title: 'Renovagent bathroom-refresh recipe v1',
+    title: 'Renovagent bathroom-refresh recipe v2',
     publisher: 'Renovagent',
     retrieval: 'internal-recipe',
     supports:
@@ -563,7 +563,7 @@ export function bathroomRequirements(packageId: string, v: RecipeValues): ScopeR
     }
     case 'exhaust-fan': {
       const broan = ['broan-fan-install', ...RECIPE];
-      const dims = missing(v, ['floorLengthFt', 'floorWidthFt']);
+      const dims = floorSizeMissing(v);
       return [
         req(
           packageId,

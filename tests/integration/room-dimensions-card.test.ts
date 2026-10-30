@@ -65,15 +65,53 @@ test('the controller saves a photo once, cites it from each fact, and skips unch
   repo.close();
 });
 
+test('an imported plan file is kept verbatim as evidence for its area and perimeter', async () => {
+  const repo = await IndexedDbProjectRepository.open({
+    factory: new IDBFactory(),
+    name: crypto.randomUUID(),
+    ownerId: context.ownerId,
+  });
+  const c = new WorkspaceController(repo, await repo.read());
+  const id = await c.createProject({
+    name: 'Bath',
+    goal: 'Retile the bathroom',
+    propertyName: 'Test home',
+    underway: false,
+  });
+  const text = JSON.stringify({ walls: [], floors: [] });
+  const plan = new File([text], 'scan.json', { type: 'application/json' });
+  await c.recordRoomDimensions(
+    id,
+    {
+      length: null,
+      width: null,
+      height: null,
+      area: { amount: 12, unit: 'm2' },
+      perimeter: { amount: 14, unit: 'm' },
+      method: 'floor-plan-file',
+      notes: '',
+    },
+    plan,
+  );
+  const state = await repo.read();
+  const evidence = Object.values(state.evidence).find((e) => e.source.attachment)!;
+  assert.equal(evidence.source.attachment!.mediaType, 'application/json');
+  assert.match(evidence.source.description, /Floor plan file/);
+  assert.equal(await (await repo.readBlob(evidence.source.attachment!.blobId))!.text(), text);
+  for (const d of ['area', 'perimeter'] as const)
+    assert.ok(roomDimensionFact(state, id, d)!.evidenceIds.includes(evidence.id));
+  repo.close();
+});
+
 test('the room card starts empty and open, with no invented dimensions', () => {
   const s = new Scenario();
   s.create();
   const html = render(s);
-  assert.match(html, /Measure this room · 0\/3 recorded/);
+  assert.match(html, /Measure this room · 0\/5 recorded/);
   assert.match(html, /<details[^>]*open/);
   assert.doesNotMatch(html, /value="\d/);
   assert.match(html, /Phone AR measuring app/);
-  assert.match(html, /nothing here is verified/);
+  assert.match(html, /nothing here is verified/i);
 });
 
 test('saved dimensions show in their original units and a stale draft asks for a re-draft', () => {
@@ -105,7 +143,7 @@ test('saved dimensions show in their original units and a stale draft asks for a
   for (const c of commands) s.apply(c);
   assert.equal(s.state.artifacts[scopeDraftId('project-a')].at(-1)!.freshness, 'stale');
   const html = render(s);
-  assert.match(html, /2\/3 recorded/);
+  assert.match(html, /2\/5 recorded/);
   assert.match(html, /value="12"/);
   assert.match(html, /value="96"/);
   assert.match(html, /Ask Muse to re-draft/);

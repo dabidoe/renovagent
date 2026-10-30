@@ -17,7 +17,7 @@ import {
 // Versioned living-room refresh recipe: wall paint, carpet removal and two
 // floating-floor alternatives. Like the bathroom recipe it never supplies a
 // physical default; product rates and gaps come from the selected product.
-export const livingRoomRefreshRecipe = { id: 'living-room-refresh', version: 1 } as const;
+export const livingRoomRefreshRecipe = { id: 'living-room-refresh', version: 2 } as const;
 
 export const livingRoomPackages = [
   {
@@ -50,7 +50,7 @@ export const livingRoomPackages = [
 export const livingRoomSources: ScopeDraft['sources'] = [
   {
     id: 'recipe-living-room-refresh-1',
-    title: 'Renovagent living-room-refresh recipe v1',
+    title: 'Renovagent living-room-refresh recipe v2',
     publisher: 'Renovagent',
     retrieval: 'internal-recipe',
     supports:

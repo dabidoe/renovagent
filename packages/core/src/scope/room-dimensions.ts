@@ -8,8 +8,14 @@ import {
   type Workspace,
 } from '@renovagent/contracts';
 
-const order: RoomDimension[] = ['length', 'width', 'height'];
-const labels = { length: 'Floor length', width: 'Floor width', height: 'Ceiling height' };
+const order: RoomDimension[] = ['length', 'width', 'height', 'area', 'perimeter'];
+const labels = {
+  length: 'Floor length',
+  width: 'Floor width',
+  height: 'Ceiling height',
+  area: 'Floor area',
+  perimeter: 'Floor perimeter',
+};
 
 // Project-scoped room dimension facts, so the web card and any later capture
 // path supersede the same records instead of creating a second live fact.
@@ -85,7 +91,11 @@ export function roomDimensionCommands(
         key: roomDimensionFacts[dimension],
         scope: 'project',
         supersedesRevision: old?.revision || 0,
-        value: { kind: 'quantity', dimension: 'length', ...input[dimension]! },
+        value: {
+          kind: 'quantity',
+          dimension: dimension === 'area' ? 'area' : 'length',
+          ...input[dimension]!,
+        },
         assertion: 'user_reported',
         evidenceIds: [ids.evidenceId, ...input.photoEvidenceIds],
       },

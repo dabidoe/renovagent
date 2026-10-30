@@ -1,28 +1,35 @@
-import { useState, type FormEvent } from 'react';
+import { useState, type ChangeEvent, type FormEvent } from 'react';
 import {
   roomMeasureMethodLabels,
+  type FloorPlanSummary,
   type RoomDimension,
+  type RoomDimensionsInput,
   type RoomMeasureMethod,
   type Workspace,
 } from '@renovagent/contracts';
-import { roomDimensionFact, scopeDraftId } from '@renovagent/core';
+import { roomDimensionFact, scopeDraftId, summarizeFloorPlan } from '@renovagent/core';
 import { type WorkspaceController } from '../../app/workspace-controller.js';
 
-const dimensions: { key: RoomDimension; label: string }[] = [
-  { key: 'length', label: 'Floor length' },
-  { key: 'width', label: 'Floor width' },
-  { key: 'height', label: 'Ceiling height' },
-];
-const units = ['ft', 'in', 'm', 'cm'] as const;
-type Unit = (typeof units)[number];
+const lengthUnits = ['ft', 'in', 'm', 'cm'] as const;
+const areaUnits = ['ft2', 'm2'] as const;
+type Unit = (typeof lengthUnits)[number] | (typeof areaUnits)[number];
 type Entry = { amount: string; unit: Unit };
+const dimensions: { key: RoomDimension; label: string; units: readonly Unit[] }[] = [
+  { key: 'length', label: 'Floor length', units: lengthUnits },
+  { key: 'width', label: 'Floor width', units: lengthUnits },
+  { key: 'height', label: 'Ceiling height', units: lengthUnits },
+  { key: 'area', label: 'Floor area', units: areaUnits },
+  { key: 'perimeter', label: 'Floor perimeter', units: lengthUnits },
+];
+const unitLabel = (u: Unit) => (u === 'ft2' ? 'sq ft' : u === 'm2' ? 'm²' : u);
 
 // Saved values come back in the units the person typed (originalValue).
 function savedEntry(state: Workspace, projectId: string, key: RoomDimension): Entry {
+  const units = dimensions.find((d) => d.key === key)!.units;
   const v = roomDimensionFact(state, projectId, key)?.originalValue;
   return v?.kind === 'quantity' && (units as readonly string[]).includes(v.unit)
     ? { amount: String(v.amount), unit: v.unit as Unit }
-    : { amount: '', unit: 'ft' };
+    : { amount: '', unit: units[0] };
 }
 
 export function RoomDimensionsCard({
@@ -44,7 +51,8 @@ export function RoomDimensionsCard({
   );
   const [method, setMethod] = useState<RoomMeasureMethod>('tape-measure');
   const [notes, setNotes] = useState('');
-  const [photo, setPhoto] = useState<File | undefined>();
+  const [evidence, setEvidence] = useState<File | undefined>();
+  const [plan, setPlan] = useState<FloorPlanSummary | null>(null);
   // Open by default only until something is recorded; the person controls it after.
   const [open, setOpen] = useState(
     () => !dimensions.some(({ key }) => roomDimensionFact(state, projectId, key)),
@@ -54,27 +62,60 @@ export function RoomDimensionsCard({
   const recorded = dimensions.filter(({ key }) => roomDimensionFact(state, projectId, key)).length;
   const draft = state.artifacts[scopeDraftId(projectId)]?.at(-1);
 
+  // Parsing only proposes values; nothing is recorded until the person saves.
+  async function importPlan(e: ChangeEvent<HTMLInputElement>) {
+    setError('');
+    setSaved('');
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const summary = summarizeFloorPlan(JSON.parse(text));
+      const set = (amount: number | null, unit: Unit) =>
+        amount === null ? null : { amount: String(amount), unit };
+      setValues((v) => ({
+        ...v,
+        area: set(summary.floorAreaM2, 'm2') ?? v.area,
+        perimeter: set(summary.perimeterM, 'm') ?? v.perimeter,
+        height: set(summary.ceilingHeightM, 'm') ?? v.height,
+      }));
+      setPlan(summary);
+      setMethod('floor-plan-file');
+      setEvidence(new File([text], file.name, { type: 'application/json' }));
+    } catch (err) {
+      setPlan(null);
+      setError(
+        err instanceof SyntaxError
+          ? 'That file is not JSON. Export the plan as RoomPlan or OpenPlan3D JSON.'
+          : err instanceof Error
+            ? err.message
+            : String(err),
+      );
+    }
+  }
+
   async function save(e: FormEvent) {
     e.preventDefault();
     setError('');
     setSaved('');
-    const length = (key: RoomDimension) =>
+    const entry = (key: RoomDimension) =>
       values[key].amount.trim() === ''
         ? null
         : { amount: Number(values[key].amount), unit: values[key].unit };
+    // Units are constrained per field by the selects; the core schema re-checks them.
+    const input = {
+      length: entry('length'),
+      width: entry('width'),
+      height: entry('height'),
+      area: entry('area'),
+      perimeter: entry('perimeter'),
+      method,
+      notes,
+    } as Omit<RoomDimensionsInput, 'photoEvidenceIds'>;
     try {
-      await controller.recordRoomDimensions(
-        projectId,
-        {
-          length: length('length'),
-          width: length('width'),
-          height: length('height'),
-          method,
-          notes,
-        },
-        photo,
-      );
-      setPhoto(undefined);
+      await controller.recordRoomDimensions(projectId, input, evidence);
+      setEvidence(undefined);
+      setPlan(null);
       setSaved('Saved as your reported measurements. Confirm them on site before ordering.');
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
@@ -87,14 +128,46 @@ export function RoomDimensionsCard({
       open={open}
       onToggle={(e) => setOpen(e.currentTarget.open)}
     >
-      <summary>Measure this room · {recorded}/3 recorded</summary>
+      <summary>
+        Measure this room · {recorded}/{dimensions.length} recorded
+      </summary>
       <p>
-        Enter what you measured. Leave a value blank if you don&apos;t know it. Paint, flooring and
-        trim quantities use these numbers; nothing here is verified.
+        Enter what you measured, or import a floor plan from an iPhone LiDAR scan (RoomPlan JSON) or
+        an{' '}
+        <a href="https://openplan3d.com" target="_blank" rel="noreferrer">
+          OpenPlan3D
+        </a>{' '}
+        export. Leave a value blank if you don&apos;t know it. Floor area and perimeter from a plan
+        replace length × width. Nothing here is verified.
       </p>
       <form className="candidate-editor" onSubmit={save} aria-label="Room dimensions">
+        <label>
+          Import floor plan (optional)
+          <input
+            type="file"
+            accept=".json,application/json"
+            aria-label="Floor plan file"
+            onChange={(e) => void importPlan(e)}
+          />
+        </label>
+        {plan && (
+          <div role="status" aria-label="Imported floor plan">
+            <p>
+              {plan.format === 'roomplan-capture' ? 'RoomPlan scan' : 'OpenPlan3D plan'}:{' '}
+              {plan.wallCount} walls, {plan.openings.length} doors/windows
+              {plan.spaces.length ? `, spaces: ${plan.spaces.join(', ')}` : ''}. Confidence:{' '}
+              {plan.confidence.high} high, {plan.confidence.medium} medium, {plan.confidence.low}{' '}
+              low. Review the values below, then save.
+            </p>
+            <ul>
+              {plan.notes.map((note) => (
+                <li key={note}>{note}</li>
+              ))}
+            </ul>
+          </div>
+        )}
         <div className="candidate-dimensions">
-          {dimensions.map(({ key, label }) => (
+          {dimensions.map(({ key, label, units }) => (
             <label key={key}>
               {label}
               <span>
@@ -119,7 +192,9 @@ export function RoomDimensionsCard({
                   }
                 >
                   {units.map((u) => (
-                    <option key={u}>{u}</option>
+                    <option key={u} value={u}>
+                      {unitLabel(u)}
+                    </option>
                   ))}
                 </select>
               </span>
@@ -141,15 +216,17 @@ export function RoomDimensionsCard({
               ))}
             </select>
           </label>
-          <label>
-            Photo (optional)
-            <input
-              type="file"
-              accept="image/*"
-              aria-label="Measurement photo"
-              onChange={(e) => setPhoto(e.target.files?.[0])}
-            />
-          </label>
+          {!plan && (
+            <label>
+              Photo (optional)
+              <input
+                type="file"
+                accept="image/*"
+                aria-label="Measurement photo"
+                onChange={(e) => setEvidence(e.target.files?.[0])}
+              />
+            </label>
+          )}
           <label>
             Notes
             <input

@@ -18,7 +18,19 @@ export function count(amount: number, basis: string): Quantity {
   return { quantity: amount, quantityBasis: basis, blockedBy: [] };
 }
 
+// A floor plan's measured area and perimeter win over length × width, which is
+// exact only for rectangles. Either source unblocks the room-size items.
+export function floorSizeMissing(v: RecipeValues): Need {
+  return v.floorAreaSqFt !== undefined ? [] : missing(v, ['floorLengthFt', 'floorWidthFt']);
+}
+
 export function floorArea(v: RecipeValues): Quantity {
+  if (v.floorAreaSqFt !== undefined)
+    return {
+      quantity: round(v.floorAreaSqFt),
+      quantityBasis: `${round(v.floorAreaSqFt)} sq ft measured floor area (floor plan); fixtures and cabinet footprint not deducted.`,
+      blockedBy: [],
+    };
   const blocked = missing(v, ['floorLengthFt', 'floorWidthFt']);
   if (blocked.length)
     return {
@@ -33,33 +45,47 @@ export function floorArea(v: RecipeValues): Quantity {
   };
 }
 
-export function perimeter(v: RecipeValues): Quantity {
+function perimeterFt(v: RecipeValues): { feet: number; basis: string } | Need {
+  if (v.floorPerimeterFt !== undefined)
+    return {
+      feet: round(v.floorPerimeterFt),
+      basis: `${round(v.floorPerimeterFt)} ft measured perimeter (floor plan)`,
+    };
   const blocked = missing(v, ['floorLengthFt', 'floorWidthFt']);
-  if (blocked.length)
+  if (blocked.length) return blocked;
+  return {
+    feet: round(2 * (v.floorLengthFt! + v.floorWidthFt!)),
+    basis: `2 × (${v.floorLengthFt} + ${v.floorWidthFt}) ft`,
+  };
+}
+
+export function perimeter(v: RecipeValues): Quantity {
+  const p = perimeterFt(v);
+  if (Array.isArray(p))
     return {
       quantity: null,
       quantityBasis: '2 × (length + width); dimensions not yet provided.',
-      blockedBy: blocked,
+      blockedBy: p,
     };
   return {
-    quantity: round(2 * (v.floorLengthFt! + v.floorWidthFt!)),
-    quantityBasis: `2 × (${v.floorLengthFt} + ${v.floorWidthFt}) ft; door openings and the vanity run not deducted.`,
+    quantity: p.feet,
+    quantityBasis: `${p.basis}; door openings and the vanity run not deducted.`,
     blockedBy: [],
   };
 }
 
 export function wallArea(v: RecipeValues): Quantity {
-  const blocked = missing(v, ['floorLengthFt', 'floorWidthFt', 'ceilingHeightFt']);
-  if (blocked.length)
+  const p = perimeterFt(v);
+  const blocked = [...(Array.isArray(p) ? p : []), ...missing(v, ['ceilingHeightFt'])];
+  if (Array.isArray(p) || blocked.length)
     return {
       quantity: null,
       quantityBasis: 'Room perimeter × ceiling height; dimensions not yet provided.',
       blockedBy: blocked,
     };
-  const gross = 2 * (v.floorLengthFt! + v.floorWidthFt!) * v.ceilingHeightFt!;
   return {
-    quantity: round(gross),
-    quantityBasis: `Perimeter ${round(2 * (v.floorLengthFt! + v.floorWidthFt!))} ft × ${v.ceilingHeightFt} ft height, gross; doors, windows, tile and the vanity backsplash not deducted.`,
+    quantity: round(p.feet * v.ceilingHeightFt!),
+    quantityBasis: `Perimeter ${p.feet} ft × ${v.ceilingHeightFt} ft height, gross; doors, windows, tile and the vanity backsplash not deducted.`,
     blockedBy: [],
   };
 }

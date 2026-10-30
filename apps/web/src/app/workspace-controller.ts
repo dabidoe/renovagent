@@ -805,15 +805,17 @@ export class WorkspaceController {
       return { commands: [first, second], value: undefined };
     });
   }
-  // The person's own measurements become project facts; an optional photo is
-  // attached first as original evidence and cited by every recorded dimension.
+  // The person's own measurements become project facts; an optional photo or
+  // floor plan file is attached first as original evidence (the plan keeps its
+  // full geometry) and cited by every recorded dimension.
   async recordRoomDimensions(
     projectId: string,
     input: Omit<RoomDimensionsInput, 'photoEvidenceIds'>,
     photo?: File,
   ) {
-    if (photo && (!photo.type.startsWith('image/') || photo.size > 20 * 1024 * 1024))
-      throw Error('Choose a photo under 20 MB.');
+    const plan = photo?.type === 'application/json';
+    if (photo && ((!photo.type.startsWith('image/') && !plan) || photo.size > 20 * 1024 * 1024))
+      throw Error('Choose a photo or floor plan file under 20 MB.');
     const photoEvidenceId = photo ? uid('attachment') : null,
       blobId = uid('blob'),
       sha256 = photo ? await blobDigest(photo) : '';
@@ -825,7 +827,9 @@ export class WorkspaceController {
               evidence: {
                 id: photoEvidenceId,
                 kind: 'attachment',
-                description: 'Room measurement photo supplied by the user. Not analyzed.',
+                description: plan
+                  ? 'Floor plan file supplied by the user (RoomPlan/OpenPlan3D JSON). Not verified.'
+                  : 'Room measurement photo supplied by the user. Not analyzed.',
                 attachment: {
                   blobId,
                   sha256,

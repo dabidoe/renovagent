@@ -79,7 +79,7 @@ test('a saved scope draft renders packages, open quantities, conditions and sour
     }),
   );
   const html = render(s.state.artifacts['project-a:scope-draft'].at(-1)!.payload);
-  assert.match(html, /Draft scope · recipe bathroom-refresh v1/);
+  assert.match(html, /Draft scope · recipe bathroom-refresh v2/);
   assert.match(html, /Floor tile/);
   assert.match(html, /Needs a measurement/);
   assert.match(html, /Allowance unset/);
