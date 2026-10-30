@@ -347,9 +347,26 @@ export function App({ controller }: { controller: WorkspaceController }) {
           />
         </main>
       ) : (
-        <main className={`prompt-main ${showRecent ? 'has-conversation' : ''}`}>
+        <main className={`prompt-main has-room ${showRecent ? 'has-conversation' : ''}`}>
+          {/* The project opens on its room: the work pinned where it happens. */}
+          <section className="project-room" aria-label="Your room">
+            <RoomStudio
+              key={`${active}:room-home`}
+              state={state}
+              projectId={active}
+              controller={controller}
+              heading={project.name}
+            />
+            <RoomDimensionsCard
+              key={`${active}:room-home-dimensions`}
+              state={state}
+              projectId={active}
+              controller={controller}
+              busy={busy}
+            />
+          </section>
           <div className="prompt-intro">
-            <h1>What would you like to improve?</h1>
+            <h1>What else would you like to improve?</h1>
           </div>
           {showRecent && (
             <section className="prompt-recent" aria-label="Recent conversation" aria-live="polite">
@@ -531,14 +548,6 @@ export function App({ controller }: { controller: WorkspaceController }) {
                     projectId={active}
                     controller={controller}
                     busy={busy}
-                  />
-                )}
-                {['options', 'plan'].includes(view.stage) && (
-                  <RoomStudio
-                    key={`${active}:room-studio`}
-                    state={state}
-                    projectId={active}
-                    controller={controller}
                   />
                 )}
                 {['options', 'plan'].includes(view.stage) &&

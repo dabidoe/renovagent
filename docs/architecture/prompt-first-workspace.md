@@ -6,6 +6,13 @@ October 29, 2026. Prompt UI implemented locally; standard Muse-agent MCP access 
 
 The initial house-first dashboard proposal was rejected as too dated and crowded. The new opening is a clean, centered prompt with a compact house/project context. House, plan, materials and contractor tools appear on demand in dialogs. The web UI is one client of the project workflow; a user's standard Muse agent should eventually be another.
 
+## Update: the project opens on its room (October 30, 2026)
+
+At the owner's direction, an open project now leads with its room: the 3D room
+studio with annotated, priced work (see [room studio](room-studio.md)), then the
+prompt. The landing page and the dialogs are unchanged; the prompt stays on the
+same page, below the room.
+
 ## Implemented UI
 
 - Replaced the permanent sidebar, lifecycle dashboard and split conversation with a white, sans-serif prompt surface. A single Tools control inside the composer opens the existing work surfaces; the separate shortcut row, tagline and footer were removed.

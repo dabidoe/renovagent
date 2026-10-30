@@ -46,6 +46,44 @@ orientation; the Blender top-down render and the SVG of the same scan match.
   show name, retailer, SKU, price and freshness; the catalog has no product
   images yet, so the panel says "No product image on file".
 
+## Project home and annotations (October 30, 2026)
+
+At the owner's direction the project now opens on its room: the studio leads
+the home screen with the "Measure this room" card under it, and the prompt
+follows (narrower). The options/plan dialog no longer mounts a second scene.
+
+- `geometry/room-annotations.ts`: one callout per included work package,
+  pinned to the surfaces it acts on (paint → all walls, floor packages → floor,
+  exhaust fan → ceiling, toilet/vanity → a scanned fixture of that kind).
+  Without a recorded location (a measured box has no fixtures) or for
+  whole-room work, the package is listed, never pinned at a guessed spot.
+  Located work is numbered first.
+- Costs come only from purchase-plan lines (per package and total, with the
+  tier, "N of M items priced", tax/labour excluded). Nothing is derived from
+  3D geometry; panels show measured geometry separately.
+- The scene places pins on measured geometry (longest wall, floor, under the
+  ceiling, above a fixture), fans out pins sharing a surface, and fades walls
+  between the camera and the room (dollhouse cutaway). Clicking a pin or a
+  surface selects the package and highlights all its surfaces.
+- "Pin this work in the room" drafts the scope from a recipe's packages
+  (`controller.draftScope`, pure domain, local or connected). Connected
+  workspaces then price it against the shared catalog
+  (`controller.priceScopeDraft`: BOM tied to the draft revision, tier plans tied
+  to the BOM, as the server's `draft_scope` does).
+- Without a chosen design option, the Proposed look follows the planned work
+  (vinyl plank / hardwood / tile floor; carpet as the existing floor when the
+  plan removes it). Illustrative swatches, not products.
+- "Example project" is now a labelled living-room refresh: `[Example fixture]`
+  14 × 12 × 8 ft dimensions and a drafted scope, priced from the demo catalog
+  when connected (paint and vinyl-plank lines; the rest stays "not priced").
+
+Verified: `tests/domain/room-annotations.test.ts` (box room, scanned toilet,
+partial pricing, whole-home note), `room-annotations-priced.test.ts` (example
+path through the demo catalog to priced pins), and headless Chrome over CDP in
+local mode (pins, not priced) and connected mode against a scratch database
+with the demo catalog ($724.32 mid-tier estimate, paint and floor priced).
+Not verified by a person in a browser.
+
 ## Wiring and other trades
 
 The drawing has an empty `layer-electrical` (`data-status="not-recorded"`).

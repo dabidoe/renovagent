@@ -9,8 +9,11 @@ import {
   designOptionsId,
   dimensionLabel,
   floorPlanSvg,
+  roomAnnotations,
   roomSurfaces,
   scopeDraftId,
+  scopeRecipe,
+  type RoomAnnotation,
   type RoomSurface,
 } from '@renovagent/core';
 import type { WorkspaceController } from '../../app/workspace-controller.js';
@@ -18,12 +21,31 @@ import { loadRoomSource, type RoomSource } from './room-source.js';
 import type { RoomLook, RoomScene } from './room-scene.js';
 
 const EXISTING: RoomLook = { wallColor: 'white', floorFinish: 'existing', label: 'Existing' };
+const TIERS = ['mid', 'builder', 'high'] as const;
+const TIER_LABEL: Record<(typeof TIERS)[number], string> = {
+  builder: 'Budget',
+  mid: 'Mid-range',
+  high: 'Premium',
+};
 const m2 = (v: number | null | undefined) =>
   v === null || v === undefined
     ? 'not established'
     : `${v} m² (${Math.round(v * 10.7639 * 10) / 10} sq ft)`;
 const money = (minor: number, currency: string) =>
-  new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(minor / 100);
+  new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency,
+    maximumFractionDigits: minor % 100 ? 2 : 0,
+  }).format(minor / 100);
+const pinCost = (a: RoomAnnotation) =>
+  a.costMinor === null || !a.currency ? 'not priced' : money(a.costMinor, a.currency);
+const STATUS: Record<string, string> = {
+  quantified: '',
+  'needs-input': 'needs a measurement',
+  'needs-product-spec': 'needs a product choice',
+  conditional: 'only if needed',
+  'needs-source': 'needs a source',
+};
 
 function download(name: string, data: BlobPart, type: string) {
   const url = URL.createObjectURL(new Blob([data], { type }));
@@ -40,6 +62,29 @@ function proposedLook(state: Workspace, projectId: string): RoomLook | null {
     | undefined;
   const selected = options?.options.find((o) => o.id === options.selectedOptionId);
   return selected ? { ...selected.direction, label: `Proposed: ${selected.title}` } : null;
+}
+
+// Without a chosen design option, the planned work implies an illustrative
+// look: the floor package names the new finish, carpet removal the old one.
+// Wall colour is not in the scope, so it stays as is.
+const FLOOR_FINISH: Record<string, string> = {
+  'lvp-floor': 'vinyl plank',
+  'hardwood-floor': 'hardwood',
+  'floor-tile': 'tile',
+};
+function scopeLooks(draft: ScopeDraft | null): { existing: RoomLook; proposed: RoomLook | null } {
+  const included = new Set(draft?.packages.filter((p) => p.included).map((p) => p.id));
+  const existing = {
+    ...EXISTING,
+    floorFinish: included.has('carpet-removal') ? 'carpet' : EXISTING.floorFinish,
+  };
+  const floor = Object.keys(FLOOR_FINISH).find((id) => included.has(id));
+  return {
+    existing,
+    proposed: floor
+      ? { ...existing, floorFinish: FLOOR_FINISH[floor]!, label: 'Proposed: planned work' }
+      : null,
+  };
 }
 
 function SurfaceDetail({ surface }: { surface: RoomSurface }) {
@@ -93,37 +138,162 @@ function SurfaceDetail({ surface }: { surface: RoomSurface }) {
           {n}
         </p>
       ))}
-      <h5>In the scope</h5>
-      {surface.links.length === 0 ? (
-        <p className="small-note">No scope item acts on this surface yet.</p>
-      ) : (
-        <ul className="room3d-links">
-          {surface.links.map((l) => (
-            <li key={l.requirementId}>
+    </div>
+  );
+}
+
+function AnnotationDetail({
+  pin,
+  surfaces,
+  onBack,
+}: {
+  pin: RoomAnnotation;
+  surfaces: RoomSurface[];
+  onBack: () => void;
+}) {
+  const on = surfaces.filter((s) => pin.surfaceIds.includes(s.id));
+  const walls = on.filter((s) => s.kind === 'wall');
+  const wallArea = walls.every((w) => w.geometry.grossAreaM2 != null)
+    ? Math.round(walls.reduce((n, w) => n + w.geometry.grossAreaM2!, 0) * 100) / 100
+    : null;
+  return (
+    <div className="room3d-detail" aria-live="polite">
+      <button type="button" className="link-button subtle" onClick={onBack}>
+        ← All work
+      </button>
+      <h4>
+        <span className="room3d-badge">{pin.number}</span> {pin.title}
+      </h4>
+      <p className="room3d-detail-cost">
+        {pinCost(pin)}
+        {pin.costMinor !== null && pin.priced < pin.lines.length && (
+          <span className="small-note">
+            {' '}
+            · {pin.priced} of {pin.lines.length} items priced
+          </span>
+        )}
+      </p>
+      <p className="small-note">{pin.summary}</p>
+      {walls.length > 1 && (
+        <p className="small-note">
+          On {walls.length} walls
+          {wallArea !== null ? ` · ${m2(wallArea)} gross, measured, not verified` : ''}
+        </p>
+      )}
+      {pin.unplacedReason && <p className="small-note">{pin.unplacedReason}.</p>}
+      <ul className="room3d-links">
+        {pin.lines.map((l) => (
+          <li key={l.requirementId}>
+            <div className="room3d-line-head">
               <strong>{l.purpose}</strong>
-              <div>
-                {l.quantity === null ? 'Quantity open' : `${l.quantity} ${l.unit}`}{' '}
-                <span className="small-note">· package total · {l.quantityBasis}</span>
-              </div>
-              {l.product ? (
-                <div className="room3d-product">
-                  <div className="room3d-product-image" aria-label="No product image on file">
-                    No product image on file
-                  </div>
-                  <div>
-                    {l.product.name}
-                    <div className="small-note">
-                      {l.product.retailer} · SKU {l.product.sku} ·{' '}
-                      {money(l.product.lineTotalMinor, l.product.currency)} · price{' '}
-                      {l.product.freshness}
-                    </div>
+              <span>
+                {l.product ? money(l.product.lineTotalMinor, l.product.currency) : 'not priced'}
+              </span>
+            </div>
+            <div className="small-note">
+              {l.quantity === null ? 'Quantity open' : `${l.quantity} ${l.unit}`}
+              {STATUS[l.status] ? ` · ${STATUS[l.status]}` : ''}
+            </div>
+            {l.product && (
+              <div className="room3d-product">
+                <div className="room3d-product-image" aria-label="No product image on file">
+                  No image on file
+                </div>
+                <div>
+                  {l.product.productName}
+                  <div className="small-note">
+                    {l.product.retailer} · SKU {l.product.sku} · price {l.product.freshness}
                   </div>
                 </div>
-              ) : null}
-            </li>
-          ))}
-        </ul>
-      )}
+              </div>
+            )}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+const ROOMS = [
+  {
+    recipeId: 'bathroom-refresh',
+    label: 'Bathroom',
+    request: 'Refresh this bathroom',
+    defaults: ['removal-protection', 'vanity', 'toilet', 'floor-tile', 'paint', 'exhaust-fan'],
+  },
+  {
+    recipeId: 'living-room-refresh',
+    label: 'Living room',
+    request: 'Refresh this living room',
+    defaults: ['removal-protection', 'wall-paint', 'carpet-removal', 'lvp-floor'],
+  },
+] as const;
+
+// Picks a room type and its work packages, then drafts the scope from the
+// recorded room facts. Nothing is priced or ordered here.
+function WorkPlanner({
+  onDraft,
+  busy,
+}: {
+  onDraft: (recipeId: string, packageIds: string[], request: string) => void;
+  busy: boolean;
+}) {
+  const [room, setRoom] = useState<(typeof ROOMS)[number]>(ROOMS[0]);
+  const [picked, setPicked] = useState<string[]>([...ROOMS[0].defaults]);
+  const packages = scopeRecipe(room.recipeId).packages;
+  return (
+    <div className="room3d-summary room3d-planner">
+      <h4>Plan the work</h4>
+      <div className="room3d-tiers" role="group" aria-label="Room type">
+        {ROOMS.map((r) => (
+          <button
+            key={r.recipeId}
+            type="button"
+            aria-pressed={r === room}
+            onClick={() => {
+              setRoom(r);
+              setPicked([...r.defaults]);
+            }}
+          >
+            {r.label}
+          </button>
+        ))}
+      </div>
+      <ul className="room3d-checks">
+        {packages.map((p) => (
+          <li key={p.id}>
+            <label>
+              <input
+                type="checkbox"
+                checked={picked.includes(p.id)}
+                onChange={(e) =>
+                  setPicked((now) =>
+                    e.target.checked ? [...now, p.id] : now.filter((id) => id !== p.id),
+                  )
+                }
+              />{' '}
+              {p.title}
+            </label>
+          </li>
+        ))}
+      </ul>
+      <button
+        type="button"
+        className="primary"
+        disabled={busy || !picked.length}
+        onClick={() =>
+          onDraft(
+            room.recipeId,
+            packages.map((p) => p.id).filter((id) => picked.includes(id)),
+            room.request,
+          )
+        }
+      >
+        Pin this work in the room
+      </button>
+      <span className="small-note">
+        Quantities come from your recorded measurements; missing ones stay open.
+      </span>
     </div>
   );
 }
@@ -132,27 +302,24 @@ export function RoomStudio({
   state,
   projectId,
   controller,
+  heading = 'Room studio',
 }: {
   state: Workspace;
   projectId: string;
   controller: WorkspaceController;
+  heading?: string;
 }) {
   const [source, setSource] = useState<RoomSource | null>(null);
   const [loadError, setLoadError] = useState('');
   const [view, setView] = useState<'3d' | 'plan'>('3d');
   const [webglError, setWebglError] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [pinId, setPinId] = useState<string | null>(null);
+  const [pricing, setPricing] = useState('');
+  const [replanning, setReplanning] = useState(false);
   // Wall dimensions default on for one room, off for busy multi-room plans.
   const [showDims, setShowDims] = useState<boolean | null>(null);
-  const proposedNow = proposedLook(state, projectId);
   const [showProposed, setShowProposed] = useState(true);
-  // Stable look objects: a new object each render would rebuild the floor texture.
-  const proposed = useMemo(
-    () => proposedNow,
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [proposedNow?.wallColor, proposedNow?.floorFinish, proposedNow?.label],
-  );
-  const look = showProposed && proposed ? proposed : EXISTING;
   const host = useRef<HTMLDivElement>(null);
   const scene = useRef<RoomScene | null>(null);
 
@@ -174,21 +341,40 @@ export function RoomStudio({
   }, [projectId, factKey]);
 
   const draft = state.artifacts[scopeDraftId(projectId)]?.at(-1);
-  const plan = ['builder', 'mid', 'high']
-    .map((t) => state.artifacts[`${projectId}:purchase-plan:${t}`]?.at(-1))
-    .find(Boolean);
+  const plans = TIERS.map((t) => state.artifacts[`${projectId}:purchase-plan:${t}`]?.at(-1)).filter(
+    (p) => p?.payload.kind === 'purchase-plan',
+  );
+  const [tier, setTier] = useState<string | null>(null);
+  const plan =
+    plans.find((p) => (p!.payload as PurchasePlanPayload).tier === tier) ?? plans[0] ?? undefined;
   // Every command re-reads the workspace into new objects, so key on revisions:
   // unrelated changes (a chat draft, a view switch) must not rebuild the scene.
   const scopeKey = `${draft?.revision ?? 0}:${plan?.id ?? ''}@${plan?.revision ?? 0}`;
+  const scopeDraft = draft?.payload.kind === 'scope-draft' ? (draft.payload as ScopeDraft) : null;
+  const planPayload = plan ? (plan.payload as PurchasePlanPayload) : null;
+  // A chosen design option sets the proposed look; otherwise the planned work does.
+  const fromScope = scopeLooks(scopeDraft);
+  const proposedNow = proposedLook(state, projectId) ?? fromScope.proposed;
+  const existingNow = fromScope.existing;
+  // Stable look objects: a new object each render would rebuild the floor texture.
+  const proposed = useMemo(
+    () => proposedNow,
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [proposedNow?.wallColor, proposedNow?.floorFinish, proposedNow?.label],
+  );
+  const existing = useMemo(
+    () => existingNow,
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [existingNow.floorFinish],
+  );
+  const look = showProposed && proposed ? proposed : existing;
   const surfaces = useMemo(
-    () =>
-      source
-        ? roomSurfaces(
-            source.model,
-            draft?.payload.kind === 'scope-draft' ? (draft.payload as ScopeDraft) : null,
-            plan?.payload.kind === 'purchase-plan' ? (plan.payload as PurchasePlanPayload) : null,
-          )
-        : [],
+    () => (source ? roomSurfaces(source.model, scopeDraft, planPayload) : []),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [source, scopeKey],
+  );
+  const notes = useMemo(
+    () => (source ? roomAnnotations(source.model, scopeDraft, planPayload) : null),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [source, scopeKey],
   );
@@ -197,6 +383,32 @@ export function RoomStudio({
     () => (source ? floorPlanSvg(source.model, { title, sourceLabel: source.label }) : ''),
     [source, title],
   );
+  const allPins = notes ? [...notes.pins, ...notes.unplaced] : [];
+  const choosePin = (id: string | null) => {
+    setPinId(id);
+    setSelectedId(null);
+    const pin = allPins.find((p) => p.id === id);
+    scene.current?.select(pin?.surfaceIds ?? []);
+    scene.current?.focusPin(id);
+  };
+  // Clicking a surface opens the work acting on it; plain surfaces show geometry.
+  const chooseSurface = (surfaceId: string | null) => {
+    const pin = surfaceId ? notes?.pins.find((p) => p.surfaceIds.includes(surfaceId)) : undefined;
+    if (pin) {
+      setPinId(pin.id);
+      setSelectedId(null);
+      scene.current?.select(pin.surfaceIds);
+      scene.current?.focusPin(pin.id);
+    } else {
+      setPinId(null);
+      setSelectedId(surfaceId);
+      scene.current?.focusPin(null);
+    }
+  };
+  const chooseSurfaceRef = useRef(chooseSurface);
+  chooseSurfaceRef.current = chooseSurface;
+  const choosePinRef = useRef(choosePin);
+  choosePinRef.current = choosePin;
 
   useEffect(() => {
     if (!source || view !== '3d' || !host.current) return;
@@ -205,10 +417,17 @@ export function RoomStudio({
     import('./room-scene.js')
       .then(({ mountRoomScene }) => {
         if (disposed) return;
-        scene.current = mountRoomScene(el, source.model, surfaces, look, setSelectedId, {
-          sourceEvidenceId: source.evidenceId,
-          title,
-        });
+        scene.current = mountRoomScene(
+          el,
+          source.model,
+          surfaces,
+          look,
+          (id) => chooseSurfaceRef.current(id),
+          { sourceEvidenceId: source.evidenceId, title },
+          notes?.pins ?? [],
+          (id) => choosePinRef.current(id),
+          pinCost,
+        );
       })
       .catch((e) => {
         setWebglError(e instanceof Error ? e.message : String(e));
@@ -220,26 +439,54 @@ export function RoomStudio({
       scene.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [source, view, surfaces]);
+  }, [source, view, surfaces, notes]);
   useEffect(() => scene.current?.setLook(look), [look]);
+
+  const run = async (work: () => Promise<unknown>) => {
+    setPricing('working');
+    try {
+      await work();
+      setPricing('');
+      return true;
+    } catch (e) {
+      setPricing(e instanceof Error ? e.message : String(e));
+      return false;
+    }
+  };
+  const price = () => run(() => controller.priceScopeDraft(projectId));
+  // Connected workspaces price straight away; the catalog is on the server.
+  const draftWork = async (recipeId: string, packageIds: string[], request: string) => {
+    const drafted = await run(() =>
+      controller.draftScope(projectId, recipeId, packageIds, request),
+    );
+    if (!drafted) return;
+    setReplanning(false);
+    choosePin(null);
+    if (controller.connected) await price();
+  };
 
   if (loadError) return <p role="alert">Could not read the floor plan: {loadError}</p>;
   if (!source)
     return (
-      <section className="room3d" aria-label="Room studio">
-        <h3>Room studio</h3>
+      <section className="room3d room3d-empty" aria-label={heading}>
+        <h3>{heading}</h3>
+        <p>
+          Bring in your room to see it in 3D, with every planned piece of work pinned where it
+          happens and what it costs.
+        </p>
         <p className="small-note">
-          Save a floor plan or your room&apos;s length and width above to see the room in 3D and as
-          a dimensioned drawing.
+          Import a floor plan from a scanning app, or enter the room&apos;s length and width.
         </p>
       </section>
     );
   const selected = surfaces.find((s) => s.id === selectedId) ?? null;
+  const activePin = allPins.find((p) => p.id === pinId) ?? null;
+  const dimsOn = showDims ?? source.model.walls.length <= 8;
   return (
-    <section className="room3d" aria-label="Room studio">
+    <section className="room3d" aria-label={heading}>
       <header className="room3d-head">
         <div>
-          <h3>Room studio</h3>
+          <h3>{heading}</h3>
           <p className="small-note">
             {source.label} · {source.model.walls.length} walls ·{' '}
             {source.model.walls.reduce((n, w) => n + w.openings.length, 0)} openings · measured, not
@@ -251,7 +498,7 @@ export function RoomStudio({
             3D
           </button>
           <button type="button" aria-pressed={view === 'plan'} onClick={() => setView('plan')}>
-            Plan drawing
+            Plan
           </button>
           {proposed && (
             <button
@@ -262,18 +509,14 @@ export function RoomStudio({
               {showProposed ? proposed.label : 'Existing'}
             </button>
           )}
-          <button type="button" onClick={() => download(`${title}-plan.svg`, svg, 'image/svg+xml')}>
-            Download drawing
-          </button>
           {view === '3d' && (
-            <button
-              type="button"
-              aria-pressed={showDims ?? source.model.walls.length <= 8}
-              onClick={() => setShowDims(!(showDims ?? source.model.walls.length <= 8))}
-            >
+            <button type="button" aria-pressed={dimsOn} onClick={() => setShowDims(!dimsOn)}>
               Dimensions
             </button>
           )}
+          <button type="button" onClick={() => download(`${title}-plan.svg`, svg, 'image/svg+xml')}>
+            Drawing ↓
+          </button>
           {view === '3d' && (
             <button
               type="button"
@@ -283,7 +526,7 @@ export function RoomStudio({
                   .then((glb) => download(`${title}.glb`, glb, 'model/gltf-binary'))
               }
             >
-              Download 3D (.glb)
+              3D model ↓
             </button>
           )}
         </div>
@@ -298,47 +541,162 @@ export function RoomStudio({
           3D is unavailable in this browser ({webglError}); showing the drawing.
         </p>
       )}
-      {showProposed && proposed && view === '3d' && (
-        <p className="small-note">
-          Colours and finishes are illustrative swatches for “{proposed.wallColor}” and “
-          {proposed.floorFinish}”, not product photos.
-        </p>
-      )}
       <div className="room3d-body">
         {view === '3d' ? (
           <div
             key="canvas"
             ref={host}
-            className={`room3d-canvas${(showDims ?? source.model.walls.length <= 8) ? '' : ' hide-dims'}`}
+            className={`room3d-canvas${dimsOn ? '' : ' hide-dims'}`}
             data-testid="room3d-canvas"
           />
         ) : (
           <div key="plan" className="room3d-plan" dangerouslySetInnerHTML={{ __html: svg }} />
         )}
         <aside className="room3d-side">
-          {selected ? (
-            <SurfaceDetail surface={selected} />
-          ) : (
-            <p className="small-note">Click a wall, the floor or a fixture to see its scope.</p>
-          )}
-          <h5>Surfaces</h5>
-          <ul className="room3d-surfaces">
-            {surfaces.map((s) => (
-              <li key={s.id}>
+          {activePin ? (
+            <AnnotationDetail pin={activePin} surfaces={surfaces} onBack={() => choosePin(null)} />
+          ) : selected ? (
+            <>
+              <button
+                type="button"
+                className="link-button subtle"
+                onClick={() => chooseSurface(null)}
+              >
+                ← All work
+              </button>
+              <SurfaceDetail surface={selected} />
+              <p className="small-note">No planned work acts on this surface.</p>
+            </>
+          ) : !scopeDraft || replanning ? (
+            <>
+              <WorkPlanner
+                busy={pricing === 'working'}
+                onDraft={(recipeId, packageIds, request) =>
+                  void draftWork(recipeId, packageIds, request)
+                }
+              />
+              {replanning && (
                 <button
                   type="button"
-                  aria-pressed={s.id === selectedId}
-                  onClick={() => {
-                    setSelectedId(s.id);
-                    scene.current?.select(s.id);
-                  }}
+                  className="link-button subtle"
+                  onClick={() => setReplanning(false)}
                 >
-                  {s.label}
-                  {s.links.length ? ` · ${s.links.length} scope items` : ''}
+                  Keep the current plan
                 </button>
-              </li>
-            ))}
-          </ul>
+              )}
+              {pricing && pricing !== 'working' && (
+                <p role="alert" className="small-note">
+                  {pricing}
+                </p>
+              )}
+            </>
+          ) : (
+            <>
+              <div className="room3d-summary">
+                {notes?.totalMinor != null && notes.currency ? (
+                  <>
+                    <span className="eyebrow">Materials estimate</span>
+                    <strong className="room3d-total">
+                      {money(notes.totalMinor, notes.currency)}
+                    </strong>
+                    <span className="small-note">
+                      {notes.priced} of {notes.items} items priced · demo catalog prices
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <span className="eyebrow">{notes?.items} items planned</span>
+                    <strong className="room3d-total">Not priced yet</strong>
+                    {controller.connected ? (
+                      <button
+                        type="button"
+                        className="primary"
+                        disabled={pricing === 'working'}
+                        onClick={() => void price()}
+                      >
+                        {pricing === 'working' ? 'Pricing…' : 'Price this work'}
+                      </button>
+                    ) : (
+                      <span className="small-note">
+                        Prices come from the shared catalog when the workspace is connected.
+                      </span>
+                    )}
+                  </>
+                )}
+                {pricing && pricing !== 'working' && (
+                  <p role="alert" className="small-note">
+                    {pricing}
+                  </p>
+                )}
+                {plans.length > 1 && (
+                  <div className="room3d-tiers" role="group" aria-label="Price tier">
+                    {plans.map((p) => {
+                      const t = (p!.payload as PurchasePlanPayload).tier;
+                      return (
+                        <button
+                          key={t}
+                          type="button"
+                          aria-pressed={p === plan}
+                          onClick={() => setTier(t)}
+                        >
+                          {TIER_LABEL[t as keyof typeof TIER_LABEL] ?? t}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+              <ol className="room3d-pins">
+                {notes?.pins.map((p) => (
+                  <li key={p.id}>
+                    <button type="button" onClick={() => choosePin(p.id)}>
+                      <span className="room3d-badge">{p.number}</span>
+                      <span className="room3d-pin-title">
+                        {p.title}
+                        {p.needsInput > 0 && (
+                          <small>
+                            {p.needsInput} open item{p.needsInput > 1 ? 's' : ''}
+                          </small>
+                        )}
+                      </span>
+                      <span className="room3d-pin-cost">{pinCost(p)}</span>
+                    </button>
+                  </li>
+                ))}
+              </ol>
+              {!!notes?.unplaced.length && (
+                <>
+                  <h5>Whole room and not yet located</h5>
+                  <ol className="room3d-pins">
+                    {notes.unplaced.map((p) => (
+                      <li key={p.id}>
+                        <button type="button" onClick={() => choosePin(p.id)}>
+                          <span className="room3d-badge muted">{p.number}</span>
+                          <span className="room3d-pin-title">
+                            {p.title}
+                            <small>{p.unplacedReason}</small>
+                          </span>
+                          <span className="room3d-pin-cost">{pinCost(p)}</span>
+                        </button>
+                      </li>
+                    ))}
+                  </ol>
+                </>
+              )}
+              {notes?.notes.map((n) => (
+                <p key={n} className="small-note">
+                  {n}
+                </p>
+              ))}
+              <button
+                type="button"
+                className="link-button subtle"
+                onClick={() => setReplanning(true)}
+              >
+                Change the work
+              </button>
+            </>
+          )}
         </aside>
       </div>
     </section>

@@ -8,6 +8,7 @@ import {
   floorOutline,
   wallSwatch,
   type ModelWall,
+  type RoomAnnotation,
   type RoomModel,
   type RoomSurface,
 } from '@renovagent/core';
@@ -19,7 +20,10 @@ import {
 
 export type RoomLook = { wallColor: string; floorFinish: string; label: string };
 export type RoomScene = {
-  select(surfaceId: string | null): void;
+  // Highlights these surfaces (a package's walls, or one clicked surface).
+  select(surfaceIds: string[]): void;
+  // Marks the active callout.
+  focusPin(annotationId: string | null): void;
   setLook(look: RoomLook): void;
   exportGlb(): Promise<ArrayBuffer>;
   dispose(): void;
@@ -123,6 +127,9 @@ export function mountRoomScene(
   look: RoomLook,
   onSelect: (surfaceId: string | null) => void,
   meta: { sourceEvidenceId: string | null; title: string },
+  pins: RoomAnnotation[] = [],
+  onPin: (annotationId: string) => void = () => {},
+  formatCost: (pin: RoomAnnotation) => string = () => '',
 ): RoomScene {
   const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -175,6 +182,8 @@ export function mountRoomScene(
   const maxY = Math.max(...pts.map((p) => p[1]));
   const center = new THREE.Vector3((minX + maxX) / 2, 0, (minY + maxY) / 2);
   const span = Math.max(maxX - minX, maxY - minY, 2);
+  const roomHeightForFrame = () =>
+    Math.max(...model.walls.map((w) => w.heightM ?? DISPLAY_HEIGHT_M));
 
   const wallMat = new THREE.MeshStandardMaterial({
     color: wallSwatch(look.wallColor).hex,
@@ -186,6 +195,15 @@ export function mountRoomScene(
     transparent: true,
     opacity: 0.45,
   });
+  // Dollhouse cutaway: each wall has its own material so walls between the
+  // camera and the room can fade while orbiting.
+  const cutaway: {
+    mid: THREE.Vector3;
+    out: THREE.Vector3;
+    mat: THREE.MeshStandardMaterial;
+    base: number;
+    known: boolean;
+  }[] = [];
   model.walls.forEach((w) => {
     const height = w.heightM ?? DISPLAY_HEIGHT_M;
     const thickness = w.thicknessM ?? DISPLAY_THICKNESS_M;
@@ -194,7 +212,12 @@ export function mountRoomScene(
       bevelEnabled: false,
     });
     const known = w.heightM !== null && !w.curved;
-    const mesh = new THREE.Mesh(geometry, known ? wallMat : unknownMat);
+    const mat = (known ? wallMat : unknownMat).clone();
+    const mid = new THREE.Vector3((w.a[0] + w.b[0]) / 2, 0, (w.a[1] + w.b[1]) / 2);
+    const out = new THREE.Vector3(-(w.b[1] - w.a[1]), 0, w.b[0] - w.a[0]).normalize();
+    if (out.dot(new THREE.Vector3().subVectors(mid, center)) < 0) out.negate();
+    cutaway.push({ mid, out, mat, base: mat.opacity, known });
+    const mesh = new THREE.Mesh(geometry, mat);
     mesh.castShadow = mesh.receiveShadow = true;
     mesh.position.z = -thickness / 2;
     const group = new THREE.Group();
@@ -280,31 +303,97 @@ export function mountRoomScene(
   sc.right = sc.top = span;
   scene.add(sun, sun.target);
 
-  const camera = new THREE.PerspectiveCamera(45, 1, 0.05, 200);
-  camera.position.set(center.x + span * 0.9, span * 1.1, center.z + span * 1.1);
+  // Frame the whole room from a raised corner, whatever its size.
+  const camera = new THREE.PerspectiveCamera(40, 1, 0.05, 200);
+  const radius = Math.hypot(maxX - minX, maxY - minY, roomHeightForFrame()) / 2;
+  const distance = Math.max(radius / Math.sin((camera.fov * Math.PI) / 360), 3) * 1.15;
+  camera.position
+    .copy(center)
+    .add(new THREE.Vector3(0.75, 0.95, 1).normalize().multiplyScalar(distance));
   const controls = new OrbitControls(camera, renderer.domElement);
-  controls.target.copy(center).setY(1);
+  controls.target.copy(center).setY(roomHeightForFrame() * 0.35);
+  controls.minDistance = radius * 0.6;
+  controls.maxDistance = distance * 3;
   controls.enableDamping = true;
   controls.maxPolarAngle = Math.PI * 0.49;
   controls.update();
 
-  // The selected mesh gets a highlighted copy of its material; deselecting
-  // restores the shared one, so look changes reach every surface.
-  let selected: { mesh: THREE.Mesh; shared: THREE.Material } | null = null;
-  const highlight = (mesh: THREE.Mesh | null) => {
-    if (selected) {
-      (selected.mesh.material as THREE.Material).dispose();
-      selected.mesh.material = selected.shared;
-    }
-    selected = null;
-    if (!mesh) return;
-    const shared = mesh.material as THREE.MeshStandardMaterial;
-    const lit = shared.clone();
-    lit.emissive.set('#1d4ed8');
-    lit.emissiveIntensity = 0.35;
-    mesh.material = lit;
-    selected = { mesh, shared };
+  // Callouts sit on their surfaces' measured geometry: the middle of the
+  // longest wall (just inside the room), above the floor or fixture, or under
+  // the ceiling. Heights the plan lacks use the display stand-in.
+  const roomHeight = Math.max(...model.walls.map((w) => w.heightM ?? DISPLAY_HEIGHT_M));
+  const inward = (x: number, z: number, by: number) => {
+    const d = new THREE.Vector3(center.x - x, 0, center.z - z);
+    return d.lengthSq() ? d.normalize().multiplyScalar(by) : d;
   };
+  const pinAt = (pin: RoomAnnotation): THREE.Vector3 | null => {
+    const walls = model.walls.filter((w) => pin.surfaceIds.includes(`wall:${w.id}`));
+    if (walls.length) {
+      const w = walls.reduce((a, b) => (b.lengthM > a.lengthM ? b : a));
+      const [x, z] = [(w.a[0] + w.b[0]) / 2, (w.a[1] + w.b[1]) / 2];
+      return new THREE.Vector3(x, (w.heightM ?? DISPLAY_HEIGHT_M) * 0.62, z).add(
+        inward(x, z, 0.25),
+      );
+    }
+    if (pin.surfaceIds.includes('floor'))
+      return new THREE.Vector3(center.x, 0.05, center.z).add(new THREE.Vector3(0, 0, span * 0.12));
+    if (pin.surfaceIds.includes('ceiling'))
+      return new THREE.Vector3(center.x, roomHeight - 0.12, center.z);
+    const f = model.fixtures.find((x) => pin.surfaceIds.includes(`fixture:${x.id}`));
+    return f ? new THREE.Vector3(f.center[0], (f.heightM ?? 0.4) + 0.35, f.center[1]) : null;
+  };
+  const pinEls = new Map<string, HTMLButtonElement>();
+  // Several packages on one surface (carpet out, plank in) fan out sideways.
+  const placed = new Map<string, number>();
+  for (const pin of pins) {
+    const at = pinAt(pin);
+    if (!at) continue;
+    const key = `${at.x.toFixed(1)}:${at.y.toFixed(1)}:${at.z.toFixed(1)}`;
+    const k = placed.get(key) ?? 0;
+    placed.set(key, k + 1);
+    if (k) at.x += (k % 2 ? 1 : -1) * Math.ceil(k / 2) * Math.min(span * 0.3, 1.6);
+    const el = document.createElement('button');
+    el.type = 'button';
+    el.className = 'room3d-pin';
+    el.dataset.annotation = pin.id;
+    const n = document.createElement('span');
+    n.className = 'room3d-pin-n';
+    n.textContent = String(pin.number);
+    const t = document.createElement('span');
+    t.className = 'room3d-pin-t';
+    t.textContent = pin.title;
+    const c = document.createElement('span');
+    c.className = 'room3d-pin-c';
+    c.textContent = formatCost(pin);
+    el.append(n, t, c);
+    el.addEventListener('click', (e) => {
+      e.stopPropagation();
+      onPin(pin.id);
+    });
+    const obj = new CSS2DObject(el);
+    obj.position.copy(at);
+    room.add(obj);
+    pinEls.set(pin.id, el);
+  }
+
+  // Selected meshes get a highlighted copy of their material; deselecting
+  // restores the shared one, so look changes reach every surface.
+  let selected: { mesh: THREE.Mesh; shared: THREE.Material }[] = [];
+  const highlight = (meshes: THREE.Mesh[]) => {
+    for (const s of selected) {
+      (s.mesh.material as THREE.Material).dispose();
+      s.mesh.material = s.shared;
+    }
+    selected = meshes.map((mesh) => {
+      const shared = mesh.material as THREE.MeshStandardMaterial;
+      const lit = shared.clone();
+      lit.emissive.set('#1d4ed8');
+      lit.emissiveIntensity = 0.35;
+      mesh.material = lit;
+      return { mesh, shared };
+    });
+  };
+  const meshesFor = (ids: string[]) => pickable.filter((m) => ids.includes(m.userData.surfaceId));
   const ray = new THREE.Raycaster();
   let down: [number, number] | null = null;
   const el = renderer.domElement;
@@ -320,7 +409,7 @@ export function mountRoomScene(
       camera,
     );
     const hit = ray.intersectObjects(pickable, false)[0]?.object as THREE.Mesh | undefined;
-    highlight(hit ?? null);
+    highlight(hit ? [hit] : []);
     onSelect(hit ? (hit.userData.surfaceId as string) : null);
   });
 
@@ -335,22 +424,38 @@ export function mountRoomScene(
   observer.observe(host);
   resize();
   let frame = 0;
+  const toCamera = new THREE.Vector3();
   const loop = () => {
     frame = requestAnimationFrame(loop);
     controls.update();
+    for (const c of cutaway) {
+      // Walls whose outside faces the camera stand between it and the room.
+      const facing = c.out.dot(toCamera.subVectors(camera.position, c.mid).setY(0).normalize());
+      const opacity = facing > 0.2 ? 0.12 : c.base;
+      if (c.mat.opacity !== opacity) {
+        c.mat.transparent = opacity < 1;
+        c.mat.opacity = opacity;
+        c.mat.depthWrite = opacity >= c.base;
+        c.mat.needsUpdate = true;
+      }
+    }
     renderer.render(scene, camera);
     labels.render(scene, camera);
   };
   loop();
 
   return {
-    select(surfaceId) {
-      highlight(pickable.find((m) => m.userData.surfaceId === surfaceId) ?? null);
+    select(surfaceIds) {
+      highlight(meshesFor(surfaceIds));
+    },
+    focusPin(annotationId) {
+      for (const [id, el] of pinEls) el.classList.toggle('active', id === annotationId);
     },
     setLook(next) {
-      const reselect = selected?.mesh ?? null;
-      highlight(null);
+      const reselect = selected.map((s) => s.mesh);
+      highlight([]);
       wallMat.color.set(wallSwatch(next.wallColor).hex);
+      for (const c of cutaway) if (c.known) c.mat.color.copy(wallMat.color);
       const tex = finishTexture(next.floorFinish);
       tex.repeat.copy(floorTex.repeat);
       floorMat.map?.dispose();

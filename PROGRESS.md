@@ -42,6 +42,12 @@ Renovagent carries a persistent property project through investigation, options,
 
 Use each slice's acceptance criteria before changing its status. A mock screen, canned reply, or HTTP 200 does not establish workflow completion.
 
+### The project opens on its room, with work pinned and priced — October 30, 2026
+
+- An open project now leads with its 3D room. Each planned work package is a numbered callout on the surfaces it acts on (walls, floor, ceiling, scanned fixtures) with its cost from purchase-plan lines; work without a recorded location is listed, never pinned at a guessed spot. Clicking a pin or a wall opens its line items and products. Walls between the camera and the room fade (dollhouse view).
+- "Pin this work in the room" drafts a bathroom or living-room scope from the measurements; connected workspaces price it from the shared catalog in the browser. "Example project" is now a labelled living-room refresh that opens annotated and, connected, priced ($724.32 mid tier from the demo catalog in testing).
+- Verified: `npm test` 15 + 206 (6 new), build; headless Chrome via CDP in local and connected (scratch database) modes. Not checked by a person in a browser. Details: [room studio](docs/architecture/room-studio.md).
+
 ### Attachments out of the workspace document — October 30, 2026
 
 - Photos and plan files are stored one document each in `workspace_blobs` (`{ownerId, blobId}` key, raw bytes, sha256), so an owner is no longer limited to 16 MB in total. Supplied bytes are checked against the references the batch would create before anything is stored (wrong bytes never block the correct retry), then the workspace commits in its single atomic write after confirming every reference has matching stored bytes. Every read is owner-filtered. The API wire format is unchanged.

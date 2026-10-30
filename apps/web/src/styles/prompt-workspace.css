@@ -732,3 +732,29 @@
     transition: none;
   }
 }
+
+/* Project home: the room studio leads, the prompt follows. */
+.prompt-main.has-room {
+  width: min(1240px, calc(100% - 40px));
+  justify-content: flex-start;
+  padding-top: 24px;
+}
+.prompt-main.has-room > .prompt-intro,
+.prompt-main.has-room > .prompt-recent,
+.prompt-main.has-room > .conversation-composer,
+.prompt-main.has-room > form,
+.prompt-main.has-room > .prompt-disclosure {
+  width: min(700px, 100%);
+}
+.prompt-main.has-room .prompt-intro {
+  margin: 28px 0 16px;
+}
+.prompt-main.has-room .prompt-intro h1 {
+  font-size: clamp(24px, 3vw, 32px);
+}
+.project-room {
+  width: 100%;
+}
+.project-room .room3d {
+  margin-top: 0;
+}

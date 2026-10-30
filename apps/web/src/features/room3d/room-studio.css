@@ -124,3 +124,177 @@
 .room3d-canvas.hide-dims .room3d-dim {
   display: none;
 }
+
+/* Callouts: one per planned package, pinned on its surfaces. */
+.room3d-pin {
+  pointer-events: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 9px 3px 3px;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.94);
+  color: #0f172a;
+  font:
+    600 12px/1.2 ui-sans-serif,
+    system-ui,
+    sans-serif;
+  white-space: nowrap;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.16);
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.12s ease;
+}
+.room3d-pin:hover,
+.room3d-pin:focus-visible {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.22);
+  outline: none;
+}
+.room3d-pin.active {
+  background: var(--blue, #2563eb);
+  color: #fff;
+  border-color: transparent;
+}
+.room3d-pin-n,
+.room3d-badge {
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--blue, #2563eb);
+  color: #fff;
+  font:
+    700 11px/1 ui-sans-serif,
+    system-ui,
+    sans-serif;
+  flex: 0 0 auto;
+}
+.room3d-pin.active .room3d-pin-n {
+  background: #fff;
+  color: var(--blue, #2563eb);
+}
+.room3d-badge.muted {
+  background: #94a3b8;
+}
+.room3d-pin-c {
+  font-weight: 500;
+  color: #475569;
+}
+.room3d-pin.active .room3d-pin-c {
+  color: #dbeafe;
+}
+
+/* Side panel: estimate first, then the numbered work. */
+.room3d-summary {
+  display: grid;
+  gap: 4px;
+  padding: 12px;
+  border-radius: 8px;
+  background: var(--side, #f1f5f9);
+  margin-bottom: 10px;
+}
+.room3d-summary h4 {
+  margin: 0;
+}
+.room3d-summary .eyebrow {
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+.room3d-total {
+  font-size: 26px;
+  line-height: 1.1;
+  color: #0f172a;
+}
+.room3d-summary button.primary {
+  justify-self: start;
+  margin-top: 6px;
+}
+.room3d-tiers {
+  display: flex;
+  gap: 4px;
+  margin-top: 6px;
+}
+.room3d-tiers button {
+  font-size: 12px;
+  padding: 3px 8px;
+}
+.room3d-tiers button[aria-pressed='true'] {
+  outline: 2px solid var(--blue, #2563eb);
+}
+.room3d-pins {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 10px;
+  display: grid;
+  gap: 4px;
+}
+.room3d-pins button {
+  width: 100%;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 8px;
+  align-items: center;
+  text-align: left;
+  padding: 8px;
+  border: 1px solid var(--line, #e2e8f0);
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+}
+.room3d-pins button:hover {
+  border-color: var(--blue, #2563eb);
+}
+.room3d-pin-title {
+  display: grid;
+  font-weight: 600;
+}
+.room3d-pin-title small {
+  font-weight: 400;
+  color: #64748b;
+}
+.room3d-pin-cost {
+  font-variant-numeric: tabular-nums;
+  color: #0f172a;
+}
+.room3d-detail h4 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0 2px;
+}
+.room3d-detail-cost {
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0 0 4px;
+}
+.room3d-line-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+.room3d-links li {
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line, #e2e8f0);
+}
+.room3d-empty p {
+  max-width: 560px;
+}
+.room3d-checks {
+  list-style: none;
+  padding: 0;
+  margin: 6px 0;
+  display: grid;
+  gap: 4px;
+}
+.room3d-checks label {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  cursor: pointer;
+}

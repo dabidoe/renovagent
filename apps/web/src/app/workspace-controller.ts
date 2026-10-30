@@ -21,6 +21,10 @@ import {
   type Fact,
   type BomPayload,
   type CheckoutReviewPayload,
+  type Offer,
+  type PriceObservation,
+  type Product,
+  type ScopeDraft,
   DomainError,
 } from '@renovagent/contracts';
 import {
@@ -33,6 +37,10 @@ import {
   latest,
   isLocalUploadUrl,
   roomDimensionCommands,
+  bomFromScopeDraft,
+  buildTierPlans,
+  scopeDraftId,
+  type PricedOffer,
 } from '@renovagent/core';
 import { IndexedDbProjectRepository } from '../adapters/indexeddb/project-repository.js';
 import {
@@ -416,22 +424,28 @@ export class WorkspaceController {
   }
   async sampleProject() {
     const id = await this.createProject({
-      name: 'First-floor half bath · example',
-      goal: 'Explore adding a toilet and sink to a Philadelphia rowhouse. All details in this example are synthetic.',
+      name: 'Living room refresh · example',
+      goal: 'Repaint and replace the carpet with vinyl plank in a Philadelphia rowhouse living room. All details in this example are synthetic.',
       propertyName: 'Example rowhouse',
       underway: false,
       sample: true,
     });
-    const runId = await this.requestWork(id, 'options');
-    await this.transition(id, runId, 'advance');
-    await this.transition(id, runId, 'advance');
-    await this.transition(
+    // The example opens on an annotated room: synthetic, labelled dimensions
+    // and a refresh drafted from them (priced from the demo catalog when connected).
+    await this.recordRoomDimensions(id, {
+      length: { amount: 14, unit: 'ft' },
+      width: { amount: 12, unit: 'ft' },
+      height: { amount: 8, unit: 'ft' },
+      method: 'tape-measure',
+      notes: '[Example fixture] Synthetic living-room dimensions, not a real room.',
+    });
+    await this.draftScope(
       id,
-      runId,
-      'answer',
-      '[Example fixture] Compare keeping services nearby with reconfiguring the room. Site geometry and existing systems are unknown.',
+      'living-room-refresh',
+      ['removal-protection', 'wall-paint', 'carpet-removal', 'lvp-floor'],
+      '[Example fixture] Repaint and put vinyl plank down in this living room',
     );
-    await this.transition(id, runId, 'advance');
+    if (this.connected) await this.priceScopeDraft(id).catch(() => {});
     return id;
   }
   importPhotoInventory(projectId: string, raw: unknown) {
@@ -737,6 +751,82 @@ export class WorkspaceController {
           baseRevision: base + index,
         };
       });
+      return { commands, value: undefined };
+    });
+  }
+  // Drafts the scope from a recipe's packages. Pure domain work: it reads the
+  // recorded room facts and runs the same way locally and connected.
+  draftScope(projectId: string, recipeId: string, packageIds: string[], request: string) {
+    return this.mutate((state) => ({
+      commands: [
+        this.command(state, projectId, 'DraftScope', {
+          recipeId,
+          packageIds,
+          request,
+          reported: [],
+          expectedDraftRevision: latest(state.artifacts[scopeDraftId(projectId)])?.revision ?? 0,
+        }),
+      ],
+      value: undefined,
+    }));
+  }
+  // Prices the current scope draft against the shared catalog, as the server's
+  // draft_scope does: a BOM tied to the draft revision, then tier plans tied to
+  // that BOM. Connected mode only; the catalog lives on the server.
+  async priceScopeDraft(projectId: string) {
+    if (!this.connected) throw Error('Pricing needs the connected catalog.');
+    const catalog = (await workspaceRequest('/catalog/offers')) as {
+      products: Product[];
+      offers: Offer[];
+      observations: PriceObservation[];
+    };
+    const products = new Map(catalog.products.map((p) => [p.id, p]));
+    const observations = new Map(catalog.observations.map((o) => [o.offerId, o]));
+    const priced: PricedOffer[] = [];
+    for (const offer of catalog.offers) {
+      const product = products.get(offer.productId);
+      const observation = observations.get(offer.id);
+      if (product && observation) priced.push({ offer, product, observation });
+    }
+    return this.mutate((state) => {
+      const draftId = scopeDraftId(projectId);
+      const draft = latest(state.artifacts[draftId]);
+      if (draft?.payload.kind !== 'scope-draft') throw Error('Plan the work before pricing it.');
+      const { bom } = bomFromScopeDraft(draft.payload as ScopeDraft, catalog.products);
+      if (!bom) throw Error('Nothing in this scope matches the catalog yet.');
+      const plans = buildTierPlans(bom, priced).filter((p) => p.lines.length);
+      if (!plans.length) throw Error('The catalog has no current prices for this scope.');
+      const base = state.projects[projectId]!.revision;
+      const bomId = `${projectId}:bom`;
+      const bomRevision = (latest(state.artifacts[bomId])?.revision ?? 0) + 1;
+      const bomRef = { kind: 'artifact' as const, id: bomId, revision: bomRevision };
+      const commands = [
+        this.command(state, projectId, 'ProposeArtifact', {
+          artifactId: bomId,
+          supersedesRevision: bomRevision - 1,
+          inputRefs: [{ kind: 'artifact', id: draftId, revision: draft.revision }],
+          evidenceIds: [],
+          content: bom,
+        }),
+        ...plans.map((plan, i) => {
+          const artifactId = `${projectId}:purchase-plan:${plan.tier}`;
+          return {
+            ...this.command(state, projectId, 'ProposeArtifact', {
+              artifactId,
+              supersedesRevision: latest(state.artifacts[artifactId])?.revision ?? 0,
+              inputRefs: [bomRef],
+              evidenceIds: [],
+              content: {
+                kind: 'purchase-plan',
+                ...plan,
+                bomRef,
+                builtAt: new Date().toISOString(),
+              },
+            }),
+            baseRevision: base + 1 + i,
+          };
+        }),
+      ];
       return { commands, value: undefined };
     });
   }
