@@ -59,7 +59,7 @@ export type RoomMeasureMethod = z.infer<typeof roomMeasureMethodSchema>;
 // Metric, as in the source file. Null means the file does not establish it.
 export const floorPlanSummarySchema = z
   .object({
-    format: z.enum(['roomplan-capture', 'openplan3d-export']),
+    format: z.enum(['roomplan-capture', 'openplan3d-export', 'openplan3d-project']),
     floorAreaM2: z.number().positive().nullable(),
     perimeterM: z.number().positive().nullable(),
     ceilingHeightM: z.number().positive().nullable(),

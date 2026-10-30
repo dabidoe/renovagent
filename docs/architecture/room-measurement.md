@@ -76,31 +76,45 @@ and plans drawn or corrected in OpenPlan3D's 2D/3D editor. We integrate through
 the file, not by porting its SvelteKit editor; the card links out to it.
 
 - Core: `summarizeFloorPlan` (`packages/core/src/scope/floor-plan.ts`) is pure
-  and runs in the browser. Floor area and perimeter come from scanned floor
-  polygons (shoelace), else from walls that close exactly one loop (OpenPlan3D
-  exports carry `floors: []`). Transform conventions follow OpenPlan3D's
-  importer. Returns metric values plus wall count, spaces, openings, scan
-  confidence and notes.
+  and runs in the browser. It reads three files: Apple RoomPlan captures,
+  OpenPlan3D's RoomPlan-shaped export (metres, transforms; `floors: []`) and
+  OpenPlan3D's own project file (`.openplan.json`: centimetres, walls as
+  start/end points, named rooms with stored areas). Only the lowest storey is
+  measured. Floor area and perimeter come from scanned floor polygons
+  (shoelace), else from walls that close exactly one loop, else from a single
+  named room's stored area (no perimeter). Returns metric values plus wall
+  count, spaces, openings, scan confidence and notes.
 - No invented defaults: OpenPlan3D falls back to a 280 cm wall height; we do
-  not. Disagreeing wall heights (beyond 5 cm) or missing heights leave ceiling
-  height unknown with the range shown. A scan covering several spaces keeps the
-  total floor area but drops the outline perimeter, which omits interior walls.
+  not. Disagreeing wall heights (beyond 5 cm, including sloped walls) or missing
+  heights leave ceiling height unknown with the range shown. Curved walls leave
+  the outline unknown rather than being read as straight. A plan covering
+  several spaces proposes no area or perimeter (its total is only a note), so a
+  whole-home scan cannot price one room's tile. Most real multi-room plans
+  therefore yield height only until rooms are split.
 - Openings are listed, not deducted: paint stays gross (overbuys slightly).
 - New project facts `floorArea` (area) and `floorPerimeter` (length). Recipes
   (bathroom and living room, now v2) use them in place of length × width for
   floor area, perimeter, wall area and the fan's room-size check, so L-shaped
   rooms come out right. These inputs are fact-only: `DraftScope` rejects them
-  as relayed values, and drafts list them only once recorded.
+  as relayed values, and drafts list them only once recorded. Length × width
+  results are unchanged from v1 (only the final quantity is rounded).
+- Design options saved under v1 upgrade in place on revise or when a preview
+  lands (current recipe and re-resolved inputs; directions, previews and
+  selection kept), so the version bump costs no new Muse calls. Rebuilding
+  already kept previews for the same photo.
 - Web: "Import floor plan" in the room card fills the form for review; saving is
   the confirmation. The original JSON is attached as `application/json`
   evidence, so the full geometry (walls, openings, positions) is preserved for
   later use, and every recorded dimension cites it.
 - Verified: `tests/domain/floor-plan.test.ts` (rectangle, L-shape, multi-space,
-  height disagreement, OpenPlan3D wall loop, rejection, import → draft
-  quantities); controller evidence test; parsed OpenPlan3D's own sample scan
-  (`test-roomplan.json`: 47.74 m² over four spaces, perimeter and height left
-  unknown). Not yet tested on a scan from our own iPhone; Apple publishes no
-  accuracy figure. Not verified in a live browser.
+  height disagreement, wall loop, project file, curved walls, storeys,
+  rejection, import → draft quantities); design-options upgrade test;
+  controller evidence test. Also parsed OpenPlan3D's own fixtures: the sample
+  scan (four spaces → area and perimeter withheld, total 47.74 m² noted), a
+  handoff export (24 m², 20 m, 2.74 m), a project file (24.01 m², matching its
+  stored room area), sloped, curved, crossing and multi-floor plans (unknowns
+  left unknown). Not yet tested on a scan from our own iPhone; Apple publishes
+  no accuracy figure. Not verified in a live browser.
 
 Next: split multi-space scans into rooms (OpenPlan3D's room detection), a
 geometry artifact for the full plan, and an MCP read tool over it.

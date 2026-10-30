@@ -46,15 +46,16 @@ export function floorArea(v: RecipeValues): Quantity {
 }
 
 function perimeterFt(v: RecipeValues): { feet: number; basis: string } | Need {
+  // Unrounded here; callers round only the final quantity.
   if (v.floorPerimeterFt !== undefined)
     return {
-      feet: round(v.floorPerimeterFt),
+      feet: v.floorPerimeterFt,
       basis: `${round(v.floorPerimeterFt)} ft measured perimeter (floor plan)`,
     };
   const blocked = missing(v, ['floorLengthFt', 'floorWidthFt']);
   if (blocked.length) return blocked;
   return {
-    feet: round(2 * (v.floorLengthFt! + v.floorWidthFt!)),
+    feet: 2 * (v.floorLengthFt! + v.floorWidthFt!),
     basis: `2 × (${v.floorLengthFt} + ${v.floorWidthFt}) ft`,
   };
 }
@@ -68,7 +69,7 @@ export function perimeter(v: RecipeValues): Quantity {
       blockedBy: p,
     };
   return {
-    quantity: p.feet,
+    quantity: round(p.feet),
     quantityBasis: `${p.basis}; door openings and the vanity run not deducted.`,
     blockedBy: [],
   };
@@ -85,7 +86,7 @@ export function wallArea(v: RecipeValues): Quantity {
     };
   return {
     quantity: round(p.feet * v.ceilingHeightFt!),
-    quantityBasis: `Perimeter ${p.feet} ft × ${v.ceilingHeightFt} ft height, gross; doors, windows, tile and the vanity backsplash not deducted.`,
+    quantityBasis: `Perimeter ${round(p.feet)} ft × ${v.ceilingHeightFt} ft height, gross; doors, windows, tile and the vanity backsplash not deducted.`,
     blockedBy: [],
   };
 }

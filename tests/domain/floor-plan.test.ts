@@ -104,7 +104,7 @@ test('an L-shaped floor uses its true area, not the bounding length × width', (
   assert.equal(s.perimeterM, 16);
 });
 
-test('multi-space scans keep the total area but not the outline perimeter', () => {
+test('multi-space scans propose no area or perimeter for the room, only the scan total', () => {
   const s = summarizeFloorPlan(
     capture({
       sections: [
@@ -113,9 +113,10 @@ test('multi-space scans keep the total area but not the outline perimeter', () =
       ],
     }),
   );
-  assert.equal(s.floorAreaM2, 12);
+  assert.equal(s.floorAreaM2, null);
   assert.equal(s.perimeterM, null);
   assert.match(s.notes.join(' '), /covers 2 spaces \(bedroom, bathroom\)/);
+  assert.match(s.notes.join(' '), /Total 12 m²/);
 });
 
 test('disagreeing or missing wall heights leave ceiling height unknown, never a default', () => {
@@ -146,6 +147,61 @@ test('an OpenPlan3D export without floor polygons closes the outline from its wa
   const open = summarizeFloorPlan({ walls: rectangleWalls().slice(0, 3), floors: [], stories: [] });
   assert.equal(open.floorAreaM2, null);
   assert.match(open.notes.join(' '), /do not close a single room outline/);
+});
+
+// OpenPlan3D project file: centimetres, walls as start/end points.
+const projectWall = (x1: number, y1: number, x2: number, y2: number, extra = {}) => ({
+  id: `${x1},${y1}`,
+  start: { x: x1, y: y1 },
+  end: { x: x2, y: y2 },
+  thickness: 15,
+  color: '#444',
+  ...extra,
+});
+const project = (walls: object[], rooms: object[] = [], level = 0) => ({
+  id: 'p',
+  name: 'Plan',
+  activeFloorId: 'f',
+  floors: [{ id: 'f', name: 'Ground', level, walls, rooms, doors: [], windows: [] }],
+});
+const box = (extra = {}) => [
+  projectWall(0, 0, 400, 0, extra),
+  projectWall(400, 0, 400, 300, extra),
+  projectWall(400, 300, 0, 300, extra),
+  projectWall(0, 300, 0, 0, extra),
+];
+
+test('an OpenPlan3D project file is read in centimetres, with no default wall height', () => {
+  const s = summarizeFloorPlan(
+    project(box({ height: 250 }), [{ id: 'r', name: 'Kitchen', walls: [], area: 12 }]),
+  );
+  assert.equal(s.format, 'openplan3d-project');
+  assert.equal(s.floorAreaM2, 12);
+  assert.equal(s.perimeterM, 14);
+  assert.equal(s.ceilingHeightM, 2.5);
+  assert.deepEqual(s.spaces, ['Kitchen']);
+  // OpenPlan3D falls back to 280 cm; we leave a missing height unknown.
+  const noHeight = summarizeFloorPlan(project(box()));
+  assert.equal(noHeight.ceilingHeightM, null);
+  assert.equal(noHeight.floorAreaM2, 12);
+});
+
+test('curved walls leave the outline unknown instead of reading them as straight', () => {
+  const walls = box({ height: 250 });
+  Object.assign(walls[0], { curvePoint: { x: 200, y: -100 } });
+  const s = summarizeFloorPlan(project(walls));
+  assert.equal(s.floorAreaM2, null);
+  assert.match(s.notes.join(' '), /curved walls/);
+});
+
+test('only the lowest storey is measured when a file has several', () => {
+  const upper = wall(0, 0, 1, 0, 2, 2.6);
+  const s = summarizeFloorPlan(
+    capture({ floors: [], stories: [], walls: [...rectangleWalls(), { ...upper, story: 1 }] }),
+  );
+  assert.equal(s.floorAreaM2, 12);
+  assert.equal(s.ceilingHeightM, 2.44);
+  assert.match(s.notes.join(' '), /2 storeys; only the lowest/);
 });
 
 test('files without walls are rejected', () => {
@@ -194,7 +250,7 @@ test('a confirmed plan replaces length × width in the scope; area cannot be rel
   assert.equal(byId('floor-tile:tile').quantity, 129.2); // 12 m² in sq ft
   assert.match(byId('floor-tile:tile').quantityBasis, /measured floor area \(floor plan\)/);
   assert.equal(byId('floor-tile:base-trim').quantity, 45.9); // 14 m in ft
-  assert.equal(byId('paint:walls').quantity, 367.7); // 45.9 ft × 8.01 ft
+  assert.equal(byId('paint:walls').quantity, 367.9); // 45.93 ft × 8.01 ft
   assert.deepEqual(byId('exhaust-fan:fan').blockedBy, []);
   assert.equal(draft.inputs.find((i) => i.key === 'floorAreaSqFt')!.source, 'workspace-fact');
 

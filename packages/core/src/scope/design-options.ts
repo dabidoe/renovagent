@@ -16,6 +16,7 @@ import {
   resolveScopeInputs,
   scopeDraftId,
   scopeRecipe,
+  scopeRecipeCurrent,
   valuesFromInputs,
 } from './draft-scope.js';
 import { livingRoomOptions, livingRoomPreviewPrompt } from './living-room-refresh.js';
@@ -99,6 +100,25 @@ function current(state: Workspace, projectId: string, expected: number) {
   if (old && old.payload.kind !== 'design-options')
     throw new DomainError('CONFLICT', 'Design options identity is occupied');
   return old as (typeof old & { payload: DesignOptions }) | undefined;
+}
+
+// Options saved under an older recipe version keep their directions, previews
+// and selection, and take the current recipe and inputs, so a revise or a
+// finished (paid) preview does not land on a stale record. Scope and costs are
+// recompiled from the current recipe either way.
+function upgraded(
+  state: Workspace,
+  pid: string,
+  old: { payload: DesignOptions; inputRefs: InputRef[] },
+) {
+  const payload = structuredClone(old.payload);
+  if (scopeRecipeCurrent(payload.recipe)) return { payload, inputRefs: old.inputRefs };
+  const recipe = scopeRecipe(payload.recipe.id);
+  const { inputs, inputRefs } = resolveScopeInputs(state, pid, reportedFromInputs(payload.inputs));
+  return {
+    payload: { ...payload, recipe: { id: recipe.id, version: recipe.version }, inputs },
+    inputRefs,
+  };
 }
 
 // The selected option drives the scope draft (and through it the BOM, plans
@@ -185,7 +205,7 @@ export function handleDesignOptions(state: Workspace, command: Command, ctx: Com
     const p = command.payload;
     const old = current(state, pid, p.expectedRevision);
     if (!old) throw new DomainError('NOT_FOUND', 'Build design options first');
-    const payload = structuredClone(old.payload);
+    const { payload, inputRefs } = upgraded(state, pid, old);
     const option = payload.options.find((o) => o.id === p.optionId);
     if (!option) throw new DomainError('NOT_FOUND', `Unknown design option ${p.optionId}`);
     if (p.direction) {
@@ -198,7 +218,7 @@ export function handleDesignOptions(state: Workspace, command: Command, ctx: Com
     if (p.select) payload.selectedOptionId = option.id;
     if (fingerprint(payload) === fingerprint(old.payload))
       throw new DomainError('VALIDATION', 'Nothing changed in the design options');
-    const ref = store(state, pid, ctx, payload, old.inputRefs);
+    const ref = store(state, pid, ctx, payload, inputRefs);
     const ids = [ref.id];
     if (payload.selectedOptionId && (p.select || payload.selectedOptionId === p.optionId))
       ids.push(redraftSelected(state, pid, ctx, payload, ref));
@@ -208,7 +228,7 @@ export function handleDesignOptions(state: Workspace, command: Command, ctx: Com
     const p = command.payload;
     const old = current(state, pid, p.expectedRevision);
     if (!old) throw new DomainError('NOT_FOUND', 'Build design options first');
-    const payload = structuredClone(old.payload);
+    const { payload, inputRefs } = upgraded(state, pid, old);
     const option = payload.options.find((o) => o.id === p.optionId);
     if (!option) throw new DomainError('NOT_FOUND', `Unknown design option ${p.optionId}`);
     if (option.preview.status !== 'pending' || !previewCurrent(option))
@@ -224,7 +244,7 @@ export function handleDesignOptions(state: Workspace, command: Command, ctx: Com
     option.preview = p.preview;
     return {
       type: 'ArtifactProposed' as const,
-      ids: [store(state, pid, ctx, payload, old.inputRefs).id],
+      ids: [store(state, pid, ctx, payload, inputRefs).id],
     };
   }
   return undefined;

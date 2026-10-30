@@ -255,3 +255,57 @@ test('new measurements rebuild costs but keep previews, directions and the prefe
   const draft = s.state.artifacts[scopeDraftId('project-a')].at(-1)!.payload as ScopeDraft;
   assert.equal(draft.requirements.find((r) => r.id === 'wall-paint:walls')!.quantity, 580);
 });
+
+test('options saved under an older recipe version upgrade in place on revise and preview', () => {
+  const s = new Scenario();
+  s.create();
+  const { payload } = build(s, [
+    { key: 'floorLengthFt', amount: 15, unit: 'ft' },
+    { key: 'floorWidthFt', amount: 12, unit: 'ft' },
+  ]);
+  const option = payload.options[0];
+  // Simulate options stored before the recipe bump, as Atlas holds them.
+  const stored = latest(s).artifact;
+  (stored.payload as DesignOptions).recipe.version = 1;
+  stored.freshness = 'stale';
+  revise(s, { optionId: option.id, select: true });
+  const after = latest(s);
+  assert.equal(after.payload.recipe.version, 2);
+  assert.equal(after.artifact.freshness, 'current');
+  // Relayed measurements and the selection survive the upgrade.
+  assert.equal(after.payload.inputs.find((i) => i.key === 'floorLengthFt')!.amount, 15);
+  assert.equal(after.payload.selectedOptionId, option.id);
+  assert.equal(s.state.artifacts[scopeDraftId('project-a')].at(-1)!.freshness, 'current');
+
+  // A paid preview finishing against an older-version record still lands, current.
+  (latest(s).artifact.payload as DesignOptions).recipe.version = 1;
+  const target = latest(s).payload.options[1];
+  s.apply(
+    s.command('RecordDesignPreview', {
+      optionId: target.id,
+      expectedRevision: latest(s).artifact.revision,
+      preview: {
+        status: 'generated' as const,
+        forDirection: target.direction,
+        image: {
+          sha256: 'c'.repeat(64),
+          mediaType: 'image/jpeg' as const,
+          width: 1536,
+          height: 1024,
+          bytes: 300000,
+        },
+        provenance: {
+          kind: 'generated-concept' as const,
+          sourcePhotoSha256: SHA,
+          prompt: designPreviewPrompt(latest(s).payload, target.id),
+          provider: 'Muse CLI image_generation',
+          model: 'muse-spark-1.3',
+          generatedAt: '2026-10-29T20:00:00.000Z',
+        },
+      },
+    }),
+  );
+  assert.equal(latest(s).payload.recipe.version, 2);
+  assert.equal(latest(s).artifact.freshness, 'current');
+  assert.equal(latest(s).payload.options[1].preview.status, 'generated');
+});
