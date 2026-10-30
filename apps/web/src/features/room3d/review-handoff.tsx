@@ -68,19 +68,63 @@ function Close({ onClose }: { onClose: () => void }) {
   );
 }
 
+export type JevRanking =
+  | { status: 'working' }
+  | { status: 'done'; model: string | null; relevance: Record<string, number | null> }
+  | { status: 'error'; message: string };
+
+// Below this, a code finding is folded away as less likely for this work.
+const LOW = 0.15;
+
+function Finding({
+  f,
+  relevance,
+}: {
+  f: ScopeReview['findings'][number];
+  relevance?: number | null;
+}) {
+  return (
+    <li>
+      {relevance != null && (
+        <span
+          className={`room3d-jev ${relevance >= 0.5 ? 'is-high' : relevance >= LOW ? 'is-mid' : 'is-low'}`}
+          title="Jev’s probability that this provision applies to this work (interpretation)"
+        >
+          {Math.round(relevance * 100)}%
+        </span>
+      )}
+      <strong>{f.packageTitle}</strong> {f.summary}
+      {f.group !== 'passes' && <em> {f.action}</em>}
+      {f.citations.length > 0 && (
+        <ul className="room3d-cites">
+          {f.citations.map((c) => (
+            <Cite key={c.id} c={c} />
+          ))}
+        </ul>
+      )}
+    </li>
+  );
+}
+
 export function ReviewPopup({
   review,
   draftNote,
   location,
   onLocation,
+  ranking,
+  onRank,
   onClose,
 }: {
   review: ScopeReview;
   draftNote: string | null;
   location: string;
   onLocation: (id: string) => void;
+  ranking: JevRanking | null;
+  onRank: () => void;
   onClose: () => void;
 }) {
+  const rel = ranking?.status === 'done' ? ranking.relevance : null;
+  const score = (id: string) => rel?.[id] ?? null;
   return (
     <div className="room3d-popup room3d-review-card" role="dialog" aria-label="Does this work?">
       <header>
@@ -104,29 +148,64 @@ export function ReviewPopup({
         </span>
         <span className="small-note">{review.codeBasis.label}</span>
       </div>
+      <div className="room3d-basis">
+        <button
+          type="button"
+          className="room3d-muse"
+          disabled={ranking?.status === 'working'}
+          onClick={onRank}
+        >
+          {ranking?.status === 'working'
+            ? 'Jev is ranking…'
+            : rel
+              ? '✦ Ranked by Jev · re-rank'
+              : '✦ Rank by relevance with Jev'}
+        </button>
+      </div>
+      {ranking?.status === 'error' && (
+        <p role="alert" className="small-note">
+          {ranking.message}
+        </p>
+      )}
+      {rel && (
+        <p className="small-note">
+          Percentages are the Jev model’s judgment ({ranking?.status === 'done' && ranking.model})
+          of how likely each provision applies to this work: an interpretation, not a code
+          determination. Findings without a code citation are not scored.
+        </p>
+      )}
       {GROUPS.map((g) => {
-        const items = review.findings.filter((f) => f.group === g.key);
+        const all = review.findings.filter((f) => f.group === g.key);
+        // Ranked: code findings by relevance first, then the unscored ones (not
+        // code questions), with code findings below LOW folded away.
+        const items = rel
+          ? [...all].sort((a, b) => (score(b.id) ?? -1) - (score(a.id) ?? -1))
+          : all;
+        const shown = rel ? items.filter((f) => (score(f.id) ?? 1) >= LOW) : items;
+        const folded = rel ? items.filter((f) => (score(f.id) ?? 1) < LOW) : [];
         return (
           <section key={g.key} className={`room3d-findings is-${g.key}`}>
             <h5>{g.title}</h5>
-            {items.length ? (
+            {shown.length ? (
               <ul>
-                {items.map((f) => (
-                  <li key={f.id}>
-                    <strong>{f.packageTitle}</strong> {f.summary}
-                    {f.group !== 'passes' && <em> {f.action}</em>}
-                    {f.citations.length > 0 && (
-                      <ul className="room3d-cites">
-                        {f.citations.map((c) => (
-                          <Cite key={c.id} c={c} />
-                        ))}
-                      </ul>
-                    )}
-                  </li>
+                {shown.map((f) => (
+                  <Finding key={f.id} f={f} relevance={score(f.id)} />
                 ))}
               </ul>
             ) : (
-              <p className="small-note">{g.empty}</p>
+              !folded.length && <p className="small-note">{g.empty}</p>
+            )}
+            {folded.length > 0 && (
+              <details className="room3d-folded">
+                <summary>
+                  {folded.length} less likely for this work (under {Math.round(LOW * 100)}%)
+                </summary>
+                <ul>
+                  {folded.map((f) => (
+                    <Finding key={f.id} f={f} relevance={score(f.id)} />
+                  ))}
+                </ul>
+              </details>
             )}
           </section>
         );

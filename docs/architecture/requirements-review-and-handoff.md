@@ -149,11 +149,41 @@ Austin's base 2024 codes are not held (only amendments); no Oakland/San José
 local amendments; adopted provisions are unreviewed and a reported location is
 not a verified boundary.
 
+## Jev in the review card (October 30, 2026, later)
+
+The "Does this work?" card has **Rank by relevance with Jev**. The browser
+holds the review; on click it opens the API session (`/session`, which now
+reports `jev`), then `POST /api/workspace/review/rank` with only the work
+description (request, included packages, recorded measurements, code basis)
+and each finding's id and citations. The server calls Jev
+(`rankReviewFindings`: each cited provision judged separately, a finding
+takes its best) and returns `{ model, relevance: { findingId: p }, note }`,
+never findings or text. The key stays on the server.
+
+- Guards: same auth as every workspace call (signed-in account or local
+  single-owner cookie); zod caps (80 findings, 12 citations, 600-char
+  excerpts; extra fields stripped); validation before the per-owner limit of
+  20 model calls per 10 minutes.
+- Card: percentages per code finding, ranked first within each group;
+  findings without a code citation are unscored; code findings under 15% fold
+  into "N less likely for this work" (nothing is removed). The note says the
+  percentages are Jev's interpretation, not a code determination. A new review
+  (location or saved design) drops the scores. Without the server, sign-in or
+  a configured key the card says which.
+
+Verified: `tests/integration/review-rank.test.ts` (real local Mongo, injected
+ranker: 403 without a session, scores only, stripped fields, size cap, rate
+limit; in `npm run test:connected`), `tests/integration/review-card.test.ts`
+(render: chips, folding, nothing dropped, error), and headless Chrome against
+a local single-owner API with the real key: example room, Bay Area assumed,
+CALGreen paints 97%, resilient flooring 96%, permits 90%, construction waste
+90%, 5 provisions folded (`docs/previews/room-review-jev-ranked.png`). Your
+running account-mode API needs a signed-in session for the card to rank.
+
 ## Not shipped (from the proposal)
 
-- **Jev in the review UI.** Ranking runs through MCP (`rank: true`) and the
-  API module; the web card does not call it yet (the example runs in local
-  mode without the server).
+- **PAUGO for Jev.** The card's ranking is rate limited per owner (20 calls
+  per 10 minutes) but not metered or charged.
 - PAUGO metering, `/connect` page, hosted MCP, Bunny storage, contractor
   comments on the handoff.
 

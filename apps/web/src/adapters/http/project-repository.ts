@@ -41,6 +41,7 @@ export type SessionInfo = {
   user?: { email: string };
   providers?: string[];
   muse?: boolean;
+  jev?: boolean;
 };
 export const signInUrlFor = (provider: string) => `/api/workspace/auth/${provider}`;
 export async function accountStatus(): Promise<SessionInfo> {

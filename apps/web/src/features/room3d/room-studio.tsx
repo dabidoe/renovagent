@@ -27,7 +27,7 @@ import {
 } from '@renovagent/core';
 import type { WorkspaceController } from '../../app/workspace-controller.js';
 import { loadRoomSource, type RoomSource } from './room-source.js';
-import { workspaceRequest } from '../../adapters/http/project-repository.js';
+import { workspaceRequest, type SessionInfo } from '../../adapters/http/project-repository.js';
 import {
   DesignPicker,
   directionFor,
@@ -39,7 +39,13 @@ import {
   type MuseRender,
   type Pick,
 } from './example-photo.js';
-import { ChangeConfirm, HandoffPopup, ReviewPopup, type ChangeRow } from './review-handoff.js';
+import {
+  ChangeConfirm,
+  HandoffPopup,
+  ReviewPopup,
+  type ChangeRow,
+  type JevRanking,
+} from './review-handoff.js';
 import type { RoomLook, RoomScene } from './room-scene.js';
 
 const EXISTING: RoomLook = { wallColor: 'white', floorFinish: 'existing', label: 'Existing' };
@@ -638,6 +644,47 @@ export function RoomStudio({
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [panel, projectId, scopeKey, reviewAt],
   );
+  // Jev relevance for the review on screen; a different review (location,
+  // saved design) drops the old scores. The server holds the key.
+  const rankKey = `${scopeKey}|${reviewAt}`;
+  const [ranked, setRanked] = useState<{ key: string; value: JevRanking } | null>(null);
+  const jevRanking = ranked?.key === rankKey ? ranked.value : null;
+  const rankWithJev = async () => {
+    if (!review || !scopeDraft) return;
+    const key = rankKey;
+    setRanked({ key, value: { status: 'working' } });
+    try {
+      const session = (await workspaceRequest('/session')) as SessionInfo;
+      if (session.mode === 'account' && !session.signedIn)
+        throw Error('Sign in to the connected app to rank with Jev.');
+      if (!session.jev) throw Error('Jev is not configured on this server.');
+      const r = (await workspaceRequest('/review/rank', {
+        work: {
+          request: scopeDraft.request.replace(EXAMPLE_TAG, '').trim(),
+          packages: scopeDraft.packages.filter((p) => p.included).map((p) => p.title),
+          facts: [
+            ...scopeDraft.inputs
+              .filter((i) => i.amount !== null)
+              .map((i) => `${i.label}: ${i.amount} ${i.unit}`),
+            ...(review.codeBasis.adopted ? [review.codeBasis.label] : []),
+          ].slice(0, 10),
+        },
+        findings: review.findings.map((f) => ({ id: f.id, citations: f.citations })),
+      })) as { model: string | null; relevance: Record<string, number | null> };
+      setRanked({ key, value: { status: 'done', model: r.model, relevance: r.relevance } });
+    } catch (e) {
+      const message = e instanceof Error ? e.message : String(e);
+      setRanked({
+        key,
+        value: {
+          status: 'error',
+          message: /unavailable|fetch|Failed/i.test(message)
+            ? 'Jev ranking needs the Renovagent server (npm run dev:connected).'
+            : message.slice(0, 200),
+        },
+      });
+    }
+  };
   const allPins = shownNotes ? [...shownNotes.pins, ...shownNotes.unplaced] : [];
   const choosePin = (id: string | null) => {
     setPinId(id);
@@ -948,6 +995,8 @@ export function RoomStudio({
               review={review}
               location={reviewAt}
               onLocation={setReviewAt}
+              ranking={jevRanking}
+              onRank={() => void rankWithJev()}
               draftNote={
                 changed
                   ? 'This reviews the saved design; approve your new pick to review it.'

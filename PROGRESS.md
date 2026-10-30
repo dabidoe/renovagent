@@ -44,6 +44,10 @@ Renovagent carries a persistent property project through investigation, options,
 
 Use each slice's acceptance criteria before changing its status. A mock screen, canned reply, or HTTP 200 does not establish workflow completion.
 
+### Jev in the review card — October 30, 2026
+
+- "Rank by relevance with Jev" in the "Does this work?" card: the server scores each cited provision for the described work (`POST /api/workspace/review/rank`, key server-side, session required, size caps, 20 calls / 10 min per owner) and the card shows percentages, ranks code findings first and folds those under 15% (nothing removed), labelled as Jev's interpretation. Verified with a connected route test, a render test and headless Chrome on the real model (Bay Area example: CALGreen paints 97%, flooring 96%, permits 90%).
+
 ### Adopted codes for the Bay Area, NYC and Austin; Jev live — October 30, 2026
 
 - Enacted code text for our markets: California 2025 Title 24 (residential, plumbing, electrical, mechanical, existing, energy, CALGreen) and 2016 residential; NYC 2022 Construction Codes chapters (DOB PDFs) and NY State 2025 code; City of Austin amendments to the 2024 codes. 33,213 sections; a second reviewing agent picked 167 provisions by market and package, all excerpts re-verified. A reported location (`codePlace`) switches the review and handoff to that market's adopted text, falling back to the 2012 model code per package; the review card has a Location picker ("assumed"). MCP review tools take `location`, and `review_scope rank=true` orders findings by Jev-judged relevance.

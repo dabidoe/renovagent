@@ -42,6 +42,42 @@ import {
   uploadDesignPhoto,
 } from './design-service.js';
 import { renderExample } from './example-render.js';
+import { configuredJevKey, rankReviewFindings } from './jev.js';
+
+// Paid model calls per owner per window, so a session cannot drain the key.
+const RANK_LIMIT = { calls: 20, windowMs: 10 * 60 * 1000 };
+const rankInput = z
+  .object({
+    work: z
+      .object({
+        request: z.string().max(2000),
+        packages: z.array(z.string().max(160)).max(20),
+        facts: z.array(z.string().max(200)).max(10),
+      })
+      .strict(),
+    findings: z
+      .array(
+        z
+          .object({
+            id: z.string().min(1).max(40),
+            citations: z
+              .array(
+                z
+                  .object({
+                    kind: z.string().max(40),
+                    title: z.string().max(300),
+                    locator: z.string().max(120).nullable(),
+                    excerpt: z.string().max(600),
+                  })
+                  .strip(),
+              )
+              .max(12),
+          })
+          .strip(),
+      )
+      .max(80),
+  })
+  .strict();
 export async function createWorkspaceServer(
   repository: MongoWorkspaceRepository,
   token: string,
@@ -51,6 +87,11 @@ export async function createWorkspaceServer(
   photoFiles?: PhotoJobFiles,
   design?: { images: DesignImageStore; provider?: PreviewProvider },
   hosting: HostingConfig = localHosting,
+  // Jev relevance ranking for review findings; injectable for tests.
+  jev: { configured: () => Promise<boolean>; rank: typeof rankReviewFindings } = {
+    configured: async () => Boolean(await configuredJevKey()),
+    rank: rankReviewFindings,
+  },
 ) {
   const accountMode = Boolean(accounts);
   // A public origin with the shared local token would give every visitor one workspace.
@@ -69,6 +110,7 @@ export async function createWorkspaceServer(
   };
   if (!accountMode) designWorkerFor(repository);
   const exampleRenders = new Map<string, ReturnType<typeof renderExample>>();
+  const rankCalls = new Map<string, number[]>();
   const workers = new Map<string, PhotoWorker>();
   async function workerFor(repo: MongoWorkspaceRepository) {
     let worker = workers.get(repo.ownerId);
@@ -251,6 +293,7 @@ export async function createWorkspaceServer(
                   providers: accounts!.providers(),
                   mongo: true,
                   muse: providerConfigured,
+                  jev: await jev.configured(),
                 }
               : {
                   mode: 'account',
@@ -258,6 +301,7 @@ export async function createWorkspaceServer(
                   providers: accounts!.providers(),
                   mongo: true,
                   muse: providerConfigured,
+                  jev: await jev.configured(),
                 },
           );
           return;
@@ -267,7 +311,12 @@ export async function createWorkspaceServer(
           `renovagent_local=${token}; HttpOnly; SameSite=Strict; Path=/api/workspace`,
         );
         await repository.read();
-        json(200, { mode: 'local-single-owner', mongo: true, muse: providerConfigured });
+        json(200, {
+          mode: 'local-single-owner',
+          mongo: true,
+          muse: providerConfigured,
+          jev: await jev.configured(),
+        });
         return;
       }
       let activeRepo = repository;
@@ -297,6 +346,28 @@ export async function createWorkspaceServer(
         if (!found) throw new DomainError('NOT_FOUND', 'Image is outside this workspace');
         res.writeHead(200, { 'Content-Type': found.mediaType });
         res.end(Buffer.from(found.bytes));
+        return;
+      }
+      if (path === '/review/rank' && req.method === 'POST') {
+        // Scores only: the browser holds the review; Jev judges how likely each
+        // cited provision applies to the described work. Interpretation, not a source.
+        if (!(await jev.configured()))
+          throw new DomainError('VALIDATION', 'Jev is not configured on this server');
+        // Validate first: only requests that reach the model count toward the limit.
+        const input = rankInput.parse(await body(req));
+        const now = Date.now();
+        const recent = (rankCalls.get(activeRepo.ownerId) ?? []).filter(
+          (t) => now - t < RANK_LIMIT.windowMs,
+        );
+        if (recent.length >= RANK_LIMIT.calls)
+          throw new DomainError('VALIDATION', 'Ranking limit reached; try again in a few minutes');
+        rankCalls.set(activeRepo.ownerId, [...recent, now]);
+        const ranked = await jev.rank(input.findings, input.work);
+        json(200, {
+          model: ranked.model,
+          relevance: Object.fromEntries(ranked.findings.map((f) => [f.id, f.relevance])),
+          note: 'Probability that a provision applies to this work, judged by the Jev model; an interpretation, not a code source or determination.',
+        });
         return;
       }
       if (path.startsWith('/design/')) {
