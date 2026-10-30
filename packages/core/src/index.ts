@@ -54,4 +54,5 @@ export * from './planning/code-markets.js';
 export * from './scope/scope-review.js';
 export * from './scope/contractor-handoff.js';
 export * from './scope/project-handoff.js';
+export * from './scope/photo-read.js';
 export * from './geometry/finish-swatches.js';

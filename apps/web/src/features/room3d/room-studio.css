@@ -966,3 +966,84 @@
   font-size: 13px;
   opacity: 0.8;
 }
+
+/* The owner's photos, read by Jev: outlines, pins on planned work, notes. */
+.owner-photos {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid #e5e7eb;
+}
+.owner-photos > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.owner-photos > header h4 {
+  margin: 0;
+}
+.owner-photos > header .room3d-muse {
+  width: auto;
+  margin: 0;
+  padding: 6px 12px;
+}
+.owner-photos-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 12px;
+  margin-top: 8px;
+}
+.owner-photo {
+  position: relative;
+  margin: 0;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #f3f4f6;
+  align-self: start;
+}
+.owner-photo img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.owner-photo-box {
+  position: absolute;
+  border: 1.5px dashed rgb(29 78 216 / 0.7);
+  border-radius: 4px;
+  pointer-events: none;
+}
+.owner-photos-thumbs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+.owner-photos-thumbs button {
+  font-size: 12px;
+  padding: 2px 8px;
+}
+.owner-photos-thumbs button[aria-pressed='true'] {
+  outline: 2px solid #1d4ed8;
+}
+.owner-photo-notes {
+  margin: 0 0 8px;
+  padding-left: 16px;
+  display: grid;
+  gap: 8px;
+  font-size: 13px;
+}
+.owner-photo-notes li.is-suggest-add {
+  color: #1e3a8a;
+}
+.owner-photo-notes li.is-check {
+  color: #92400e;
+}
+.owner-photo-notes button {
+  display: block;
+  margin-top: 4px;
+}
+@media (max-width: 720px) {
+  .owner-photos-body {
+    grid-template-columns: 1fr;
+  }
+}

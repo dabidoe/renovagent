@@ -89,7 +89,9 @@ test('photo checks send the image as an asset with the images header and return 
   );
   assert.equal(calls[0]!.headers['TypeSafe-Danger-Zone-Images'], 'true');
   const [ref] = Object.keys(calls[0]!.body.assets);
-  assert.ok(calls[0]!.body.questions.fan_box.instructions.includes(ref!));
+  // Referenced once, in the state: each mention would send another copy.
+  assert.equal(calls[0]!.body.state.photo, ref);
+  assert.equal(JSON.stringify(calls[0]!.body.questions).includes(ref!), false);
   assert.equal(calls[0]!.body.assets[ref!].data_base64, 'AQID');
   assert.deepEqual(r.items[0], {
     key: 'fan',

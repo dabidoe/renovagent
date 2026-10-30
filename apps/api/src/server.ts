@@ -42,7 +42,8 @@ import {
   uploadDesignPhoto,
 } from './design-service.js';
 import { renderExample } from './example-render.js';
-import { configuredJevKey, rankReviewFindings } from './jev.js';
+import { configuredJevKey, rankReviewFindings, readRoomPhoto } from './jev.js';
+import { imageSize } from 'image-size';
 
 // Paid model calls per owner per window, so a session cannot drain the key.
 const RANK_LIMIT = { calls: 20, windowMs: 10 * 60 * 1000 };
@@ -87,10 +88,15 @@ export async function createWorkspaceServer(
   photoFiles?: PhotoJobFiles,
   design?: { images: DesignImageStore; provider?: PreviewProvider },
   hosting: HostingConfig = localHosting,
-  // Jev relevance ranking for review findings; injectable for tests.
-  jev: { configured: () => Promise<boolean>; rank: typeof rankReviewFindings } = {
+  // Jev judgments (review ranking, room photo reading); injectable for tests.
+  jev: {
+    configured: () => Promise<boolean>;
+    rank: typeof rankReviewFindings;
+    readPhoto: typeof readRoomPhoto;
+  } = {
     configured: async () => Boolean(await configuredJevKey()),
     rank: rankReviewFindings,
+    readPhoto: readRoomPhoto,
   },
 ) {
   const accountMode = Boolean(accounts);
@@ -110,7 +116,15 @@ export async function createWorkspaceServer(
   };
   if (!accountMode) designWorkerFor(repository);
   const exampleRenders = new Map<string, ReturnType<typeof renderExample>>();
-  const rankCalls = new Map<string, number[]>();
+  // Paid Jev calls per owner per window (review ranking and photo reading).
+  const jevCalls = new Map<string, number[]>();
+  const spendJevCall = (ownerId: string) => {
+    const now = Date.now();
+    const recent = (jevCalls.get(ownerId) ?? []).filter((t) => now - t < RANK_LIMIT.windowMs);
+    if (recent.length >= RANK_LIMIT.calls)
+      throw new DomainError('VALIDATION', 'Jev limit reached; try again in a few minutes');
+    jevCalls.set(ownerId, [...recent, now]);
+  };
   const workers = new Map<string, PhotoWorker>();
   async function workerFor(repo: MongoWorkspaceRepository) {
     let worker = workers.get(repo.ownerId);
@@ -355,19 +369,42 @@ export async function createWorkspaceServer(
           throw new DomainError('VALIDATION', 'Jev is not configured on this server');
         // Validate first: only requests that reach the model count toward the limit.
         const input = rankInput.parse(await body(req));
-        const now = Date.now();
-        const recent = (rankCalls.get(activeRepo.ownerId) ?? []).filter(
-          (t) => now - t < RANK_LIMIT.windowMs,
-        );
-        if (recent.length >= RANK_LIMIT.calls)
-          throw new DomainError('VALIDATION', 'Ranking limit reached; try again in a few minutes');
-        rankCalls.set(activeRepo.ownerId, [...recent, now]);
+        spendJevCall(activeRepo.ownerId);
         const ranked = await jev.rank(input.findings, input.work);
         json(200, {
           model: ranked.model,
           relevance: Object.fromEntries(ranked.findings.map((f) => [f.id, f.relevance])),
           note: 'Probability that a provision applies to this work, judged by the Jev model; an interpretation, not a code source or determination.',
         });
+        return;
+      }
+      if (path === '/photo/read' && req.method === 'POST') {
+        // The browser sends one already-resized photo; Jev reports what it sees
+        // and where. Observations only: code decides pins and suggestions.
+        if (!(await jev.configured()))
+          throw new DomainError('VALIDATION', 'Jev is not configured on this server');
+        const input = z
+          .object({
+            format: z.enum(['jpg', 'png']),
+            data: z
+              .string()
+              .max(6 * 1024 * 1024)
+              .regex(/^[A-Za-z0-9+/]*={0,2}$/),
+          })
+          .strict()
+          .parse(await body(req));
+        const bytes = new Uint8Array(Buffer.from(input.data, 'base64'));
+        let size: { width?: number; height?: number; type?: string };
+        try {
+          size = imageSize(bytes);
+        } catch {
+          throw new DomainError('VALIDATION', 'The photo could not be read');
+        }
+        const fits = (n?: number) => !!n && n >= 280 && n <= 1568;
+        if (!fits(size.width) || !fits(size.height) || !['jpg', 'png'].includes(size.type ?? ''))
+          throw new DomainError('VALIDATION', 'Send a JPEG or PNG 280–1568 px on each side');
+        spendJevCall(activeRepo.ownerId);
+        json(200, await jev.readPhoto({ format: input.format, bytes }));
         return;
       }
       if (path.startsWith('/design/')) {

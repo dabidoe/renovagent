@@ -182,6 +182,41 @@ Assets: Poly Haven (polyhaven.com), CC0: Sofa_01, ArmChair_01,
 modern_coffee_table_01, potted_plant_01, throw_pillows_01, laminate_floor_02,
 wood_floor_deck.
 
+### Your photos, read by Jev (October 30, 2026)
+
+The room studio has a **Your photos** panel: the project's image evidence
+(add more with "Add room photos", `controller.attachFile`) and **✦ Pin with
+Jev**.
+
+- The browser resizes the photo to Jev's 280–1568 px range and sends one JPEG
+  to `POST /api/workspace/photo/read` (session required, size checked with
+  `image-size`, shared 20-calls-per-10-minutes Jev limit). `readRoomPhoto`
+  (`apps/api/src/jev.ts`) asks one batch: room type, floor covering (choice),
+  toilet / vanity / shower / tub / fan / window visible, water damage,
+  how dated the vanity looks (score), and boxes for toilet, vanity, shower,
+  floor, a plain painted wall, fan and window. Boxes are kept only for things
+  Jev also judges visible. The image is referenced once in the state: each
+  mention of a reference adds another copy of the image (a first version
+  that named it in every question exceeded the token limit).
+- Code decides everything after that (`packages/core/src/scope/photo-read.ts`):
+  `photoPins` pins each planned package on its surface or fixture (nothing is
+  pinned for things not seen); `photoNotes` turns findings into observations
+  ("floor looks like tile, 80% confident, confirm"), checks (existing tile or
+  vinyl under a planned floor, possible water damage) and suggestions to add a
+  package (no fan visible in a bathroom → exhaust fan; dated vanity →
+  vanity; carpet under a planned floor → carpet removal). A suggestion is
+  added only after "Approve: add …", as a new proposed scope revision.
+- Readings are held in the page, not recorded as facts: Jev's output is an
+  observation for the owner to confirm, never a measurement.
+
+Verified: `tests/domain/photo-read.test.ts`, the photo cases in
+`tests/integration/review-rank.test.ts` (size checks before any model call,
+shared limit), and headless Chrome with the real model on a real bathroom
+photo (`docs/previews/room-photo-jev-pins.png`): vanity, toilet, floor and
+wall pinned; "no exhaust fan visible (4%)" suggested and added after
+approval; 0.6 s and about 5k input tokens per photo. Jev read the sheet-vinyl
+floor as tile (66–80%), which is why floor findings ask for confirmation.
+
 ## Wiring and other trades
 
 The drawing has an empty `layer-electrical` (`data-status="not-recorded"`).

@@ -8,6 +8,7 @@
 import { readFile } from 'node:fs/promises';
 import { parseEnv } from 'node:util';
 import { fileURLToPath } from 'node:url';
+import type { PhotoRead } from '@renovagent/core';
 
 const BASE = process.env.TYPESAFE_BASE_URL ?? 'https://api.typesafe.ai';
 
@@ -161,15 +162,20 @@ export async function photoChecks(
   items: { key: string; present: string; locate?: string }[],
   options: Parameters<typeof askJev>[2] = {},
 ) {
+  // The image is referenced once, in the state: every mention of a reference
+  // adds another copy of the image to the request (and its token bill).
   const ref = 'room-photo-7f3c2a91';
   const questions: Record<string, Question> = {};
   for (const item of items) {
     questions[`${item.key}_present`] = {
       type: 'noul',
-      instructions: `Looking at the photo ${ref}: ${item.present}`,
+      instructions: `Looking at the photo in \`photo\`: ${item.present}`,
     };
     if (item.locate)
-      questions[`${item.key}_box`] = { type: 'box', instructions: `${item.locate} in ${ref}` };
+      questions[`${item.key}_box`] = {
+        type: 'box',
+        instructions: `${item.locate} in the photo in \`photo\``,
+      };
   }
   const { answers, model, inputTokens } = await askJev(
     { photo: ref, note: 'Homeowner photo of the room to be renovated.' },
@@ -228,5 +234,120 @@ export async function rankReviewFindings<
     findings: findings
       .map((f) => ({ ...f, relevance: p.get(f.id) ?? null }))
       .sort((a, b) => (b.relevance ?? 2) - (a.relevance ?? 2)),
+  };
+}
+
+// One request reads an owner's room photo: room type, floor covering, what is
+// visible, signs of damage, how dated the vanity looks, and where fixtures
+// are. Boxes are kept only for things Jev also judges visible, so absent
+// items are never pinned. Code turns this into pins and suggestions.
+const ROOM_PHOTO_REF = 'owner-room-photo-3f9a6c1e';
+export async function readRoomPhoto(
+  image: JevImage,
+  options: Parameters<typeof askJev>[2] = {},
+): Promise<PhotoRead> {
+  const inPhoto = 'in the photo in `photo`';
+  const seen = (what: string) => ({
+    type: 'noul' as const,
+    instructions: `Is ${what} visible ${inPhoto}?`,
+  });
+  const box = (what: string) => ({ type: 'box' as const, instructions: `${what} ${inPhoto}` });
+  const { model, answers } = await askJev(
+    { photo: ROOM_PHOTO_REF, note: 'Homeowner photo of a room they plan to renovate.' },
+    {
+      room: {
+        type: 'choice',
+        instructions: `What room is shown ${inPhoto}?`,
+        criteria: {
+          bathroom: 'Bathroom or powder room',
+          kitchen: 'Kitchen',
+          living: 'Living, family or dining room',
+          bedroom: 'Bedroom',
+          other: 'Something else',
+        },
+      },
+      floor: {
+        type: 'choice',
+        instructions: `What is the existing floor covering ${inPhoto}?`,
+        criteria: {
+          carpet: 'Wall-to-wall carpet',
+          'sheet-vinyl':
+            'Sheet vinyl or linoleum: one continuous sheet, often printed with a pattern',
+          tile: 'Ceramic or porcelain tiles with real grout lines',
+          wood: 'Solid or engineered wood boards',
+          lvp: 'Vinyl or laminate planks',
+          'not-visible': 'The floor is not visible',
+        },
+      },
+      toilet: seen('a toilet'),
+      vanity: seen('a bathroom vanity or sink cabinet'),
+      shower: seen('a shower or shower stall'),
+      tub: seen('a bathtub'),
+      fan: seen('a ceiling exhaust fan or vent grille'),
+      window: seen('a window in the room itself (not only a reflection in a mirror)'),
+      damage: {
+        type: 'noul',
+        instructions: `Are there visible water stains, peeling paint, mold or water damage on walls, ceiling or floor ${inPhoto}?`,
+      },
+      vanity_dated: {
+        type: 'score',
+        instructions: `How dated does the bathroom vanity ${inPhoto} look? If there is no vanity, choose the first level.`,
+        criteria: [
+          'Current style, or no vanity visible',
+          'Somewhat dated but fine',
+          'Clearly dated (1980s–90s style finishes and hardware)',
+        ],
+      },
+      toilet_box: box('The toilet'),
+      vanity_box: box('The vanity cabinet with its countertop'),
+      shower_box: box('The shower stall or bathtub'),
+      floor_box: box('The largest visible area of floor'),
+      wall_box: box(
+        'A plain painted wall area with nothing on it: not tile, not a shower or tub surround, not a mirror, window, door or cabinet',
+      ),
+      fan_box: box('The ceiling exhaust fan or vent grille'),
+      window_box: box('The window'),
+    },
+    { ...options, images: { [ROOM_PHOTO_REF]: image } },
+  );
+  const p = (k: string) => (answers[k] as { noul: number } | undefined)?.noul ?? 0;
+  const choice = (k: string) => answers[k] as { choice: string; confidence: number } | undefined;
+  const b = (k: string) => {
+    const a = answers[`${k}_box`] as Extract<JevAnswer, { type: 'box' }> | undefined;
+    return a?.box ?? undefined;
+  };
+  const room = choice('room');
+  const floor = choice('floor');
+  const dated = answers.vanity_dated as Extract<JevAnswer, { type: 'score' }> | undefined;
+  const visible = (k: string) => p(k) >= 0.5;
+  const boxes: PhotoRead['boxes'] = {};
+  for (const k of ['toilet', 'vanity', 'shower', 'fan', 'window'] as const)
+    if (visible(k) || (k === 'shower' && visible('tub'))) {
+      const found = b(k);
+      if (found) boxes[k] = found;
+    }
+  if (floor?.choice !== 'not-visible' && b('floor')) boxes.floor = b('floor')!;
+  if (b('wall')) boxes.wall = b('wall')!;
+  return {
+    model,
+    room: {
+      kind: (room?.choice ?? 'other') as PhotoRead['room']['kind'],
+      confidence: room?.confidence ?? 0,
+    },
+    floor: {
+      kind: (floor?.choice ?? 'not-visible') as PhotoRead['floor']['kind'],
+      confidence: floor?.confidence ?? 0,
+    },
+    seen: {
+      toilet: p('toilet'),
+      vanity: p('vanity'),
+      shower: p('shower'),
+      tub: p('tub'),
+      fan: p('fan'),
+      window: p('window'),
+      damage: p('damage'),
+    },
+    vanityDated: dated ? { score: dated.score, confidence: dated.confidence } : null,
+    boxes,
   };
 }

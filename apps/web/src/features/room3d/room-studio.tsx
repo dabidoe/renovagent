@@ -1,4 +1,5 @@
 import { RoomWelcome } from './room-welcome.js';
+import { OwnerPhotos, ownerPhotos } from './owner-photos.js';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type {
   DesignOptions,
@@ -779,10 +780,44 @@ export function RoomStudio({
     if (controller.connected) await price();
   };
 
+  // A package a photo suggested, added after the owner approved it in the
+  // photo panel: a new proposed scope revision with the same request.
+  const addPackage = async (packageId: string) => {
+    if (!scopeDraft) return;
+    const ids = scopeDraft.packages.filter((p) => p.included).map((p) => p.id);
+    const ok = await run(() =>
+      controller.draftScope(
+        projectId,
+        scopeDraft.recipe.id,
+        [...ids, packageId],
+        scopeDraft.request,
+        scopeDraft.direction,
+      ),
+    );
+    if (ok && controller.connected) await price();
+  };
+  const photosPanel = (
+    <OwnerPhotos
+      state={state}
+      projectId={projectId}
+      controller={controller}
+      draft={scopeDraft}
+      onAdd={addPackage}
+    />
+  );
+
   if (loadError) return <p role="alert">Could not read the floor plan: {loadError}</p>;
   if (!source)
     return (
-      <RoomWelcome state={state} projectId={projectId} controller={controller} heading={heading} />
+      <>
+        <RoomWelcome
+          state={state}
+          projectId={projectId}
+          controller={controller}
+          heading={heading}
+        />
+        {ownerPhotos(state, projectId).length > 0 && photosPanel}
+      </>
     );
   const selected = surfaces.find((s) => s.id === selectedId) ?? null;
   const activePin = allPins.find((p) => p.id === pinId) ?? null;
@@ -1235,6 +1270,7 @@ export function RoomStudio({
           )}
         </aside>
       </div>
+      {photosPanel}
     </section>
   );
 }

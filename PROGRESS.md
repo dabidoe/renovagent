@@ -44,6 +44,10 @@ Renovagent carries a persistent property project through investigation, options,
 
 Use each slice's acceptance criteria before changing its status. A mock screen, canned reply, or HTTP 200 does not establish workflow completion.
 
+### Your photos pinned by Jev — October 30, 2026
+
+- The room studio's "Your photos" panel uploads room photos and reads one with Jev (`POST /api/workspace/photo/read`): room, floor covering, visible fixtures, damage, dated vanity, and boxes. Code pins the planned work on what was located and suggests plan changes (no bathroom fan → exhaust fan, dated vanity, carpet under a new floor), each added only after approval. Verified with unit and route tests and headless Chrome on a real bathroom photo with the real model.
+
 ### Jev in the review card — October 30, 2026
 
 - "Rank by relevance with Jev" in the "Does this work?" card: the server scores each cited provision for the described work (`POST /api/workspace/review/rank`, key server-side, session required, size caps, 20 calls / 10 min per owner) and the card shows percentages, ranks code findings first and folds those under 15% (nothing removed), labelled as Jev's interpretation. Verified with a connected route test, a render test and headless Chrome on the real model (Bay Area example: CALGreen paints 97%, flooring 96%, permits 90%).
