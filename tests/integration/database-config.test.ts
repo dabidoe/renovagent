@@ -31,15 +31,19 @@ test('web/MCP database selection uses the cluster URI and explicit local selecti
       root,
     );
     assert.equal(explicit.uri, 'mongodb://127.0.0.1:27018/isolated');
-    const environment = await workspaceMongoConfig(
-      { MONGODB_URI: 'mongodb+srv://other.invalid/selected' },
+    // A MONGODB_URI inherited from another project never overrides this project's .env.
+    const inherited = await workspaceMongoConfig(
+      { MONGODB_URI: 'mongodb+srv://other.invalid/OtherProject' },
       root,
     );
-    assert.equal(environment.uri, 'mongodb+srv://other.invalid/selected');
+    assert.equal(inherited.uri, 'mongodb+srv://example.invalid/workspace');
+    // Without a .env (a hosted container), the environment is used.
+    const bare = await mkdtemp(join(tmpdir(), 'renovagent-database-config-'));
     const atlasDefault = await workspaceMongoConfig(
       { MONGODB_URI: 'mongodb+srv://example.invalid/?retryWrites=true' },
-      root,
+      bare,
     );
+    await rm(bare, { recursive: true, force: true });
     assert.equal(
       atlasDefault.uri,
       'mongodb+srv://example.invalid/renovagent_workspace?retryWrites=true',

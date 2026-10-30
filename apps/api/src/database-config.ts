@@ -19,7 +19,13 @@ export async function workspaceMongoConfig(
       if (!(error instanceof Error && 'code' in error && error.code === 'ENOENT')) throw error;
     }
   }
-  const value = (name: string) => env[name]?.trim() || files[name]?.trim();
+  // RENOVAGENT_* settings may override from the environment. Generic names such
+  // as MONGODB_URI are often inherited from other projects (shell or launchctl),
+  // so the project's own .env wins for those; hosts without a .env still use env.
+  const value = (name: string) =>
+    name.startsWith('RENOVAGENT_')
+      ? env[name]?.trim() || files[name]?.trim()
+      : files[name]?.trim() || env[name]?.trim();
   const mode = value('RENOVAGENT_MONGO_TARGET');
   if (mode && mode !== 'local' && mode !== 'configured')
     throw new Error('RENOVAGENT_MONGO_TARGET must be local or configured');
