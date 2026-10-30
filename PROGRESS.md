@@ -44,6 +44,20 @@ Renovagent carries a persistent property project through investigation, options,
 
 Use each slice's acceptance criteria before changing its status. A mock screen, canned reply, or HTTP 200 does not establish workflow completion.
 
+### Retail reference prices; CI fix — October 30, 2026
+
+- **The catalog:** `fixtures/catalog/retail-reference-2026-10.ts` holds 25 real products (Home Depot, Floor & Decor, Benjamin Moore, Delta, Ferguson and others) across the ten catalog categories, with shelf prices checked by hand on October 30.
+  - **Labelled:** the prices are `manual-entry` and `recent`, never `live`, and each note names its page and whether the price came from the fetched page or only a search result.
+  - **Specs:** only published specs are recorded, so a product without a published spec is listed but never picked for a rule that depends on it.
+  - **Sources:** every source and choice is listed in [retail reference prices](docs/retail-reference-prices.md).
+- **Seeding:** `seed:catalog` now loads one set per database (`--set retail`, the default, or `--set demo`). `--retire-demo` deletes exactly the demo fixture records.
+- **Verified on the local test database:** Best value on the example living room picks $566.84 against $827.19 for the cheapest mid-tier plan, at 75% to 91% Jev fit.
+- **Open:**
+  - projects priced against the demo set need re-pricing;
+  - mid-tier vanity top and several high tiers are missing;
+  - the bathroom faucet rule (`1/2-fip`) excludes typical 3/8 in compression faucets, a recipe decision left open.
+- **CI:** the build had failed since 5eda479, because `owner-photos.tsx` read an evidence field that exists only in uncommitted contracts work. It is fixed in 43a2d62, and CI passes. Local checks now run on an export whose workspace packages resolve inside the export.
+
 ### Best value with Jev — October 30, 2026
 
 - Connected projects with a priced plan get "Best value with Jev": every offer of every tier that passes the hard rules is judged by Jev for fit (does it meet this requirement for this project) and quality; code picks the cheapest fit, lists cheaper options passed over and the cheapest step up, and compares with the mid tier. Demo example: $511.48 vs $724.32 mid tier with every pick ≥ 82% fit. Demo prices are labelled as such.
