@@ -306,7 +306,7 @@ export function mountRoomScene(
   // Frame the whole room from a raised corner, whatever its size.
   const camera = new THREE.PerspectiveCamera(40, 1, 0.05, 200);
   const radius = Math.hypot(maxX - minX, maxY - minY, roomHeightForFrame()) / 2;
-  const distance = Math.max(radius / Math.sin((camera.fov * Math.PI) / 360), 3) * 1.15;
+  const distance = Math.max(radius / Math.sin((camera.fov * Math.PI) / 360), 2.6) * 0.92;
   camera.position
     .copy(center)
     .add(new THREE.Vector3(0.75, 0.95, 1).normalize().multiplyScalar(distance));
@@ -356,16 +356,13 @@ export function mountRoomScene(
     el.type = 'button';
     el.className = 'room3d-pin';
     el.dataset.annotation = pin.id;
-    const n = document.createElement('span');
-    n.className = 'room3d-pin-n';
-    n.textContent = String(pin.number);
     const t = document.createElement('span');
     t.className = 'room3d-pin-t';
     t.textContent = pin.title;
     const c = document.createElement('span');
     c.className = 'room3d-pin-c';
     c.textContent = formatCost(pin);
-    el.append(n, t, c);
+    el.append(t, c);
     el.addEventListener('click', (e) => {
       e.stopPropagation();
       onPin(pin.id);

@@ -1,5 +1,12 @@
 import type { PlanLine, PurchasePlanPayload, ScopeDraft } from '@renovagent/contracts';
 import type { RoomModel } from './room-model.js';
+import {
+  PHASES,
+  templateEstimate,
+  workGuide,
+  type TemplateEstimate,
+  type WorkGuide,
+} from '../scope/work-guide.js';
 
 // One callout per included work package, pinned to the surfaces it acts on.
 // Pins name surfaces, never invented positions: the views place them on those
@@ -31,10 +38,17 @@ export type RoomAnnotation = {
   needsInput: number;
   costMinor: number | null;
   currency: string | null;
+  // Order of operations, DIY difficulty, kit and template price (null if unknown).
+  guide: WorkGuide | null;
+  estimate: TemplateEstimate | null;
 };
 export type RoomAnnotations = {
   pins: RoomAnnotation[];
   unplaced: RoomAnnotation[];
+  // Every package in order of operations (numbers follow this order).
+  steps: RoomAnnotation[];
+  // Template totals (USD): materials only, and materials plus DIY tools.
+  template: { materialsMinor: number; toolsMinor: number; needsArea: number } | null;
   tier: PurchasePlanPayload['tier'] | null;
   totalMinor: number | null;
   currency: string | null;
@@ -70,6 +84,8 @@ export function roomAnnotations(
   const empty: RoomAnnotations = {
     pins: [],
     unplaced: [],
+    steps: [],
+    template: null,
     tier: null,
     totalMinor: null,
     currency: null,
@@ -105,7 +121,10 @@ export function roomAnnotations(
       });
       const priced = lines.filter((l) => l.product);
       const where = placement(p.id, model);
+      const guide = workGuide(p.id);
       return {
+        guide,
+        estimate: guide ? templateEstimate(guide, lines) : null,
         id: p.id,
         number: i + 1,
         title: p.title,
@@ -119,9 +138,11 @@ export function roomAnnotations(
         currency: priced[0]?.product!.currency ?? null,
       };
     });
-  // Numbered in reading order: callouts in the room first, then the list.
-  all.sort((a, b) => Number(!a.surfaceIds.length) - Number(!b.surfaceIds.length));
+  // Numbered in order of operations: prep, demo, rough-in, paint, flooring, fixtures.
+  const phase = (a: RoomAnnotation) => (a.guide ? PHASES.indexOf(a.guide.phase) : PHASES.length);
+  all.sort((a, b) => phase(a) - phase(b));
   all.forEach((a, i) => (a.number = i + 1));
+  const guided = all.filter((a) => a.estimate);
   const pins = all.filter((a) => a.surfaceIds.length);
   const priced = all.reduce((n, a) => n + a.priced, 0);
   const items = all.reduce((n, a) => n + a.lines.length, 0);
@@ -129,6 +150,14 @@ export function roomAnnotations(
   return {
     pins,
     unplaced: all.filter((a) => !a.surfaceIds.length),
+    steps: all,
+    template: guided.length
+      ? {
+          materialsMinor: guided.reduce((n, a) => n + a.estimate!.materialMinor, 0),
+          toolsMinor: guided.reduce((n, a) => n + a.estimate!.kitMinor, 0),
+          needsArea: guided.filter((a) => a.estimate!.needsArea).length,
+        }
+      : null,
     tier: plan?.tier ?? null,
     totalMinor: costed.length ? costed.reduce((n, a) => n + a.costMinor!, 0) : null,
     currency: costed[0]?.currency ?? null,

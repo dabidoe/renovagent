@@ -151,65 +151,106 @@ function AnnotationDetail({
   surfaces: RoomSurface[];
   onBack: () => void;
 }) {
-  const on = surfaces.filter((s) => pin.surfaceIds.includes(s.id));
-  const walls = on.filter((s) => s.kind === 'wall');
-  const wallArea = walls.every((w) => w.geometry.grossAreaM2 != null)
-    ? Math.round(walls.reduce((n, w) => n + w.geometry.grossAreaM2!, 0) * 100) / 100
-    : null;
+  void surfaces;
+  const g = pin.guide;
+  const e = pin.estimate;
   return (
     <div className="room3d-detail" aria-live="polite">
       <button type="button" className="link-button subtle" onClick={onBack}>
-        ← All work
+        ← Overview
       </button>
-      <h4>
-        <span className="room3d-badge">{pin.number}</span> {pin.title}
-      </h4>
-      <p className="room3d-detail-cost">
-        {pinCost(pin)}
-        {pin.costMinor !== null && pin.priced < pin.lines.length && (
-          <span className="small-note">
-            {' '}
-            · {pin.priced} of {pin.lines.length} items priced
-          </span>
-        )}
-      </p>
-      <p className="small-note">{pin.summary}</p>
-      {walls.length > 1 && (
-        <p className="small-note">
-          On {walls.length} walls
-          {wallArea !== null ? ` · ${m2(wallArea)} gross, measured, not verified` : ''}
+      <h4>{pin.title}</h4>
+      {g && (
+        <p className="room3d-diy">
+          <span className={`room3d-chip diy-${g.diy.toLowerCase()}`}>DIY: {g.diy}</span>{' '}
+          <span className="small-note">{g.diyNote}</span>
         </p>
       )}
+      {e && (
+        <dl className="room3d-costs">
+          <dt>
+            Materials
+            <small>
+              {g?.materialNote ?? 'No materials beyond the kit'}
+              {e.areaSqFt !== null && g?.materialPerSqFtMinor !== undefined
+                ? ` · ${e.areaSqFt} sq ft measured`
+                : ''}
+            </small>
+          </dt>
+          <dd>{e.needsArea ? 'needs a measurement' : `≈ ${money(e.materialMinor, 'USD')}`}</dd>
+          {g && g.kit.length > 0 && (
+            <>
+              <dt>
+                DIY tools
+                <small>A contractor brings these</small>
+              </dt>
+              <dd>≈ {money(e.kitMinor, 'USD')}</dd>
+            </>
+          )}
+          <dt className="room3d-costs-total">DIY total</dt>
+          <dd className="room3d-costs-total">≈ {money(e.totalMinor, 'USD')}</dd>
+        </dl>
+      )}
+      {g && g.kit.length > 0 && (
+        <ul className="room3d-kit">
+          {g.kit.map((item) => (
+            <li key={item.name}>
+              <span>{item.name}</span>
+              <span>{money(item.priceMinor, 'USD')}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+      {g && (
+        <a
+          className="room3d-video"
+          href={`https://www.youtube.com/results?search_query=${encodeURIComponent(g.videoSearch)}`}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          ▶ Watch how-to videos
+        </a>
+      )}
+      <p className="small-note">
+        Template prices: typical retail, not a quote. Hiring out adds labour (not estimated).
+      </p>
       {pin.unplacedReason && <p className="small-note">{pin.unplacedReason}.</p>}
-      <ul className="room3d-links">
-        {pin.lines.map((l) => (
-          <li key={l.requirementId}>
-            <div className="room3d-line-head">
-              <strong>{l.purpose}</strong>
-              <span>
-                {l.product ? money(l.product.lineTotalMinor, l.product.currency) : 'not priced'}
-              </span>
-            </div>
-            <div className="small-note">
-              {l.quantity === null ? 'Quantity open' : `${l.quantity} ${l.unit}`}
-              {STATUS[l.status] ? ` · ${STATUS[l.status]}` : ''}
-            </div>
-            {l.product && (
-              <div className="room3d-product">
-                <div className="room3d-product-image" aria-label="No product image on file">
-                  No image on file
-                </div>
-                <div>
-                  {l.product.productName}
-                  <div className="small-note">
-                    {l.product.retailer} · SKU {l.product.sku} · price {l.product.freshness}
+      <details className="room3d-more">
+        <summary>
+          Line items and store prices
+          {pin.costMinor !== null ? ` · ${pinCost(pin)} found` : ''}
+        </summary>
+        <p className="small-note">{pin.summary}</p>
+        <ul className="room3d-links">
+          {pin.lines.map((l) => (
+            <li key={l.requirementId}>
+              <div className="room3d-line-head">
+                <strong>{l.purpose}</strong>
+                <span>
+                  {l.product ? money(l.product.lineTotalMinor, l.product.currency) : 'not priced'}
+                </span>
+              </div>
+              <div className="small-note">
+                {l.quantity === null ? 'Quantity open' : `${l.quantity} ${l.unit}`}
+                {STATUS[l.status] ? ` · ${STATUS[l.status]}` : ''}
+              </div>
+              {l.product && (
+                <div className="room3d-product">
+                  <div className="room3d-product-image" aria-label="No product image on file">
+                    No image on file
+                  </div>
+                  <div>
+                    {l.product.productName}
+                    <div className="small-note">
+                      {l.product.retailer} · SKU {l.product.sku} · price {l.product.freshness}
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
-          </li>
-        ))}
-      </ul>
+              )}
+            </li>
+          ))}
+        </ul>
+      </details>
     </div>
   );
 }
@@ -426,7 +467,8 @@ export function RoomStudio({
           { sourceEvidenceId: source.evidenceId, title },
           notes?.pins ?? [],
           (id) => choosePinRef.current(id),
-          pinCost,
+          (p: RoomAnnotation) =>
+            p.estimate ? `≈ ${money(p.estimate.totalMinor, 'USD')}` : pinCost(p),
         );
       })
       .catch((e) => {
@@ -481,17 +523,16 @@ export function RoomStudio({
     );
   const selected = surfaces.find((s) => s.id === selectedId) ?? null;
   const activePin = allPins.find((p) => p.id === pinId) ?? null;
-  const dimsOn = showDims ?? source.model.walls.length <= 8;
+  // Dimension labels are opt-in: the room reads better without them.
+  const dimsOn = showDims ?? false;
+  const steps = notes?.steps ?? [];
+  const template = notes?.template ?? null;
   return (
     <section className="room3d" aria-label={heading}>
       <header className="room3d-head">
         <div>
           <h3>{heading}</h3>
-          <p className="small-note">
-            {source.label} · {source.model.walls.length} walls ·{' '}
-            {source.model.walls.reduce((n, w) => n + w.openings.length, 0)} openings · measured, not
-            verified
-          </p>
+          <p className="small-note">{source.label} · measured, not verified</p>
         </div>
         <div className="room3d-actions" role="group" aria-label="Room view">
           <button type="button" aria-pressed={view === '3d'} onClick={() => setView('3d')}>
@@ -506,32 +547,40 @@ export function RoomStudio({
               aria-pressed={showProposed}
               onClick={() => setShowProposed((v) => !v)}
             >
-              {showProposed ? proposed.label : 'Existing'}
+              {showProposed ? 'After' : 'Before'}
             </button>
           )}
-          {view === '3d' && (
-            <button type="button" aria-pressed={dimsOn} onClick={() => setShowDims(!dimsOn)}>
-              Dimensions
-            </button>
-          )}
-          <button type="button" onClick={() => download(`${title}-plan.svg`, svg, 'image/svg+xml')}>
-            Drawing ↓
-          </button>
-          {view === '3d' && (
-            <button
-              type="button"
-              onClick={() =>
-                void scene.current
-                  ?.exportGlb()
-                  .then((glb) => download(`${title}.glb`, glb, 'model/gltf-binary'))
-              }
-            >
-              3D model ↓
-            </button>
-          )}
+          <details className="room3d-menu">
+            <summary aria-label="More">⋯</summary>
+            <div>
+              {view === '3d' && (
+                <button type="button" onClick={() => setShowDims(!dimsOn)}>
+                  {dimsOn ? 'Hide' : 'Show'} dimensions
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => download(`${title}-plan.svg`, svg, 'image/svg+xml')}
+              >
+                Download drawing (SVG)
+              </button>
+              {view === '3d' && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    void scene.current
+                      ?.exportGlb()
+                      .then((glb) => download(`${title}.glb`, glb, 'model/gltf-binary'))
+                  }
+                >
+                  Download 3D model (GLB)
+                </button>
+              )}
+            </div>
+          </details>
         </div>
       </header>
-      {[...source.warnings, ...source.model.notes].map((w) => (
+      {source.warnings.map((w) => (
         <p key={w} role="status" className="small-note">
           {w}
         </p>
@@ -540,6 +589,26 @@ export function RoomStudio({
         <p role="status" className="small-note">
           3D is unavailable in this browser ({webglError}); showing the drawing.
         </p>
+      )}
+      {steps.length > 0 && !replanning && (
+        <nav className="room3d-steps" role="tablist" aria-label="Order of work">
+          <button type="button" role="tab" aria-selected={!pinId} onClick={() => choosePin(null)}>
+            <span className="room3d-step-phase">All</span>
+            <span>Overview</span>
+          </button>
+          {steps.map((s) => (
+            <button
+              key={s.id}
+              type="button"
+              role="tab"
+              aria-selected={pinId === s.id}
+              onClick={() => choosePin(s.id)}
+            >
+              <span className="room3d-step-phase">{s.guide?.phase ?? 'Other'}</span>
+              <span>{s.title}</span>
+            </button>
+          ))}
+        </nav>
       )}
       <div className="room3d-body">
         {view === '3d' ? (
@@ -562,7 +631,7 @@ export function RoomStudio({
                 className="link-button subtle"
                 onClick={() => chooseSurface(null)}
               >
-                ← All work
+                ← Overview
               </button>
               <SurfaceDetail surface={selected} />
               <p className="small-note">No planned work acts on this surface.</p>
@@ -593,101 +662,86 @@ export function RoomStudio({
           ) : (
             <>
               <div className="room3d-summary">
+                <span className="eyebrow">DIY estimate · template prices</span>
+                <strong className="room3d-total">
+                  {template
+                    ? `≈ ${money(template.materialsMinor + template.toolsMinor, 'USD')}`
+                    : 'Not estimated'}
+                </strong>
+                {template && (
+                  <span className="small-note">
+                    Materials ≈ {money(template.materialsMinor, 'USD')} · DIY tools ≈{' '}
+                    {money(template.toolsMinor, 'USD')}
+                    <br />
+                    Hiring out: materials plus labour (not estimated)
+                  </span>
+                )}
+                {!!template?.needsArea && (
+                  <span className="small-note">
+                    {template.needsArea} step{template.needsArea > 1 ? 's need' : ' needs'} a
+                    measurement to price materials.
+                  </span>
+                )}
+              </div>
+              <ol className="room3d-order">
+                {steps.map((s) => (
+                  <li key={s.id}>
+                    <button type="button" onClick={() => choosePin(s.id)}>
+                      <span className="room3d-step-phase">{s.guide?.phase ?? 'Other'}</span>
+                      <span className="room3d-pin-title">{s.title}</span>
+                      {s.guide && (
+                        <span className={`room3d-chip diy-${s.guide.diy.toLowerCase()}`}>
+                          {s.guide.diy}
+                        </span>
+                      )}
+                      <span className="room3d-pin-cost">
+                        {s.estimate ? `≈ ${money(s.estimate.totalMinor, 'USD')}` : '—'}
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ol>
+              <div className="room3d-store">
                 {notes?.totalMinor != null && notes.currency ? (
                   <>
-                    <span className="eyebrow">Materials estimate</span>
-                    <strong className="room3d-total">
-                      {money(notes.totalMinor, notes.currency)}
-                    </strong>
                     <span className="small-note">
-                      {notes.priced} of {notes.items} items priced · demo catalog prices
+                      Store prices found: {money(notes.totalMinor, notes.currency)} for{' '}
+                      {notes.priced} of {notes.items} items (demo catalog)
                     </span>
-                  </>
-                ) : (
-                  <>
-                    <span className="eyebrow">{notes?.items} items planned</span>
-                    <strong className="room3d-total">Not priced yet</strong>
-                    {controller.connected ? (
-                      <button
-                        type="button"
-                        className="primary"
-                        disabled={pricing === 'working'}
-                        onClick={() => void price()}
-                      >
-                        {pricing === 'working' ? 'Pricing…' : 'Price this work'}
-                      </button>
-                    ) : (
-                      <span className="small-note">
-                        Prices come from the shared catalog when the workspace is connected.
-                      </span>
+                    {plans.length > 1 && (
+                      <div className="room3d-tiers" role="group" aria-label="Price tier">
+                        {plans.map((p) => {
+                          const t = (p!.payload as PurchasePlanPayload).tier;
+                          return (
+                            <button
+                              key={t}
+                              type="button"
+                              aria-pressed={p === plan}
+                              onClick={() => setTier(t)}
+                            >
+                              {TIER_LABEL[t as keyof typeof TIER_LABEL] ?? t}
+                            </button>
+                          );
+                        })}
+                      </div>
                     )}
                   </>
-                )}
+                ) : controller.connected ? (
+                  <button
+                    type="button"
+                    className="link-button"
+                    disabled={pricing === 'working'}
+                    onClick={() => void price()}
+                  >
+                    {pricing === 'working' ? 'Checking store prices…' : 'Check store prices'}
+                  </button>
+                ) : null}
                 {pricing && pricing !== 'working' && (
                   <p role="alert" className="small-note">
                     {pricing}
                   </p>
                 )}
-                {plans.length > 1 && (
-                  <div className="room3d-tiers" role="group" aria-label="Price tier">
-                    {plans.map((p) => {
-                      const t = (p!.payload as PurchasePlanPayload).tier;
-                      return (
-                        <button
-                          key={t}
-                          type="button"
-                          aria-pressed={p === plan}
-                          onClick={() => setTier(t)}
-                        >
-                          {TIER_LABEL[t as keyof typeof TIER_LABEL] ?? t}
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
               </div>
-              <ol className="room3d-pins">
-                {notes?.pins.map((p) => (
-                  <li key={p.id}>
-                    <button type="button" onClick={() => choosePin(p.id)}>
-                      <span className="room3d-badge">{p.number}</span>
-                      <span className="room3d-pin-title">
-                        {p.title}
-                        {p.needsInput > 0 && (
-                          <small>
-                            {p.needsInput} open item{p.needsInput > 1 ? 's' : ''}
-                          </small>
-                        )}
-                      </span>
-                      <span className="room3d-pin-cost">{pinCost(p)}</span>
-                    </button>
-                  </li>
-                ))}
-              </ol>
-              {!!notes?.unplaced.length && (
-                <>
-                  <h5>Whole room and not yet located</h5>
-                  <ol className="room3d-pins">
-                    {notes.unplaced.map((p) => (
-                      <li key={p.id}>
-                        <button type="button" onClick={() => choosePin(p.id)}>
-                          <span className="room3d-badge muted">{p.number}</span>
-                          <span className="room3d-pin-title">
-                            {p.title}
-                            <small>{p.unplacedReason}</small>
-                          </span>
-                          <span className="room3d-pin-cost">{pinCost(p)}</span>
-                        </button>
-                      </li>
-                    ))}
-                  </ol>
-                </>
-              )}
-              {notes?.notes.map((n) => (
-                <p key={n} className="small-note">
-                  {n}
-                </p>
-              ))}
               <button
                 type="button"
                 className="link-button subtle"
@@ -695,6 +749,11 @@ export function RoomStudio({
               >
                 Change the work
               </button>
+              {source.model.notes.map((n) => (
+                <p key={n} className="small-note">
+                  {n}
+                </p>
+              ))}
             </>
           )}
         </aside>

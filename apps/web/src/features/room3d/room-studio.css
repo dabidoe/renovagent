@@ -26,13 +26,13 @@
 }
 .room3d-body {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 300px;
+  grid-template-columns: minmax(0, 1fr) 320px;
   gap: 12px;
   margin-top: 10px;
 }
 .room3d-canvas {
   position: relative;
-  height: 480px;
+  height: 560px;
   border-radius: 8px;
   overflow: hidden;
   background: #eef1f4;
@@ -63,7 +63,7 @@
 }
 .room3d-plan {
   overflow: auto;
-  max-height: 520px;
+  max-height: 560px;
   border-radius: 8px;
   background: #fff;
 }
@@ -72,7 +72,7 @@
   height: auto;
 }
 .room3d-side {
-  max-height: 520px;
+  max-height: 560px;
   overflow: auto;
 }
 .room3d-detail dl {
@@ -297,4 +297,209 @@
   gap: 6px;
   align-items: center;
   cursor: pointer;
+}
+
+/* Order of work as tabs across the top. */
+.room3d-steps {
+  display: flex;
+  gap: 4px;
+  margin-top: 12px;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--line, #e2e8f0);
+}
+.room3d-steps button {
+  display: grid;
+  gap: 1px;
+  padding: 8px 14px 9px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  text-align: left;
+  font-weight: 600;
+  color: #334155;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.room3d-steps button[aria-selected='true'] {
+  border-bottom-color: var(--blue, #2563eb);
+  color: #0f172a;
+}
+.room3d-step-phase {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+.room3d-steps button[aria-selected='true'] .room3d-step-phase {
+  color: var(--blue, #2563eb);
+}
+
+/* DIY difficulty. */
+.room3d-chip {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.diy-easy {
+  background: #dcfce7;
+  color: #166534;
+}
+.diy-medium {
+  background: #fef3c7;
+  color: #92400e;
+}
+.diy-hard {
+  background: #ffedd5;
+  color: #9a3412;
+}
+.diy-pro {
+  background: #fee2e2;
+  color: #991b1b;
+}
+.room3d-diy {
+  margin: 4px 0 10px;
+}
+
+/* Cost breakdown and kit. */
+.room3d-costs {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 6px 12px;
+  margin: 0 0 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--side, #f1f5f9);
+}
+.room3d-costs dt {
+  display: grid;
+  font-weight: 600;
+  color: #0f172a;
+}
+.room3d-costs dt small {
+  font-weight: 400;
+  color: #64748b;
+}
+.room3d-costs dd {
+  margin: 0;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.room3d-costs .room3d-costs-total {
+  padding-top: 6px;
+  border-top: 1px solid var(--line, #e2e8f0);
+  font-size: 18px;
+  font-weight: 700;
+}
+.room3d-kit {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 10px;
+  font-size: 13px;
+}
+.room3d-kit li {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 0;
+  border-bottom: 1px dashed var(--line, #e2e8f0);
+}
+.room3d-video {
+  display: inline-flex;
+  margin: 2px 0 8px;
+  padding: 7px 12px;
+  border-radius: 8px;
+  background: #0f172a;
+  color: #fff;
+  font-weight: 600;
+  text-decoration: none;
+}
+.room3d-video:hover {
+  background: #1e293b;
+}
+.room3d-more summary {
+  cursor: pointer;
+  font-size: 13px;
+  color: #334155;
+  margin: 6px 0;
+}
+
+/* Overview list in order of work. */
+.room3d-order {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 10px;
+  display: grid;
+  gap: 4px;
+}
+.room3d-order button {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 64px 1fr auto auto;
+  gap: 8px;
+  align-items: center;
+  padding: 8px;
+  border: 1px solid var(--line, #e2e8f0);
+  border-radius: 8px;
+  background: #fff;
+  text-align: left;
+  cursor: pointer;
+}
+.room3d-order button:hover {
+  border-color: var(--blue, #2563eb);
+}
+.room3d-store {
+  display: grid;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+.room3d-store .link-button {
+  justify-self: start;
+}
+
+/* Compact "more" menu in the header. */
+.room3d-menu {
+  position: relative;
+}
+.room3d-menu summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 2px 10px;
+  border: 1px solid var(--line, #e2e8f0);
+  border-radius: 6px;
+}
+.room3d-menu summary::-webkit-details-marker {
+  display: none;
+}
+.room3d-menu > div {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 4px);
+  z-index: 5;
+  display: grid;
+  min-width: 220px;
+  padding: 6px;
+  border: 1px solid var(--line, #e2e8f0);
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+}
+.room3d-menu > div button {
+  text-align: left;
+  border: 0;
+  background: none;
+  padding: 6px 8px;
+  cursor: pointer;
+}
+.room3d-menu > div button:hover {
+  background: var(--side, #f1f5f9);
+}
+.room3d-body {
+  margin-top: 12px;
+}
+.room3d-costs dd {
+  white-space: nowrap;
 }

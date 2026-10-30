@@ -42,6 +42,11 @@ Renovagent carries a persistent property project through investigation, options,
 
 Use each slice's acceptance criteria before changing its status. A mock screen, canned reply, or HTTP 200 does not establish workflow completion.
 
+### Order of work, DIY difficulty and template prices — October 30, 2026
+
+- Every planned step has a price: a labelled template estimate (typical retail materials at the measured area, plus the DIY tool kit), DIY difficulty with what you need, and a how-to video search. Steps run as tabs in order of work (prep → demo → paint → flooring → fixtures). Store prices from the catalog stay available per step. Calmer 3D: larger room, dimensions off by default, simpler pins.
+- Verified: `npm test` 15 + 206; the example living room's template totals and order are pinned in `tests/domain/room-annotations-priced.test.ts`; headless Chrome screenshots. Not checked by a person in a browser.
+
 ### The project opens on its room, with work pinned and priced — October 30, 2026
 
 - An open project now leads with its 3D room. Each planned work package is a numbered callout on the surfaces it acts on (walls, floor, ceiling, scanned fixtures) with its cost from purchase-plan lines; work without a recorded location is listed, never pinned at a guessed spot. Clicking a pin or a wall opens its line items and products. Walls between the camera and the room fade (dollhouse view).

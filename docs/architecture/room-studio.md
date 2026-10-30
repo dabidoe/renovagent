@@ -84,6 +84,23 @@ local mode (pins, not priced) and connected mode against a scratch database
 with the demo catalog ($724.32 mid-tier estimate, paint and floor priced).
 Not verified by a person in a browser.
 
+### Order of work, DIY difficulty and template prices
+
+`scope/work-guide.ts` gives each package a phase (Prep → Demo → Rough-in →
+Paint → Flooring → Fixtures), a DIY difficulty with a one-line reason, the tool
+kit a contractor would bring, a YouTube how-to search (a search, so it always
+resolves; no specific video is claimed) and a template material rate. Template
+prices are typical US big-box figures for planning, labelled as such in the UI:
+not quotes, not live prices. Material allowances scale with the package's own
+base area from the scope draft (the smallest sq ft quantity; coats and waste are
+multiples), never from 3D geometry; without it only the kit is priced and the
+step says it needs a measurement. The UI shows the DIY total (materials + tools)
+and states that hiring out adds labour, which is not estimated. Catalog store
+prices remain available under each step and as a summary line.
+
+The studio shows the order of work as tabs over the room; pins show name and
+template price; dimension labels and downloads moved into a "⋯" menu.
+
 ## Wiring and other trades
 
 The drawing has an empty `layer-electrical` (`data-status="not-recorded"`).
