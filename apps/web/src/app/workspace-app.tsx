@@ -3,6 +3,7 @@ import { homeInventory } from '@renovagent/core';
 import { HomePlan } from '../features/work/home-plan.js';
 import { scopePlanningCoverage } from '@renovagent/core';
 import { CandidateMeasurementsPanel } from '../features/work/candidate-measurements.js';
+import { RoomDimensionsCard } from '../features/scope/room-dimensions-card.js';
 import { ScopePlannerEntry } from '../features/work/scope-planner.js';
 import { PropertyIntake } from '../features/intake/property-intake.js';
 import { PlanningPanel } from '../features/technical/planning-panel.js';
@@ -532,6 +533,15 @@ export function App({ controller }: { controller: WorkspaceController }) {
                 {view.stage === 'technical' && (
                   <PlanningPanel
                     key={active}
+                    state={state}
+                    projectId={active}
+                    controller={controller}
+                    busy={busy}
+                  />
+                )}
+                {['options', 'plan'].includes(view.stage) && (
+                  <RoomDimensionsCard
+                    key={`${active}:room-dimensions`}
                     state={state}
                     projectId={active}
                     controller={controller}

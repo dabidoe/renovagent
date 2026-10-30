@@ -19,6 +19,7 @@ import {
   bathroomSources,
   type RecipeValues,
 } from './bathroom-refresh.js';
+import { planningFactSignature } from '../planning/fact-context.js';
 
 // Recipes are looked up by ID; a new space type adds a registry entry rather
 // than special-casing the bathroom in the command path.
@@ -47,6 +48,13 @@ const INPUTS: { key: ScopeInputKey; label: string; unit: 'ft' | 'in'; factKey?: 
   { key: 'vanityWidthIn', label: 'Vanity width', unit: 'in' },
   { key: 'toiletRoughInIn', label: 'Toilet rough-in', unit: 'in' },
 ];
+
+// Every measurement fact a draft can read. A draft compiled before one of
+// these exists has no inputRef to it, so the factContext signature is what
+// stales it when a dimension is recorded for the first time.
+export const scopeFactKeys = INPUTS.flatMap((i) => (i.factKey ? [i.factKey] : []));
+export const scopeFactSignature = (state: Workspace, projectId: string) =>
+  planningFactSignature(state, projectId, scopeFactKeys);
 
 const TO_INCHES = { in: 1, ft: 12, cm: 1 / 2.54, m: 100 / 2.54 } as const;
 const round = (value: number) => Math.round(value * 100) / 100;
@@ -183,6 +191,10 @@ export function handleDraftScope(state: Workspace, command: Command, ctx: Comman
     revision: (old?.revision ?? 0) + 1,
     lifecycle: 'proposed',
     freshness: 'current',
+    factContext: {
+      keys: scopeFactKeys,
+      signature: scopeFactSignature(state, pid),
+    },
     inputRefs,
     evidenceIds: [],
     payload: draft,

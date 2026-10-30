@@ -16,6 +16,7 @@ import {
   fingerprint,
   handleCommand,
   scopeDraftId,
+  scopeFactSignature,
   type PricedOffer,
 } from '@renovagent/core';
 import type { CatalogStore } from './catalog.js';
@@ -43,15 +44,17 @@ export async function draftProjectScope(
     request: input.request,
     reported: input.reported,
   };
-  const key = createHash('sha256')
-    .update(`${input.projectId}\n${input.requestId}\n${fingerprint(payload)}`)
-    .digest('hex')
-    .slice(0, 24);
-  const commandId = (step: string) => `mcp-scope:${key}:${step}`;
-
   const { workspace } = await repository.read();
   if (!workspace.projects[input.projectId])
     throw new DomainError('NOT_FOUND', `Unknown project ${input.projectId}`);
+  // Recorded measurements are part of the key too: once a dimension is saved,
+  // the same request drafts anew instead of replaying the blocked draft.
+  const facts = scopeFactSignature(workspace, input.projectId);
+  const key = createHash('sha256')
+    .update(`${input.projectId}\n${input.requestId}\n${fingerprint(payload)}\n${facts}`)
+    .digest('hex')
+    .slice(0, 24);
+  const commandId = (step: string) => `mcp-scope:${key}:${step}`;
   let priced: PricedOffer[] = [];
   let products: PricedOffer['product'][] = [];
   if (catalog && !workspace.commands[commandId('draft')]) {

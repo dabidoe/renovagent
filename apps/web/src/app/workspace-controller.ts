@@ -4,7 +4,11 @@ import {
   encodeBlobs,
 } from '../adapters/http/project-repository.js';
 import { inventoryImportSchema } from '@renovagent/contracts';
-import { type CandidateSurvey, type InputRef } from '@renovagent/contracts';
+import {
+  type CandidateSurvey,
+  type InputRef,
+  type RoomDimensionsInput,
+} from '@renovagent/contracts';
 import {
   type Workspace,
   type PlanningInputs,
@@ -28,6 +32,7 @@ import {
   type BuiltPlan,
   latest,
   isLocalUploadUrl,
+  roomDimensionCommands,
 } from '@renovagent/core';
 import { IndexedDbProjectRepository } from '../adapters/indexeddb/project-repository.js';
 import {
@@ -798,6 +803,55 @@ export class WorkspaceController {
             : first.basePropertyRevision,
       };
       return { commands: [first, second], value: undefined };
+    });
+  }
+  // The person's own measurements become project facts; an optional photo is
+  // attached first as original evidence and cited by every recorded dimension.
+  async recordRoomDimensions(
+    projectId: string,
+    input: Omit<RoomDimensionsInput, 'photoEvidenceIds'>,
+    photo?: File,
+  ) {
+    if (photo && (!photo.type.startsWith('image/') || photo.size > 20 * 1024 * 1024))
+      throw Error('Choose a photo under 20 MB.');
+    const photoEvidenceId = photo ? uid('attachment') : null,
+      blobId = uid('blob'),
+      sha256 = photo ? await blobDigest(photo) : '';
+    return this.mutate((state) => {
+      const attach = photo
+        ? [
+            this.command(state, projectId, 'AttachEvidence', {
+              scope: 'project',
+              evidence: {
+                id: photoEvidenceId,
+                kind: 'attachment',
+                description: 'Room measurement photo supplied by the user. Not analyzed.',
+                attachment: {
+                  blobId,
+                  sha256,
+                  name: photo.name,
+                  mediaType: photo.type,
+                  role: 'original',
+                },
+              },
+            }),
+          ]
+        : [];
+      const measure = roomDimensionCommands(
+        state,
+        projectId,
+        { ...input, photoEvidenceIds: photoEvidenceId ? [photoEvidenceId] : [] },
+        {
+          commandId: () => uid('command'),
+          evidenceId: uid('observation'),
+          factId: () => uid('fact'),
+        },
+      ).map((c) => ({ ...c, baseRevision: c.baseRevision + attach.length }) as Command);
+      return {
+        commands: [...attach, ...measure],
+        blobs: photo ? [{ id: blobId, blob: photo }] : [],
+        value: undefined,
+      };
     });
   }
   async attachFile(projectId: string, file: File) {
