@@ -63,13 +63,20 @@ function useBlobUrl(controller: WorkspaceController, blobId: string | undefined)
 
 const pct = (n: number) => `${Math.round(n * 100)}%`;
 
+// Saved references (inspiration, products) are not photos of this room. The
+// field is optional in contracts that predate references, hence the read.
+const referenceKind = (source: object) =>
+  (source as { reference?: { kind?: string } }).reference?.kind;
+
 export function ownerPhotos(state: Workspace, projectId: string) {
-  return Object.values(state.evidence).filter(
-    (e) =>
+  return Object.values(state.evidence).filter((e) => {
+    const kind = referenceKind(e.source);
+    return (
       e.projectId === projectId &&
-      (!e.source.reference || e.source.reference.kind === 'room') &&
-      e.source.attachment?.mediaType.startsWith('image/'),
-  );
+      (kind === undefined || kind === 'room') &&
+      e.source.attachment?.mediaType.startsWith('image/')
+    );
+  });
 }
 
 export function OwnerPhotos({
