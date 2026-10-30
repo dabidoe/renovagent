@@ -270,14 +270,12 @@ export function App({ controller }: { controller: WorkspaceController }) {
           }}
           aria-label="Renovagent home"
         >
-          <BrandMark />
-          <span className="brand-wordmark">
-            renov<span>agent</span>
-          </span>
+          <BrandMark size={174} lockup />
         </button>
         {!project ? (
           <nav className="landing-nav" aria-label="Main navigation">
             <a href="#how-it-works">How it works</a>
+            <a href="#compare-tools">Compare tools</a>
             <button onClick={() => safe(controller.sampleProject())} disabled={busy}>
               Example project
             </button>

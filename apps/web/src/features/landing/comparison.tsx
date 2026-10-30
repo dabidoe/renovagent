@@ -1,100 +1,70 @@
-import type { CSSProperties } from 'react';
+import { useState, type CSSProperties } from 'react';
 import './comparison.css';
 import { BrandMark } from '../../components/brand-mark.js';
-
+import { Glyph } from '../../components/glyph.js';
+const asset = (name: string) => new URL(`../../assets/brands/${name}`, import.meta.url).href;
 const vendors = [
   {
-    name: 'Homesage',
-    plan: 'Starting plan¹',
-    price: 75,
-    source: 'https://homesage.ai/faq/',
-    color: '#20a6b7',
-  },
-  {
     name: 'Handoff',
-    plan: 'Flex',
-    price: 149,
+    logo: 'handoff.svg',
+    plan: 'Scale',
+    audience: 'Contractor software',
+    price: 899,
     source: 'https://help.handoff.ai/en/articles/13745799-handoff-plans-compared',
-    color: '#34465e',
   },
   {
     name: 'JobTread',
+    logo: 'jobtread.svg',
     plan: 'One internal user',
+    audience: 'Contractor software',
     price: 199,
     source: 'https://www.jobtread.com/pricing',
-    color: '#ff862e',
   },
   {
-    name: 'Handoff',
-    plan: 'Pro',
-    price: 299,
-    source: 'https://help.handoff.ai/en/articles/13745799-handoff-plans-compared',
-    color: '#34465e',
-  },
-  {
-    name: 'Handoff',
-    plan: 'Scale',
-    price: 899,
-    source: 'https://help.handoff.ai/en/articles/13745799-handoff-plans-compared',
-    color: '#34465e',
+    name: 'Buildertrend',
+    logo: 'buildertrend.png',
+    plan: 'Full platform · from',
+    audience: 'Contractor software',
+    price: 499,
+    source: 'https://buildertrend.com/pricing-1026/',
   },
 ];
-const columns = ['Renovagent', 'Handoff', 'Homesage', 'JobTread', 'Buildertrend'];
 type Status = 'available' | 'partial' | 'unknown';
-const rows: { name: string; note: string; statuses: Status[]; labels: string[] }[] = [
+const rows: { name: string; statuses: Status[]; labels: string[] }[] = [
   {
-    name: 'Itemized scopes',
-    note: 'Turn a job into structured work.',
-    statuses: ['available', 'available', 'unknown', 'available', 'unknown'],
+    name: 'Scope of work',
+    statuses: ['available', 'available', 'available', 'available'],
     labels: [
-      'Recipe drafts',
-      'Scopes & proposals',
-      'Not verified',
-      'Specifications',
-      'Not verified',
+      'Versioned scopes',
+      'AI scopes & proposals',
+      'Estimates & budgets',
+      'Estimate worksheet',
     ],
   },
   {
-    name: 'Material planning',
-    note: 'Keep requirements and sourcing together.',
-    statuses: ['available', 'available', 'unknown', 'available', 'unknown'],
-    labels: ['Demo catalog', 'Supplier platform', 'Not verified', 'Cost catalog', 'Not verified'],
+    name: 'Measurements & takeoff',
+    statuses: ['available', 'available', 'available', 'available'],
+    labels: ['Floor-plan import', 'Scale takeoffs', 'Plan takeoffs', 'Plan takeoffs'],
   },
   {
-    name: 'External agent / MCP',
-    note: 'Work through an agent you already use.',
-    statuses: ['available', 'available', 'available', 'unknown', 'unknown'],
-    labels: ['Muse tested', 'Scale plan', 'MCP access', 'Not verified', 'Not verified'],
+    name: 'Materials & costs',
+    statuses: ['partial', 'available', 'available', 'available'],
+    labels: ['Demo catalog prices', 'Supplier tools', 'Cost catalog', 'Selections & budgets'],
   },
   {
-    name: 'Persistent projects',
-    note: 'Return to the same work and decisions.',
-    statuses: ['available', 'available', 'unknown', 'available', 'available'],
-    labels: [
-      'Versioned records',
-      'Project management',
-      'Not verified',
-      'Project management',
-      'Project management',
-    ],
+    name: 'External assistant / MCP',
+    statuses: ['available', 'available', 'available', 'unknown'],
+    labels: ['Muse tested', 'Scale plan', 'MCP connector', 'Not confirmed'],
   },
   {
     name: 'Contractor collaboration',
-    note: 'Keep the scope and review connected.',
-    statuses: ['partial', 'available', 'unknown', 'available', 'available'],
+    statuses: ['partial', 'available', 'available', 'available'],
     labels: [
-      'Accept / decline only',
-      'Portals by plan',
-      'Not verified',
+      'Purchase-plan review',
+      'Client & sub portals',
       'External portals',
       'Client management',
     ],
-  },
-  {
-    name: 'Open-source distribution',
-    note: 'License and packaging status.',
-    statuses: ['partial', 'unknown', 'unknown', 'unknown', 'unknown'],
-    labels: ['Being finalized', 'Not verified', 'Not verified', 'Not verified', 'Not verified'],
   },
 ];
 function Mark({ status, label }: { status: Status; label: string }) {
@@ -105,103 +75,115 @@ function Mark({ status, label }: { status: Status; label: string }) {
     </span>
   );
 }
-export function Comparison() {
+function VendorLogo({ vendor }: { vendor: (typeof vendors)[number] }) {
   return (
-    <section className="landing-block comparison-section" aria-labelledby="comparison-title">
-      <div className="comparison-price-panel">
-        <div className="comparison-intro">
-          <span className="landing-eyebrow">THE BIGGER PICTURE</span>
-          <h2 id="comparison-title">
-            A clearer plan.
-            <br />
-            <em>Before the big spend.</em>
-          </h2>
-          <p>Planning your home improvement shouldn’t feel like running a construction company.</p>
-        </div>
-        <div
-          className="comparison-chart"
-          aria-label="Published monthly software subscription prices"
-        >
-          <div className="comparison-renovagent">
-            <BrandMark size={54} />
-            <strong>
-              renov<span>agent</span>
-            </strong>
-            <b>
-              Your home.
-              <br />
-              Your project.
-            </b>
-            <p>Working prototype</p>
-            <small>Muse connected · scope to materials</small>
-            <span className="reno-bar" aria-hidden="true" />
-          </div>
-          <div className="vendor-bars">
-            {vendors.map((vendor) => (
-              <a
-                className="vendor-bar"
-                key={`${vendor.name}-${vendor.plan}`}
-                href={vendor.source}
-                target="_blank"
-                rel="noreferrer"
-                style={
-                  {
-                    '--bar-height': `${(vendor.price / 899) * 190}px`,
-                    '--bar-color': vendor.color,
-                    '--bar-width': `${(vendor.price / 899) * 100}%`,
-                  } as CSSProperties
-                }
-              >
-                <span className="vendor-name">
-                  {vendor.name}
-                  <small>{vendor.plan}</small>
-                </span>
-                <span className="vendor-value">
-                  <b>${vendor.price}</b>
-                  <small>/month</small>
-                </span>
-                <span className="vendor-column" aria-hidden="true" />
-              </a>
-            ))}
-          </div>
-        </div>
-        <div className="comparison-chart-footer">
-          <a href="https://buildertrend.com/pricing/" target="_blank" rel="noreferrer">
-            Buildertrend <b>Custom quote ↗</b>
-          </a>
-          <span>
-            Monthly billing where published. ¹ Homesage FAQ starting rate; credits and promotional
-            terms vary. Additional users may cost extra.
-          </span>
-        </div>
+    <img
+      className={`official-vendor-logo logo-${vendor.name.toLowerCase()}`}
+      src={asset(vendor.logo)}
+      alt={vendor.name}
+      width={150}
+      height={60}
+      loading="lazy"
+    />
+  );
+}
+export function Comparison() {
+  const [selectedVendor, setSelectedVendor] = useState(0);
+  return (
+    <section
+      className="landing-block comparison-section"
+      id="compare-tools"
+      aria-labelledby="comparison-title"
+    >
+      <div className="comparison-intro">
+        <h2 id="comparison-title">
+          Your renovation.
+          <br />
+          <em>Your budget.</em>
+        </h2>
+        <p>Your project, alongside the tools built for construction businesses.</p>
       </div>
+      <div
+        className="price-chart"
+        aria-label="Selected monthly software plans, one entry per product"
+      >
+        <div className="price-chart-renovagent">
+          <BrandMark size={180} lockup />
+          <strong>
+            $0<small>Local prototype</small>
+          </strong>
+          <p>
+            Built around
+            <br />
+            your project.
+          </p>
+          <span className="price-chart-zero" aria-hidden="true" />
+        </div>
+        {[...vendors]
+          .sort((a, b) => a.price - b.price)
+          .map((vendor) => (
+            <a
+              className={`price-chart-vendor ${vendor.price === null ? 'quote-vendor' : ''}`}
+              key={vendor.name}
+              href={vendor.source}
+              target="_blank"
+              rel="noreferrer"
+              style={
+                {
+                  '--price-height': `${vendor.price === null ? 0 : (vendor.price / 899) * 150}px`,
+                  '--price-width': `${vendor.price === null ? 0 : (vendor.price / 899) * 100}%`,
+                } as CSSProperties
+              }
+            >
+              <span className="price-chart-audience">{vendor.audience}</span>
+              <VendorLogo vendor={vendor} />
+              <span className="price-chart-plan">{vendor.plan}</span>
+              <strong>
+                {vendor.price === null ? 'Custom quote' : `$${vendor.price}`}
+                <small>{vendor.price === null ? 'Contact sales' : '/ month'}</small>
+              </strong>
+              {vendor.price === null ? (
+                <span className="price-quote-note">
+                  <Glyph name="chat" /> No public monthly rate
+                </span>
+              ) : (
+                <span className="price-chart-column" aria-hidden="true" />
+              )}
+            </a>
+          ))}
+      </div>
+      <p className="price-chart-basis">
+        Selected monthly plans · USD · October 30, 2026. Renovagent: local prototype; AI/hosting
+        extra. Vendor terms vary.
+      </p>
       <div className="comparison-capability-panel">
         <div className="capability-heading">
-          <div>
-            <span className="landing-eyebrow">LOOK PAST THE PRICE TAG</span>
-            <h3>Compare what matters.</h3>
-          </div>
+          <h3>What’s included.</h3>
           <div className="capability-legend">
             <span>
               <b className="legend-available">✓</b> Available
             </span>
             <span>
-              <b className="legend-partial">◐</b> Partial / planned
+              <b className="legend-partial">◐</b> Limited
             </span>
-            <span>— Not verified</span>
+            <span>— Not confirmed</span>
           </div>
         </div>
         <table className="capability-table">
           <caption className="sr-only">
-            Published capability comparison. Not verified does not mean unavailable. Renovagent
-            capabilities refer to the current prototype.
+            Published capability comparison. Not confirmed does not mean unavailable. Renovagent
+            refers to the current local prototype.
           </caption>
           <thead>
             <tr>
               <th scope="col">Capability</th>
-              {columns.map((name) => (
-                <th scope="col" key={name}>
-                  {name}
+              <th scope="col">
+                <BrandMark size={110} lockup />
+                <span className="sr-only">Renovagent</span>
+              </th>
+              {vendors.map((v) => (
+                <th scope="col" key={v.name}>
+                  <VendorLogo vendor={v} />
                 </th>
               ))}
             </tr>
@@ -211,7 +193,7 @@ export function Comparison() {
               <tr key={row.name}>
                 <th scope="row">{row.name}</th>
                 {row.statuses.map((status, index) => (
-                  <td key={columns[index]}>
+                  <td key={index}>
                     <Mark status={status} label={row.labels[index]} />
                   </td>
                 ))}
@@ -219,55 +201,64 @@ export function Comparison() {
             ))}
           </tbody>
         </table>
-        <div className="mobile-capabilities">
-          {rows.map((row) => (
-            <article key={row.name}>
-              <div>
+        <div className="mobile-comparison">
+          <div
+            className="comparison-vendor-picker"
+            role="group"
+            aria-label="Choose a competitor to compare"
+          >
+            {vendors.map((vendor, index) => (
+              <button
+                key={vendor.name}
+                aria-label={`Compare ${vendor.name}`}
+                aria-pressed={selectedVendor === index}
+                onClick={() => setSelectedVendor(index)}
+              >
+                <VendorLogo vendor={vendor} />
+              </button>
+            ))}
+          </div>
+          <div className="mobile-comparison-columns">
+            <span>Renovagent</span>
+            <span>{vendors[selectedVendor].name}</span>
+          </div>
+          <div aria-live="polite">
+            {rows.map((row) => (
+              <div className="mobile-comparison-row" key={row.name}>
                 <h4>{row.name}</h4>
-                <Mark status={row.statuses[0]} label={row.labels[0]} />
+                <div>
+                  <Mark status={row.statuses[0]} label={row.labels[0]} />
+                  <Mark
+                    status={row.statuses[selectedVendor + 1]}
+                    label={row.labels[selectedVendor + 1]}
+                  />
+                </div>
               </div>
-              <p>{row.note}</p>
-              <details>
-                <summary>Compare other tools</summary>
-                <ul>
-                  {columns.slice(1).map((name, index) => (
-                    <li key={name}>
-                      <strong>{name}</strong>
-                      <Mark status={row.statuses[index + 1]} label={row.labels[index + 1]} />
-                    </li>
-                  ))}
-                </ul>
-              </details>
-            </article>
-          ))}
+            ))}
+          </div>
         </div>
         <div className="comparison-footnote">
-          <p>
-            Independent snapshot · October 29, 2026. Products serve different audiences;
-            availability varies by plan. “Not verified” does not mean absent. Renovagent is a
-            prototype; public pricing and licensing are being finalized.
-          </p>
+          <p>Independent comparison · No affiliation. Unconfirmed does not mean unavailable.</p>
           <div>
             Sources:{' '}
+            {vendors.map((v) => (
+              <a key={v.name} href={v.source} target="_blank" rel="noreferrer">
+                {v.name} ↗
+              </a>
+            ))}
             <a
-              href="https://www.handoff.ai/official-information-about-handoff"
+              href="https://www.jobtread.com/integrations/ai-connector"
               target="_blank"
               rel="noreferrer"
             >
-              Handoff
-            </a>
-            <a href="https://homesage.ai/faq/" target="_blank" rel="noreferrer">
-              Homesage
-            </a>
-            <a href="https://www.jobtread.com/pricing" target="_blank" rel="noreferrer">
-              JobTread
+              JobTread MCP ↗
             </a>
             <a
               href="https://buildertrend.com/frequently-asked-questions/"
               target="_blank"
               rel="noreferrer"
             >
-              Buildertrend
+              Buildertrend features ↗
             </a>
           </div>
         </div>

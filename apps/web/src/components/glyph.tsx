@@ -1,9 +1,54 @@
 import { type ReactNode } from 'react';
 export function Glyph({ name }: { name: string }) {
   const paths: Record<string, ReactNode> = {
+    code: (
+      <>
+        <path d="m8 6-6 6 6 6m8-12 6 6-6 6m-2-15-4 18" />
+      </>
+    ),
+    photo: (
+      <>
+        <rect x="3" y="3" width="18" height="18" rx="3" />
+        <circle cx="8" cy="8" r="1.5" />
+        <path d="m3 17 5-5 4 4 4-6 5 7" />
+      </>
+    ),
+    paint: (
+      <>
+        <rect x="3" y="3" width="14" height="6" rx="1" />
+        <path d="M17 6h4v7h-9v3m-2 0h4v6h-4z" />
+      </>
+    ),
+    layers: (
+      <>
+        <path d="m3 7 9-5 9 5-9 5-9-5Zm0 5 9 5 9-5M3 17l9 5 9-5" />
+      </>
+    ),
     plus: <path d="M12 5v14M5 12h14" />,
     arrow: <path d="M12 19V5m-6 6 6-6 6 6" />,
     right: <path d="M5 12h14m-6-6 6 6-6 6" />,
+    pipe: (
+      <>
+        <path d="M4 3h6v7h10v6H4ZM2 3h10M20 8v10" />
+      </>
+    ),
+    screw: (
+      <>
+        <path d="m5 4 4-2 13 13-2 4L5 4ZM7 6l-4 4 2 2 4-4M13 10l-3 3m6 0-3 3m6 0-3 3" />
+      </>
+    ),
+    tile: (
+      <>
+        <rect x="3" y="3" width="18" height="18" rx="2" />
+        <path d="M3 12h18M12 3v18" />
+      </>
+    ),
+    clock: (
+      <>
+        <circle cx="12" cy="12" r="9" />
+        <path d="M12 7v5l3 2" />
+      </>
+    ),
     home: <path d="m3 10 9-7 9 7v10H3Zm6 10v-7h6v7" />,
     file: (
       <>

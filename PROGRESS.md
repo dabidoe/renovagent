@@ -1,8 +1,10 @@
 # Project status — Renovagent
 
-Updated October 29, 2026. This tracker distinguishes prototypes from the reliable product workflow we are building.
+Latest landing refinement (October 30): slider is now the third section, titled “See your space transform.”, after a compact idea-to-scope example; redundant paragraphs and long captions are trimmed. The seven-section page retains an object-linked hero (vanity/floor outlines and useful cost previews), subtle nav shade, shorter 640px phone opening, and mock labor at hours × rate (Plumbing 6h × $75 = $450). Comparison focuses on three official-branded workflow platforms: Handoff Scale $899, JobTread $199, Buildertrend from $499 with the newly verified official `/pricing-1026/` source. Five meaningful capability rows replace the broader spotty matrix. This checkout’s frontend preview is at http://localhost:8742/ because 8741 serves a separate worktree; that server and all database settings/data were preserved. See `docs/landing-v2-evidence.md`.
 
-**Landing V2:** compact header and first-screen prompt, uniform drafting background, a single bathroom example with before/after and material views, and responsive pricing/capability panels are implemented at `/`. Product specs/fit checks expand on demand; prototype selections survive demo view switches. Build and 1280px/390px/360px browser checks pass; visuals and allowances remain illustrative. See [evidence and limitations](docs/landing-v2-evidence.md).
+Updated October 30, 2026. This tracker distinguishes prototypes from the reliable product workflow we are building.
+
+**Landing V2:** the latest October 30 pass restores the visible before/after slider and comparison, with a full-width room hero, hover/focus/tap annotations, one prompt and a Muse/agent connection link. The header uses the owner's unchanged stacked logo; favicons derive from its original symbol. Supporting materials and crew-hour examples sit in a separate explainer; their quantities and labor are mock data, not a connected estimator. Build and 1280px/390px/360px browser checks pass. See [evidence and limitations](docs/landing-v2-evidence.md).
 
 **Resume work:** [current handoff](HANDOFF.md) records the Atlas/Muse verification, runtime and connection expiry, preserved data, uncommitted changes, next implementation sequence. Step 1 commerce findings are addressed (entry below).
 
