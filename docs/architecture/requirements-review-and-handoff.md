@@ -92,21 +92,68 @@ from a script (403), so none are guessed.
   the API marks images as not production-ready).
 - `scripts/jev-check.ts` runs both live against the example.
 
-Status: tested with a fake that mirrors the documented API
-(`tests/integration/jev.test.ts`). Live calls returned **401** with the key in
-the main `.env` on both `/v1/models` and `/v1/systemone`, using the SDK's
-defaults (base URL `https://api.typesafe.ai`, Bearer auth); the key has no
-stray characters. Not yet wired into the review UI.
+- `rankReviewFindings(findings, work)`: scores each cited provision of a
+  review (up to six per finding) and orders findings by their most relevant
+  one; findings are annotated, never added, removed or re-worded. MCP
+  `review_scope` exposes it as `rank: true` (labelled interpretation).
+- 429/529 are retried with exponential backoff (bounded).
+
+Status: live with the replacement key (jev-1.14.0). Example living room:
+2012 model digest, 45 provisions, ~6k input tokens: R105.2 permit exemption
+0.94 and IEBC Level 1 alteration 0.91 on top, toilet/GFCI/bath provisions
+0.02. Photo check on the "before" render: window box at 47–60% × 27–54% and
+sofa at 53–84% × 52–86%, both where they are; carpet 0.51–0.54 (uncertain).
+The first key returned 401 and was replaced.
+
+## Adopted code text for our markets (October 30, 2026, later)
+
+The owner asked for broad coverage of the Bay Area, Austin and New York City.
+Copyrighted ICC books are still not scraped (their viewer blocks automated
+access); the codes as enacted are, from public sources:
+
+| Market        | Text held (newest first)                                                                                                                                                                     | Source                                                             |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| Bay Area      | California 2025 Title 24: Residential, Plumbing, Electrical, Mechanical, Existing Building, Energy, CALGreen; 2016 Residential; 2007 San Francisco Building/Housing                          | Public.Resource.Org on archive.org (`gov.ca.bsc.*`, `gov.ca.sf.*`) |
+| New York City | NYC 2022 Construction Codes: Title 28 administration, Plumbing ch. 3/4/6/7/9/10, Mechanical ch. 4/5, Building ch. 8/12/24 + App. M; NYC 2008 codes; NY State 2025 Uniform Code (outside NYC) | NYC Department of Buildings PDFs; Public.Resource.Org              |
+| Austin        | City of Austin amendments to the 2024 IRC, UPC, UMC, IBC/IEBC, IECC (effective July 10, 2025)                                                                                                | City of Austin EDIMS                                               |
+| (all)         | 2012 IRC/IEBC/IPC/IMC/IECC model text                                                                                                                                                        | Public.Resource.Org                                                |
+
+Scripts: `fetch-adopted-codes.mjs`, `fetch-city-codes.mjs`,
+`pdf-to-text.swift` (macOS PDFKit), `split-adopted-codes.mjs` (33,213
+sections), `build-adopted-digest.mjs`. A second reviewing agent picked 167
+provisions per market and package; every excerpt is re-verified verbatim
+(section text, or whitespace-collapsed raw text where a heading did not
+parse) into `packages/core/src/planning/adopted-code-digest.ts`.
+
+`codePlace(locality)` (`planning/code-markets.ts`) maps a reported location:
+California → Title 24 statewide (+ San Francisco), New York City → NYC codes,
+elsewhere in New York → NY State code, Austin → Austin amendments. The review
+cites adopted text for packages it covers and falls back to the 2012 model
+code per package; `codeBasis` says which. The room studio's review card has a
+**Location** picker (as recorded / Bay Area / NYC / Austin / Philadelphia,
+"assumed"), and the handoff states the code text and whether the location
+was assumed. MCP `review_scope` and `export_contractor_handoff` take
+`location`.
+
+Notable local differences the digest carries: California 1.28 gpf toilets,
+1.2 gpm lavatory faucets, 24 in front clearance, Civil Code 1101.1 fixture
+replacement at permit final, Class A GFCI within 6 ft of sinks, CO alarms in
+existing dwellings, R105 exemptions only where a city adopted Division II;
+NYC permits by "minor alterations and ordinary repairs" (§28-105.4.2),
+limited plumbing work by licensed plumbers without a permit (§28-105.4.4),
+1.28 gpf / 1.5 gpm; Austin's own R105.2 exemptions, UPC fixture replacement
+without permit (not showers/tubs), 65 psi regulator threshold, visitability.
+
+Gaps: NYC 2022 is partial chapters (no 2022 ch. 9 alarms or NYC electrical);
+Austin's base 2024 codes are not held (only amendments); no Oakland/San José
+local amendments; adopted provisions are unreviewed and a reported location is
+not a verified boundary.
 
 ## Not shipped (from the proposal)
 
-- **Jev in the review.** The client exists (above) but is not in the review
-  until a live call succeeds and its rankings are checked on real projects.
-  Model output stays labelled interpretation, never a source.
-- **Adopted editions.** Living-room and bathroom work now cite the 2012 model
-  code; which edition and amendments a jurisdiction adopted is still an open
-  question per project (Philadelphia provisions remain the only adopted text). Jurisdiction-aware registry and freshness checks are
-  "Later" items.
+- **Jev in the review UI.** Ranking runs through MCP (`rank: true`) and the
+  API module; the web card does not call it yet (the example runs in local
+  mode without the server).
 - PAUGO metering, `/connect` page, hosted MCP, Bunny storage, contractor
   comments on the handoff.
 

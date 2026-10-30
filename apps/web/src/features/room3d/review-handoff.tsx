@@ -1,5 +1,33 @@
 import { useState } from 'react';
-import type { FindingGroup, ReviewCitation, ScopeReview } from '@renovagent/core';
+import {
+  reviewLocations,
+  type FindingGroup,
+  type ReviewCitation,
+  type ScopeReview,
+} from '@renovagent/core';
+
+// Where the codes come from: the recorded location, or one assumed here.
+export function LocationPick({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (id: string) => void;
+}) {
+  return (
+    <label className="room3d-location">
+      <span className="small-note">Location</span>
+      <select value={value} onChange={(e) => onChange(e.target.value)}>
+        <option value="">As recorded</option>
+        {reviewLocations.map((l) => (
+          <option key={l.id} value={l.id}>
+            {l.label} (assumed)
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+}
 
 // "Does this work?", the contractor handoff and the approval step for a design
 // change, shown as cards over the room like the step popups.
@@ -43,10 +71,14 @@ function Close({ onClose }: { onClose: () => void }) {
 export function ReviewPopup({
   review,
   draftNote,
+  location,
+  onLocation,
   onClose,
 }: {
   review: ScopeReview;
   draftNote: string | null;
+  location: string;
+  onLocation: (id: string) => void;
   onClose: () => void;
 }) {
   return (
@@ -63,6 +95,15 @@ export function ReviewPopup({
         <Close onClose={onClose} />
       </header>
       {draftNote && <p className="small-note">{draftNote}</p>}
+      <div className="room3d-basis">
+        <LocationPick value={location} onChange={onLocation} />
+        <span
+          className={review.codeBasis.adopted ? 'room3d-chip diy-easy' : 'room3d-chip diy-medium'}
+        >
+          {review.codeBasis.adopted ? 'Adopted code' : 'Model code'}
+        </span>
+        <span className="small-note">{review.codeBasis.label}</span>
+      </div>
       {GROUPS.map((g) => {
         const items = review.findings.filter((f) => f.group === g.key);
         return (

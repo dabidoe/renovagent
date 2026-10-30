@@ -44,6 +44,12 @@ Renovagent carries a persistent property project through investigation, options,
 
 Use each slice's acceptance criteria before changing its status. A mock screen, canned reply, or HTTP 200 does not establish workflow completion.
 
+### Adopted codes for the Bay Area, NYC and Austin; Jev live — October 30, 2026
+
+- Enacted code text for our markets: California 2025 Title 24 (residential, plumbing, electrical, mechanical, existing, energy, CALGreen) and 2016 residential; NYC 2022 Construction Codes chapters (DOB PDFs) and NY State 2025 code; City of Austin amendments to the 2024 codes. 33,213 sections; a second reviewing agent picked 167 provisions by market and package, all excerpts re-verified. A reported location (`codePlace`) switches the review and handoff to that market's adopted text, falling back to the 2012 model code per package; the review card has a Location picker ("assumed"). MCP review tools take `location`, and `review_scope rank=true` orders findings by Jev-judged relevance.
+- Jev live (jev-1.14.0) with the replacement key: rankings and photo boxes checked on the example; 429/529 retried with backoff.
+- Gaps: NYC 2022 partial chapters, Austin base 2024 codes not held, no other Bay Area city amendments. Copyrighted ICC books are not scraped.
+
 ### Model-code digest and Jev client — October 30, 2026
 
 - The 2012 IRC, IEBC, IPC, IMC and IECC (newest public-domain editions, Public.Resource.Org) are downloaded and split into 4,523 sections; a reviewing subagent picked 74 provisions across 13 work packages, and every excerpt is re-verified verbatim before it becomes `modelCodeDigest`. The review cites them (permits incl. the R105.2 finish-work exemption, clearances, exhaust rates, GFCI, smoke/CO) as model text, never as the adopted code. 2015–2024 editions are copyrighted; only ICC's licensed API provides them.

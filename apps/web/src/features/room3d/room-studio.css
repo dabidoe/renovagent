@@ -910,3 +910,21 @@
 .room3d-tools button[aria-pressed='true'] {
   outline: 2px solid #1d4ed8;
 }
+
+/* Which code text the review cites, and the location it assumes. */
+.room3d-basis {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 6px 0 2px;
+}
+.room3d-location {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.room3d-location select {
+  font-size: 12px;
+  padding: 2px 4px;
+}

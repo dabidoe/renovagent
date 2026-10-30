@@ -49,6 +49,8 @@ export * from './geometry/room-annotations.js';
 export * from './scope/work-guide.js';
 export * from './scope/example-quotes.js';
 export * from './planning/model-code-digest.js';
+export * from './planning/adopted-code-digest.js';
+export * from './planning/code-markets.js';
 export * from './scope/scope-review.js';
 export * from './scope/contractor-handoff.js';
 export * from './scope/project-handoff.js';

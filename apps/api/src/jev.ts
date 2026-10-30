@@ -54,7 +54,13 @@ export class JevError extends Error {
 export async function askJev(
   state: unknown,
   questions: Record<string, Question>,
-  options: { images?: Record<string, JevImage>; key?: string; fetch?: typeof fetch } = {},
+  options: {
+    images?: Record<string, JevImage>;
+    key?: string;
+    fetch?: typeof fetch;
+    retries?: number;
+    backoffMs?: number;
+  } = {},
 ) {
   const key = options.key ?? (await configuredJevKey());
   if (!key) throw new JevError(0, 'TYPESAFE_API_KEY is not configured');
@@ -78,17 +84,29 @@ export async function askJev(
         }
       : {}),
   };
-  const res = await (options.fetch ?? fetch)(`${BASE}/v1/systemone`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${key}`,
-      'Content-Type': 'application/json',
-      ...(Object.keys(images).length || Object.values(questions).some((q) => q.type === 'box')
-        ? { 'TypeSafe-Danger-Zone-Images': 'true' }
-        : {}),
-    },
-    body: JSON.stringify(body),
-  });
+  const send = () =>
+    (options.fetch ?? fetch)(`${BASE}/v1/systemone`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${key}`,
+        'Content-Type': 'application/json',
+        ...(Object.keys(images).length || Object.values(questions).some((q) => q.type === 'box')
+          ? { 'TypeSafe-Danger-Zone-Images': 'true' }
+          : {}),
+      },
+      body: JSON.stringify(body),
+    });
+  // Rate limits (429) and overload (529) are retried with backoff, as the API
+  // docs advise; a bounded number of attempts so nothing retries forever.
+  let res = await send();
+  for (
+    let attempt = 0;
+    attempt < (options.retries ?? 4) && [429, 529].includes(res.status);
+    attempt++
+  ) {
+    await new Promise((r) => setTimeout(r, (options.backoffMs ?? 1500) * 2 ** attempt));
+    res = await send();
+  }
   const text = await res.text();
   if (!res.ok)
     throw new JevError(
@@ -166,5 +184,49 @@ export async function photoChecks(
       probability: (answers[`${item.key}_present`] as { noul: number }).noul,
       box: item.locate ? ((answers[`${item.key}_box`] as { box: unknown })?.box ?? null) : null,
     })),
+  };
+}
+
+// Order a review's code findings by how likely Jev judges each provision to
+// apply to this project. Findings are only annotated and sorted; nothing is
+// added, removed or re-worded, and the probability is labelled interpretation.
+export async function rankReviewFindings<
+  F extends {
+    id: string;
+    citations: { kind: string; title: string; locator: string | null; excerpt: string }[];
+  },
+>(
+  findings: F[],
+  work: { request: string; packages: string[]; facts: string[] },
+  options: Parameters<typeof askJev>[2] = {},
+) {
+  // Each cited provision is judged on its own (up to six per finding); a
+  // finding takes its most relevant citation, so a permit question citing
+  // both the general rule and its exemptions is not judged by the first alone.
+  const candidates = findings.flatMap((f) =>
+    f.citations
+      .filter((c) => c.kind === 'code-provision')
+      .slice(0, 6)
+      .map((c, i) => ({
+        key: `${f.id}#${i}`,
+        code: c.title.split(' ')[0] ?? '',
+        id: c.locator?.replace(/^Section /, '') ?? '',
+        title: c.title,
+        excerpt: c.excerpt.slice(0, 400),
+      })),
+  );
+  if (!candidates.length)
+    return { model: null, findings: findings.map((f) => ({ ...f, relevance: null })) };
+  const { model, ranked } = await rankSections(work, candidates, options);
+  const p = new Map<string, number>();
+  for (const r of ranked) {
+    const id = r.key.slice(0, r.key.lastIndexOf('#'));
+    p.set(id, Math.max(p.get(id) ?? 0, r.probability));
+  }
+  return {
+    model,
+    findings: findings
+      .map((f) => ({ ...f, relevance: p.get(f.id) ?? null }))
+      .sort((a, b) => (b.relevance ?? 2) - (a.relevance ?? 2)),
   };
 }

@@ -1,6 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { askJev, JevError, photoChecks, rankSections } from '../../apps/api/src/jev.js';
+import {
+  askJev,
+  JevError,
+  photoChecks,
+  rankReviewFindings,
+  rankSections,
+} from '../../apps/api/src/jev.js';
 
 // A fake fetch that records the request and answers like the documented API.
 function fake(
@@ -99,4 +105,56 @@ test('errors carry the status and never echo the key', async () => {
     (e: unknown) =>
       e instanceof JevError && e.status === 401 && !e.message.includes('test-key-123'),
   );
+});
+
+test('overload is retried with backoff, then answered', async () => {
+  let n = 0;
+  const f = (async () =>
+    ++n < 3
+      ? new Response('{"detail":"busy"}', { status: 529 })
+      : new Response(
+          JSON.stringify({
+            model: 'jev-1.14',
+            answers: { q: { type: 'noul', noul: 0.7 } },
+            usage: { input_tokens: 1 },
+          }),
+        )) as unknown as typeof fetch;
+  const r = await askJev(
+    'x',
+    { q: { type: 'noul', instructions: 'y?' } },
+    { key: 'k', fetch: f, backoffMs: 1 },
+  );
+  assert.equal(n, 3);
+  assert.equal((r.answers.q as { noul: number }).noul, 0.7);
+});
+
+test('review findings are only annotated and reordered by relevance', async () => {
+  const { f } = fake((q) =>
+    Object.fromEntries(Object.keys(q).map((k, i) => [k, { type: 'noul', noul: [0.1, 0.8][i] }])),
+  );
+  const cite = (title: string) => ({
+    kind: 'code-provision',
+    title,
+    locator: 'Section X',
+    excerpt: 'text',
+  });
+  const findings = [
+    { id: 'f1', summary: 'toilet', citations: [cite('IPC 405.3.1')] },
+    { id: 'f2', summary: 'permit', citations: [cite('CRC R105.2')] },
+    { id: 'f3', summary: 'measure', citations: [] },
+  ];
+  const r = await rankReviewFindings(
+    findings,
+    { request: 'repaint', packages: ['Wall paint'], facts: [] },
+    { key: 'k', fetch: f },
+  );
+  assert.deepEqual(
+    r.findings.map((x) => [x.id, x.relevance]),
+    [
+      ['f3', null],
+      ['f2', 0.8],
+      ['f1', 0.1],
+    ],
+  );
+  assert.deepEqual(r.findings.find((x) => x.id === 'f1')!.citations, findings[0]!.citations);
 });

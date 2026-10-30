@@ -81,6 +81,9 @@ export function contractorHandoff(input: HandoffInput): string {
   line(
     `- Jurisdiction: ${review.jurisdiction.authority ?? 'not confirmed'}${review.jurisdiction.unresolved.length ? ` (open: ${review.jurisdiction.unresolved[0]})` : ''}`,
   );
+  line(
+    `- Code text: ${review.codeBasis.label}${review.codeBasis.assumed ? ' (location assumed for this handoff, not recorded)' : ''}`,
+  );
   line(`- Recipe: ${draft.recipe.id} v${draft.recipe.version}`);
   line();
 

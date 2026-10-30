@@ -1,4 +1,5 @@
 import type { ScopeDraft, Workspace } from '@renovagent/contracts';
+import type { LocalityInput } from '../planning/code-markets.js';
 import { boxRoomModel } from '../geometry/room-model.js';
 import { roomAnnotations } from '../geometry/room-annotations.js';
 import { readPlanningInputs } from '../planning/commands.js';
@@ -17,17 +18,33 @@ function current(state: Workspace, projectId: string) {
   return { draft: artifact.payload as ScopeDraft, revision: artifact.revision };
 }
 
-export function projectScopeReview(state: Workspace, projectId: string) {
+// `assumed` is a location to review against without recording it.
+export function projectScopeReview(
+  state: Workspace,
+  projectId: string,
+  assumed: LocalityInput | null = null,
+) {
   const found = current(state, projectId);
   if (!found) return null;
-  return reviewScope(found.draft, {
-    local: resolveLocalContext(readPlanningInputs(state, projectId).context),
-  });
+  const context = readPlanningInputs(state, projectId).context;
+  const philadelphia =
+    assumed?.regionCode === 'PA' && /^philadelphia$/i.test(assumed.municipality ?? '');
+  const local = resolveLocalContext(
+    assumed
+      ? { ...context, jurisdiction: philadelphia ? 'philadelphia' : 'other', locality: assumed }
+      : context,
+  );
+  return reviewScope(found.draft, { local, locality: assumed });
 }
 
-export function projectHandoff(state: Workspace, projectId: string, generatedAt: string) {
+export function projectHandoff(
+  state: Workspace,
+  projectId: string,
+  generatedAt: string,
+  assumed: LocalityInput | null = null,
+) {
   const found = current(state, projectId);
-  const review = projectScopeReview(state, projectId);
+  const review = projectScopeReview(state, projectId, assumed);
   if (!found || !review) return null;
   // Only the step order, guides and template estimates are used here; a
   // placeholder room stands in because pin placement is not part of a handoff.

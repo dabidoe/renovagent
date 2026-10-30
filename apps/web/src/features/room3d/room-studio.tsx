@@ -1,3 +1,4 @@
+import { RoomWelcome } from './room-welcome.js';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type {
   DesignOptions,
@@ -14,6 +15,7 @@ import {
   floorPlanSvg,
   projectHandoff,
   projectScopeReview,
+  reviewLocations,
   roomAnnotations,
   roomSurfaces,
   scopeDraftId,
@@ -620,15 +622,21 @@ export function RoomStudio({
   // Review and handoff read the saved draft; a pick must be approved first.
   const [panel, setPanel] = useState<'review' | 'handoff' | null>(null);
   const [confirming, setConfirming] = useState(false);
+  // A location assumed for the review and handoff only (not recorded).
+  const [reviewAt, setReviewAt] = useState('');
+  const assumed = reviewLocations.find((l) => l.id === reviewAt)?.locality ?? null;
   const review = useMemo(
-    () => (panel === 'review' ? projectScopeReview(state, projectId) : null),
+    () => (panel === 'review' ? projectScopeReview(state, projectId, assumed) : null),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [panel, projectId, scopeKey],
+    [panel, projectId, scopeKey, reviewAt],
   );
   const handoff = useMemo(
-    () => (panel === 'handoff' ? projectHandoff(state, projectId, new Date().toISOString()) : null),
+    () =>
+      panel === 'handoff'
+        ? projectHandoff(state, projectId, new Date().toISOString(), assumed)
+        : null,
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [panel, projectId, scopeKey],
+    [panel, projectId, scopeKey, reviewAt],
   );
   const allPins = shownNotes ? [...shownNotes.pins, ...shownNotes.unplaced] : [];
   const choosePin = (id: string | null) => {
@@ -727,16 +735,7 @@ export function RoomStudio({
   if (loadError) return <p role="alert">Could not read the floor plan: {loadError}</p>;
   if (!source)
     return (
-      <section className="room3d room3d-empty" aria-label={heading}>
-        <h3>{heading}</h3>
-        <p>
-          Bring in your room to see it in 3D, with every planned piece of work pinned where it
-          happens and what it costs.
-        </p>
-        <p className="small-note">
-          Import a floor plan from a scanning app, or enter the room&apos;s length and width.
-        </p>
-      </section>
+      <RoomWelcome state={state} projectId={projectId} controller={controller} heading={heading} />
     );
   const selected = surfaces.find((s) => s.id === selectedId) ?? null;
   const activePin = allPins.find((p) => p.id === pinId) ?? null;
@@ -947,6 +946,8 @@ export function RoomStudio({
           {panel === 'review' && review ? (
             <ReviewPopup
               review={review}
+              location={reviewAt}
+              onLocation={setReviewAt}
               draftNote={
                 changed
                   ? 'This reviews the saved design; approve your new pick to review it.'
