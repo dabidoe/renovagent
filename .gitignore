@@ -11,3 +11,7 @@ atlas-credentials.env
 
 # Owner photos, floor plans and design mockups (private; not for the public repo)
 docs/pics/
+
+# macOS and local agent worktrees
+.DS_Store
+.claude/worktrees/
