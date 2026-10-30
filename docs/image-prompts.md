@@ -63,3 +63,26 @@ stored measurements, never baked into the picture.
 
 - **Muse:** the existing preview provider path takes about 30 s per image.
 - **Any generator:** use the prompt plus the reference crop at 30–50% strength.
+
+## Generated assets
+
+All six images above have been generated with the built-in `image_gen` tool and
+saved under the specified filenames. The four idea cards are 1448×1086; the
+text-free hero is 1145×1374. The workspace bathroom was generated at 1448×1086
+and exported at the requested 1600×1200 minimum; that small export resize does
+not add captured detail. The five existing images were backed up in ignored
+`.local/design-shots/pre-generated-examples/` before replacement.
+
+References were supplied with a requested loose composition influence of about
+40%; this tool does not expose a numerical reference-strength control. The
+basement received one correction to retain exactly one egress window. Images
+contain no measurement overlays; the workspace image is ready for Board B and
+is not yet attached to a real project.
+
+The complete final prompts, reference roles, generation-output identifiers and
+native/export dimensions are recorded in [image-generation-run.json](image-generation-run.json).
+
+The landing page was checked with the new hero and all four idea cards; the
+existing logo was preserved. Production build and changed-source formatting
+passed. Browser previews: [hero](previews/generated-images-hero.png) and
+[idea cards](previews/generated-images-cards.png).

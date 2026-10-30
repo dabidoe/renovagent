@@ -1,0 +1,503 @@
+.landing-v2 .comparison-price-panel,
+.landing-v2 .comparison-capability-panel {
+  background: #fff;
+  border: 1px solid #e0e9f5;
+  border-radius: 20px;
+  box-shadow: 0 12px 45px #18386c09;
+  overflow: hidden;
+}
+.landing-v2 .comparison-intro {
+  padding: 34px 36px 0;
+  background: radial-gradient(ellipse at 95% 0, #eaf4ff, transparent 65%);
+}
+.landing-v2 .comparison-intro h2 {
+  margin-bottom: 15px;
+  font-size: clamp(32px, 3.6vw, 46px);
+}
+.landing-v2 .comparison-intro > p {
+  font-size: 14px;
+  color: #52627c;
+  max-width: 470px;
+  line-height: 1.7;
+}
+.landing-v2 .comparison-chart {
+  display: grid;
+  grid-template-columns: 190px 1fr;
+  gap: 25px;
+  padding: 12px 36px 0;
+}
+.landing-v2 .comparison-renovagent {
+  background: linear-gradient(155deg, #f0f8ff, #e0edff);
+  border: 1px solid #d9e8ff;
+  border-bottom: 0;
+  border-radius: 15px 15px 0 0;
+  padding: 25px 17px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  position: relative;
+}
+.landing-v2 .comparison-renovagent > strong {
+  font-size: 23px;
+  letter-spacing: -0.045em;
+  margin: 9px 0 17px;
+}
+.landing-v2 .comparison-renovagent > strong > span {
+  color: #0866ff;
+}
+.landing-v2 .comparison-renovagent > b {
+  font-size: 21px;
+  line-height: 1.2;
+  letter-spacing: -0.04em;
+}
+.landing-v2 .comparison-renovagent > p {
+  color: #0866ff;
+  font-size: 11px;
+  font-weight: 700;
+  margin-bottom: 7px;
+}
+.landing-v2 .comparison-renovagent > small {
+  font-size: 9px;
+  color: #52627c;
+  line-height: 1.6;
+}
+.landing-v2 .reno-bar {
+  position: absolute;
+  bottom: 0;
+  height: 4px;
+  left: 0;
+  right: 0;
+  border-radius: 4px;
+  background: #0866ff;
+}
+.landing-v2 .vendor-bars {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  align-items: end;
+  gap: 13px;
+  border-bottom: 1px solid #dce5f1;
+  min-height: 300px;
+}
+.landing-v2 .vendor-bar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 13px;
+  text-align: center;
+  color: #142038;
+  text-decoration: none;
+  min-width: 0;
+}
+.landing-v2 .vendor-name {
+  font-size: 13px;
+  font-weight: 700;
+}
+.landing-v2 .vendor-name > small {
+  display: block;
+  min-height: 25px;
+  font-size: 9px;
+  color: #64748b;
+  font-weight: 400;
+  margin-top: 5px;
+}
+.landing-v2 .vendor-value > b {
+  font-size: 23px;
+  letter-spacing: -0.04em;
+}
+.landing-v2 .vendor-value > small {
+  display: block;
+  font-size: 9px;
+  color: #64748b;
+  margin-top: 4px;
+}
+.landing-v2 .vendor-column {
+  display: block;
+  width: 85%;
+  height: var(--bar-height);
+  background: linear-gradient(0deg, #dbe3ee, var(--bar-color));
+  opacity: 0.8;
+  border-radius: 5px 5px 0 0;
+  transition: opacity 0.2s;
+}
+.landing-v2 .vendor-bar:hover .vendor-column {
+  opacity: 1;
+}
+.landing-v2 .comparison-chart-footer {
+  padding: 22px 36px;
+  display: flex;
+  gap: 25px;
+  align-items: center;
+  border-top: 1px solid #edf2f9;
+}
+.landing-v2 .comparison-chart-footer > a {
+  color: #142038;
+  font-size: 11px;
+  text-decoration: none;
+  flex-shrink: 0;
+}
+.landing-v2 .comparison-chart-footer > a b {
+  display: block;
+  color: #0866ff;
+  margin-top: 5px;
+}
+.landing-v2 .comparison-chart-footer > span {
+  color: #64748b;
+  font-size: 9px;
+  line-height: 1.8;
+  border-left: 1px solid #e2e8f0;
+  padding-left: 25px;
+}
+.landing-v2 .comparison-capability-panel {
+  margin-top: 22px;
+}
+.landing-v2 .capability-heading {
+  padding: 30px 30px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+}
+.landing-v2 .capability-heading h3 {
+  font-size: 30px;
+  letter-spacing: -0.04em;
+  margin: 7px 0 0;
+}
+.landing-v2 .capability-legend {
+  display: flex;
+  gap: 13px;
+  font-size: 9px;
+  color: #52627c;
+  flex-wrap: wrap;
+}
+.landing-v2 .capability-legend b {
+  font-size: 13px;
+  margin-right: 3px;
+}
+.landing-v2 .legend-available {
+  color: #009f6b;
+}
+.landing-v2 .legend-partial {
+  color: #0866ff;
+}
+.landing-v2 .capability-table {
+  width: calc(100% - 60px);
+  margin: 0 30px;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 11px;
+}
+.landing-v2 .capability-table th:first-child {
+  width: 23%;
+}
+.landing-v2 .capability-table th {
+  font-weight: 500;
+  text-align: left;
+}
+.landing-v2 .capability-table th,
+.landing-v2 .capability-table td {
+  padding: 17px 9px;
+  border-bottom: 1px solid #e7edf6;
+  vertical-align: middle;
+}
+.landing-v2 .capability-table thead th:not(:first-child) {
+  text-align: center;
+  font-size: 10px;
+  font-weight: 700;
+}
+.landing-v2 .capability-table tr > :nth-child(2) {
+  background: #eef6ff;
+}
+.landing-v2 .capability-table thead tr > :nth-child(2) {
+  border-radius: 8px 8px 0 0;
+  color: #0866ff;
+}
+.landing-v2 .capability-status {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  text-align: center;
+  font-size: 8px;
+  color: #64748b;
+  line-height: 1.5;
+}
+.landing-v2 .capability-status > b {
+  font-size: 17px;
+  line-height: 1;
+}
+.landing-v2 .status-available > b {
+  color: #009f6b;
+}
+.landing-v2 .status-partial > b {
+  color: #0866ff;
+}
+.landing-v2 .status-unknown > b {
+  color: #94a3b8;
+}
+.landing-v2 .comparison-footnote {
+  padding: 18px 30px 24px;
+  color: #64748b;
+  font-size: 9px;
+  line-height: 1.8;
+}
+.landing-v2 .comparison-footnote > p {
+  margin-top: 0;
+}
+.landing-v2 .comparison-footnote a {
+  color: #486383;
+  margin-left: 10px;
+  text-underline-offset: 3px;
+}
+.landing-v2 .mobile-capabilities {
+  display: none;
+}
+@media (min-width: 861px) and (max-width: 1100px) {
+  .landing-v2 .comparison-chart {
+    grid-template-columns: 160px 1fr;
+    gap: 18px;
+  }
+  .landing-v2 .vendor-bars {
+    gap: 8px;
+  }
+}
+@media (max-width: 860px) {
+  .landing-v2 .comparison-chart {
+    padding: 10px 24px 0;
+    grid-template-columns: 150px 1fr;
+    gap: 15px;
+  }
+  .landing-v2 .comparison-intro {
+    padding: 28px 24px 0;
+  }
+  .landing-v2 .comparison-renovagent {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+  .landing-v2 .comparison-renovagent > strong {
+    font-size: 20px;
+  }
+  .landing-v2 .vendor-bars {
+    gap: 8px;
+  }
+  .landing-v2 .vendor-name {
+    font-size: 11px;
+  }
+  .landing-v2 .vendor-value > b {
+    font-size: 19px;
+  }
+  .landing-v2 .capability-heading {
+    display: block;
+  }
+  .landing-v2 .capability-legend {
+    margin-top: 16px;
+  }
+}
+@media (max-width: 640px) {
+  .landing-v2 .comparison-price-panel,
+  .landing-v2 .comparison-capability-panel {
+    border-radius: 15px;
+  }
+  .landing-v2 .comparison-intro {
+    padding: 25px 20px 0;
+  }
+  .landing-v2 .comparison-intro > p {
+    font-size: 13px;
+  }
+  .landing-v2 .comparison-chart {
+    display: block;
+    padding: 10px 20px 0;
+  }
+  .landing-v2 .comparison-renovagent {
+    display: grid;
+    grid-template-columns: 46px 1fr;
+    text-align: left;
+    padding: 16px;
+    gap: 3px 14px;
+    border: 1px solid #d9e8ff;
+    border-radius: 10px;
+    align-items: center;
+  }
+  .landing-v2 .comparison-renovagent > svg {
+    width: 40px;
+    height: 40px;
+    grid-row: 1/3;
+  }
+  .landing-v2 .comparison-renovagent > strong {
+    font-size: 24px;
+    margin: 0;
+  }
+  .landing-v2 .comparison-renovagent > b {
+    display: none;
+  }
+  .landing-v2 .comparison-renovagent > p {
+    font-size: 10px;
+    margin: 3px 0;
+  }
+  .landing-v2 .comparison-renovagent > small {
+    grid-column: 1/-1;
+    margin-top: 9px;
+  }
+  .landing-v2 .reno-bar {
+    left: 15px;
+    right: 15px;
+    height: 3px;
+    bottom: 0;
+  }
+  .landing-v2 .vendor-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    border: 0;
+    min-height: 0;
+    margin-top: 12px;
+  }
+  .landing-v2 .vendor-bar {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    width: 100%;
+    align-items: center;
+    text-align: left;
+    gap: 0;
+    padding: 15px 0 20px;
+    border-bottom: 1px solid #edf2f9;
+  }
+  .landing-v2 .vendor-name {
+    font-size: 14px;
+  }
+  .landing-v2 .vendor-name > small {
+    min-height: 0;
+    margin: 4px 0 0;
+    font-size: 10px;
+  }
+  .landing-v2 .vendor-value {
+    text-align: right;
+  }
+  .landing-v2 .vendor-value > b {
+    font-size: 23px;
+  }
+  .landing-v2 .vendor-value > small {
+    font-size: 9px;
+  }
+  .landing-v2 .vendor-column {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 5px;
+    width: var(--bar-width);
+    min-width: 5px;
+    border-radius: 3px;
+    background: var(--bar-color);
+  }
+  .landing-v2 .comparison-chart-footer {
+    display: block;
+    padding: 20px;
+  }
+  .landing-v2 .comparison-chart-footer > a {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+  }
+  .landing-v2 .comparison-chart-footer > a b {
+    margin: 0;
+  }
+  .landing-v2 .comparison-chart-footer > span {
+    display: block;
+    border: 0;
+    border-top: 1px solid #edf2f9;
+    padding: 14px 0 0;
+    margin-top: 15px;
+    font-size: 9px;
+  }
+  .landing-v2 .capability-heading {
+    padding: 24px 20px 18px;
+  }
+  .landing-v2 .capability-heading h3 {
+    font-size: 28px;
+  }
+  .landing-v2 .capability-legend {
+    font-size: 8px;
+    gap: 10px;
+  }
+  .landing-v2 .capability-table {
+    display: none;
+  }
+  .landing-v2 .mobile-capabilities {
+    display: block;
+    padding: 0 20px;
+  }
+  .landing-v2 .mobile-capabilities article {
+    padding: 18px 0;
+    border-top: 1px solid #e7edf6;
+  }
+  .landing-v2 .mobile-capabilities article > div {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  .landing-v2 .mobile-capabilities h4 {
+    font-size: 13px;
+    margin: 0;
+  }
+  .landing-v2 .mobile-capabilities .capability-status {
+    flex-direction: row;
+    gap: 6px;
+    font-size: 9px;
+    flex-shrink: 0;
+  }
+  .landing-v2 .mobile-capabilities article > p {
+    font-size: 11px;
+    line-height: 1.6;
+    color: #64748b;
+    margin: 8px 0;
+  }
+  .landing-v2 .mobile-capabilities details summary {
+    cursor: pointer;
+    font-size: 10px;
+    color: #155ac4;
+    padding: 9px 0;
+  }
+  .landing-v2 .mobile-capabilities ul {
+    list-style: none;
+    padding: 5px 12px;
+    margin: 5px 0 0;
+    border-radius: 7px;
+    background: #f7faff;
+  }
+  .landing-v2 .mobile-capabilities li {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 0;
+  }
+  .landing-v2 .mobile-capabilities li > strong {
+    font-size: 10px;
+    font-weight: 500;
+  }
+  .landing-v2 .comparison-footnote {
+    padding: 18px 20px;
+  }
+}
+@media (max-width: 640px) {
+  .landing-v2 .mobile-capabilities h4 {
+    font-size: 14px;
+  }
+  .landing-v2 .mobile-capabilities article > p {
+    font-size: 12px;
+  }
+  .landing-v2 .mobile-capabilities details summary {
+    font-size: 12px;
+  }
+  .landing-v2 .mobile-capabilities .capability-status {
+    font-size: 10px;
+  }
+  .landing-v2 .mobile-capabilities li > strong {
+    font-size: 12px;
+  }
+  .landing-v2 .capability-legend {
+    font-size: 9px;
+  }
+}

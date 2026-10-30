@@ -1,0 +1,30 @@
+{
+  "generator": "built-in image_gen",
+  "purpose": "Generic style illustrations for landing-page material annotations. Not exact branded retail product photos.",
+  "assets": [
+    {
+      "filename": "apps/web/src/assets/examples/product-vanity.jpg",
+      "source": "exec-5f77bf4d-5c57-46bf-b25b-8b0c30c01bfb.png",
+      "prompt": "Use case: product-mockup. Asset: a small website material-selection thumbnail. Create one centered isolated photorealistic catalog product photograph on an absolutely white seamless background, square 1:1 composition. A compact freestanding bathroom vanity cabinet, medium natural oak wood grain, simple shaker door and two drawers, matte black small pulls, white quartz counter and integrated rectangular white basin, three-quarter view from slightly above. No faucet. A generic design concept, no brand imitation. Soft diffuse studio lighting, restrained realistic soft shadow under item, high detail, visually large object occupying about 80 percent of the frame, premium IKEA-style catalog photography. No words, labels, badges, watermarks, logos, people, props or extra objects. This is an illustrative design option, not an exact branded retail product.",
+      "export": "480px square JPEG, sips quality 88"
+    },
+    {
+      "filename": "apps/web/src/assets/examples/product-mirror.jpg",
+      "source": "exec-2f033861-91fd-445c-b59a-b81179a45827.png",
+      "prompt": "Use case: product-mockup. Asset: a small website material-selection thumbnail. Create one centered isolated photorealistic catalog product photograph on an absolutely white seamless background, square 1:1 composition. One plain rectangular bathroom wall mirror, slim matte black metal frame, portrait orientation 24 by 32 proportions, upright three-quarter view with a very subtle neutral light gray reflection, no room scene, no objects reflected. Soft diffuse studio lighting, restrained realistic soft shadow under item, high detail, visually large object occupying about 80 percent of the frame, premium IKEA-style catalog photography. No words, labels, badges, watermarks, logos, people, props or extra objects. This is an illustrative design option, not an exact branded retail product.",
+      "export": "480px square JPEG, sips quality 88"
+    },
+    {
+      "filename": "apps/web/src/assets/examples/product-shower.jpg",
+      "source": "exec-c0a07999-d474-4ac3-92a5-96f2858e79c3.png",
+      "prompt": "Use case: product-mockup. Asset: a small website material-selection thumbnail. Create one centered isolated photorealistic catalog product photograph on an absolutely white seamless background, square 1:1 composition. A neat small material sample of glossy white 3 by 6 inch subway wall tiles, six tiles assembled in a running bond pattern with fine warm gray grout, resting diagonally on a white surface, three-quarter top down view, crisp glazed edges. Soft diffuse studio lighting, restrained realistic soft shadow under item, high detail, visually large object occupying about 80 percent of the frame, premium IKEA-style catalog photography. No words, labels, badges, watermarks, logos, people, props or extra objects. This is an illustrative design option, not an exact branded retail product.",
+      "export": "480px square JPEG, sips quality 88"
+    },
+    {
+      "filename": "apps/web/src/assets/examples/product-floor.jpg",
+      "source": "exec-235374d9-a348-40e0-b1dc-e4c3589738ad.png",
+      "prompt": "Use case: product-mockup. One photorealistic catalog product photo of a small sample of plain matte charcoal-gray REGULAR HEXAGON mosaic porcelain floor tile on a clean white background. Square composition. Make a contiguous honeycomb of exactly seven equal regular hexagons: one central hexagon with six hexagons tightly surrounding it, separated only by thin uniform white grout gaps. Every piece has SIX equal sides; no square pieces, no diamonds, no rectangular infill, no octagons, no patterned inserts. Flat top-down view, no perspective. Small realistic ceramic thickness and soft shadow. The entire seven-hexagon cluster fills 75% of frame, centered, clean white seamless background. No words, logos, watermarks, labels or extra objects. Generic illustrative design sample, not a branded product.",
+      "export": "480px square JPEG, sips quality 88"
+    }
+  ]
+}

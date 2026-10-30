@@ -1,0 +1,19 @@
+{
+  "generator": "built-in image_gen",
+  "purpose": "Illustrative aligned before/after bathroom for landing page; not an actual renovation",
+  "filename": "apps/web/src/assets/examples/bath-before.jpg",
+  "nativePixels": [1448, 1086],
+  "exportPixels": [1600, 1200],
+  "export": "sips JPEG quality 88; modest resampling to match after asset",
+  "reference": "apps/web/src/assets/examples/workspace-bath.jpg",
+  "stages": [
+    {
+      "sourceOutput": "exec-9d0b0e2d-ac3b-4ca8-9889-9b9b1253813e.png",
+      "prompt": "Precise-object-edit: Create a believable dated BEFORE-renovation version of the attached clean bathroom photograph. This must be an ordinary lived-in, unfashionable bathroom, NOT abandoned, NOT a crack den, NOT a shelter, and NOT destroyed. Keep the exact camera, 4:3 framing, room proportions, left entry door, vanity footprint, mirror location, shower footprint at right and toilet position, so it aligns to the reference in a before/after slider. Replace the modern glass shower enclosure and all glass panels/black brackets with a dated molded beige fiberglass shower surround and plain chrome shower-curtain rod. The shower curtain is faded pale blue/cream patterned vinyl, pulled partly aside to reveal the fiberglass shower, with minor dinginess around its bottom hem. No glass shower door at all. Replace the dark hex floor with ugly dated tan/brown patterned sheet vinyl or small square faux-stone vinyl tiles, dull and a bit scuffed but intact. The vanity is old medium-brown honey-oak laminate, dated brass/chrome handles, a cream cultured-marble counter and basic chrome faucet. The mirror has a basic cheap dated frame. Walls are dingy off-white, a few normal scuffs only, paint intact. A simple old dome light rather than fancy styling. Remove plants and decorative art. Keep the bathroom basically clean, maintained, and fully usable, with no damage, no missing tiles, no debris, no peeling walls, no mold, no rotting wood, no rusty brown stains or extreme grime. Soft natural daylight, realistic attainable American home, no dramatic horror lighting. It looks like someone wants to update a 1990s bathroom. No people, text, numbers, labels, logos, watermarks or overlays. Requested exact 4:3 landscape image."
+    },
+    {
+      "sourceOutput": "exec-5a599be7-df2f-437e-a5a3-cfca2c87c512.png",
+      "prompt": "Use case: precise-object-edit. Edit this dated bathroom photograph only in three areas: vanity cabinet/counter/faucet, mirror, and vanity light. Make those clearly uglier and more dated, ordinary 1980s builder-grade fixtures, still maintained and usable. Replace the honey oak vanity with a bulky dark fake-walnut laminate vanity with cheap inset slab doors, dated antique-brass pulls, plain recessed plinth and no furniture legs. Same footprint and counter height. Yellowed cream cultured-marble countertop with integrated scalloped oval basin, basic chunky acrylic crystal-knob two-handle chrome faucet. Replace the attractive wood-framed mirror with an ugly old shallow surface-mounted three-panel mirrored medicine cabinet, beveled mirror edges, thin dull aluminum frame, center same position. Replace the round wall globe above it with a horizontal chrome Hollywood vanity light bar with six exposed round incandescent bulbs, mounted level above the medicine cabinet. Dated warm white light, ordinary not theatrical. Keep absolutely everything else unchanged: exact camera position, framing, room geometry, left door/window, toilet at right, beige fiberglass shower, chrome curtain rod, faded blue floral shower curtain pulled aside, off-white walls, ugly tan patterned vinyl flooring. Do not introduce damage, mold, filth, broken fixtures, peeling paint, trash, or extreme grime. This is an unfashionable lived-in home, not abandoned or destroyed. Keep the 4:3 landscape composition. No text, labels, logos, people, watermarks."
+    }
+  ]
+}
