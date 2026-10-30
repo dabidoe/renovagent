@@ -1,8 +1,10 @@
 # Project status — Renovagent
 
-Updated October 29, 2026. This tracker distinguishes prototypes from the reliable product workflow we are building.
+Latest landing refinement (October 30): slider is now the third section, titled “See your space transform.”, after a compact idea-to-scope example; redundant paragraphs and long captions are trimmed. The seven-section page retains an object-linked hero (vanity/floor outlines and useful cost previews), subtle nav shade, shorter 640px phone opening, and mock labor at hours × rate (Plumbing 6h × $75 = $450). Comparison focuses on three official-branded workflow platforms: Handoff Scale $899, JobTread $199, Buildertrend from $499 with the newly verified official `/pricing-1026/` source. Five meaningful capability rows replace the broader spotty matrix. This checkout’s frontend preview is at http://localhost:8742/ because 8741 serves a separate worktree; that server and all database settings/data were preserved. See `docs/landing-v2-evidence.md`.
 
-**Landing V2:** compact header and first-screen prompt, uniform drafting background, a single bathroom example with before/after and material views, and responsive pricing/capability panels are implemented at `/`. Product specs/fit checks expand on demand; prototype selections survive demo view switches. Build and 1280px/390px/360px browser checks pass; visuals and allowances remain illustrative. See [evidence and limitations](docs/landing-v2-evidence.md).
+Updated October 30, 2026. This tracker distinguishes prototypes from the reliable product workflow we are building.
+
+**Landing V2:** the latest October 30 pass restores the visible before/after slider and comparison, with a full-width room hero, hover/focus/tap annotations, one prompt and a Muse/agent connection link. The header uses the owner's unchanged stacked logo; favicons derive from its original symbol. Supporting materials and crew-hour examples sit in a separate explainer; their quantities and labor are mock data, not a connected estimator. Build and 1280px/390px/360px browser checks pass. See [evidence and limitations](docs/landing-v2-evidence.md).
 
 **Resume work:** [current handoff](HANDOFF.md) records the Atlas/Muse verification, runtime and connection expiry, preserved data, uncommitted changes, next implementation sequence. Step 1 commerce findings are addressed (entry below).
 
@@ -16,29 +18,29 @@ Renovagent carries a persistent property project through investigation, options,
 
 ## What currently exists
 
-| Area | Current state | Important limit |
-|---|---|---|
-| Local frontend | Prompt-first React/Vite workspace on IndexedDB or connected Mongo: projects, conversation/work surfaces, artifacts/revisions, decisions, sources, drafts, activity | Labeled agent fixtures where noted; no reviewed compliance guidance. Original frontend retained at `/legacy.html` |
-| Connected backend | Loopback API + selectable local/cluster Mongo: per-owner workspaces, real in-app Muse photo jobs, sessions, catalog, submissions; shared server-side database selection | Public HTTPS hosting and production hardening remain open |
-| Accounts | Optional Google/Meta sign-in with per-owner workspaces, explicit local adoption, sign-in web surface | No passwords; live round-trips need the owner's OAuth clients |
-| Commerce | Shared catalog with duplicate-proof imports, tiered purchase plans, contractor accept/decline, checkout reviews, price submissions with review quarantine | Seed prices are labeled demo examples; affiliate feeds need the owner's accounts; no live inventory, tax, or checkout |
-| Agents | MCP adapter with 14 tools over stdio and authenticated Streamable HTTP: owner-scoped reads/proposals, project creation, recipe scope/materials drafts, same-room design options, file discovery, catalog recall and checkout assembly | Consumer Muse Mac discovered ten tools, read the migrated projects, created a separate authorized QA project and reread its brief over temporary HTTPS; stable hosting remains open |
-| Technical references | Versioned adoption/scope/permit source register, applicability checks and visible coverage gaps | Exact 2018 clearances and residential exhaust criteria retrieved; local clearance mapping, complete electrical provisions, trade design and qualified review remain blocked |
-| Planning math | Shared deterministic geometry, quantities, money/tier/checkout math; single command authority for all writes | Rectangular playbooks; no inferred routes, no reviewed compliance guidance |
-| Verification | 181 pass (15 legacy + 166 TypeScript, 31 Mongo cases skip); explicit real-Mongo suite 34/34; strict types, boundaries, formatting, builds | Browser QA covers labeled projects; actual consumer-Muse reads and separate QA brief write/read verified; no claim of general model reliability, technical compliance, or full lifecycle coverage |
+| Area                 | Current state                                                                                                                                                                                                                         | Important limit                                                                                                                                                                                   |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Local frontend       | Prompt-first React/Vite workspace on IndexedDB or connected Mongo: projects, conversation/work surfaces, artifacts/revisions, decisions, sources, drafts, activity                                                                    | Labeled agent fixtures where noted; no reviewed compliance guidance. Original frontend retained at `/legacy.html`                                                                                 |
+| Connected backend    | Loopback API + selectable local/cluster Mongo: per-owner workspaces, real in-app Muse photo jobs, sessions, catalog, submissions; shared server-side database selection                                                               | Public HTTPS hosting and production hardening remain open                                                                                                                                         |
+| Accounts             | Optional Google/Meta sign-in with per-owner workspaces, explicit local adoption, sign-in web surface                                                                                                                                  | No passwords; live round-trips need the owner's OAuth clients                                                                                                                                     |
+| Commerce             | Shared catalog with duplicate-proof imports, tiered purchase plans, contractor accept/decline, checkout reviews, price submissions with review quarantine                                                                             | Seed prices are labeled demo examples; affiliate feeds need the owner's accounts; no live inventory, tax, or checkout                                                                             |
+| Agents               | MCP adapter with 14 tools over stdio and authenticated Streamable HTTP: owner-scoped reads/proposals, project creation, recipe scope/materials drafts, same-room design options, file discovery, catalog recall and checkout assembly | Consumer Muse Mac discovered ten tools, read the migrated projects, created a separate authorized QA project and reread its brief over temporary HTTPS; stable hosting remains open               |
+| Technical references | Versioned adoption/scope/permit source register, applicability checks and visible coverage gaps                                                                                                                                       | Exact 2018 clearances and residential exhaust criteria retrieved; local clearance mapping, complete electrical provisions, trade design and qualified review remain blocked                       |
+| Planning math        | Shared deterministic geometry, quantities, money/tier/checkout math; single command authority for all writes                                                                                                                          | Rectangular playbooks; no inferred routes, no reviewed compliance guidance                                                                                                                        |
+| Verification         | 181 pass (15 legacy + 166 TypeScript, 31 Mongo cases skip); explicit real-Mongo suite 34/34; strict types, boundaries, formatting, builds                                                                                             | Browser QA covers labeled projects; actual consumer-Muse reads and separate QA brief write/read verified; no claim of general model reliability, technical compliance, or full lifecycle coverage |
 
 ## Delivery tracking
 
-| Slice | Status |
-|---|---|
-| 0 — Architecture baseline | Documented; implementation choices and open integration questions recorded |
-| 1 — Durable project foundation | Implemented and tested alongside current preview; see linked acceptance evidence |
-| 2 — Working project workspace | Implemented with durable local fixtures and desktop/phone browser checks; see linked evidence |
-| 3 — Technical planning core | Local deterministic core implemented; exact-source/trade coverage and qualified technical review gate remain open |
-| 4 — Connected durable agent workflow | Partial: loopback API/Mongo, photo jobs, accounts, local MCP done; hosted transport and general agent workflow open |
-| 5 — Job preparation and coordination | Partial: catalog, tiered plans, checkout reviews done; scheduling, contractor accounts, tax, live retail open |
-| 6 — Execution, change control, handover | Not implemented; receipt accounting and contractor accountability specified only |
-| 7 — Second project playbook | Not implemented |
+| Slice                                   | Status                                                                                                              |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| 0 — Architecture baseline               | Documented; implementation choices and open integration questions recorded                                          |
+| 1 — Durable project foundation          | Implemented and tested alongside current preview; see linked acceptance evidence                                    |
+| 2 — Working project workspace           | Implemented with durable local fixtures and desktop/phone browser checks; see linked evidence                       |
+| 3 — Technical planning core             | Local deterministic core implemented; exact-source/trade coverage and qualified technical review gate remain open   |
+| 4 — Connected durable agent workflow    | Partial: loopback API/Mongo, photo jobs, accounts, local MCP done; hosted transport and general agent workflow open |
+| 5 — Job preparation and coordination    | Partial: catalog, tiered plans, checkout reviews done; scheduling, contractor accounts, tax, live retail open       |
+| 6 — Execution, change control, handover | Not implemented; receipt accounting and contractor accountability specified only                                    |
+| 7 — Second project playbook             | Not implemented                                                                                                     |
 
 Use each slice's acceptance criteria before changing its status. A mock screen, canned reply, or HTTP 200 does not establish workflow completion.
 

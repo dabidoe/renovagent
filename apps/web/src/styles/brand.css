@@ -42,6 +42,18 @@
 .brand-mark {
   flex: none;
 }
+.brand-lockup {
+  display: block;
+  width: 174px;
+  height: 116px;
+  object-fit: contain;
+}
+@media (max-width: 640px) {
+  .brand-lockup {
+    width: 150px;
+    height: 100px;
+  }
+}
 
 /* Display type */
 .prompt-intro h1,

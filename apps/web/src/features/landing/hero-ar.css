@@ -1,0 +1,245 @@
+/* Object-linked example, aligned to the mirrored room photograph. */
+.prompt-workspace.is-landing .prompt-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 100vw;
+  transform: translateX(-50%);
+  background: linear-gradient(180deg, #07132138, #0713210a);
+  z-index: -1;
+  pointer-events: none;
+}
+.landing.landing-v2.landing-refined.landing-cinematic .landing-hero {
+  min-height: 680px;
+  padding-top: 140px;
+}
+.hero-ar-scene .hero-room-image {
+  object-position: center bottom;
+  transform: scaleX(-1);
+}
+.hero-ar-scene .hero-room-shade {
+  mask-image: linear-gradient(180deg, transparent, #000 130px);
+  background:
+    linear-gradient(90deg, #071321d9, #071321a6 30%, #07132105 65%),
+    linear-gradient(0deg, #07132138, transparent 40%);
+}
+.hero-ar-outlines {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.ar-object {
+  cursor: pointer;
+  pointer-events: all;
+}
+.ar-object polygon {
+  fill: #0866ff08;
+  stroke: #b5d7ff9c;
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+  transition:
+    fill 0.2s,
+    stroke 0.2s;
+}
+.ar-object circle {
+  fill: #fff;
+  stroke: #0866ff;
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+}
+.ar-object.is-active polygon {
+  fill: #0866ff1a;
+  stroke: #69adff;
+  stroke-width: 2;
+}
+.hero-ar-controls {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.hero-ar-target {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  border: 0;
+  background: transparent;
+  padding: 8px;
+  color: #fff;
+  font: inherit;
+  cursor: pointer;
+  pointer-events: auto;
+}
+.hero-ar-target > span {
+  width: 8px;
+  height: 8px;
+  background: #fff;
+  border: 2px solid #0866ff;
+  border-radius: 50%;
+  box-shadow: 0 0 0 3px #ffffff50;
+}
+.hero-ar-target > b {
+  font-size: 12px;
+  font-weight: 500;
+  padding: 6px 9px;
+  background: #102337c9;
+  border-radius: 4px;
+}
+.hero-ar-target[aria-pressed='true'] > b {
+  background: #0866ff;
+}
+.ar-target-vanity {
+  right: 12%;
+  top: 68%;
+}
+.ar-target-floor {
+  left: 53%;
+  bottom: 6%;
+}
+.hero-ar-card {
+  position: absolute;
+  right: 4%;
+  top: 25%;
+  width: 290px;
+  padding: 15px;
+  background: #fffffff2;
+  backdrop-filter: blur(12px);
+  border: 1px solid #ffffff;
+  border-left: 2px solid #0866ff;
+  border-radius: 7px;
+  color: #142038;
+  box-shadow: 0 6px 30px #0713211a;
+}
+.hero-ar-card-heading {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.hero-ar-card-heading > img {
+  width: 48px;
+  height: 54px;
+  object-fit: contain;
+}
+.hero-ar-card-heading > div {
+  flex: 1;
+  min-width: 0;
+}
+.landing.landing-v2 .hero-ar-card h3 {
+  font-size: 13px;
+  line-height: 1.4;
+  margin: 0;
+  letter-spacing: 0;
+}
+.hero-ar-card-heading small {
+  display: block;
+  font-size: 9px;
+  line-height: 1.5;
+  color: #64748b;
+  margin-top: 4px;
+}
+.hero-ar-card-heading > strong {
+  font-size: 22px;
+  letter-spacing: -0.04em;
+}
+.hero-ar-card dl {
+  margin: 10px 0 0;
+  border-top: 1px solid #dfe7f2;
+  padding-top: 7px;
+}
+.hero-ar-card dl > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 11px;
+  line-height: 1.6;
+  padding: 4px 0;
+}
+.hero-ar-card dd {
+  margin: 0;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.hero-ar-card > p {
+  font-size: 9px;
+  color: #64748b;
+  margin: 7px 0 0;
+}
+@media (max-width: 760px) {
+  .prompt-workspace.is-landing .prompt-header {
+    min-height: 88px;
+  }
+  .prompt-workspace.is-landing .prompt-header .brand-lockup {
+    width: 120px;
+    height: 80px;
+  }
+  .landing.landing-v2.landing-refined.landing-cinematic .landing-hero {
+    min-height: 640px;
+    padding: 124px 20px 190px;
+    gap: 18px;
+  }
+  .landing.landing-v2.landing-refined.landing-cinematic .prompt-intro h1 {
+    font-size: 40px;
+    line-height: 1.04;
+  }
+  .landing.landing-v2.landing-refined.landing-cinematic .prompt-intro p {
+    font-size: 15px;
+    margin-top: 12px;
+  }
+  .landing.landing-v2.landing-refined.landing-cinematic .launch-prompt {
+    padding: 13px;
+  }
+  .landing.landing-v2.landing-refined.landing-cinematic .launch-prompt textarea {
+    min-height: 42px;
+  }
+  .hero-agent-line {
+    margin-top: 12px;
+    font-size: 12px;
+  }
+  .hero-ar-scene .hero-room-shade {
+    background: linear-gradient(180deg, #07132166, #071321a6 25%, #07132140 62%, #0713211a);
+  }
+  .hero-ar-card {
+    top: auto;
+    bottom: 14px;
+    left: 16px;
+    right: 16px;
+    width: auto;
+    padding: 11px 13px;
+  }
+  .hero-ar-card-heading > img {
+    width: 38px;
+    height: 39px;
+  }
+  .hero-ar-card-heading > strong {
+    font-size: 21px;
+  }
+  .hero-ar-card dl {
+    margin-top: 7px;
+    padding-top: 5px;
+  }
+  .hero-ar-card dl > div {
+    padding: 2px 0;
+    font-size: 11px;
+  }
+  .hero-ar-card > p {
+    margin-top: 5px;
+    font-size: 9px;
+  }
+  .ar-target-vanity {
+    top: auto;
+    bottom: 164px;
+    right: 8%;
+  }
+  .ar-target-floor {
+    left: 9%;
+    bottom: 164px;
+  }
+  .hero-ar-target > b {
+    font-size: 11px;
+    padding: 5px 8px;
+  }
+}
