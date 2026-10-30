@@ -142,14 +142,18 @@ export async function createWorkspaceServer(
         throw new DomainError('FORBIDDEN', 'Only the workspace origin is allowed');
       // Pages are public and linked from anywhere; the API checks below stay strict.
       if (hosting.staticDir && (await serveStatic(hosting.staticDir, req, res))) return;
+      const url = new URL(req.url || '/', 'http://127.0.0.1:4000');
+      const path = url.pathname.replace(/^\/api\/workspace/, '');
+      // The provider's redirect back is a cross-site navigation; its one-time
+      // state is the CSRF guard there. Every other request must be same-origin.
+      const providerReturn = req.method === 'GET' && /^\/auth\/(google|meta)\/callback$/.test(path);
       if (
         (req.headers.origin && !trustedOrigins(hosting, port).has(req.headers.origin)) ||
-        (req.headers['sec-fetch-site'] &&
+        (!providerReturn &&
+          req.headers['sec-fetch-site'] &&
           !['same-origin', 'none'].includes(String(req.headers['sec-fetch-site'])))
       )
         throw new DomainError('FORBIDDEN', 'Only the local workspace origin is allowed');
-      const url = new URL(req.url || '/', 'http://127.0.0.1:4000');
-      const path = url.pathname.replace(/^\/api\/workspace/, '');
       if (req.method === 'POST' && req.headers['x-renovagent-client'] !== 'workspace')
         throw new DomainError('FORBIDDEN', 'Workspace request header required');
       const cookies = Object.fromEntries(
@@ -182,7 +186,7 @@ export async function createWorkspaceServer(
         const state = url.searchParams.get('state') || '',
           code = url.searchParams.get('code') || '';
         if (!code || !accounts.consumeState(state, provider)) {
-          res.writeHead(302, { Location: `${hosting.appPath}?auth=error` });
+          res.writeHead(302, { Location: '/?auth=error' });
           res.end();
           return;
         }
@@ -190,11 +194,11 @@ export async function createWorkspaceServer(
           const login = await accounts.completeLogin(provider, code);
           await repository.forUser(login.user._id).ensure();
           res.writeHead(302, {
-            Location: hosting.appPath,
+            Location: '/',
             'Set-Cookie': accountCookie(login.token, secure),
           });
         } catch {
-          res.writeHead(302, { Location: `${hosting.appPath}?auth=error` });
+          res.writeHead(302, { Location: '/?auth=error' });
         }
         res.end();
         return;

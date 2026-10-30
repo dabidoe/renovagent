@@ -11,23 +11,31 @@ flowchart LR
   B[Browser] --> CDN[Bunny pull zone<br/>optional, caches /assets/*]
   CDN --> R[Railway container<br/>apps/api/src/server.ts]
   B -. without CDN .-> R
-  R --> S[pages-dist/<br/>landing / and workspace.html]
+  R --> S[dist/<br/>React app with landing at /]
   R --> A[/api/workspace/*/]
   A --> M[(Atlas production cluster)]
 ```
 
-The API server also serves the packaged site (`npm run build:pages`), so the
-website, workspace and API share one origin. The existing cookie, `Origin`,
-`Host` and `Sec-Fetch-Site` checks keep working without CORS, and the web
-client's absolute `/api/workspace` paths need no change.
+The API server also serves the built site (`npm run build` → `dist/`), exactly
+as development serves it, so the website, workspace and API share one origin.
+The existing cookie, `Origin`, `Host` and `Sec-Fetch-Site` checks keep working
+without CORS, and the web client's absolute `/api/workspace` paths need no
+change. (`build:pages` is the older static package for GitHub Pages: it puts
+the pre-v2 static `landing.html` at `/`, so it is not used for hosting.)
 
-| Path               | Served as                                   | Cache                           |
-| ------------------ | ------------------------------------------- | ------------------------------- |
-| `/`                | Landing page                                | `no-cache` (revalidate)         |
-| `/workspace.html`  | Workspace app; sign-in returns here         | `no-cache`                      |
-| `/assets/*`        | Hashed JS/CSS/images                        | 1 year, `immutable`             |
-| `/api/workspace/*` | Workspace API (unchanged rules)             | `no-store`                      |
-| `/healthz`         | Liveness `{ok:true}`, no workspace data     | `no-store`                      |
+| Path               | Served as                                                | Cache                   |
+| ------------------ | -------------------------------------------------------- | ----------------------- |
+| `/`                | React app: landing v2, then the workspace; sign-in returns here | `no-cache` (revalidate) |
+| `/assets/*`        | Hashed JS/CSS/images                                     | 1 year, `immutable`     |
+| `/legacy.html`     | Earlier preview                                          | `no-cache`              |
+| `/api/workspace/*` | Workspace API (unchanged rules)                          | `no-store`              |
+| `/healthz`         | Liveness `{ok:true}`, no workspace data                  | `no-store`              |
+
+The provider's redirect back to `/api/workspace/auth/<provider>/callback` is a
+cross-site navigation, so that one GET is exempt from the `Sec-Fetch-Site`
+check (its one-time `state` is the CSRF guard). Before this, a real browser
+returning from Google or Meta would have been refused, locally too; the stubbed
+tests did not send the header. They now do.
 
 ## Configuration (`apps/api/src/hosting.ts`)
 
@@ -39,8 +47,7 @@ With nothing set, the server is the same loopback development API as before.
   (explicit `GOOGLE_REDIRECT_URI` / `META_REDIRECT_URI` still win).
 - `RENOVAGENT_HOST`, `PORT`: listen address. Listening beyond loopback without a
   public URL refuses to start.
-- `RENOVAGENT_STATIC_DIR`: the packaged site; sign-in then returns to
-  `/workspace.html`.
+- `RENOVAGENT_STATIC_DIR`: the built site to serve (`dist` in the image).
 - A public origin without Google or Meta sign-in refuses to start: local
   single-owner mode hands its one workspace token to any visitor.
 
@@ -49,9 +56,9 @@ host's secret settings.
 
 ## Files
 
-- `Dockerfile`: Node 22, `npm ci`, `build:pages`, runs as `node`, health check.
+- `Dockerfile`: Node 22, `npm ci`, `npm run build`, runs as `node`, health check.
 - `railway.json`: Dockerfile builder, `/healthz` health check, restart on failure.
-- `.github/workflows/ci.yml`: install, `build:pages` (typecheck, boundaries,
+- `.github/workflows/ci.yml`: install, `npm run build` (typecheck, boundaries,
   builds), `npm test`, Docker image build. No deploy step, no secrets.
 
 ## Owner steps (cannot be done in code)
@@ -63,10 +70,12 @@ host's secret settings.
    until there is a custom domain.
 3. **Sign-in**: register the hosted callbacks with Google (OAuth client) and Meta
    (Facebook Login); set the four credentials as Railway variables.
-4. **Domain** (later): point it at Railway, or at a Bunny pull zone whose origin
-   is the Railway URL. With Bunny, enable **Forward Host Header** so the server
-   sees the public host; then change `RENOVAGENT_PUBLIC_URL` and the provider
-   callbacks to the domain.
+4. **Domain** (later): add it to the Railway service, then change
+   `RENOVAGENT_PUBLIC_URL` and the provider callbacks to it. Bunny in front is
+   optional (it would cache only `/assets/*`; everything else is `no-cache` or
+   `no-store`). Unverified: the server only accepts its public `Host`, while
+   Railway routes by `Host`. Adding the domain to Railway and having Bunny
+   forward it should satisfy both; test that before switching DNS.
 
 ## Not ready for the public (blockers)
 
@@ -106,10 +115,11 @@ The workspace already runs in a phone browser. Two paths remain open:
   serving and cache rules, API paths and writes never served as files.
 - `tests/integration/accounts.test.ts` (connected, real Mongo): a public
   deployment serves the site, rejects a foreign origin, accepts its own, signs
-  in to `/workspace.html` with a `Secure` cookie; local mode on a public
-  origin refuses to start.
-- Manual: `RENOVAGENT_STATIC_DIR=pages-dist PORT=4107 npm run dev:api` served
-  `/`, `/workspace.html`, hashed assets (immutable), `/healthz`, 404s, and
-  rejected a foreign `Host`.
-- Not verified: a Docker build (no Docker on this machine; CI builds it), a
+  in to `/` with a `Secure` cookie through a cross-site provider return, and
+  still refuses a cross-site data read; local mode on a public origin refuses
+  to start. All sign-in scenarios fail without the provider-return exemption.
+- Manual: `RENOVAGENT_STATIC_DIR=dist PORT=4107 npm run dev:api` served `/`
+  (landing v2, checked by screenshot), hashed assets (immutable), `/healthz`,
+  404s, and rejected a foreign `Host`.
+- Not verified: a local Docker build (no Docker on this machine; see CI), a
   Railway deploy, Bunny, real provider sign-in on a hosted URL.

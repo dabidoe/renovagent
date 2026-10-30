@@ -19,7 +19,7 @@ jobs:
           cache: npm
       - run: npm ci --no-audit --no-fund
       # build runs typecheck and the package-boundary check first.
-      - run: npm run build:pages
+      - run: npm run build
       - run: npm test
       - name: Docker image builds
         run: docker build -t renovagent:ci .

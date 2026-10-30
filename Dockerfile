@@ -1,4 +1,4 @@
-# One container serves the website (landing at /, workspace at /workspace.html)
+# One container serves the website (the React app with its landing at /)
 # and the workspace API from the same origin. Configuration is environment only;
 # see .env.example and docs/architecture/hosted-deployment.md.
 FROM node:22-bookworm-slim
@@ -12,13 +12,13 @@ COPY packages/core/package.json packages/core/
 RUN npm ci --no-audit --no-fund
 
 COPY . .
-RUN npm run build:pages && chown -R node:node /app
+RUN npm run build && chown -R node:node /app
 
 USER node
 ENV NODE_ENV=production \
     RENOVAGENT_HOST=0.0.0.0 \
     PORT=4000 \
-    RENOVAGENT_STATIC_DIR=pages-dist
+    RENOVAGENT_STATIC_DIR=dist
 EXPOSE 4000
 HEALTHCHECK --interval=30s --timeout=5s CMD node -e "fetch('http://127.0.0.1:'+process.env.PORT+'/healthz').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))"
 CMD ["node", "--import", "tsx", "apps/api/src/server.ts"]

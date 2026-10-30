@@ -44,9 +44,9 @@ Use each slice's acceptance criteria before changing its status. A mock screen, 
 
 ### Hosted deployment scaffolding — October 30, 2026
 
-- One container serves the landing (`/`), workspace (`/workspace.html`) and API from one origin. `RENOVAGENT_PUBLIC_URL`/`RENOVAGENT_HOST`/`PORT`/`RENOVAGENT_STATIC_DIR` drive trusted origin and host, `Secure` cookies, hosted OAuth callbacks and static serving; defaults keep the loopback dev server. A public origin without Google/Meta sign-in refuses to start. Added `/healthz`, `Dockerfile`, `railway.json`, `.env.example` (names only), and CI (build, tests, Docker build; no deploy).
+- One container serves the built React app (landing v2 at `/`, as in dev) and the API from one origin. Fixed a pre-existing sign-in bug: the provider's cross-site redirect back to the OAuth callback was refused by the `Sec-Fetch-Site` check; only that GET is now exempt (its `state` guards it). `RENOVAGENT_PUBLIC_URL`/`RENOVAGENT_HOST`/`PORT`/`RENOVAGENT_STATIC_DIR` drive trusted origin and host, `Secure` cookies, hosted OAuth callbacks and static serving; defaults keep the loopback dev server. A public origin without Google/Meta sign-in refuses to start. Added `/healthz`, `Dockerfile`, `railway.json`, `.env.example` (names only), and CI (build, tests, Docker build; no deploy).
 - Nothing deployed. Owner steps (Railway, production Atlas, provider callbacks, domain/Bunny) and public-launch blockers (16 MB per-owner blob document, no account deletion or privacy policy, `muse` CLI absent from the image, MCP HTTP not containerised) are in [hosted deployment](docs/architecture/hosted-deployment.md).
-- Verified: `npm test` 15 legacy + 200 TypeScript, `npm run test:connected` 36/36 (new public-mode scenario), build/types/boundaries; manual run serving `pages-dist`. Docker build not run locally (no Docker); Railway, Bunny and hosted sign-in not exercised.
+- Verified: `npm test` 15 legacy + 200 TypeScript, `npm run test:connected` 36/36 (new public-mode scenario; sign-in tests now send a cross-site callback and fail without the fix), build/types/boundaries; manual run serving `dist`. Docker build not run locally (no Docker); Railway, Bunny and hosted sign-in not exercised.
 
 ### Room studio: 3D room, plan drawing, renders — October 30, 2026
 

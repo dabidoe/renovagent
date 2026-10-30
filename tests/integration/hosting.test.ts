@@ -17,7 +17,7 @@ import {
 
 test('with nothing set, hosting stays the loopback dev server', () => {
   const h = hostingConfigFromEnv({});
-  assert.deepEqual(h, { listenHost: '127.0.0.1', listenPort: 4000, appPath: '/' });
+  assert.deepEqual(h, { listenHost: '127.0.0.1', listenPort: 4000 });
   assert.equal(isPublic(h), false);
   assert.equal(secureCookies(h), false);
   assert.equal(oauthRedirect(h, 'google'), undefined);
@@ -30,10 +30,9 @@ test('a public origin is trusted alongside loopback, with secure cookies and hos
     RENOVAGENT_HOST: '0.0.0.0',
     PORT: '8080',
     RENOVAGENT_PUBLIC_URL: 'https://renovagent.example',
-    RENOVAGENT_STATIC_DIR: 'pages-dist',
+    RENOVAGENT_STATIC_DIR: 'dist',
   });
   assert.equal(h.listenPort, 8080);
-  assert.equal(h.appPath, '/workspace.html');
   assert.ok(isPublic(h) && secureCookies(h));
   assert.ok(trustedOrigins(h, 8080).has('https://renovagent.example'));
   assert.ok(!trustedOrigins(h, 8080).has('https://evil.example'));

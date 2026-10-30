@@ -11,8 +11,6 @@ export type HostingConfig = {
   listenPort: number;
   publicUrl?: URL;
   staticDir?: string;
-  // Where sign-in returns: the workspace page of the served site, or the dev root.
-  appPath: string;
 };
 
 const LOOPBACK = new Set(['127.0.0.1', 'localhost', '::1']);
@@ -38,15 +36,10 @@ export function hostingConfigFromEnv(env: NodeJS.ProcessEnv = process.env): Host
     listenPort,
     ...(publicUrl ? { publicUrl } : {}),
     ...(staticDir ? { staticDir } : {}),
-    appPath: staticDir ? '/workspace.html' : '/',
   };
 }
 
-export const localHosting: HostingConfig = {
-  listenHost: '127.0.0.1',
-  listenPort: 4000,
-  appPath: '/',
-};
+export const localHosting: HostingConfig = { listenHost: '127.0.0.1', listenPort: 4000 };
 
 export const isPublic = (h: HostingConfig) =>
   Boolean(h.publicUrl && !LOOPBACK.has(h.publicUrl.hostname));
@@ -90,7 +83,8 @@ const TYPES: Record<string, string> = {
   '.txt': 'text/plain; charset=utf-8',
 };
 
-// Serves the packaged site (`npm run build:pages` → pages-dist/). Returns false
+// Serves the built site (`npm run build` → dist/): the React app with the landing
+// at /, as in development. Returns false
 // for paths it does not own, so the API routes run as before. Hashed assets are
 // cached for a year; pages are revalidated so a deploy shows up at once.
 export async function serveStatic(dir: string, req: IncomingMessage, res: ServerResponse) {

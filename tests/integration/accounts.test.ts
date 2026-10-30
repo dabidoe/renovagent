@@ -83,12 +83,13 @@ async function withAccountServer(
       assert.equal(target.searchParams.get('client_id'), 'test-meta-app-id');
       assert.match(target.searchParams.get('scope')!, /email/);
     }
+    // A browser arrives here from the provider's site, so the request is cross-site.
     const done = await fetch(
       `${base}/auth/${provider}/callback?code=${code}&state=${target.searchParams.get('state')}`,
-      { headers, redirect: 'manual' },
+      { headers: { ...headers, 'Sec-Fetch-Site': 'cross-site' }, redirect: 'manual' },
     );
     assert.equal(done.status, 302);
-    assert.equal(done.headers.get('location'), hosting?.appPath ?? '/');
+    assert.equal(done.headers.get('location'), '/');
     const cookie = done.headers.getSetCookie()[0];
     assert.equal(/; Secure/.test(cookie), hosting?.publicUrl?.protocol === 'https:');
     return cookie.split(';')[0];
@@ -242,7 +243,6 @@ const publicHosting: HostingConfig = {
   listenHost: '0.0.0.0',
   listenPort: 0,
   publicUrl: new URL('https://renovagent.example'),
-  appPath: '/workspace.html',
 };
 
 // Sends a request as a browser on the public origin would (fetch cannot set Host).
@@ -284,12 +284,17 @@ test(
             headers: { ...headers, Origin: 'https://renovagent.example.evil' },
           });
           assert.equal(wrongHost.status, 403);
-          // Sign-in lands on the workspace page with a Secure cookie (asserted in login).
+          // Sign-in returns to / with a Secure cookie (asserted in login).
           const alice = await login('google', 'alice');
           const me = await (
             await fetch(`${base}/auth/me`, { headers: { ...headers, Cookie: alice } })
           ).json();
           assert.equal(me.signedIn, true);
+          // Only the provider return is exempt: cross-site data reads stay blocked.
+          const crossSite = await fetch(base, {
+            headers: { ...headers, Cookie: alice, 'Sec-Fetch-Site': 'cross-site' },
+          });
+          assert.equal(crossSite.status, 403);
         },
         { ...publicHosting, staticDir: site },
       );
