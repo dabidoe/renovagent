@@ -217,6 +217,40 @@ wall pinned; "no exhaust fan visible (4%)" suggested and added after
 approval; 0.6 s and about 5k input tokens per photo. Jev read the sheet-vinyl
 floor as tile (66–80%), which is why floor findings ask for confirmation.
 
+### Best value with Jev (October 30, 2026)
+
+Connected projects with a priced plan get **✦ Best value with Jev**. Tier
+plans pick the cheapest acceptable offer inside each tier; best value looks
+across all tiers and asks whether the cheap option is actually right.
+
+- `valueCandidates` (`packages/core/src/commerce/best-value.ts`) applies the
+  same hard rules as tier plans (constraints, currency, stock, pack unit) to
+  every offer of every tier for each BOM item.
+- `POST /api/workspace/products/best` (session, catalog, shared Jev limit)
+  sends the survivors to `judgeProducts` in one request: per candidate a
+  **fit** yes-probability ("does this product meet this requirement for this
+  project?", judged from name, category and specs; colour/tint chosen at
+  purchase does not count against it) and a **quality** score (basic /
+  standard / premium). Prices are not sent, so the judgment is about the
+  product.
+- `bestValue` (code) picks the cheapest candidate with fit ≥ 70% (unknown
+  shipping ranks after known costs), lists cheaper candidates passed over
+  with their fit, and offers the cheapest step up at least ~one quality level
+  higher. No fitting candidate means no pick, never a guess.
+- The card compares the picks with the same items in the mid-tier plan and
+  shows each pick's retailer, tier, units, unit price, fit, quality and price
+  date; demo catalog prices are labelled "example price (demo data)".
+
+Verified: `tests/domain/best-value.test.ts` (all-tier candidates and pack
+rounding, poor fit passed over with its reason, step up, no fit no pick,
+never above the mid-tier line), and headless Chrome in connected mode against
+a local database seeded with the demo catalog and the real model: paint
+(builder, 88% fit), vinyl plank (builder 4 mm, 85%, step up to rigid-core
+6 mm for $133.84) and quarter-round (primed, 82%, step up to oak for $105):
+$511.48 against $724.32 mid tier (`docs/previews/room-best-value-jev.png`).
+A first wording without the colour note judged no paint a fit because the
+requirement named "warm white" and the catalog lists tintable bases.
+
 ## Wiring and other trades
 
 The drawing has an empty `layer-electrical` (`data-status="not-recorded"`).

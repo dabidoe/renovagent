@@ -1,5 +1,6 @@
 import { RoomWelcome } from './room-welcome.js';
 import { OwnerPhotos, ownerPhotos } from './owner-photos.js';
+import { BestValuePopup, type BestValueResult, type BestValueState } from './best-value.js';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type {
   DesignOptions,
@@ -627,7 +628,25 @@ export function RoomStudio({
   const [showMuse, setShowMuse] = useState(true);
   const [quoteId, setQuoteId] = useState<string | null>(null);
   // Review and handoff read the saved draft; a pick must be approved first.
-  const [panel, setPanel] = useState<'review' | 'handoff' | null>(null);
+  const [panel, setPanel] = useState<'review' | 'handoff' | 'value' | null>(null);
+  // Best value across tiers (connected): the server holds the catalog and key.
+  const [value, setValue] = useState<BestValueState | null>(null);
+  const findBestValue = async () => {
+    choosePinRef.current(null);
+    setPanel('value');
+    setValue({ status: 'working' });
+    try {
+      const result = (await workspaceRequest('/products/best', {
+        projectId,
+      })) as BestValueResult;
+      setValue({ status: 'done', result });
+    } catch (e) {
+      setValue({
+        status: 'error',
+        message: (e instanceof Error ? e.message : String(e)).slice(0, 200),
+      });
+    }
+  };
   const [confirming, setConfirming] = useState(false);
   // A location assumed for the review and handoff only (not recorded).
   const [reviewAt, setReviewAt] = useState('');
@@ -1025,7 +1044,9 @@ export function RoomStudio({
           ) : (
             <div key="plan" className="room3d-plan" dangerouslySetInnerHTML={{ __html: svg }} />
           )}
-          {panel === 'review' && review ? (
+          {panel === 'value' && value ? (
+            <BestValuePopup state={value} onClose={() => setPanel(null)} />
+          ) : panel === 'review' && review ? (
             <ReviewPopup
               review={review}
               location={reviewAt}
@@ -1253,6 +1274,15 @@ export function RoomStudio({
                 >
                   Contractor handoff
                 </button>
+                {controller.connected && plan && (
+                  <button
+                    type="button"
+                    aria-pressed={panel === 'value'}
+                    onClick={() => void findBestValue()}
+                  >
+                    ✦ Best value with Jev
+                  </button>
+                )}
               </div>
               <button
                 type="button"

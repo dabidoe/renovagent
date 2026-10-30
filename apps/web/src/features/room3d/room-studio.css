@@ -1047,3 +1047,18 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Best value picks (Jev fit and quality, catalog prices). */
+.best-value-lines {
+  list-style: none;
+  margin: 10px 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+  font-size: 13px;
+}
+.best-value-lines > li {
+  padding: 8px;
+  border-radius: 6px;
+  background: #f8fafc;
+}

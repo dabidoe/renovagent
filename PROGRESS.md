@@ -44,6 +44,10 @@ Renovagent carries a persistent property project through investigation, options,
 
 Use each slice's acceptance criteria before changing its status. A mock screen, canned reply, or HTTP 200 does not establish workflow completion.
 
+### Best value with Jev — October 30, 2026
+
+- Connected projects with a priced plan get "Best value with Jev": every offer of every tier that passes the hard rules is judged by Jev for fit (does it meet this requirement for this project) and quality; code picks the cheapest fit, lists cheaper options passed over and the cheapest step up, and compares with the mid tier. Demo example: $511.48 vs $724.32 mid tier with every pick ≥ 82% fit. Demo prices are labelled as such.
+
 ### Your photos pinned by Jev — October 30, 2026
 
 - The room studio's "Your photos" panel uploads room photos and reads one with Jev (`POST /api/workspace/photo/read`): room, floor covering, visible fixtures, damage, dated vanity, and boxes. Code pins the planned work on what was located and suggests plan changes (no bathroom fan → exhaust fan, dated vanity, carpet under a new floor), each added only after approval. Verified with unit and route tests and headless Chrome on a real bathroom photo with the real model.

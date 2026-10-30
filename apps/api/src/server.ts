@@ -42,7 +42,9 @@ import {
   uploadDesignPhoto,
 } from './design-service.js';
 import { renderExample } from './example-render.js';
-import { configuredJevKey, rankReviewFindings, readRoomPhoto } from './jev.js';
+import { configuredJevKey, judgeProducts, rankReviewFindings, readRoomPhoto } from './jev.js';
+import { bestValue, scopeDraftId, valueCandidates } from '@renovagent/core';
+import type { BomPayload, PurchasePlanPayload, ScopeDraft } from '@renovagent/contracts';
 import { imageSize } from 'image-size';
 
 // Paid model calls per owner per window, so a session cannot drain the key.
@@ -93,10 +95,12 @@ export async function createWorkspaceServer(
     configured: () => Promise<boolean>;
     rank: typeof rankReviewFindings;
     readPhoto: typeof readRoomPhoto;
+    judgeProducts: typeof judgeProducts;
   } = {
     configured: async () => Boolean(await configuredJevKey()),
     rank: rankReviewFindings,
     readPhoto: readRoomPhoto,
+    judgeProducts,
   },
 ) {
   const accountMode = Boolean(accounts);
@@ -375,6 +379,93 @@ export async function createWorkspaceServer(
           model: ranked.model,
           relevance: Object.fromEntries(ranked.findings.map((f) => [f.id, f.relevance])),
           note: 'Probability that a provision applies to this work, judged by the Jev model; an interpretation, not a code source or determination.',
+        });
+        return;
+      }
+      if (path === '/products/best' && req.method === 'POST') {
+        // Best value across tiers for the project's current BOM: hard rules
+        // filter, Jev judges fit and quality, code picks the cheapest fit.
+        if (!catalog) throw new DomainError('VALIDATION', 'Catalog is unavailable');
+        if (!(await jev.configured()))
+          throw new DomainError('VALIDATION', 'Jev is not configured on this server');
+        const { projectId } = z
+          .object({ projectId: z.string().min(1).max(160) })
+          .strict()
+          .parse(await body(req));
+        const { workspace } = await activeRepo.read();
+        if (!workspace.projects[projectId]) throw new DomainError('NOT_FOUND', 'Unknown project');
+        const latestOf = (id: string) => workspace.artifacts[id]?.at(-1);
+        const bomArtifact = latestOf(`${projectId}:bom`);
+        if (bomArtifact?.payload.kind !== 'bom')
+          throw new DomainError(
+            'VALIDATION',
+            'Price the plan first: there is no materials list yet',
+          );
+        const bom = bomArtifact.payload as BomPayload;
+        const draft = latestOf(scopeDraftId(projectId))?.payload as ScopeDraft | undefined;
+        const priced = await catalog.pricedOffers([
+          ...new Set(bom.items.flatMap((i) => i.candidateProductIds)),
+        ]);
+        const candidates = valueCandidates(bom, priced);
+        spendJevCall(activeRepo.ownerId);
+        const { model, judged } = await jev.judgeProducts(
+          {
+            request: (draft?.request ?? '').replace(/^\[Example fixture\]\s*/, ''),
+            design: draft?.direction
+              ? `walls ${draft.direction.wallColor}; floor ${draft.direction.floorFinish}`
+              : null,
+          },
+          candidates.map((c) => ({
+            key: c.key,
+            requirement: bom.items.find((i) => i.id === c.itemId)!.description,
+            product: {
+              name: c.priced.product.name,
+              manufacturer: c.priced.product.manufacturer,
+              category: c.priced.product.category,
+              specs: c.priced.product.specs,
+              certifications: c.priced.product.certifications,
+            },
+          })),
+        );
+        const lines = bestValue(bom, candidates, judged);
+        const mid = latestOf(`${projectId}:purchase-plan:mid`)?.payload as
+          | PurchasePlanPayload
+          | undefined;
+        const view = (c: (typeof lines)[number]['pick']) =>
+          c && {
+            productName: c.priced.product.name,
+            manufacturer: c.priced.product.manufacturer,
+            retailer: c.priced.offer.retailer,
+            sku: c.priced.offer.sku,
+            tier: c.priced.offer.tier,
+            units: c.units,
+            packQuantity: c.priced.offer.packQuantity,
+            packUnit: c.priced.offer.packUnit,
+            unitPriceMinor: c.priced.observation.unitPrice.amountMinor,
+            totalMinor: c.totalMinor,
+            shippingMinor: c.shippingMinor,
+            observedAt: c.priced.observation.observedAt,
+            freshness: c.priced.observation.freshness,
+            source: c.priced.observation.source,
+            fit: c.fit,
+            quality: c.quality,
+          };
+        const picked = lines.filter((l) => l.pick);
+        json(200, {
+          model,
+          lines: lines.map((l) => ({ ...l, pick: view(l.pick), upgrade: view(l.upgrade) })),
+          totals: {
+            bestValueMinor: picked.reduce(
+              (n, l) => n + l.pick!.totalMinor + (l.pick!.shippingMinor ?? 0),
+              0,
+            ),
+            midMinor: mid
+              ? mid.lines
+                  .filter((pl) => picked.some((l) => l.itemId === pl.bomItemId))
+                  .reduce((n, pl) => n + pl.lineTotalMinor, 0)
+              : null,
+          },
+          note: 'Fit and quality are the Jev model’s judgments from product specs; prices are the catalog’s dated observations, not live quotes.',
         });
         return;
       }

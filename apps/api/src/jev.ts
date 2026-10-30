@@ -351,3 +351,63 @@ export async function readRoomPhoto(
     boxes,
   };
 }
+
+// For each candidate (a requirement paired with a catalog product that already
+// passed the hard rules): does the product really meet the requirement for
+// this project, and what quality level is it? One request; prices are left
+// out so the judgment is about the product, and code weighs it against cost.
+export async function judgeProducts(
+  project: { request: string; design: string | null },
+  candidates: {
+    key: string;
+    requirement: string;
+    product: {
+      name: string;
+      manufacturer: string;
+      category: string;
+      specs: Record<string, string | number | boolean>;
+      certifications: string[];
+    };
+  }[],
+  options: Parameters<typeof askJev>[2] = {},
+) {
+  const list = candidates.slice(0, 40);
+  if (!list.length)
+    return { model: null, judged: {} as Record<string, { fit: number; quality: number }> };
+  const questions: Record<string, Question> = {};
+  list.forEach((_, i) => {
+    questions[`fit${i}`] = {
+      type: 'noul',
+      instructions: `Does the product in \`candidates[${i}].product\` fully meet the requirement in \`candidates[${i}].requirement\` for the work in \`project\`? Judge the product type and specs from its name, category and specs only; colour, tint and size options chosen at purchase do not count against it.`,
+      criteria: {
+        true: 'Right kind of product, and its specs satisfy what the requirement asks for this job.',
+        false:
+          'Wrong kind of product, a spec conflicts with the requirement, or it would not suit this job.',
+      },
+    };
+    questions[`quality${i}`] = {
+      type: 'score',
+      instructions: `What quality level is the product in \`candidates[${i}].product\`, judged from its specs and certifications (not price)?`,
+      criteria: [
+        'Basic: entry-level materials or ratings, shorter expected life',
+        'Standard: solid mainstream specs a contractor would install without hesitation',
+        'Premium: clearly better materials, ratings or warranty than mainstream',
+      ],
+    };
+  });
+  const { model, answers } = await askJev(
+    {
+      project,
+      candidates: list.map((c) => ({ requirement: c.requirement, product: c.product })),
+    },
+    questions,
+    options,
+  );
+  const judged: Record<string, { fit: number; quality: number }> = {};
+  list.forEach((c, i) => {
+    const fit = answers[`fit${i}`] as { noul: number } | undefined;
+    const quality = answers[`quality${i}`] as { score: number } | undefined;
+    if (fit && quality) judged[c.key] = { fit: fit.noul, quality: quality.score };
+  });
+  return { model, judged };
+}
