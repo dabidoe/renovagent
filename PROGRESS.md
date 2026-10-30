@@ -40,6 +40,13 @@ Renovagent carries a persistent property project through investigation, options,
 
 Use each slice's acceptance criteria before changing its status. A mock screen, canned reply, or HTTP 200 does not establish workflow completion.
 
+### Room measurement capture — October 29, 2026
+
+- "Measure this room" card (options and plan stages) saves floor length, width and ceiling height as project facts with a user observation and optional photo as evidence. The method (tape, phone AR app, LiDAR scan) is recorded; nothing is marked verified. Unchanged values are skipped on re-save.
+- Scope drafts carry a `factContext` over their measurement fact keys, so a first-time dimension stales an existing draft and, through it, the BOM and purchase plans. MCP `draft_scope` includes the measurement signature in its idempotency key, so a retry after measuring re-drafts. No MCP fact-writing tool: agents still relay values as unverified `reported` inputs.
+- Research and plan (RoomPlan import as step 2, gated on a real export file): [room measurement](docs/architecture/room-measurement.md).
+- Verified after merging with design options: `npm test` 15 legacy + 173 TypeScript passed, `npm run test:connected` 35/35, build/types/boundaries. Not verified in a live browser. Scope drafts saved before this change lack `factContext`; re-draft them once.
+
 ### Same-room design options with costs and previews — October 29, 2026
 
 - One room photo plus a vague request becomes three living-room options (fresh walls keeping the carpet; light-oak hardwood + walls; wood-look vinyl plank + walls), each with its own recipe scope, a builder-to-high materials range priced at view time, coverage ("priced N of M"), its biggest unknown, and a labeled generated concept preview. Validated commands only: `BuildDesignOptions`, `ReviseDesignOptions` ("make it blue", preference, retry) and server-only `RecordDesignPreview`.

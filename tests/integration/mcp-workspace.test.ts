@@ -9,7 +9,7 @@ import { createWorkspaceMcpServer } from '../../apps/api/src/mcp.js';
 import { CatalogStore } from '../../apps/api/src/catalog.js';
 import { Scenario } from '../foundation-helpers.js';
 import { emptyWorkspace, type Command } from '@renovagent/contracts';
-import { buildTierPlans } from '@renovagent/core';
+import { buildTierPlans, roomDimensionCommands } from '@renovagent/core';
 import { vanityCatalog, vanityTemplate } from '../../fixtures/catalog/vanity-philadelphia.js';
 
 const uri = process.env.TEST_WORKSPACE_MONGO_URI;
@@ -425,6 +425,62 @@ test(
       assert.equal(rewritten.result.isError, true);
       const saved = await propose('project-a:checkout-review:builder', [planRef], review);
       assert.equal(saved.result.isError, undefined, saved.text);
+    }),
+);
+
+test(
+  'MCP draft_scope re-drafts after the person records room dimensions, even with the same requestId',
+  { skip: !uri },
+  () =>
+    withClient(async (mcp, repo, catalog) => {
+      await catalog.importBatch(vanityCatalog);
+      const ask = {
+        requestId: 'muse-measure-1',
+        projectId: 'project-a',
+        recipeId: 'bathroom-refresh',
+        packageIds: ['vanity', 'floor-tile', 'paint'],
+        request: 'New vanity, retile and paint this bathroom.',
+      };
+      const blocked = JSON.parse((await call(mcp, 'draft_scope', ask)).text);
+      const priced = (await repo.read()).workspace.artifacts;
+      assert.ok(priced['project-a:bom']?.length);
+      assert.ok(priced['project-a:purchase-plan:builder']?.length);
+      // The person saves their own measurements in the workspace (not via MCP).
+      const { workspace } = await repo.read();
+      let n = 0;
+      await repo.execute(
+        roomDimensionCommands(
+          workspace,
+          'project-a',
+          {
+            length: { amount: 8, unit: 'ft' },
+            width: { amount: 5, unit: 'ft' },
+            height: { amount: 8, unit: 'ft' },
+            method: 'phone-ar-app',
+            notes: '',
+            photoEvidenceIds: [],
+          },
+          {
+            commandId: (step) => `web-measure:${step}`,
+            evidenceId: 'measure-observation',
+            factId: () => `room-fact-${n++}`,
+          },
+        ),
+      );
+      const after = (await repo.read()).workspace.artifacts;
+      assert.equal(after['project-a:scope-draft'].at(-1)!.freshness, 'stale');
+      // Downstream materials list and purchase plans are flagged too.
+      assert.notEqual(after['project-a:bom'].at(-1)!.freshness, 'current');
+      assert.notEqual(after['project-a:purchase-plan:builder'].at(-1)!.freshness, 'current');
+      const fresh = JSON.parse((await call(mcp, 'draft_scope', ask)).text);
+      assert.equal(fresh.replay, false);
+      assert.equal(fresh.draftRef.revision, blocked.draftRef.revision + 1);
+      assert.ok(fresh.requirements.quantified > blocked.requirements.quantified);
+      const draft = (await repo.read()).workspace.artifacts['project-a:scope-draft'].at(-1)!;
+      const tile = (
+        draft.payload as { requirements: { id: string; quantity: number | null }[] }
+      ).requirements.find((r) => r.id === 'floor-tile:tile')!;
+      assert.equal(tile.quantity, 40);
     }),
 );
 

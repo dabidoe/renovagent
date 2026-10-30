@@ -20,3 +20,4 @@ export * from './conversation-plan.js';
 export * from './catalog.js';
 export * from './scope-draft.js';
 export * from './design-options.js';
+export * from './room-dimensions.js';
