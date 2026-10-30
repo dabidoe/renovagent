@@ -3,13 +3,21 @@ import { BSON } from 'mongodb';
 import type { Db, MongoClient } from 'mongodb';
 import { DomainError, emptyWorkspace } from '@renovagent/contracts';
 import { checkCatalogReferences, fingerprint, validateCatalogImport } from '@renovagent/core';
-import { checkedWorkspace, validateBlobs, type Aggregate } from './repository.js';
+import {
+  BLOB_COLLECTION,
+  checkedWorkspace,
+  validateBlobs,
+  type Aggregate,
+  type BlobRecord,
+} from './repository.js';
 import { photoJobFile, type PhotoJobFile } from './photo-job-files.js';
 
+// `_id` is a string except for blob records, whose compound ids go through idKey.
 export type MigrationRecord = { _id: string; [key: string]: unknown };
 export type MigrationSnapshot = Record<string, MigrationRecord[]>;
 export const migrationCollections = [
   'workspace_aggregates',
+  BLOB_COLLECTION,
   'catalog_products',
   'retailer_offers',
   'price_observations',
@@ -20,13 +28,35 @@ export const snapshotHash = (value: unknown) =>
     .update(fingerprint(BSON.EJSON.serialize(value, { relaxed: false })))
     .digest('hex');
 const workspaceContent = ({ workspace, blobs, jobs }: Aggregate) => ({ workspace, blobs, jobs });
+// Blob records have compound ids; compare every id by value.
+export const idKey = (id: unknown) => (typeof id === 'string' ? id : snapshotHash(id));
+const sameId = (a: MigrationRecord, b: MigrationRecord) => idKey(a._id) === idKey(b._id);
+const blobBytes = (r: BlobRecord) => Buffer.from(r.bytes.buffer);
 
 export function validateMigration(source: MigrationSnapshot, destination: MigrationSnapshot) {
   const workspaces = source.workspace_aggregates as unknown as Aggregate[];
   if (!workspaces?.length) throw new DomainError('VALIDATION', 'No source workspaces');
+  const blobRecords = (source[BLOB_COLLECTION] ?? []) as unknown as BlobRecord[];
+  for (const r of blobRecords)
+    if (
+      !workspaces.some((w) => w._id === r._id.ownerId) ||
+      createHash('sha256').update(blobBytes(r)).digest('hex') !== r.sha256
+    )
+      throw new DomainError(
+        'VALIDATION',
+        'Attachment outside source workspace or checksum mismatch',
+      );
   for (const doc of workspaces) {
     const state = checkedWorkspace(doc.workspace, doc._id);
-    validateBlobs(state, doc.blobs);
+    // Each workspace's references against its stored (and any still-embedded) bytes.
+    const stored = blobRecords
+      .filter((r) => r._id.ownerId === doc._id)
+      .map((r) => ({
+        id: r._id.blobId,
+        mediaType: r.mediaType,
+        data: blobBytes(r).toString('base64'),
+      }));
+    validateBlobs(state, [...(doc.blobs ?? []), ...stored]);
     if (doc.jobs.some((j) => ['queued', 'running'].includes(j.status)))
       throw new DomainError(
         'CONFLICT',
@@ -63,15 +93,16 @@ export function validateMigration(source: MigrationSnapshot, destination: Migrat
   }
   for (const name of migrationCollections) {
     const rows = source[name] ?? [];
-    if (new Set(rows.map((row) => row._id)).size !== rows.length)
+    if (new Set(rows.map((row) => idKey(row._id))).size !== rows.length)
       throw new DomainError('VALIDATION', 'Duplicate migration record');
     for (const row of rows) {
-      const prior = (destination[name] ?? []).find((r) => r._id === row._id);
+      const prior = (destination[name] ?? []).find((r) => sameId(r, row));
       if (!prior) continue;
       if (name === 'workspace_aggregates') {
         const a = prior as unknown as Aggregate,
           b = row as unknown as Aggregate;
         const blank = { workspace: emptyWorkspace(a._id), blobs: [], jobs: [] };
+        // A destination that already moved its (empty) blob list out is still blank.
         if (
           snapshotHash(workspaceContent(a)) === snapshotHash(blank) ||
           snapshotHash(workspaceContent(a)) === snapshotHash(workspaceContent(b))
@@ -111,7 +142,7 @@ export async function applyMigration(client: MongoClient, source: MigrationSnaps
         for (const name of migrationCollections) {
           const collection = db.collection<MigrationRecord>(name);
           for (const row of source[name] ?? []) {
-            const prior = destination[name].find((r) => r._id === row._id);
+            const prior = destination[name].find((r) => sameId(r, row));
             if (name === 'workspace_aggregates') {
               if (
                 prior &&

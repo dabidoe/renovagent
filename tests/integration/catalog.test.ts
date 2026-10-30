@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { createHash, randomUUID } from 'node:crypto';
 import type { AddressInfo } from 'node:net';
 import { MongoClient } from 'mongodb';
-import { MongoWorkspaceRepository, OWNER, type Aggregate } from '../../apps/api/src/repository.js';
+import { MongoWorkspaceRepository, OWNER } from '../../apps/api/src/repository.js';
 import { CatalogStore } from '../../apps/api/src/catalog.js';
 import { AccountService } from '../../apps/api/src/accounts.js';
 import { createWorkspaceServer } from '../../apps/api/src/server.js';
@@ -225,7 +225,7 @@ test('price submissions quarantine until review and never duplicate facts', { sk
 
 test('catalog HTTP honors sessions and gates imports by operator token', { skip: !uri }, () =>
   withDb(async (db) => {
-    const repo = new MongoWorkspaceRepository(db.collection<Aggregate>('workspace_aggregates'));
+    const repo = MongoWorkspaceRepository.forDb(db);
     await repo.collection.insertOne({
       _id: OWNER,
       version: 0,

@@ -79,11 +79,12 @@ host's secret settings.
 
 ## Not ready for the public (blockers)
 
-- **Blob storage limit.** Photos and plan files are stored base64 inside one
-  Mongo document per owner (`doc.blobs`). MongoDB documents are capped at
-  16 MB, so a few dozen phone photos would make that owner's workspace
-  unwritable. Needs per-blob storage (GridFS in the same cluster, or private
-  object storage such as Bunny Storage/R2/S3) before real users upload photos.
+- ~~Blob storage limit~~ (resolved October 30): attachments are now one
+  document each in `workspace_blobs` (keyed by owner and blob id, raw bytes),
+  not inside the owner's workspace document, so an owner's total is no longer
+  capped at 16 MB. Bytes are checked against the batch's references and
+  stored before the workspace commit; embedded attachments move out on first
+  boot. See `apps/api/src/repository.ts` and `tests/integration/blob-store.test.ts`.
 - **Provider review.** Google's production OAuth verification and Meta App
   Review need a privacy policy and terms on the domain; Meta also needs a
   data-deletion URL or callback. There is no account/data deletion yet.

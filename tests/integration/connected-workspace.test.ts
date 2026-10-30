@@ -3,7 +3,13 @@ import assert from 'node:assert/strict';
 import { randomUUID, createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { MongoClient } from 'mongodb';
-import { MongoWorkspaceRepository, OWNER, type Aggregate } from '../../apps/api/src/repository.js';
+import {
+  BLOB_COLLECTION,
+  MongoWorkspaceRepository,
+  OWNER,
+  type Aggregate,
+  type BlobRecord,
+} from '../../apps/api/src/repository.js';
 import { requestPhotoJob, publishPhotoJob, PhotoWorker } from '../../apps/api/src/photo-jobs.js';
 import { createWorkspaceServer } from '../../apps/api/src/server.js';
 import { PhotoJobFiles } from '../../apps/api/src/photo-job-files.js';
@@ -171,7 +177,7 @@ async function withRepo(
   const client = new MongoClient(uri!);
   await client.connect();
   const db = client.db(`renovagent_test_${randomUUID().replaceAll('-', '')}`);
-  const repo = new MongoWorkspaceRepository(db.collection<Aggregate>('workspace_aggregates'));
+  const repo = MongoWorkspaceRepository.forDb(db);
   const { emptyWorkspace } = await import('@renovagent/contracts');
   await repo.collection.insertOne({
     _id: OWNER,
@@ -438,6 +444,7 @@ test(
       try {
         const reopened = new MongoWorkspaceRepository(
           second.db(repo.collection.dbName).collection<Aggregate>(repo.collection.collectionName),
+          second.db(repo.collection.dbName).collection<BlobRecord>(BLOB_COLLECTION),
         );
         assert.deepEqual(await reopened.read(), saved);
       } finally {
@@ -447,7 +454,9 @@ test(
         repo.execute([command], [{ ...blob, data: 'Y2hhbmdlZA==' }]),
         /overwrite/,
       );
-      assert.equal((await repo.read()).blobs[0].data, blob.data);
+      // Bytes live in their own collection now; the aggregate keeps none.
+      assert.deepEqual((await repo.read()).blobs, []);
+      assert.deepEqual(await repo.listBlobs(), [blob]);
     }),
 );
 

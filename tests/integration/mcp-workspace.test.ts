@@ -4,7 +4,7 @@ import { randomUUID } from 'node:crypto';
 import { MongoClient } from 'mongodb';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
-import { MongoWorkspaceRepository, OWNER, type Aggregate } from '../../apps/api/src/repository.js';
+import { MongoWorkspaceRepository, OWNER } from '../../apps/api/src/repository.js';
 import { createWorkspaceMcpServer } from '../../apps/api/src/mcp.js';
 import { CatalogStore } from '../../apps/api/src/catalog.js';
 import { Scenario } from '../foundation-helpers.js';
@@ -45,7 +45,7 @@ async function withClient(
   await client.connect();
   const db = client.db(`renovagent_mcp_test_${randomUUID().replaceAll('-', '')}`);
   try {
-    const repo = new MongoWorkspaceRepository(db.collection<Aggregate>('workspace_aggregates'));
+    const repo = MongoWorkspaceRepository.forDb(db);
     await repo.collection.insertOne({
       _id: OWNER,
       version: 0,

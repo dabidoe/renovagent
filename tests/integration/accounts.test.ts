@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import type { AddressInfo } from 'node:net';
 import { MongoClient, type Db } from 'mongodb';
-import { MongoWorkspaceRepository, OWNER, type Aggregate } from '../../apps/api/src/repository.js';
+import { MongoWorkspaceRepository, OWNER } from '../../apps/api/src/repository.js';
 import { AccountService } from '../../apps/api/src/accounts.js';
 import { createWorkspaceServer } from '../../apps/api/src/server.js';
 import type { HostingConfig } from '../../apps/api/src/hosting.js';
@@ -56,7 +56,7 @@ async function withAccountServer(
   const client = new MongoClient(uri!);
   await client.connect();
   const db = client.db(`renovagent_accounts_test_${randomUUID().replaceAll('-', '')}`);
-  const repo = new MongoWorkspaceRepository(db.collection<Aggregate>('workspace_aggregates'));
+  const repo = MongoWorkspaceRepository.forDb(db);
   await repo.ensure();
   const accounts = stubAccounts(db);
   const { server } = await createWorkspaceServer(
@@ -201,7 +201,7 @@ test('local mode is unchanged when Google is not configured', { skip: !uri }, as
   await client.connect();
   const db = client.db(`renovagent_localmode_test_${randomUUID().replaceAll('-', '')}`);
   try {
-    const repo = new MongoWorkspaceRepository(db.collection<Aggregate>('workspace_aggregates'));
+    const repo = MongoWorkspaceRepository.forDb(db);
     await repo.ensure();
     const { server } = await createWorkspaceServer(repo, 'synthetic-local-test-token', false);
     await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));

@@ -42,6 +42,12 @@ Renovagent carries a persistent property project through investigation, options,
 
 Use each slice's acceptance criteria before changing its status. A mock screen, canned reply, or HTTP 200 does not establish workflow completion.
 
+### Attachments out of the workspace document — October 30, 2026
+
+- Photos and plan files are stored one document each in `workspace_blobs` (`{ownerId, blobId}` key, raw bytes, sha256), so an owner is no longer limited to 16 MB in total. Supplied bytes are checked against the references the batch would create before anything is stored (wrong bytes never block the correct retry), then the workspace commits in its single atomic write after confirming every reference has matching stored bytes. Every read is owner-filtered. The API wire format is unchanged.
+- Existing embedded attachments move out once per owner on boot (idempotent). Cluster migration copies and checksums `workspace_blobs`; its id comparisons handle compound ids. After pulling, restart every API/MCP process: an older server cannot see moved attachments.
+- Verified: `npm run test:connected` 41/41 (new: 18 MB per owner, retry after wrong bytes, owner isolation, embedded-layout move, migration carry and checksum), `npm test` 15 + 200, build/types. Not run against the real local or Atlas data; that happens on the next server start.
+
 ### Hosted deployment scaffolding — October 30, 2026
 
 - One container serves the built React app (landing v2 at `/`, as in dev) and the API from one origin. Fixed a pre-existing sign-in bug: the provider's cross-site redirect back to the OAuth callback was refused by the `Sec-Fetch-Site` check; only that GET is now exempt (its `state` guards it). `RENOVAGENT_PUBLIC_URL`/`RENOVAGENT_HOST`/`PORT`/`RENOVAGENT_STATIC_DIR` drive trusted origin and host, `Secure` cookies, hosted OAuth callbacks and static serving; defaults keep the loopback dev server. A public origin without Google/Meta sign-in refuses to start. Added `/healthz`, `Dockerfile`, `railway.json`, `.env.example` (names only), and CI (build, tests, Docker build; no deploy).

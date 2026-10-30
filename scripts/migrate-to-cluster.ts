@@ -6,6 +6,7 @@ import { type Aggregate } from '../apps/api/src/repository.js';
 import { photoJobFile } from '../apps/api/src/photo-job-files.js';
 import {
   applyMigration,
+  idKey,
   readMigrationSnapshot,
   snapshotHash,
   validateMigration,
@@ -88,7 +89,7 @@ async function main() {
     validateMigration(source, actual);
     for (const [name, rows] of Object.entries(source))
       for (const row of rows) {
-        const saved = actual[name].find((r) => r._id === row._id);
+        const saved = actual[name].find((r) => idKey(r._id) === idKey(row._id));
         const normalize = (v: unknown) =>
           name === 'workspace_aggregates' ? { ...(v as object), version: 0 } : v;
         if (!saved || snapshotHash(normalize(saved)) !== snapshotHash(normalize(row)))

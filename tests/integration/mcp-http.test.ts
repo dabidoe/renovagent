@@ -6,7 +6,7 @@ import { request } from 'node:http';
 import { MongoClient } from 'mongodb';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
-import { MongoWorkspaceRepository, type Aggregate } from '../../apps/api/src/repository.js';
+import { MongoWorkspaceRepository } from '../../apps/api/src/repository.js';
 import { McpAccessStore } from '../../apps/api/src/mcp-access.js';
 import { createMcpHttpServer } from '../../apps/api/src/mcp-http.js';
 import { startAgentProject } from '../../apps/api/src/agent-projects.js';
@@ -27,10 +27,7 @@ async function withServer(
   await mongo.connect();
   const db = mongo.db(`renovagent_mcp_http_test_${randomUUID().replaceAll('-', '')}`);
   const clients: Client[] = [];
-  const repo = new MongoWorkspaceRepository(
-    db.collection<Aggregate>('workspace_aggregates'),
-    'user:alice',
-  );
+  const repo = MongoWorkspaceRepository.forDb(db, 'user:alice');
   await repo.ensure();
   await repo.forUser('user:bob').ensure();
   const access = new McpAccessStore(db);

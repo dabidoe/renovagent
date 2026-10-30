@@ -388,12 +388,12 @@ export class PhotoWorker {
         const b = JSON.parse(text);
         return { ...b, bytes: Buffer.from(b.data, 'base64') };
       }
-      const uploaded = job.uploads[url] && doc.blobs.find((b) => b.id === job.uploads[url]);
+      const uploaded = job.uploads[url] ? await this.repo.readBlob(job.uploads[url]) : null;
       const image = uploaded
         ? {
-            bytes: Buffer.from(uploaded.data, 'base64'),
+            bytes: uploaded.bytes,
             extension: uploaded.mediaType.split('/')[1],
-            sha256: createHash('sha256').update(Buffer.from(uploaded.data, 'base64')).digest('hex'),
+            sha256: createHash('sha256').update(uploaded.bytes).digest('hex'),
           }
         : await imageBytes(url);
       const dims = imageSize(image.bytes);

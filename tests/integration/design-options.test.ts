@@ -5,7 +5,7 @@ import { deflateSync } from 'node:zlib';
 import { MongoClient } from 'mongodb';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
-import { MongoWorkspaceRepository, OWNER, type Aggregate } from '../../apps/api/src/repository.js';
+import { MongoWorkspaceRepository, OWNER } from '../../apps/api/src/repository.js';
 import { createWorkspaceMcpServer } from '../../apps/api/src/mcp.js';
 import { CatalogStore } from '../../apps/api/src/catalog.js';
 import { DesignImageStore } from '../../apps/api/src/design-images.js';
@@ -65,7 +65,7 @@ async function withSetup(
   await client.connect();
   const db = client.db(`renovagent_design_test_${randomUUID().replaceAll('-', '')}`);
   try {
-    const repo = new MongoWorkspaceRepository(db.collection<Aggregate>('workspace_aggregates'));
+    const repo = MongoWorkspaceRepository.forDb(db);
     await repo.collection.insertOne({
       _id: OWNER,
       version: 0,
@@ -270,7 +270,7 @@ test('commit failures never loop paid preview generation', { skip: !uri }, () =>
         return super.update(apply) as Promise<T>;
       }
     }
-    const broken = new BrokenStorage(repo.collection);
+    const broken = new BrokenStorage(repo.collection, repo.blobStore);
     const provider = new FakeProvider();
     const worker = new DesignPreviewWorker(broken, images, provider);
     await worker.tick();
@@ -280,7 +280,7 @@ test('commit failures never loop paid preview generation', { skip: !uri }, () =>
     assert.ok((await options(repo)).options.every((o) => o.preview.status === 'pending'));
 
     // If only the result commit fails, the failure itself is recorded.
-    const once = new BrokenStorage(repo.collection);
+    const once = new BrokenStorage(repo.collection, repo.blobStore);
     once.failing = 1;
     const second = new FakeProvider();
     await new DesignPreviewWorker(once, images, second).tick();

@@ -79,8 +79,11 @@ export async function createWorkspaceServer(
   }
   if (!accountMode) await workerFor(repository);
   else {
-    for (const id of await repository.collection.distinct('_id'))
+    for (const id of await repository.collection.distinct('_id')) {
+      // Moves any attachments still embedded in the owner's document.
+      await repository.forUser(id).moveEmbeddedBlobs();
       await workerFor(repository.forUser(id));
+    }
   }
   const blobSchema = z
     .object({
@@ -509,7 +512,7 @@ export async function createWorkspaceServer(
       }
       if (path === '/backup' && req.method === 'GET') {
         const doc = await activeRepo.read();
-        json(200, { workspace: doc.workspace, blobs: doc.blobs });
+        json(200, { workspace: doc.workspace, blobs: await activeRepo.listBlobs() });
         return;
       }
       const asset = path.match(/^\/photo-assets\/([a-f0-9]{64})$/);
@@ -557,14 +560,14 @@ export async function createWorkspaceServer(
           doc = await activeRepo.read();
         if (!Object.values(doc.workspace.evidence).some((e) => e.source.attachment?.blobId === id))
           throw new DomainError('NOT_FOUND', 'Attachment not found');
-        const blob = doc.blobs.find((b) => b.id === id);
+        const blob = await activeRepo.readBlob(id);
         if (!blob) throw new DomainError('NOT_FOUND', 'Attachment not found');
         res.writeHead(200, {
           'Content-Type': blob.mediaType,
           'Content-Security-Policy': "sandbox; default-src 'none'",
           'Content-Disposition': 'inline',
         });
-        res.end(Buffer.from(blob.data, 'base64'));
+        res.end(blob.bytes);
         return;
       }
       if (path === '/photo-jobs' && req.method === 'GET') {

@@ -2,7 +2,7 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { MongoClient } from 'mongodb';
 import { McpAccessStore } from '../apps/api/src/mcp-access.js';
-import { MongoWorkspaceRepository, type Aggregate } from '../apps/api/src/repository.js';
+import { MongoWorkspaceRepository } from '../apps/api/src/repository.js';
 import { workspaceMongoConfig } from '../apps/api/src/database-config.js';
 
 function argument(name: string) {
@@ -26,10 +26,7 @@ async function main() {
     }
     const ownerId = argument('--owner');
     if (!ownerId) throw new Error('Specify --owner <workspace-owner-id>');
-    const repository = new MongoWorkspaceRepository(
-      client.db().collection<Aggregate>('workspace_aggregates'),
-      ownerId,
-    );
+    const repository = MongoWorkspaceRepository.forDb(client.db(), ownerId);
     await repository.read();
     if (process.argv.includes('--list')) {
       const grants = await store.grants.find({ ownerId }).toArray();
