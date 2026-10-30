@@ -76,6 +76,12 @@ test('the studio builds from the plan file cited by the current facts', async ()
   assert.ok(source.evidenceId);
   assert.deepEqual(source.warnings, []);
 
+  // A cited plan whose bytes are missing is an error, never a silent fallback.
+  await assert.rejects(
+    loadRoomSource(await repo.read(), id, async () => undefined),
+    /bath.json is not available from storage/,
+  );
+
   // A later tape measurement that did not come from the plan flags it.
   await new Promise((r) => setTimeout(r, 5));
   await c.recordRoomDimensions(id, {

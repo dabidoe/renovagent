@@ -288,16 +288,22 @@ export function mountRoomScene(
   controls.maxPolarAngle = Math.PI * 0.49;
   controls.update();
 
-  let selected: THREE.Mesh | null = null;
+  // The selected mesh gets a highlighted copy of its material; deselecting
+  // restores the shared one, so look changes reach every surface.
+  let selected: { mesh: THREE.Mesh; shared: THREE.Material } | null = null;
   const highlight = (mesh: THREE.Mesh | null) => {
-    if (selected) (selected.material as THREE.MeshStandardMaterial).emissive?.set('#000000');
-    selected = mesh;
-    if (mesh) {
-      // Give the selected mesh its own material so the highlight is per surface.
-      mesh.material = (mesh.material as THREE.MeshStandardMaterial).clone();
-      (mesh.material as THREE.MeshStandardMaterial).emissive.set('#1d4ed8');
-      (mesh.material as THREE.MeshStandardMaterial).emissiveIntensity = 0.35;
+    if (selected) {
+      (selected.mesh.material as THREE.Material).dispose();
+      selected.mesh.material = selected.shared;
     }
+    selected = null;
+    if (!mesh) return;
+    const shared = mesh.material as THREE.MeshStandardMaterial;
+    const lit = shared.clone();
+    lit.emissive.set('#1d4ed8');
+    lit.emissiveIntensity = 0.35;
+    mesh.material = lit;
+    selected = { mesh, shared };
   };
   const ray = new THREE.Raycaster();
   let down: [number, number] | null = null;
@@ -342,6 +348,8 @@ export function mountRoomScene(
       highlight(pickable.find((m) => m.userData.surfaceId === surfaceId) ?? null);
     },
     setLook(next) {
+      const reselect = selected?.mesh ?? null;
+      highlight(null);
       wallMat.color.set(wallSwatch(next.wallColor).hex);
       const tex = finishTexture(next.floorFinish);
       tex.repeat.copy(floorTex.repeat);
@@ -349,6 +357,7 @@ export function mountRoomScene(
       floorMat.map = tex;
       floorMat.needsUpdate = true;
       room.userData.renovagent.look = next;
+      highlight(reselect);
     },
     async exportGlb() {
       const result = await new GLTFExporter().parseAsync(room, { binary: true, onlyVisible: true });

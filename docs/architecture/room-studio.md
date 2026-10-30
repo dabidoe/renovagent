@@ -25,9 +25,11 @@ orientation; the Blender top-down render and the SVG of the same scan match.
 
 - No invented physical values. Missing thickness or height stays null in the
   model. Views need something to draw, so they use display stand-ins (0.08 m,
-  2.4 m) drawn in a distinct style (dashed/orange in the drawing, translucent
-  orange in 3D and Blender) and flagged `displayOnly` in GLB extras. Stand-ins
-  never appear in dimension labels, the drawing or area data.
+  2.4 m). In the drawing, unknown thickness is dashed and unknown height is
+  orange. In 3D and Blender, walls with unknown height (or curved walls) are
+  translucent orange; unknown thickness is not styled there and is recorded as
+  `thicknessMeasured: false` / `displayOnly` in GLB extras. Stand-ins never
+  appear in dimension labels, the drawing or area data.
 - Geometry and quantities stay separate. Surface panels show measured geometry
   (labelled as such) and, separately, scope quantities from the draft, which
   reads recorded facts. Requirement quantities are package totals; nothing is

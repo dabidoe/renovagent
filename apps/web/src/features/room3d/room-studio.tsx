@@ -144,8 +144,14 @@ export function RoomStudio({
   const [selectedId, setSelectedId] = useState<string | null>(null);
   // Wall dimensions default on for one room, off for busy multi-room plans.
   const [showDims, setShowDims] = useState<boolean | null>(null);
-  const proposed = proposedLook(state, projectId);
+  const proposedNow = proposedLook(state, projectId);
   const [showProposed, setShowProposed] = useState(true);
+  // Stable look objects: a new object each render would rebuild the floor texture.
+  const proposed = useMemo(
+    () => proposedNow,
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [proposedNow?.wallColor, proposedNow?.floorFinish, proposedNow?.label],
+  );
   const look = showProposed && proposed ? proposed : EXISTING;
   const host = useRef<HTMLDivElement>(null);
   const scene = useRef<RoomScene | null>(null);
@@ -171,6 +177,9 @@ export function RoomStudio({
   const plan = ['builder', 'mid', 'high']
     .map((t) => state.artifacts[`${projectId}:purchase-plan:${t}`]?.at(-1))
     .find(Boolean);
+  // Every command re-reads the workspace into new objects, so key on revisions:
+  // unrelated changes (a chat draft, a view switch) must not rebuild the scene.
+  const scopeKey = `${draft?.revision ?? 0}:${plan?.id ?? ''}@${plan?.revision ?? 0}`;
   const surfaces = useMemo(
     () =>
       source
@@ -180,7 +189,8 @@ export function RoomStudio({
             plan?.payload.kind === 'purchase-plan' ? (plan.payload as PurchasePlanPayload) : null,
           )
         : [],
-    [source, draft, plan],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [source, scopeKey],
   );
   const title = state.projects[projectId]?.name ?? 'Room';
   const svg = useMemo(

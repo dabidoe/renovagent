@@ -130,19 +130,20 @@ export function floorPlanSvg(
   const title = `<g class="title-block"><text x="12" y="${ty}" class="title">${esc(options.title)}</text><text x="12" y="${ty + 18}">${esc(options.sourceLabel)} · ${esc(heightNote)}${legend.length ? ` · ${esc(legend.join('; '))}` : ''}</text><text x="12" y="${ty + 36}">Measured, not verified. Not for construction. Door swings and wiring not recorded.</text><g transform="translate(${W - 12 - PX_PER_M} ${ty + 30})"><line x1="0" y1="0" x2="${PX_PER_M}" y2="0"/><text x="${PX_PER_M / 2}" y="-6" text-anchor="middle">1 m</text></g></g>`;
 
   const style = `<style>
-.floor{fill:#f3efe6;stroke:none}
-.wall{stroke:#1f2933;stroke-linecap:square}
-.wall.thickness-unknown{stroke-dasharray:6 3}
-.wall.height-unknown{stroke:#c2410c}
-.opening-gap{stroke:#fff}
-line.window{stroke:#2563eb;stroke-width:3}
-.door-jamb{stroke:#1f2933;stroke-width:1;stroke-dasharray:2 2}
-.opening-label,.fixture text,.dimension text,.title-block text{font:11px ui-sans-serif,system-ui,sans-serif;fill:#1f2933}
-.opening-label,.fixture text,.dimension text{text-anchor:middle}
-.fixture rect{fill:#e5e7eb;stroke:#6b7280;stroke-width:1}
-.dimension line,.title-block line{stroke:#475569;stroke-width:1}
-.dimension .tick{stroke-dasharray:2 2}
-.title-block .title{font-weight:600;font-size:13px}
+.ra-plan .floor{fill:#f3efe6;stroke:none}
+.ra-plan .wall{stroke:#1f2933;stroke-linecap:square}
+.ra-plan .wall.thickness-unknown{stroke-dasharray:6 3}
+.ra-plan .wall.height-unknown{stroke:#c2410c}
+.ra-plan .opening-gap{stroke:#fff}
+.ra-plan line.window{stroke:#2563eb;stroke-width:3}
+.ra-plan .door-jamb{stroke:#1f2933;stroke-width:1;stroke-dasharray:2 2}
+.ra-plan .opening-label,.ra-plan .fixture text,.ra-plan .dimension text,.ra-plan .title-block text{font:11px ui-sans-serif,system-ui,sans-serif;fill:#1f2933}
+.ra-plan .opening-label,.ra-plan .fixture text,.ra-plan .dimension text{text-anchor:middle}
+.ra-plan .fixture rect{fill:#e5e7eb;stroke:#6b7280;stroke-width:1}
+.ra-plan .dimension line,.ra-plan .title-block line{stroke:#475569;stroke-width:1}
+.ra-plan .dimension .tick{stroke-dasharray:2 2}
+.ra-plan .title-block .title{font-weight:600;font-size:13px}
 </style>`;
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" data-units="m" data-scale="${PX_PER_M}px-per-m"><rect width="100%" height="100%" fill="#fff"/>${style}<g id="layer-floor">${floor}</g><g id="layer-walls">${walls}</g><g id="layer-openings">${openings}</g><g id="layer-fixtures">${fixtures}</g><g id="layer-dimensions">${dims}</g><g id="layer-electrical" data-status="not-recorded"></g><g id="layer-title">${title}</g></svg>`;
+  // Rules are scoped to .ra-plan: inline SVG styles apply to the whole page.
+  return `<svg xmlns="http://www.w3.org/2000/svg" class="ra-plan" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" data-units="m" data-scale="${PX_PER_M}px-per-m"><rect width="100%" height="100%" fill="#fff"/>${style}<g id="layer-floor">${floor}</g><g id="layer-walls">${walls}</g><g id="layer-openings">${openings}</g><g id="layer-fixtures">${fixtures}</g><g id="layer-dimensions">${dims}</g><g id="layer-electrical" data-status="not-recorded"></g><g id="layer-title">${title}</g></svg>`;
 }

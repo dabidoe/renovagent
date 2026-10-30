@@ -87,6 +87,12 @@ test('the plan drawing keeps east on the right and west on the left (not mirrore
   assert.match(svg, /id="layer-electrical" data-status="not-recorded"/);
   assert.match(svg, /Ceiling 8&apos; 2½&quot; \(2.50 m\)/);
   assert.match(svg, /Not for construction/);
+  // Inline SVG styles apply page-wide, so every selector is scoped to the drawing.
+  const css = svg.match(/<style>([\s\S]*?)<\/style>/)![1];
+  const selectors = [...css.matchAll(/([^{}]+)\{/g)].flatMap((m) => m[1].split(','));
+  assert.ok(selectors.length > 10);
+  for (const sel of selectors) assert.match(sel.trim(), /^\.ra-plan /);
+  assert.match(svg, /<svg [^>]*class="ra-plan"/);
 });
 
 // RoomPlan capture: metres, column-major transforms, flat floor surface.

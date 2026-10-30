@@ -53,6 +53,8 @@ export async function loadRoomSource(
           : [],
       };
     }
+    // Never fall back silently when a saved plan cannot be read.
+    throw new Error(`the saved file ${attachment.name} is not available from storage`);
   }
   const [length, width, height] = ['length', 'width', 'height'].map((d) =>
     metres(roomDimensionFact(state, projectId, d as (typeof dims)[number])),
