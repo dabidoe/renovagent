@@ -20,10 +20,10 @@ Renovagent carries a persistent property project through investigation, options,
 | Connected backend | Loopback API + selectable local/cluster Mongo: per-owner workspaces, real in-app Muse photo jobs, sessions, catalog, submissions; shared server-side database selection | Public HTTPS hosting and production hardening remain open |
 | Accounts | Optional Google/Meta sign-in with per-owner workspaces, explicit local adoption, sign-in web surface | No passwords; live round-trips need the owner's OAuth clients |
 | Commerce | Shared catalog with duplicate-proof imports, tiered purchase plans, contractor accept/decline, checkout reviews, price submissions with review quarantine | Seed prices are labeled demo examples; affiliate feeds need the owner's accounts; no live inventory, tax, or checkout |
-| Agents | MCP adapter with 11 tools over stdio and authenticated Streamable HTTP: owner-scoped reads/proposals, project creation, recipe scope/materials drafts, file discovery, catalog recall and checkout assembly | Consumer Muse Mac discovered ten tools, read the migrated projects, created a separate authorized QA project and reread its brief over temporary HTTPS; stable hosting remains open |
+| Agents | MCP adapter with 14 tools over stdio and authenticated Streamable HTTP: owner-scoped reads/proposals, project creation, recipe scope/materials drafts, same-room design options, file discovery, catalog recall and checkout assembly | Consumer Muse Mac discovered ten tools, read the migrated projects, created a separate authorized QA project and reread its brief over temporary HTTPS; stable hosting remains open |
 | Technical references | Versioned adoption/scope/permit source register, applicability checks and visible coverage gaps | Exact 2018 clearances and residential exhaust criteria retrieved; local clearance mapping, complete electrical provisions, trade design and qualified review remain blocked |
 | Planning math | Shared deterministic geometry, quantities, money/tier/checkout math; single command authority for all writes | Rectangular playbooks; no inferred routes, no reviewed compliance guidance |
-| Verification | 174 pass (15 legacy + 159 TypeScript, 28 Mongo cases skip); explicit real-Mongo suite 31/31; strict types, boundaries, formatting, builds | Browser QA covers labeled projects; actual consumer-Muse reads and separate QA brief write/read verified; no claim of general model reliability, technical compliance, or full lifecycle coverage |
+| Verification | 181 pass (15 legacy + 166 TypeScript, 31 Mongo cases skip); explicit real-Mongo suite 34/34; strict types, boundaries, formatting, builds | Browser QA covers labeled projects; actual consumer-Muse reads and separate QA brief write/read verified; no claim of general model reliability, technical compliance, or full lifecycle coverage |
 
 ## Delivery tracking
 
@@ -39,6 +39,14 @@ Renovagent carries a persistent property project through investigation, options,
 | 7 — Second project playbook | Not implemented |
 
 Use each slice's acceptance criteria before changing its status. A mock screen, canned reply, or HTTP 200 does not establish workflow completion.
+
+### Same-room design options with costs and previews — October 29, 2026
+
+- One room photo plus a vague request becomes three living-room options (fresh walls keeping the carpet; light-oak hardwood + walls; wood-look vinyl plank + walls), each with its own recipe scope, a builder-to-high materials range priced at view time, coverage ("priced N of M"), its biggest unknown, and a labeled generated concept preview. Validated commands only: `BuildDesignOptions`, `ReviseDesignOptions` ("make it blue", preference, retry) and server-only `RecordDesignPreview`.
+- Previews: Muse `image_generation` edits the owner's photo in an isolated workspace (contributor mode off); a durable pending state is picked up by the API worker; stale results are discarded; provenance records source hash, prompt, provider, reported model and run. Images live in an owner-scoped checksum-verified collection, not the workspace document. The shipped Muse provider, run from the repository root on the owner's living-room photo, changed only floor and walls and kept camera, stairs and furniture (29 s); paid calls are bounded and commit failures never loop. Muse still reports a `-contributor` model with `--contributor-mode off`.
+- Selecting an option drafts its full scope with its colors and proposes its BOM and tier plans in the same update; it is a proposal, not a decision. New measurements rebuild costs while keeping previews and the preference. MCP: `build_design_options`, `revise_design_option`, `get_design_options` (14 tools). Website viewer shows the original photo, each preview and costs, with "I like this one" and a wall-color box.
+- New `living-room-refresh` v1 recipe with fetched This Old House and Xulon installation sources; overage unset; two coats stated as a recipe selection. Demo living-room catalog (15 fictional records); `seed:catalog` now imports both fixtures but has not been run against Atlas. Details: [design options](docs/architecture/design-options.md).
+- Verified: `npm test` 15 legacy + 166 TypeScript passed (31 Mongo cases skipped), `npm run test:connected` 34/34, build/types/boundaries, formatting. Limits: no website upload button (demo script uploads), loopback-only image paths, previews only while the API runs with a Muse key, macOS image conversion.
 
 ### Scope and materials draft from casual intent — October 29, 2026
 

@@ -8,3 +8,6 @@ server/.env
 .local/
 pages-dist/
 atlas-credentials.env
+
+# Owner photos, floor plans and design mockups (private; not for the public repo)
+docs/pics/

@@ -111,6 +111,37 @@ function draftAndPrice(
     ...payload,
     expectedDraftRevision: state.artifacts[draftId]?.at(-1)?.revision ?? 0,
   });
+  return priceCurrentDraft(state, projectId, context, catalog);
+}
+
+// Propose the BOM for the current scope draft's priceable requirements and
+// build tier plans from it, each depending on its exact input revision. Shared
+// by draft_scope and design-option selection.
+export function priceCurrentDraft(
+  initial: Workspace,
+  projectId: string,
+  context: CommandContext,
+  catalog: {
+    commandId: (step: string) => string;
+    products: PricedOffer['product'][];
+    priced: PricedOffer[];
+  },
+): Workspace {
+  let state = initial;
+  const apply = (step: string, type: Command['type'], body: unknown) => {
+    state = handleCommand(
+      state,
+      {
+        commandId: catalog.commandId(step),
+        projectId,
+        baseRevision: state.projects[projectId].revision,
+        type,
+        payload: body,
+      } as Command,
+      context,
+    ).state;
+  };
+  const draftId = scopeDraftId(projectId);
   const draft = state.artifacts[draftId].at(-1)!;
   const { bom } = bomFromScopeDraft(draft.payload as ScopeDraft, catalog.products);
   if (!bom) return state;

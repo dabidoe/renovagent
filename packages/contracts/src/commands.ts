@@ -7,6 +7,11 @@ import { valueSchema, assertionSchema, evidenceInputSchema } from './facts.js';
 import { workKindSchema, viewSchema, photoReplySchema } from './workflow.js';
 import { artifactPayloadSchema } from './artifacts.js';
 import { draftScopePayloadSchema } from './scope-draft.js';
+import {
+  buildDesignOptionsPayloadSchema,
+  recordDesignPreviewPayloadSchema,
+  reviseDesignOptionsPayloadSchema,
+} from './design-options.js';
 const envelope = {
   commandId: id,
   projectId: id,
@@ -73,6 +78,27 @@ export const commandSchema = z.discriminatedUnion('type', [
     .strict(),
   z
     .object({ ...envelope, type: z.literal('DraftScope'), payload: draftScopePayloadSchema })
+    .strict(),
+  z
+    .object({
+      ...envelope,
+      type: z.literal('BuildDesignOptions'),
+      payload: buildDesignOptionsPayloadSchema,
+    })
+    .strict(),
+  z
+    .object({
+      ...envelope,
+      type: z.literal('ReviseDesignOptions'),
+      payload: reviseDesignOptionsPayloadSchema,
+    })
+    .strict(),
+  z
+    .object({
+      ...envelope,
+      type: z.literal('RecordDesignPreview'),
+      payload: recordDesignPreviewPayloadSchema,
+    })
     .strict(),
   z
     .object({

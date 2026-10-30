@@ -6,6 +6,7 @@ import { researchForArtifact, questionsForReviewedPhoto } from '@renovagent/core
 import { PlanningView } from '../technical/planning-view.js';
 import { BomView, CheckoutReviewView, PurchasePlanView } from '../commerce/commerce-views.js';
 import { ScopeDraftView } from '../scope/scope-draft-view.js';
+import { DesignOptionsView } from '../design/design-options-view.js';
 import { type Workspace, type Artifact } from '@renovagent/contracts';
 export const artifactTitles: Record<Artifact['payload']['kind'], string> = {
   'conversation-plan': 'Conversation planning proposal',
@@ -35,6 +36,7 @@ export const artifactTitles: Record<Artifact['payload']['kind'], string> = {
   'purchase-plan': 'Purchase plan',
   'checkout-review': 'Checkout review',
   'scope-draft': 'Scope & materials draft',
+  'design-options': 'Design options',
 };
 export function artifactTitle(artifact: Artifact) {
   if (artifact.payload.kind === 'project-brief' && artifact.id.endsWith(':agent-brief'))
@@ -462,6 +464,13 @@ export function ArtifactView({
       return <CheckoutReviewView review={p} />;
     case 'scope-draft':
       return <ScopeDraftView draft={p} />;
+    case 'design-options':
+      return (
+        <DesignOptionsView
+          artifact={artifact as Artifact & { payload: typeof p }}
+          controller={controller}
+        />
+      );
     default: {
       // Every artifact kind needs a renderer; a new kind fails the typecheck here.
       const unhandled: never = p;

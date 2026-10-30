@@ -16,6 +16,15 @@ export const scopeInputKeySchema = z.enum([
 ]);
 export type ScopeInputKey = z.infer<typeof scopeInputKeySchema>;
 
+// Design direction carried from a chosen design option into its scope.
+export const designDirectionSchema = z
+  .object({
+    wallColor: z.string().trim().min(1).max(80),
+    floorFinish: z.string().trim().min(1).max(80),
+  })
+  .strict();
+export type DesignDirection = z.infer<typeof designDirectionSchema>;
+
 export const scopeInputSchema = z
   .object({
     key: scopeInputKeySchema,
@@ -84,6 +93,7 @@ export const scopeDraftSchema = z
       .object({ id: z.string().min(1).max(80), version: z.number().int().positive() })
       .strict(),
     request: z.string().min(1).max(2000),
+    direction: designDirectionSchema.optional(),
     packages: z
       .array(
         z
@@ -134,6 +144,7 @@ export const draftScopePayloadSchema = z
           .strict(),
       )
       .max(10),
+    direction: designDirectionSchema.optional(),
     expectedDraftRevision: z.number().int().nonnegative(),
   })
   .strict();

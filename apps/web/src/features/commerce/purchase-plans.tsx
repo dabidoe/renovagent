@@ -84,16 +84,24 @@ export function PurchasePlans({
           <button onClick={() => setError('')}>Dismiss</button>
         </div>
       )}
-      {!bomPayload && scopeDraft?.payload.kind === 'scope-draft' && (
-        <div className="prompt-empty">
-          <h3>Nothing in the scope draft is ready to price yet.</h3>
-          <p>
-            The draft lists {scopeDraft.payload.requirements.length} requirements. Catalog pricing
-            starts once a requirement has its needed measurements, such as the vanity width. Answer
-            the draft&apos;s next questions through your agent to continue.
-          </p>
-        </div>
-      )}
+      {!bomPayload &&
+        scopeDraft?.payload.kind === 'scope-draft' &&
+        (() => {
+          const requirements = scopeDraft.payload.requirements;
+          const ready = requirements.filter((r) => r.catalog && r.status === 'quantified').length;
+          return (
+            <div className="prompt-empty">
+              <h3>
+                {ready ? 'Not priced yet.' : 'Nothing in the scope draft is ready to price yet.'}
+              </h3>
+              <p>
+                {ready
+                  ? `${ready} of ${requirements.length} requirements are quantified for catalog pricing, but the catalog has no matching products for them yet.`
+                  : `The draft lists ${requirements.length} requirements. Catalog pricing starts once a requirement has its needed measurements. Answer the draft's next questions through your agent to continue.`}
+              </p>
+            </div>
+          );
+        })()}
       {!bomPayload && !scopeDraft && (
         <div className="prompt-empty">
           <h3>Start from a measured template.</h3>

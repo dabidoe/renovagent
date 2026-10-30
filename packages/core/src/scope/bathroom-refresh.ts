@@ -1,4 +1,15 @@
 import type { ScopeDraft, ScopeInputKey, ScopeRequirement } from '@renovagent/contracts';
+import {
+  count,
+  floorArea,
+  missing,
+  perimeter,
+  req,
+  wallArea,
+  type RecipeValues,
+} from './recipe-kit.js';
+
+export type { RecipeValues } from './recipe-kit.js';
 
 // Versioned reference recipe for a bathroom refresh. It lists the work
 // packages, the easily forgotten supporting parts and the quantity basis of
@@ -6,8 +17,6 @@ import type { ScopeDraft, ScopeInputKey, ScopeRequirement } from '@renovagent/co
 // leaves the dependent quantity null, and product-specific rates (coverage,
 // airflow) wait for a selected product's published data.
 export const bathroomRefreshRecipe = { id: 'bathroom-refresh', version: 1 } as const;
-
-export type RecipeValues = Partial<Record<ScopeInputKey, number>>;
 
 export const bathroomPackages = [
   {
@@ -95,93 +104,6 @@ export const bathroomSources: ScopeDraft['sources'] = [
       'A search for overage guidance returned figures from about 5% to 35% depending on layout, tile size and shape; no manufacturer document was found and no page was opened. Used only to show that no single value is supportable without the selected tile and layout.',
   },
 ];
-
-type Need = ScopeInputKey[];
-type Quantity = Pick<ScopeRequirement, 'quantity' | 'quantityBasis' | 'blockedBy'>;
-
-const round = (value: number, places = 1) => Math.round(value * 10 ** places) / 10 ** places;
-
-function missing(values: RecipeValues, keys: Need): Need {
-  return keys.filter((key) => values[key] === undefined);
-}
-
-function count(amount: number, basis: string): Quantity {
-  return { quantity: amount, quantityBasis: basis, blockedBy: [] };
-}
-
-function floorArea(v: RecipeValues): Quantity {
-  const blocked = missing(v, ['floorLengthFt', 'floorWidthFt']);
-  if (blocked.length)
-    return {
-      quantity: null,
-      quantityBasis: 'Floor length × width; dimensions not yet provided.',
-      blockedBy: blocked,
-    };
-  return {
-    quantity: round(v.floorLengthFt! * v.floorWidthFt!),
-    quantityBasis: `${v.floorLengthFt} ft × ${v.floorWidthFt} ft floor; fixtures and cabinet footprint not deducted.`,
-    blockedBy: [],
-  };
-}
-
-function perimeter(v: RecipeValues): Quantity {
-  const blocked = missing(v, ['floorLengthFt', 'floorWidthFt']);
-  if (blocked.length)
-    return {
-      quantity: null,
-      quantityBasis: '2 × (length + width); dimensions not yet provided.',
-      blockedBy: blocked,
-    };
-  return {
-    quantity: round(2 * (v.floorLengthFt! + v.floorWidthFt!)),
-    quantityBasis: `2 × (${v.floorLengthFt} + ${v.floorWidthFt}) ft; door openings and the vanity run not deducted.`,
-    blockedBy: [],
-  };
-}
-
-function wallArea(v: RecipeValues): Quantity {
-  const blocked = missing(v, ['floorLengthFt', 'floorWidthFt', 'ceilingHeightFt']);
-  if (blocked.length)
-    return {
-      quantity: null,
-      quantityBasis: 'Room perimeter × ceiling height; dimensions not yet provided.',
-      blockedBy: blocked,
-    };
-  const gross = 2 * (v.floorLengthFt! + v.floorWidthFt!) * v.ceilingHeightFt!;
-  return {
-    quantity: round(gross),
-    quantityBasis: `Perimeter ${round(2 * (v.floorLengthFt! + v.floorWidthFt!))} ft × ${v.ceilingHeightFt} ft height, gross; doors, windows, tile and the vanity backsplash not deducted.`,
-    blockedBy: [],
-  };
-}
-
-function req(
-  packageId: string,
-  id: string,
-  fields: Omit<ScopeRequirement, 'id' | 'packageId' | 'status' | 'codeTopics' | keyof Quantity> & {
-    codeTopics?: string[];
-  },
-  quantity: Quantity,
-  status?: ScopeRequirement['status'],
-): ScopeRequirement {
-  const derived: ScopeRequirement['status'] =
-    status ??
-    (fields.kind === 'conditional'
-      ? 'conditional'
-      : fields.kind === 'spec-dependent'
-        ? 'needs-product-spec'
-        : quantity.blockedBy.length || quantity.quantity === null
-          ? 'needs-input'
-          : 'quantified');
-  return {
-    id: `${packageId}:${id}`,
-    packageId,
-    ...fields,
-    codeTopics: fields.codeTopics ?? [],
-    ...quantity,
-    status: derived,
-  };
-}
 
 const RECIPE = ['recipe-bathroom-refresh-1'];
 

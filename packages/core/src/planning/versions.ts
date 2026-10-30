@@ -9,7 +9,7 @@ export function technicalVersionCurrent(artifact: Artifact): boolean {
   if (p.kind === 'project-options' || p.kind === 'project-work-plan')
     return p.recipe === scopeRecipeVersion;
   if (p.kind === 'planning-sources') return p.version === sourceSetVersion;
-  if (p.kind === 'scope-draft') return scopeRecipeCurrent(p.recipe);
+  if (p.kind === 'scope-draft' || p.kind === 'design-options') return scopeRecipeCurrent(p.recipe);
   if (p.kind === 'gated-plan') return p.playbook === halfBathPlaybookVersion;
   if (p.kind === 'code-assessment')
     return (

@@ -5,9 +5,14 @@ import { MongoWorkspaceRepository } from './repository.js';
 import { CatalogStore } from './catalog.js';
 import { McpAccessStore } from './mcp-access.js';
 import { createWorkspaceMcpServer } from './mcp.js';
+import { DesignImageStore } from './design-images.js';
 import { workspaceMongoConfig } from './database-config.js';
 
-export type McpHttpOptions = { publicUrl?: string; requestsPerMinute?: number };
+export type McpHttpOptions = {
+  publicUrl?: string;
+  requestsPerMinute?: number;
+  images?: DesignImageStore;
+};
 
 export function mcpPublicUrl(value: string): URL {
   const url = new URL(value);
@@ -122,6 +127,7 @@ export function createMcpHttpServer(
       const mcp = createWorkspaceMcpServer(ownerRepository, catalog, {
         access: grant.access,
         transport: 'streamable-http',
+        ...(options.images ? { images: options.images } : {}),
       });
       const transport = new StreamableHTTPServerTransport({
         sessionIdGenerator: undefined,
@@ -173,6 +179,7 @@ async function main() {
     await catalog.ensureIndexes();
     const server = createMcpHttpServer(repository, access, catalog, {
       publicUrl: process.env.RENOVAGENT_MCP_PUBLIC_URL,
+      images: new DesignImageStore(client.db()),
     });
     await new Promise<void>((resolve, reject) => {
       server.once('error', reject);

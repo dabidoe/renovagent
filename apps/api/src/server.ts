@@ -18,6 +18,18 @@ import { configuredMuseKey } from '../../../scripts/muse-provider.js';
 import { CatalogStore } from './catalog.js';
 import { workspaceMongoConfig } from './database-config.js';
 import { PhotoJobFiles } from './photo-job-files.js';
+import { DesignImageStore } from './design-images.js';
+import {
+  DesignPreviewWorker,
+  MusePreviewProvider,
+  type PreviewProvider,
+} from './design-previews.js';
+import {
+  buildDesignOptions,
+  reviseDesignOption,
+  summarizeDesignOptions,
+  uploadDesignPhoto,
+} from './design-service.js';
 export async function createWorkspaceServer(
   repository: MongoWorkspaceRepository,
   token: string,
@@ -25,8 +37,20 @@ export async function createWorkspaceServer(
   accounts?: AccountService,
   catalog?: CatalogStore,
   photoFiles?: PhotoJobFiles,
+  design?: { images: DesignImageStore; provider?: PreviewProvider },
 ) {
   const accountMode = Boolean(accounts);
+  const designWorkers = new Map<string, DesignPreviewWorker>();
+  const designWorkerFor = (repo: MongoWorkspaceRepository) => {
+    if (!design?.provider) return undefined;
+    let worker = designWorkers.get(repo.ownerId);
+    if (!worker) {
+      worker = new DesignPreviewWorker(repo, design.images, design.provider);
+      designWorkers.set(repo.ownerId, worker);
+    }
+    return worker;
+  };
+  if (!accountMode) designWorkerFor(repository);
   const workers = new Map<string, PhotoWorker>();
   async function workerFor(repo: MongoWorkspaceRepository) {
     let worker = workers.get(repo.ownerId);
@@ -232,6 +256,107 @@ export async function createWorkspaceServer(
         if (!expected || req.headers['x-renovagent-operator'] !== expected)
           throw new DomainError('FORBIDDEN', 'Catalog curation needs the operator token');
       };
+      const designImage = path.match(/^\/design-images\/([a-f0-9]{64})$/);
+      if (designImage && req.method === 'GET') {
+        // Owner-scoped store: only this owner's uploads and previews resolve.
+        const found = await design?.images.get(activeRepo.ownerId, designImage[1]);
+        if (!found) throw new DomainError('NOT_FOUND', 'Image is outside this workspace');
+        res.writeHead(200, { 'Content-Type': found.mediaType });
+        res.end(Buffer.from(found.bytes));
+        return;
+      }
+      if (path.startsWith('/design/')) {
+        if (!design) throw new DomainError('VALIDATION', 'Design options are unavailable');
+        if (path === '/design/photo' && req.method === 'POST') {
+          const input = z
+            .object({
+              name: z.string().trim().min(1).max(200),
+              label: z.string().trim().min(1).max(200),
+              permission: z.string().trim().min(1).max(300),
+              data: z
+                .string()
+                .max(20 * 1024 * 1024)
+                .regex(/^[A-Za-z0-9+/]*={0,2}$/),
+            })
+            .strict()
+            .parse(await body(req));
+          json(
+            200,
+            await uploadDesignPhoto(design.images, activeRepo.ownerId, {
+              bytes: new Uint8Array(Buffer.from(input.data, 'base64')),
+              originalName: input.name,
+              label: input.label,
+              permission: input.permission,
+            }),
+          );
+          return;
+        }
+        if (path === '/design/options' && req.method === 'POST') {
+          const input = z
+            .object({
+              requestId: z.string().min(1).max(160),
+              projectId: z.string().min(1).max(160),
+              request: z.string().trim().min(1).max(2000),
+              sourcePhotoSha256: z.string().regex(/^[a-f0-9]{64}$/),
+              reported: z
+                .array(
+                  z
+                    .object({
+                      key: z.enum(['floorLengthFt', 'floorWidthFt', 'ceilingHeightFt']),
+                      amount: z.number().positive().max(10000).nullable(),
+                      unit: z.enum(['ft', 'in', 'm', 'cm']),
+                    })
+                    .strict(),
+                )
+                .max(5)
+                .default([]),
+            })
+            .strict()
+            .parse(await body(req));
+          const result = await buildDesignOptions(activeRepo, design.images, catalog, input);
+          void designWorkerFor(activeRepo)
+            ?.tick()
+            .catch(() => {});
+          json(200, result);
+          return;
+        }
+        if (path === '/design/revise' && req.method === 'POST') {
+          const input = z
+            .object({
+              requestId: z.string().min(1).max(160),
+              projectId: z.string().min(1).max(160),
+              optionId: z.string().min(1).max(160),
+              direction: z
+                .object({
+                  wallColor: z.string().trim().min(1).max(80).optional(),
+                  floorFinish: z.string().trim().min(1).max(80).optional(),
+                })
+                .strict()
+                .optional(),
+              select: z.boolean().optional(),
+              retryPreview: z.boolean().optional(),
+            })
+            .strict()
+            .parse(await body(req));
+          const result = await reviseDesignOption(activeRepo, catalog, input);
+          void designWorkerFor(activeRepo)
+            ?.tick()
+            .catch(() => {});
+          json(200, result);
+          return;
+        }
+        if (path === '/design/summary' && req.method === 'GET') {
+          json(
+            200,
+            await summarizeDesignOptions(
+              (await activeRepo.read()).workspace,
+              url.searchParams.get('projectId') || '',
+              catalog,
+            ),
+          );
+          return;
+        }
+      }
       if (path === '/catalog/offers' && req.method === 'GET') {
         if (!catalog) throw new DomainError('VALIDATION', 'Catalog is unavailable');
         // An absent parameter means no product filter; a present one is an exact list.
@@ -458,6 +583,7 @@ export async function createWorkspaceServer(
   });
   const interval = setInterval(() => {
     for (const worker of workers.values()) void worker.tick().catch(() => {});
+    for (const worker of designWorkers.values()) void worker.tick().catch(() => {});
   }, 3000);
   server.on('close', () => clearInterval(interval));
   return { server, workers };
@@ -491,6 +617,10 @@ if (process.argv[1]?.endsWith('/apps/api/src/server.ts')) {
     accounts,
     catalog,
     new PhotoJobFiles(client.db()),
+    {
+      images: new DesignImageStore(client.db()),
+      ...((await configuredMuseKey()) ? { provider: new MusePreviewProvider() } : {}),
+    },
   );
   server.listen(4000, '127.0.0.1', () =>
     console.log(

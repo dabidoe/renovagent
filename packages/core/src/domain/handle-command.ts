@@ -17,6 +17,7 @@ import {
   validatePurchasePlan,
 } from '../commerce/validate.js';
 import { handleDraftScope } from '../scope/draft-scope.js';
+import { handleDesignOptions } from '../scope/design-options.js';
 import { handleWorkflow, finishRunsForDecision } from './workflow.js';
 import {
   commandSchema,
@@ -216,6 +217,7 @@ export function handleCommand(
     }
     const workflow =
       handleDraftScope(state, command, context) ||
+      handleDesignOptions(state, command, context) ||
       handleScopePlanning(state, command, context) ||
       handlePlanning(state, command, context) ||
       handleWorkflow(state, command, context);
@@ -349,8 +351,10 @@ export function handleCommand(
           'candidate-measurements',
           'candidate-checks',
           'scope-draft',
+          'design-options',
         ].includes(p.content.kind) ||
         p.artifactId === `${project.id}:scope-draft` ||
+        p.artifactId === `${project.id}:design-options` ||
         p.artifactId.startsWith(`${project.id}:inventory-direction:`) ||
         p.artifactId === `${project.id}:photo-inventory` ||
         p.artifactId.startsWith(`${project.id}:survey:`) ||
@@ -364,6 +368,7 @@ export function handleCommand(
             'candidate-measurements',
             'candidate-checks',
             'scope-draft',
+            'design-options',
           ].includes(old.payload.kind))
       )
         throw new DomainError('VALIDATION', 'Use validated project option/plan commands');

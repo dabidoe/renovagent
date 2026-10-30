@@ -1,11 +1,13 @@
 // Operator script: import a curated catalog into Mongo.
 // Usage: node --import tsx scripts/seed-catalog.ts [--uri mongodb://...] [--file catalog.json]
-// Without --file, imports the demo vanity fixture. File imports must match
+// Without --file, imports the demo vanity and living-room fixtures (identical
+// records already present are skipped). File imports must match
 // the CatalogImport shape (products/offers/observations).
 import { readFile } from 'node:fs/promises';
 import { MongoClient } from 'mongodb';
 import { CatalogStore } from '../apps/api/src/catalog.js';
 import { vanityCatalog } from '../fixtures/catalog/vanity-philadelphia.js';
+import { livingRoomCatalog } from '../fixtures/catalog/living-room-philadelphia.js';
 import { workspaceMongoConfig } from '../apps/api/src/database-config.js';
 
 const option = (name: string) => {
@@ -17,7 +19,13 @@ const option = (name: string) => {
 };
 const uri = option('uri') ?? (await workspaceMongoConfig()).uri;
 const file = option('file');
-const batch = file ? JSON.parse(await readFile(file, 'utf8')) : vanityCatalog;
+const batch = file
+  ? JSON.parse(await readFile(file, 'utf8'))
+  : {
+      products: [...vanityCatalog.products, ...livingRoomCatalog.products],
+      offers: [...vanityCatalog.offers, ...livingRoomCatalog.offers],
+      observations: [...vanityCatalog.observations, ...livingRoomCatalog.observations],
+    };
 const client = new MongoClient(uri);
 await client.connect();
 const store = new CatalogStore(client.db());

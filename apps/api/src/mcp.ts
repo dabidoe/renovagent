@@ -21,6 +21,12 @@ import {
 } from '@renovagent/core';
 import { startAgentProject } from './agent-projects.js';
 import { draftProjectScope } from './scope-drafts.js';
+import { DesignImageStore } from './design-images.js';
+import {
+  buildDesignOptions,
+  reviseDesignOption,
+  summarizeDesignOptions,
+} from './design-service.js';
 import type { McpAccess } from './mcp-access.js';
 import { workspaceMongoConfig } from './database-config.js';
 
@@ -42,6 +48,9 @@ const CAPABILITIES = {
     'get_artifact',
     'start_project',
     'draft_scope',
+    'build_design_options',
+    'revise_design_option',
+    'get_design_options',
     'propose_project_change',
     'search_catalog',
     'get_offer_history',
@@ -211,7 +220,11 @@ async function verifyCommerceProposal(
 export function createWorkspaceMcpServer(
   repository: MongoWorkspaceRepository,
   catalog?: CatalogStore,
-  options: { access?: McpAccess; transport?: 'stdio' | 'streamable-http' } = {},
+  options: {
+    access?: McpAccess;
+    transport?: 'stdio' | 'streamable-http';
+    images?: DesignImageStore;
+  } = {},
 ) {
   const canPropose = options.access !== 'read';
   const capabilities = {
@@ -220,7 +233,14 @@ export function createWorkspaceMcpServer(
     access: canPropose ? 'propose' : 'read',
     tools: CAPABILITIES.tools.filter(
       (name) =>
-        canPropose || !['start_project', 'draft_scope', 'propose_project_change'].includes(name),
+        canPropose ||
+        ![
+          'start_project',
+          'draft_scope',
+          'build_design_options',
+          'revise_design_option',
+          'propose_project_change',
+        ].includes(name),
     ),
     proposalCommands: canPropose ? CAPABILITIES.proposalCommands : [],
     limits: [
@@ -436,6 +456,102 @@ export function createWorkspaceMcpServer(
       },
     );
 
+  const designNote =
+    'Previews are generated concepts, not photos, and appear once the Renovagent server finishes them (about 30 seconds each); call get_design_options to check. Costs are materials only for the priced items, from labeled demo prices.';
+  if (canPropose)
+    server.tool(
+      'build_design_options',
+      'Show two or three visual options for one photographed room, each with its own scope and cost range. Uses a room photo already uploaded to the project (sourcePhotoSha256). Pass only measurements the person gave (amount null for "I don\'t know"). Reuse requestId for retries.',
+      {
+        requestId: id,
+        projectId: id,
+        request: z.string().trim().min(1).max(2000).describe('The request, relayed verbatim'),
+        sourcePhotoSha256: z.string().regex(/^[a-f0-9]{64}$/),
+        reported: z
+          .array(
+            z
+              .object({
+                key: z.enum(['floorLengthFt', 'floorWidthFt', 'ceilingHeightFt']),
+                amount: z.number().positive().max(10000).nullable(),
+                unit: z.enum(['ft', 'in', 'm', 'cm']),
+              })
+              .strict(),
+          )
+          .max(5)
+          .default([]),
+      },
+      { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+      async (input) => {
+        try {
+          if (!options.images) throw new DomainError('VALIDATION', 'Design images are unavailable');
+          const built = await buildDesignOptions(repository, options.images, catalog, input);
+          const summary = await summarizeDesignOptions(
+            (await repository.read()).workspace,
+            input.projectId,
+            catalog,
+          );
+          return text({ ...built, ...summary, note: designNote });
+        } catch (error) {
+          failure(error);
+        }
+      },
+    );
+
+  if (canPropose)
+    server.tool(
+      'revise_design_option',
+      'Change one option\'s direction ("make it blue" → wallColor, or a floorFinish), record which option the person prefers (select), or retry a failed preview. Selecting drafts that option\'s full scope and materials. A preference is saved as a proposal, not an approval.',
+      {
+        requestId: id,
+        projectId: id,
+        optionId: id,
+        direction: z
+          .object({
+            wallColor: z.string().trim().min(1).max(80).optional(),
+            floorFinish: z.string().trim().min(1).max(80).optional(),
+          })
+          .strict()
+          .optional(),
+        select: z.boolean().optional(),
+        retryPreview: z.boolean().optional(),
+      },
+      { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+      async (input) => {
+        try {
+          const revised = await reviseDesignOption(repository, catalog, input);
+          const summary = await summarizeDesignOptions(
+            (await repository.read()).workspace,
+            input.projectId,
+            catalog,
+          );
+          return text({ ...revised, ...summary, note: designNote });
+        } catch (error) {
+          failure(error);
+        }
+      },
+    );
+
+  server.tool(
+    'get_design_options',
+    "Read a project's design options: per-option scope summary, cost range, coverage, biggest unknown and preview status.",
+    { projectId: id },
+    { readOnlyHint: true, openWorldHint: false },
+    async ({ projectId }) => {
+      try {
+        return text({
+          ...(await summarizeDesignOptions(
+            (await repository.read()).workspace,
+            projectId,
+            catalog,
+          )),
+          note: designNote,
+        });
+      } catch (error) {
+        failure(error);
+      }
+    },
+  );
+
   server.tool(
     'get_artifact',
     'Read one artifact revision with its freshness, evidence, and limitations. Defaults to the latest revision; historical views stay pinned.',
@@ -608,7 +724,9 @@ async function main() {
   await repository.read();
   const catalog = new CatalogStore(client.db());
   await catalog.ensureIndexes();
-  const server = createWorkspaceMcpServer(repository, catalog);
+  const server = createWorkspaceMcpServer(repository, catalog, {
+    images: new DesignImageStore(client.db()),
+  });
   const transport = new StdioServerTransport();
   const shutdown = async () => {
     await transport.close().catch(() => {});

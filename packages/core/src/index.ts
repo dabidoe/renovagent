@@ -38,3 +38,5 @@ export * from './commerce/checkout.js';
 export * from './commerce/validate.js';
 export * from './scope/draft-scope.js';
 export * from './scope/bathroom-refresh.js';
+export * from './scope/design-options.js';
+export * from './scope/living-room-refresh.js';

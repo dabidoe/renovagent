@@ -3,11 +3,13 @@ import {
   type BomPayload,
   type Command,
   type CommandContext,
+  type DesignDirection,
   type InputRef,
   type Product,
   type ScopeDraft,
   type ScopeInput,
   type ScopeInputKey,
+  type ScopeRequirement,
   type Workspace,
 } from '@renovagent/contracts';
 import {
@@ -17,12 +19,33 @@ import {
   bathroomRefreshRecipe,
   bathroomRequirements,
   bathroomSources,
-  type RecipeValues,
 } from './bathroom-refresh.js';
+import {
+  livingRoomNotPriced,
+  livingRoomPackages,
+  livingRoomQuestions,
+  livingRoomRefreshRecipe,
+  livingRoomRequirements,
+  livingRoomSources,
+} from './living-room-refresh.js';
+import type { RecipeValues } from './recipe-kit.js';
 
 // Recipes are looked up by ID; a new space type adds a registry entry rather
 // than special-casing the bathroom in the command path.
-const RECIPES = {
+type Recipe = {
+  id: string;
+  version: number;
+  packages: readonly { id: string; title: string; summary: string }[];
+  requirements: (
+    packageId: string,
+    values: RecipeValues,
+    direction?: DesignDirection,
+  ) => ScopeRequirement[];
+  questions: { inputKeys: ScopeInputKey[]; question: string }[];
+  sources: ScopeDraft['sources'];
+  notPriced: string[];
+};
+const RECIPES: Record<string, Recipe> = {
   [bathroomRefreshRecipe.id]: {
     ...bathroomRefreshRecipe,
     packages: bathroomPackages,
@@ -31,10 +54,24 @@ const RECIPES = {
     sources: bathroomSources,
     notPriced: bathroomNotPriced,
   },
-} as const;
+  [livingRoomRefreshRecipe.id]: {
+    ...livingRoomRefreshRecipe,
+    packages: livingRoomPackages,
+    requirements: livingRoomRequirements,
+    questions: livingRoomQuestions,
+    sources: livingRoomSources,
+    notPriced: livingRoomNotPriced,
+  },
+};
+
+export function scopeRecipe(recipeId: string): Recipe {
+  const recipe = Object.hasOwn(RECIPES, recipeId) ? RECIPES[recipeId] : undefined;
+  if (!recipe) throw new DomainError('VALIDATION', `Unknown scope recipe ${recipeId}`);
+  return recipe;
+}
 
 export function scopeRecipeCurrent(recipe: { id: string; version: number }): boolean {
-  const current = RECIPES[recipe.id as keyof typeof RECIPES];
+  const current = Object.hasOwn(RECIPES, recipe.id) ? RECIPES[recipe.id] : undefined;
   return !!current && current.version === recipe.version;
 }
 
@@ -71,26 +108,14 @@ function currentFact(state: Workspace, projectId: string, key: string) {
   return matches[0];
 }
 
-export function compileScopeDraft(
-  state: Workspace,
-  projectId: string,
-  payload: Extract<Command, { type: 'DraftScope' }>['payload'],
-): { draft: ScopeDraft; inputRefs: InputRef[] } {
-  const recipe = RECIPES[payload.recipeId as keyof typeof RECIPES];
-  if (!recipe) throw new DomainError('VALIDATION', `Unknown scope recipe ${payload.recipeId}`);
-  const known = new Set<string>(recipe.packages.map((p) => p.id));
-  const unknown = payload.packageIds.filter((id) => !known.has(id));
-  if (unknown.length)
-    throw new DomainError(
-      'VALIDATION',
-      `Unknown work packages for ${recipe.id}: ${unknown.join(', ')}. Choose from ${[...known].join(', ')}`,
-    );
-  const declared = new Set(payload.packageIds);
-  if ([...declared].some((id) => id !== 'removal-protection')) declared.add('removal-protection');
-  const reported = new Map(payload.reported.map((r) => [r.key, r]));
-  if (reported.size !== payload.reported.length)
-    throw new DomainError('VALIDATION', 'Each input may be reported once');
+type Reported = Extract<Command, { type: 'DraftScope' }>['payload']['reported'];
 
+// Input resolution shared by scope drafts and design options: workspace facts
+// first (referenced), then relayed values (unverified), then explicit unknowns.
+export function resolveScopeInputs(state: Workspace, projectId: string, reportedList: Reported) {
+  const reported = new Map(reportedList.map((r) => [r.key, r]));
+  if (reported.size !== reportedList.length)
+    throw new DomainError('VALIDATION', 'Each input may be reported once');
   const values: RecipeValues = {};
   const inputs: ScopeInput[] = [];
   const inputRefs: InputRef[] = [];
@@ -122,10 +147,59 @@ export function compileScopeDraft(
         source: relayed ? 'reported-unknown' : 'not-provided',
       });
   }
+  return { values, inputs, inputRefs, limits };
+}
 
-  const requirements = recipe.packages
+// Stored inputs back to recipe values and to a relay list (for redrafting).
+export function valuesFromInputs(inputs: ScopeInput[]): RecipeValues {
+  const values: RecipeValues = {};
+  for (const input of inputs) if (input.amount !== null) values[input.key] = input.amount;
+  return values;
+}
+export function reportedFromInputs(inputs: ScopeInput[]): Reported {
+  return inputs.flatMap((input) =>
+    input.source === 'agent-relayed'
+      ? [{ key: input.key, amount: input.amount, unit: input.unit }]
+      : input.source === 'reported-unknown'
+        ? [{ key: input.key, amount: null, unit: input.unit }]
+        : [],
+  );
+}
+
+export function recipeRequirements(
+  recipeId: string,
+  packageIds: string[],
+  values: RecipeValues,
+  direction?: DesignDirection,
+): ScopeRequirement[] {
+  const recipe = scopeRecipe(recipeId);
+  const known = new Set<string>(recipe.packages.map((p) => p.id));
+  const unknown = packageIds.filter((id) => !known.has(id));
+  if (unknown.length)
+    throw new DomainError(
+      'VALIDATION',
+      `Unknown work packages for ${recipe.id}: ${unknown.join(', ')}. Choose from ${[...known].join(', ')}`,
+    );
+  const declared = new Set(packageIds);
+  if ([...declared].some((id) => id !== 'removal-protection')) declared.add('removal-protection');
+  return recipe.packages
     .filter((p) => declared.has(p.id))
-    .flatMap((p) => recipe.requirements(p.id, values));
+    .flatMap((p) => recipe.requirements(p.id, values, direction));
+}
+
+export function compileScopeDraft(
+  state: Workspace,
+  projectId: string,
+  payload: Extract<Command, { type: 'DraftScope' }>['payload'],
+): { draft: ScopeDraft; inputRefs: InputRef[] } {
+  const recipe = scopeRecipe(payload.recipeId);
+  const { values, inputs, inputRefs, limits } = resolveScopeInputs(
+    state,
+    projectId,
+    payload.reported,
+  );
+  const requirements = recipeRequirements(recipe.id, payload.packageIds, values, payload.direction);
+  const declared = new Set(requirements.map((r) => r.packageId));
   const notAsked = new Set(inputs.filter((i) => i.source === 'not-provided').map((i) => i.key));
   const questions = recipe.questions
     .map((q, order) => ({
@@ -146,6 +220,7 @@ export function compileScopeDraft(
       kind: 'scope-draft',
       recipe: { id: recipe.id, version: recipe.version },
       request: payload.request,
+      ...(payload.direction ? { direction: payload.direction } : {}),
       packages: recipe.packages.map((p) => ({
         id: p.id,
         title: p.title,
@@ -195,13 +270,18 @@ export function handleDraftScope(state: Workspace, command: Command, ctx: Comman
 // Pricing bridge: requirements with a catalog category and a known quantity
 // become BOM items whose candidates are the supplied catalog products in that
 // category. Everything else stays listed as unpriced in the draft.
-export function bomFromScopeDraft(
-  draft: ScopeDraft,
+export function bomFromScopeDraft(draft: ScopeDraft, products: Product[]) {
+  return bomFromRequirements(draft.recipe, draft.requirements, products);
+}
+
+export function bomFromRequirements(
+  recipe: { id: string; version: number },
+  requirements: ScopeRequirement[],
   products: Product[],
 ): { bom: BomPayload | null; pricedIds: string[]; unpricedIds: string[] } {
   const items: BomPayload['items'] = [];
   const pricedIds: string[] = [];
-  for (const requirement of draft.requirements) {
+  for (const requirement of requirements) {
     if (
       !requirement.catalog ||
       requirement.status !== 'quantified' ||
@@ -231,12 +311,12 @@ export function bomFromScopeDraft(
     bom: items.length
       ? {
           kind: 'bom',
-          templateId: `scope-draft:${draft.recipe.id}`,
-          templateVersion: draft.recipe.version,
+          templateId: `scope-draft:${recipe.id}`,
+          templateVersion: recipe.version,
           items,
         }
       : null,
     pricedIds,
-    unpricedIds: draft.requirements.filter((r) => !priced.has(r.id)).map((r) => r.id),
+    unpricedIds: requirements.filter((r) => !priced.has(r.id)).map((r) => r.id),
   };
 }

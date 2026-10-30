@@ -10,6 +10,8 @@ import { ArtifactPanel } from '../features/work/artifact-panel.js';
 import { SourcesPanel } from '../features/properties/sources-panel.js';
 import { stages, stageCopy, factText } from './presentation.js';
 import { Glyph } from '../components/glyph.js';
+import { BrandMark } from '../components/brand-mark.js';
+import { Landing } from '../features/landing/landing.js';
 import { Modal } from '../components/modal.js';
 import { Media } from '../features/properties/media.js';
 import { RunCard } from '../features/activity/run-card.js';
@@ -265,11 +267,9 @@ export function App({ controller }: { controller: WorkspaceController }) {
           }}
           aria-label="Renovagent home"
         >
-          <span className="prompt-brand-symbol">
-            <Glyph name="home" />
-          </span>
-          <span>
-            renovagent<span className="brand-period">.</span>
+          <BrandMark />
+          <span className="brand-wordmark">
+            renov<span>agent</span>
           </span>
         </button>
         <button
@@ -323,23 +323,33 @@ export function App({ controller }: { controller: WorkspaceController }) {
           <button onClick={() => safe(controller.refresh())}>Reload records</button>
         </div>
       )}
-      <main className={`prompt-main ${showRecent ? 'has-conversation' : ''}`}>
-        <div className="prompt-intro">
-          <h1>What would you like to improve?</h1>
-        </div>
-        {project && showRecent && (
-          <section className="prompt-recent" aria-label="Recent conversation" aria-live="polite">
-            <div className="prompt-section-label">
-              <span>Saved to this project</span>
-              <button onClick={() => setModal('history')}>
-                View history <Glyph name="history" />
-              </button>
-            </div>
-            {renderMessages(messages.slice(-3))}
-            <div ref={logEnd} />
-          </section>
-        )}
-        {project ? (
+      {!project ? (
+        <main className="prompt-main landing-main">
+          <Landing
+            prompt={startPrompt}
+            onPrompt={setStartPrompt}
+            onStart={() => setModal('new')}
+            onExample={() => safe(controller.sampleProject())}
+            busy={busy}
+          />
+        </main>
+      ) : (
+        <main className={`prompt-main ${showRecent ? 'has-conversation' : ''}`}>
+          <div className="prompt-intro">
+            <h1>What would you like to improve?</h1>
+          </div>
+          {showRecent && (
+            <section className="prompt-recent" aria-label="Recent conversation" aria-live="polite">
+              <div className="prompt-section-label">
+                <span>Saved to this project</span>
+                <button onClick={() => setModal('history')}>
+                  View history <Glyph name="history" />
+                </button>
+              </div>
+              {renderMessages(messages.slice(-3))}
+              <div ref={logEnd} />
+            </section>
+          )}
           <Composer
             key={active}
             controller={controller}
@@ -351,46 +361,9 @@ export function App({ controller }: { controller: WorkspaceController }) {
             onOpenTools={() => setModal('tools')}
             onSent={() => setShowRecent(true)}
           />
-        ) : (
-          <form
-            className="prompt-start"
-            onSubmit={(e) => {
-              e.preventDefault();
-              setModal('new');
-            }}
-          >
-            <label className="sr-only" htmlFor="start-prompt">
-              What would you like to improve?
-            </label>
-            <textarea
-              id="start-prompt"
-              maxLength={300}
-              value={startPrompt}
-              onChange={(e) => setStartPrompt(e.target.value)}
-              placeholder="I’m thinking about updating my kitchen…"
-            />
-            <div>
-              <span>Give your idea a place to grow</span>
-              <button className="send" aria-label="Start a project">
-                <Glyph name="arrow" />
-              </button>
-            </div>
-          </form>
-        )}
-        {!project && (
-          <button
-            className="prompt-example"
-            disabled={busy}
-            onClick={() => safe(controller.sampleProject())}
-          >
-            {busy ? 'Opening example…' : 'Or explore a clearly labeled example'}{' '}
-            <Glyph name="right" />
-          </button>
-        )}
-        {project && (
           <p className="prompt-disclosure">Saved project notes · Live chat not connected</p>
-        )}
-      </main>
+        </main>
+      )}
       {workOpen && project && (
         <Modal className="work-dialog" title={workTitle} onClose={() => setWorkOpen(false)}>
           <main className="work-pane" ref={workPane}>

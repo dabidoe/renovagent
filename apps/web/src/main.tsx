@@ -3,6 +3,9 @@ import { WorkspaceController, storedMode } from './app/workspace-controller.js';
 import { App } from './app/workspace-app.js';
 import './styles/workspace.css';
 import './styles/prompt-workspace.css';
+import './styles/brand.css';
+import { startGridParallax } from './app/grid-parallax.js';
+startGridParallax();
 const root = createRoot(document.getElementById('app')!);
 root.render(<div className="loading-workspace">Opening your saved workspace…</div>);
 WorkspaceController.open()

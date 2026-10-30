@@ -1,0 +1,401 @@
+/* Renovagent brand layer: ink + blueprint blue. Loaded after the base sheets.
+   One signature element, the dimension line from the mark, marks primary
+   headings; everything else stays quiet: white surfaces, slate hairlines,
+   ink primary actions. Blue means measurement or the agent, not decoration. */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://api.fontshare.com/v2/css?f[]=satoshi@500,700&display=swap');
+
+:root {
+  --brand-ink: #0f172a;
+  --brand-blue: #3b82f6;
+  /* #3b82f6 is ~3.7:1 on white; small blue text uses the darker step. */
+  --brand-blue-text: #2563eb;
+  --brand-measure: #93c5fd;
+  --paper: #f8fafc;
+  --side: #f1f5f9;
+  --line: #e2e8f0;
+  --muted: #64748b;
+  --ink: #0f172a;
+  --blue: #2563eb;
+  /* Existing rules use --serif for display text; it is now the display face. */
+  --serif: 'Satoshi', 'Inter', system-ui, sans-serif;
+  --font-display: var(--serif);
+  font-family:
+    'Inter',
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    sans-serif;
+  color: var(--ink);
+}
+
+/* Brand lockup */
+.prompt-brand {
+  gap: 9px;
+  color: var(--brand-ink);
+  font: 700 21px/1 var(--font-display);
+  letter-spacing: -0.5px;
+}
+.brand-wordmark span {
+  color: var(--brand-blue-text);
+}
+.brand-mark {
+  flex: none;
+}
+
+/* Display type */
+.prompt-intro h1,
+.surface-heading h1,
+.artifact-heading h1 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--brand-ink);
+}
+.prompt-intro h1 {
+  letter-spacing: -1.4px;
+}
+.surface-heading h1,
+.artifact-heading h1 {
+  font-size: 36px;
+  letter-spacing: -0.8px;
+}
+
+/* Signature: a dimension line (end ticks + measure rule) under primary headings */
+.prompt-intro h1::after,
+.surface-heading h1::after,
+.artifact-heading h1::after {
+  content: '';
+  display: block;
+  width: 72px;
+  height: 9px;
+  margin-top: 14px;
+  background:
+    linear-gradient(var(--brand-measure), var(--brand-measure)) center / 100% 1.5px no-repeat,
+    linear-gradient(var(--brand-blue), var(--brand-blue)) left center / 1.5px 100% no-repeat,
+    linear-gradient(var(--brand-blue), var(--brand-blue)) right center / 1.5px 100% no-repeat;
+}
+.prompt-intro h1::after {
+  margin-inline: auto;
+}
+
+/* Faint blueprint grid behind the landing prompt, fading out from the center */
+.prompt-workspace {
+  position: relative;
+  isolation: isolate;
+}
+.prompt-workspace::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  /* Drafting paper: major lines every fourth cell over a fine minor grid. */
+  background-image:
+    linear-gradient(rgb(59 130 246 / 0.12) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(59 130 246 / 0.12) 1px, transparent 1px),
+    linear-gradient(rgb(59 130 246 / 0.065) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(59 130 246 / 0.065) 1px, transparent 1px);
+  background-size:
+    128px 128px,
+    128px 128px,
+    32px 32px,
+    32px 32px;
+  /* Parallax: --grid-shift is set from scroll (see grid-parallax.ts). */
+  background-position: center calc(var(--grid-shift, 0px));
+  /* Drafting-sheet feel: a quiet middle with only a trace of grid, the grid
+     strengthening toward the edges. */
+  mask-image: radial-gradient(
+    ellipse 62% 58% at 50% 48%,
+    rgb(0 0 0 / 0.12) 0%,
+    rgb(0 0 0 / 0.18) 45%,
+    #000 100%
+  );
+}
+/* Corner crop marks framing the page like a drawing sheet. */
+.prompt-workspace::after {
+  --mark: rgb(59 130 246 / 0.45);
+  content: '';
+  position: fixed;
+  inset: 14px;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    linear-gradient(var(--mark), var(--mark)) left top / 18px 1px no-repeat,
+    linear-gradient(var(--mark), var(--mark)) left top / 1px 18px no-repeat,
+    linear-gradient(var(--mark), var(--mark)) right top / 18px 1px no-repeat,
+    linear-gradient(var(--mark), var(--mark)) right top / 1px 18px no-repeat,
+    linear-gradient(var(--mark), var(--mark)) left bottom / 18px 1px no-repeat,
+    linear-gradient(var(--mark), var(--mark)) left bottom / 1px 18px no-repeat,
+    linear-gradient(var(--mark), var(--mark)) right bottom / 18px 1px no-repeat,
+    linear-gradient(var(--mark), var(--mark)) right bottom / 1px 18px no-repeat;
+}
+.prompt-workspace {
+  background: transparent;
+}
+body {
+  background: #fff;
+}
+
+/* Actions: ink for primary, quiet outline for secondary, blue text for links */
+.primary,
+.prompt-workspace .primary {
+  background: var(--brand-ink);
+  color: #fff;
+}
+.primary:hover:not(:disabled),
+.prompt-workspace .primary:hover:not(:disabled) {
+  background: #1e293b;
+}
+.link-button,
+.prompt-workspace .link-button {
+  color: var(--brand-blue-text);
+}
+a {
+  color: var(--brand-blue-text);
+}
+:focus-visible {
+  outline: 2px solid var(--brand-blue);
+  outline-offset: 2px;
+}
+
+/* Semantic states keep their own colors */
+.historical-banner {
+  background: #fffbeb;
+  border-color: #fde68a;
+  color: #92400e;
+}
+.investigation-banner {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1e3a8a;
+}
+.error-banner {
+  background: #fef2f2;
+  color: #991b1b;
+  border-bottom-color: #fecaca;
+}
+.inline-error {
+  color: #b91c1c;
+}
+
+/* Design options: generated concepts sit in a measure-blue hairline frame */
+.option-card figure img {
+  outline: 1px solid var(--brand-measure);
+  outline-offset: -1px;
+}
+.design-original img {
+  outline: 1px solid var(--line);
+}
+
+/* Landing: two-column hero, idea cards and a quiet feature row */
+.prompt-main.landing-main {
+  width: min(1180px, calc(100% - 32px));
+  justify-content: flex-start;
+  align-items: stretch;
+  padding: 16px 0 72px;
+}
+.landing-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.92fr);
+  align-items: center;
+  gap: clamp(24px, 4vw, 56px);
+}
+.landing .prompt-intro {
+  text-align: left;
+  margin-bottom: 28px;
+}
+.landing .prompt-intro h1 {
+  margin: 0;
+  font-size: clamp(40px, 5.2vw, 66px);
+  line-height: 1.02;
+  letter-spacing: -0.04em;
+}
+.landing .prompt-intro h1 em {
+  font-style: normal;
+  color: var(--brand-blue);
+}
+.landing .prompt-intro h1::after {
+  margin-inline: 0;
+  margin-top: 20px;
+}
+.landing .prompt-intro p {
+  max-width: 470px;
+  margin-top: 18px;
+  font-size: 17px;
+  line-height: 1.55;
+}
+.landing .prompt-start {
+  width: 100%;
+  background: rgb(255 255 255 / 0.92);
+}
+.landing-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.landing-chips button,
+.landing-cards button {
+  border: 1px solid var(--line);
+  background: #fff;
+  color: #334155;
+  transition:
+    border-color 120ms,
+    box-shadow 120ms;
+}
+.landing-chips button {
+  padding: 7px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+}
+.landing-chips button:hover,
+.landing-cards button:hover {
+  border-color: var(--brand-measure);
+  box-shadow: 0 1px 0 var(--brand-measure);
+}
+.landing-art {
+  position: relative;
+  margin: 0;
+}
+.landing-art img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 620px;
+  object-fit: contain;
+  /* White render paper drops out so the page grid reads through it. */
+  mix-blend-mode: multiply;
+  mask-image: radial-gradient(ellipse 72% 70% at 52% 50%, #000 62%, transparent 100%);
+}
+.landing-art figcaption,
+.landing-note {
+  color: var(--muted);
+  font-size: 11px;
+}
+.landing-art figcaption {
+  position: absolute;
+  right: 6%;
+  bottom: 4%;
+  padding: 3px 8px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: rgb(255 255 255 / 0.9);
+}
+.landing-ideas {
+  margin-top: 40px;
+}
+.landing-section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+.landing-section-head h2 {
+  margin: 0;
+  font: 700 18px/1.2 var(--font-display);
+  letter-spacing: -0.3px;
+  color: var(--brand-ink);
+}
+.landing-section-head .prompt-example {
+  margin: 0;
+}
+.landing-cards {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+.landing-cards button {
+  display: grid;
+  gap: 2px;
+  padding: 8px 8px 12px;
+  border-radius: 12px;
+  text-align: left;
+}
+.landing-cards img {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: 7px;
+  margin-bottom: 8px;
+}
+.landing-cards strong {
+  font-size: 13px;
+  color: var(--brand-ink);
+}
+.landing-cards small {
+  font-size: 12px;
+  color: var(--muted);
+}
+.landing-note {
+  margin: 10px 0 0;
+}
+.landing-features {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-top: 44px;
+  border-top: 1px solid var(--line);
+}
+.landing-features > div {
+  display: grid;
+  gap: 6px;
+  padding: 22px 20px 0;
+  border-left: 1px solid var(--line);
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+.landing-features > div:first-child {
+  border-left: 0;
+  padding-left: 0;
+}
+.landing-features .glyph {
+  width: 22px;
+  height: 22px;
+  color: var(--brand-ink);
+  margin-bottom: 4px;
+}
+.landing-features strong {
+  color: var(--brand-ink);
+  font-size: 13.5px;
+}
+@media (max-width: 860px) {
+  .landing-hero {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .landing-art {
+    max-width: 440px;
+    margin-inline: auto;
+  }
+  .landing-art img {
+    max-height: 420px;
+  }
+  .landing-cards,
+  .landing-features {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .landing-features > div {
+    padding: 20px 14px 0 0;
+    border-left: 0;
+  }
+}
+@media (max-width: 560px) {
+  .prompt-header {
+    padding: 18px 16px;
+  }
+  .prompt-main.landing-main {
+    width: calc(100% - 32px);
+  }
+  .landing-features {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .prompt-header {
+    flex-wrap: wrap;
+    gap: 8px 16px;
+  }
+}

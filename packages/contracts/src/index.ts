@@ -19,3 +19,4 @@ export * from './home-inventory.js';
 export * from './conversation-plan.js';
 export * from './catalog.js';
 export * from './scope-draft.js';
+export * from './design-options.js';
