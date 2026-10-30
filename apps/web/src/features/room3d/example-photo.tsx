@@ -68,6 +68,13 @@ export const directionFor = (p: Pick): DesignDirection => ({
       ? 'existing carpet'
       : FLOOR_OPTIONS.find((f) => f.key === p.floor)!.label.toLowerCase(),
 });
+// The request a pick records, in the owner's words rather than the old draft's.
+export const requestFor = (p: Pick) => {
+  const d = directionFor(p);
+  return p.floor === 'carpet'
+    ? `Repaint this living room ${d.wallColor} and keep the carpet`
+    : `Repaint this living room ${d.wallColor} and put ${d.floorFinish} down`;
+};
 // What the saved draft already says, so the picker starts there.
 export function savedPick(draft: ScopeDraft | null): Pick {
   const included = new Set(draft?.packages.filter((p) => p.included).map((p) => p.id));

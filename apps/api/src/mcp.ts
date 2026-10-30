@@ -17,6 +17,8 @@ import {
   buildCheckoutReview,
   buildTierPlans,
   fingerprint,
+  projectHandoff,
+  projectScopeReview,
   referenceCurrent,
 } from '@renovagent/core';
 import { startAgentProject } from './agent-projects.js';
@@ -44,6 +46,8 @@ const CAPABILITIES = {
     'list_homes',
     'list_projects',
     'get_project_context',
+    'review_scope',
+    'export_contractor_handoff',
     'list_project_files',
     'get_artifact',
     'start_project',
@@ -343,6 +347,46 @@ export function createWorkspaceMcpServer(
           })),
           capabilities,
         });
+      } catch (error) {
+        failure(error);
+      }
+    },
+  );
+
+  server.tool(
+    'review_scope',
+    '"Does this work?" for the project’s current scope draft: potential conflicts, unresolved items (measure, choose a product, contractor or authority to confirm) and checks that pass, each with its cited sources. Deterministic; not a code review, permit determination or approval. Relay unknowns as unknowns.',
+    { projectId: id },
+    { readOnlyHint: true, openWorldHint: false },
+    async ({ projectId }) => {
+      try {
+        const { workspace } = await repository.read();
+        if (!workspace.projects[projectId])
+          throw new DomainError('NOT_FOUND', `Unknown project ${projectId}`);
+        const review = projectScopeReview(workspace, projectId);
+        if (!review)
+          throw new DomainError('VALIDATION', 'No scope draft yet; call draft_scope first');
+        return text(review);
+      } catch (error) {
+        failure(error);
+      }
+    },
+  );
+
+  server.tool(
+    'export_contractor_handoff',
+    'Markdown contractor handoff for the current scope draft: work in order with quantities, measurements and their provenance, material allowances, the requirements register with sources, what the contractor must verify, open questions and response fields. Proposed scope, not approved.',
+    { projectId: id },
+    { readOnlyHint: true, openWorldHint: false },
+    async ({ projectId }) => {
+      try {
+        const { workspace } = await repository.read();
+        if (!workspace.projects[projectId])
+          throw new DomainError('NOT_FOUND', `Unknown project ${projectId}`);
+        const markdown = projectHandoff(workspace, projectId, new Date().toISOString());
+        if (!markdown)
+          throw new DomainError('VALIDATION', 'No scope draft yet; call draft_scope first');
+        return { content: [{ type: 'text' as const, text: markdown }] };
       } catch (error) {
         failure(error);
       }

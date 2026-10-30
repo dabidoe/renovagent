@@ -64,6 +64,8 @@ The [connected Muse and Mongo increment](connected-muse-and-mongo.md) adds a loo
 
 The [prompt-first workspace](prompt-first-workspace.md) replaces the dashboard opening with a centered prompt and on-demand project tools. It records the requirement for standard Muse clients to share the current application services through a future MCP adapter; that adapter is not connected by the UI change.
 
+The [requirements review and contractor handoff](requirements-review-and-handoff.md) adds a deterministic "Does this work?" review with stored citations, approval before a design change and a Markdown handoff (also as MCP tools). No model is in the review.
+
 The [local MCP adapter](mcp-workspace-adapter.md) implements that requirement for local stdio: workspace reads plus proposal-grade commands over the shared repository, verified with a live headless client. Hosted transport, job tools, and purchasing remain future work.
 
 The [Atlas migration](atlas-migration.md) preserves the seven original projects, history, attachments, completed jobs, catalog and private photo inputs in the configured cluster. Application processes remain local.

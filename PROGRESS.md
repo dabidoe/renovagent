@@ -44,6 +44,11 @@ Renovagent carries a persistent property project through investigation, options,
 
 Use each slice's acceptance criteria before changing its status. A mock screen, canned reply, or HTTP 200 does not establish workflow completion.
 
+### "Does this work?", approval before change, contractor handoff — October 30, 2026
+
+- First slice of `docs/MODEL_INTEGRATION.md`. Any project with a scope draft gets a deterministic review (potential conflicts / to measure or confirm / passes known checks), each finding with the action that resolves it and citations copied from stored sources (URL, edition, section, retrieval date, unreviewed flag). Code provisions are cited only in their own jurisdiction and never as compliance. "Use this design" now shows what changes and needs "Approve and save". A Markdown contractor handoff (work in order, measurement provenance, allowances, requirements register, verify list, reply fields) downloads or copies. MCP tools `review_scope` and `export_contractor_handoff` expose both to Muse.
+- Not shipped: any model ("Jev") in the review, living-room code/permit sources, PAUGO, `/connect`. See `docs/architecture/requirements-review-and-handoff.md`.
+
 ### Example room photo: steps change the image, finishes change the quote — October 30, 2026
 
 - The example living room opens on a furnished render (Poly Haven CC0 furniture and floor textures, one fixed camera) labelled "Example · 3D render". Step tabs show their stage (carpet out → painted → new floor); Before/After shows the original room. A picker for walls (warm white, sage, soft blue) and floor (keep carpet, vinyl plank, hardwood) swaps the image and recomputes the DIY total and example quotes in memory; "Use this design" saves it as the scope draft. Each option names a product spec with store searches.

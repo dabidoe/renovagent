@@ -12,6 +12,8 @@ import {
   EXAMPLE_TAG,
   exampleQuotes,
   floorPlanSvg,
+  projectHandoff,
+  projectScopeReview,
   roomAnnotations,
   roomSurfaces,
   scopeDraftId,
@@ -29,11 +31,13 @@ import {
   directionFor,
   ExampleRoomPhoto,
   packagesFor,
+  requestFor,
   savedPick,
   variantFor,
   type MuseRender,
   type Pick,
 } from './example-photo.js';
+import { ChangeConfirm, HandoffPopup, ReviewPopup, type ChangeRow } from './review-handoff.js';
 import type { RoomLook, RoomScene } from './room-scene.js';
 
 const EXISTING: RoomLook = { wallColor: 'white', floorFinish: 'existing', label: 'Existing' };
@@ -613,11 +617,25 @@ export function RoomStudio({
   const [muse, setMuse] = useState<Record<string, MuseRender>>({});
   const [showMuse, setShowMuse] = useState(true);
   const [quoteId, setQuoteId] = useState<string | null>(null);
+  // Review and handoff read the saved draft; a pick must be approved first.
+  const [panel, setPanel] = useState<'review' | 'handoff' | null>(null);
+  const [confirming, setConfirming] = useState(false);
+  const review = useMemo(
+    () => (panel === 'review' ? projectScopeReview(state, projectId) : null),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [panel, projectId, scopeKey],
+  );
+  const handoff = useMemo(
+    () => (panel === 'handoff' ? projectHandoff(state, projectId, new Date().toISOString()) : null),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [panel, projectId, scopeKey],
+  );
   const allPins = shownNotes ? [...shownNotes.pins, ...shownNotes.unplaced] : [];
   const choosePin = (id: string | null) => {
     setPinId(id);
     setQuoteId(null);
     setSelectedId(null);
+    setPanel(null);
     const pin = allPins.find((p) => p.id === id);
     scene.current?.select(pin?.surfaceIds ?? []);
     scene.current?.focusPin(id);
@@ -675,7 +693,7 @@ export function RoomStudio({
   }, [source, view, surfaces, notes]);
   useEffect(() => scene.current?.setLook(look), [look]);
   // Esc closes whichever popup is open.
-  const popupOpen = !!(pinId || quoteId || selectedId);
+  const popupOpen = !!(pinId || quoteId || selectedId || panel);
   useEffect(() => {
     if (!popupOpen) return;
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && choosePinRef.current(null);
@@ -758,6 +776,37 @@ export function RoomStudio({
         })),
       );
   };
+  // What approving the pick changes, saved plan first.
+  const lowestFull = (qs: ReturnType<typeof exampleQuotes>) =>
+    qs.find((q) => !q.notQuoted.length && !q.needsArea.length)?.totalMinor ?? null;
+  const diy = (n: typeof notes) =>
+    n?.template ? money(n.template.materialsMinor + n.template.toolsMinor, 'USD') : '—';
+  const changeRows: ChangeRow[] = !changed
+    ? []
+    : (() => {
+        const before = directionFor(saved);
+        const after = directionFor(pick);
+        const was = new Set(notes?.steps.map((s) => s.title));
+        const now = new Set(steps.map((s) => s.title));
+        const pro = (n: typeof notes) => {
+          const v = isExample && n ? lowestFull(exampleQuotes(n.steps)) : null;
+          return v === null ? '—' : money(v, 'USD');
+        };
+        return [
+          ...(before.wallColor !== after.wallColor
+            ? [{ label: 'Walls', from: before.wallColor, to: after.wallColor }]
+            : []),
+          ...(before.floorFinish !== after.floorFinish
+            ? [{ label: 'Floor', from: before.floorFinish, to: after.floorFinish }]
+            : []),
+          ...[...now].filter((t) => !was.has(t)).map((t) => ({ label: 'Adds', from: '', to: t })),
+          ...[...was]
+            .filter((t) => !now.has(t))
+            .map((t) => ({ label: 'Removes', from: t, to: '—' })),
+          { label: 'Do it yourself', from: diy(notes), to: diy(shownNotes) },
+          { label: 'Hire a pro', from: pro(notes), to: pro(shownNotes) },
+        ];
+      })();
   const saveDesign = async () => {
     if (!scopeDraft) return;
     const ok = await run(() =>
@@ -765,11 +814,12 @@ export function RoomStudio({
         projectId,
         scopeDraft.recipe.id,
         packagesFor(pick.floor),
-        scopeDraft.request,
+        `${EXAMPLE_TAG} ${requestFor(pick)}`,
         directionFor(pick),
       ),
     );
     if (!ok) return;
+    setConfirming(false);
     setPicked(null);
     if (controller.connected) await price();
   };
@@ -894,7 +944,23 @@ export function RoomStudio({
           ) : (
             <div key="plan" className="room3d-plan" dangerouslySetInnerHTML={{ __html: svg }} />
           )}
-          {activePin ? (
+          {panel === 'review' && review ? (
+            <ReviewPopup
+              review={review}
+              draftNote={
+                changed
+                  ? 'This reviews the saved design; approve your new pick to review it.'
+                  : null
+              }
+              onClose={() => setPanel(null)}
+            />
+          ) : panel === 'handoff' && handoff ? (
+            <HandoffPopup
+              markdown={handoff}
+              fileName={`${title} - contractor handoff.md`}
+              onClose={() => setPanel(null)}
+            />
+          ) : activePin ? (
             <TaskPopup
               key={activePin.id}
               pin={activePin}
@@ -948,14 +1014,28 @@ export function RoomStudio({
             <>
               {photoMode && (
                 <>
-                  <DesignPicker pick={pick} onPick={setPicked} shop={(q) => <Shop query={q} />} />
-                  {changed ? (
+                  <DesignPicker
+                    pick={pick}
+                    onPick={(p) => {
+                      setPicked(p);
+                      setConfirming(false);
+                    }}
+                    shop={(q) => <Shop query={q} />}
+                  />
+                  {changed && confirming ? (
+                    <ChangeConfirm
+                      rows={changeRows}
+                      busy={pricing === 'working'}
+                      onApprove={() => void saveDesign()}
+                      onCancel={() => setConfirming(false)}
+                    />
+                  ) : changed ? (
                     <div className="room3d-use">
                       <button
                         type="button"
                         className="primary"
                         disabled={pricing === 'working'}
-                        onClick={() => void saveDesign()}
+                        onClick={() => setConfirming(true)}
                       >
                         Use this design
                       </button>
@@ -1066,6 +1146,28 @@ export function RoomStudio({
                 ) : (
                   <p className="small-note">Add a quote you received (coming soon).</p>
                 )}
+              </div>
+              <div className="room3d-tools">
+                <button
+                  type="button"
+                  aria-pressed={panel === 'review'}
+                  onClick={() => {
+                    choosePin(null);
+                    setPanel('review');
+                  }}
+                >
+                  Does this work?
+                </button>
+                <button
+                  type="button"
+                  aria-pressed={panel === 'handoff'}
+                  onClick={() => {
+                    choosePin(null);
+                    setPanel('handoff');
+                  }}
+                >
+                  Contractor handoff
+                </button>
               </div>
               <button
                 type="button"
