@@ -758,3 +758,35 @@
 .project-room .room3d {
   margin-top: 0;
 }
+
+/* Room measurements: one line once measured; the form opens on demand. */
+.room-measure {
+  margin-top: 10px;
+  padding: 10px 14px;
+  border: 1px solid var(--line, #e2e8f0);
+  border-radius: 10px;
+  background: #fff;
+}
+.room-measure-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  font-size: 14px;
+}
+.room-measure-row > span:first-child {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1 1 auto;
+}
+.room-measure-soon {
+  padding: 3px 10px;
+  border: 1px dashed var(--line, #cbd5e1);
+  border-radius: 999px;
+  font-size: 12px;
+  color: #64748b;
+}
+.room-measure .candidate-editor {
+  margin-top: 10px;
+}

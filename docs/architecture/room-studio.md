@@ -101,6 +101,32 @@ prices remain available under each step and as a summary line.
 The studio shows the order of work as tabs over the room; pins show name and
 template price; dimension labels and downloads moved into a "⋯" menu.
 
+### DIY or hire, popups, example quotes (October 30, 2026)
+
+- The overview leads with two numbers: **Do it yourself** (template materials
+  - tools) and **Hire a pro** (lowest example quote covering every step).
+    Catalog store prices moved into each step's "Item details".
+- A step (tab, list row or pin) opens as a card over the room, with "Do it
+  yourself" and "Hire a pro" tabs. Esc or × closes it; the room stays visible.
+- `scope/example-quotes.ts`: three fictional contractors with example ratings
+  and one review each, quoting materials (template allowance × markup, plus
+  supplies) and labour (per measured sq ft or flat) per step. A specialist
+  quotes only its trade and lists what it leaves out. Labour by area waits
+  for a measurement. Shown only when the scope draft's request carries
+  `[Example fixture]`. Real projects say quote upload is coming soon.
+  Reviews are never labelled as Google's.
+- Store links are Home Depot / Lowe's searches (`shopFor` per guide, and each
+  tool name), like the how-to video search. Prices stay labelled "typical
+  big-box", not store quotes.
+- The measurements card collapses to one line once something is recorded
+  ("14 × 12 ft floor · 8 ft ceiling", Example tag, "Measure with your phone ·
+  coming soon"). The form mounts only when opened, so it starts from the
+  saved values. A stale draft still shows its re-draft notice when collapsed.
+
+Verified: `tests/domain/example-quotes.test.ts`, the updated
+`room-dimensions-card.test.ts`, and headless Chrome in local mode
+(`docs/previews/room-*.png`). Not verified by a person in a browser.
+
 ## Wiring and other trades
 
 The drawing has an empty `layer-electrical` (`data-status="not-recorded"`).

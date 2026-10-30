@@ -8,11 +8,15 @@ import type {
 import {
   designOptionsId,
   dimensionLabel,
+  EXAMPLE_TAG,
+  exampleQuotes,
   floorPlanSvg,
   roomAnnotations,
   roomSurfaces,
   scopeDraftId,
   scopeRecipe,
+  type ExampleContractor,
+  type ExampleQuote,
   type RoomAnnotation,
   type RoomSurface,
 } from '@renovagent/core';
@@ -22,11 +26,6 @@ import type { RoomLook, RoomScene } from './room-scene.js';
 
 const EXISTING: RoomLook = { wallColor: 'white', floorFinish: 'existing', label: 'Existing' };
 const TIERS = ['mid', 'builder', 'high'] as const;
-const TIER_LABEL: Record<(typeof TIERS)[number], string> = {
-  builder: 'Budget',
-  mid: 'Mid-range',
-  high: 'Premium',
-};
 const m2 = (v: number | null | undefined) =>
   v === null || v === undefined
     ? 'not established'
@@ -142,115 +141,263 @@ function SurfaceDetail({ surface }: { surface: RoomSurface }) {
   );
 }
 
-function AnnotationDetail({
+// Store searches, like the how-to videos: the person picks the product there.
+const SHOPS: [string, (q: string) => string][] = [
+  ['Home Depot', (q) => `https://www.homedepot.com/s/${encodeURIComponent(q)}`],
+  ["Lowe's", (q) => `https://www.lowes.com/search?searchTerm=${encodeURIComponent(q)}`],
+];
+function Shop({ query }: { query: string }) {
+  return (
+    <span className="room3d-shop">
+      {SHOPS.map(([name, url]) => (
+        <a key={name} href={url(query)} target="_blank" rel="noopener noreferrer">
+          {name}
+        </a>
+      ))}
+    </span>
+  );
+}
+
+function ExampleTag() {
+  return <span className="room3d-tag">Example</span>;
+}
+
+function Stars({ c }: { c: ExampleContractor }) {
+  return (
+    <span className="small-note">
+      ★ {c.rating.toFixed(1)} · {c.reviews} reviews
+    </span>
+  );
+}
+
+// One step of the work, over the room: do it yourself, or what a pro quoted.
+function TaskPopup({
   pin,
-  surfaces,
-  onBack,
+  quotes,
+  isExample,
+  connected,
+  pricing,
+  onPrice,
+  onClose,
 }: {
   pin: RoomAnnotation;
-  surfaces: RoomSurface[];
-  onBack: () => void;
+  quotes: ExampleQuote[];
+  isExample: boolean;
+  connected: boolean;
+  pricing: string;
+  onPrice: () => void;
+  onClose: () => void;
 }) {
-  void surfaces;
+  const [mode, setMode] = useState<'diy' | 'pro'>('diy');
   const g = pin.guide;
   const e = pin.estimate;
+  const quoted = quotes.flatMap((q) => {
+    const line = q.lines.find((l) => l.packageId === pin.id);
+    return line ? [{ q, line }] : [];
+  });
   return (
-    <div className="room3d-detail" aria-live="polite">
-      <button type="button" className="link-button subtle" onClick={onBack}>
-        ← Overview
-      </button>
-      <h4>{pin.title}</h4>
-      {g && (
-        <p className="room3d-diy">
-          <span className={`room3d-chip diy-${g.diy.toLowerCase()}`}>DIY: {g.diy}</span>{' '}
-          <span className="small-note">{g.diyNote}</span>
-        </p>
-      )}
-      {e && (
-        <dl className="room3d-costs">
-          <dt>
-            Materials
-            <small>
-              {g?.materialNote ?? 'No materials beyond the kit'}
-              {e.areaSqFt !== null && g?.materialPerSqFtMinor !== undefined
-                ? ` · ${e.areaSqFt} sq ft measured`
-                : ''}
-            </small>
-          </dt>
-          <dd>{e.needsArea ? 'needs a measurement' : `≈ ${money(e.materialMinor, 'USD')}`}</dd>
-          {g && g.kit.length > 0 && (
-            <>
-              <dt>
-                DIY tools
-                <small>A contractor brings these</small>
-              </dt>
-              <dd>≈ {money(e.kitMinor, 'USD')}</dd>
-            </>
+    <div className="room3d-popup" role="dialog" aria-label={pin.title}>
+      <header>
+        <div>
+          <span className="room3d-step-phase">{g?.phase ?? 'Other'}</span>
+          <h4>{pin.title}</h4>
+        </div>
+        <button type="button" className="room3d-close" aria-label="Close" onClick={onClose}>
+          ×
+        </button>
+      </header>
+      <div className="room3d-tiers" role="group" aria-label="Who does it">
+        <button type="button" aria-pressed={mode === 'diy'} onClick={() => setMode('diy')}>
+          Do it yourself
+        </button>
+        <button type="button" aria-pressed={mode === 'pro'} onClick={() => setMode('pro')}>
+          Hire a pro
+        </button>
+      </div>
+      {mode === 'diy' ? (
+        <>
+          {g && (
+            <p className="room3d-diy">
+              <span className={`room3d-chip diy-${g.diy.toLowerCase()}`}>{g.diy}</span>{' '}
+              <span className="small-note">{g.diyNote}</span>
+            </p>
           )}
-          <dt className="room3d-costs-total">DIY total</dt>
-          <dd className="room3d-costs-total">≈ {money(e.totalMinor, 'USD')}</dd>
-        </dl>
-      )}
-      {g && g.kit.length > 0 && (
-        <ul className="room3d-kit">
-          {g.kit.map((item) => (
-            <li key={item.name}>
-              <span>{item.name}</span>
-              <span>{money(item.priceMinor, 'USD')}</span>
+          {e && (
+            <dl className="room3d-costs">
+              <dt>
+                Materials
+                <small>
+                  {e.needsArea
+                    ? 'Needs a measurement'
+                    : e.areaSqFt !== null && g?.materialPerSqFtMinor !== undefined
+                      ? `${e.areaSqFt} sq ft`
+                      : (g?.materialNote ?? 'Nothing beyond the tools')}
+                </small>
+              </dt>
+              <dd>{e.needsArea ? '—' : `≈ ${money(e.materialMinor, 'USD')}`}</dd>
+              {g && g.kit.length > 0 && (
+                <>
+                  <dt>
+                    Tools
+                    <small>A pro brings their own</small>
+                  </dt>
+                  <dd>≈ {money(e.kitMinor, 'USD')}</dd>
+                </>
+              )}
+              <dt className="room3d-costs-total">You pay</dt>
+              <dd className="room3d-costs-total">≈ {money(e.totalMinor, 'USD')}</dd>
+            </dl>
+          )}
+          {g?.shopFor && (
+            <p className="room3d-shop-row">
+              <span>Shop materials</span>
+              <Shop query={g.shopFor} />
+            </p>
+          )}
+          {g && g.kit.length > 0 && (
+            <ul className="room3d-kit">
+              {g.kit.map((item) => (
+                <li key={item.name}>
+                  <a
+                    href={SHOPS[0]![1](item.name)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title="Search Home Depot"
+                  >
+                    {item.name}
+                  </a>
+                  <span>{money(item.priceMinor, 'USD')}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+          {g && (
+            <a
+              className="room3d-video"
+              href={`https://www.youtube.com/results?search_query=${encodeURIComponent(g.videoSearch)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              ▶ Watch how it's done
+            </a>
+          )}
+          <p className="small-note">Typical big-box prices, not a quote.</p>
+        </>
+      ) : quoted.length ? (
+        <ul className="room3d-quote-lines">
+          {quoted.map(({ q, line }) => (
+            <li key={q.contractor.id}>
+              <div className="room3d-line-head">
+                <strong>{q.contractor.name}</strong>
+                <strong>{money(line.materialsMinor + line.labourMinor, 'USD')}</strong>
+              </div>
+              <div className="small-note">
+                Materials {money(line.materialsMinor, 'USD')} · Labour{' '}
+                {money(line.labourMinor, 'USD')}
+                {line.areaSqFt !== null ? ` (${line.areaSqFt} sq ft)` : ''}
+              </div>
+              <div className="small-note">
+                <Stars c={q.contractor} /> <ExampleTag />
+              </div>
             </li>
           ))}
         </ul>
+      ) : (
+        <p className="small-note">
+          {isExample
+            ? 'None of the example quotes cover this step.'
+            : 'Add a quote you received to compare it here (coming soon).'}
+        </p>
       )}
-      {g && (
-        <a
-          className="room3d-video"
-          href={`https://www.youtube.com/results?search_query=${encodeURIComponent(g.videoSearch)}`}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          ▶ Watch how-to videos
-        </a>
-      )}
-      <p className="small-note">
-        Template prices: typical retail, not a quote. Hiring out adds labour (not estimated).
-      </p>
       {pin.unplacedReason && <p className="small-note">{pin.unplacedReason}.</p>}
       <details className="room3d-more">
-        <summary>
-          Line items and store prices
-          {pin.costMinor !== null ? ` · ${pinCost(pin)} found` : ''}
-        </summary>
-        <p className="small-note">{pin.summary}</p>
+        <summary>Item details{pin.costMinor !== null ? ` · ${pinCost(pin)}` : ''}</summary>
         <ul className="room3d-links">
           {pin.lines.map((l) => (
             <li key={l.requirementId}>
               <div className="room3d-line-head">
                 <strong>{l.purpose}</strong>
-                <span>
-                  {l.product ? money(l.product.lineTotalMinor, l.product.currency) : 'not priced'}
-                </span>
+                <span>{l.product ? money(l.product.lineTotalMinor, l.product.currency) : '—'}</span>
               </div>
               <div className="small-note">
                 {l.quantity === null ? 'Quantity open' : `${l.quantity} ${l.unit}`}
                 {STATUS[l.status] ? ` · ${STATUS[l.status]}` : ''}
+                {l.product ? ` · ${l.product.productName}, ${l.product.retailer}` : ''}
               </div>
-              {l.product && (
-                <div className="room3d-product">
-                  <div className="room3d-product-image" aria-label="No product image on file">
-                    No image on file
-                  </div>
-                  <div>
-                    {l.product.productName}
-                    <div className="small-note">
-                      {l.product.retailer} · SKU {l.product.sku} · price {l.product.freshness}
-                    </div>
-                  </div>
-                </div>
-              )}
             </li>
           ))}
         </ul>
+        {pin.costMinor === null && connected && (
+          <button
+            type="button"
+            className="link-button"
+            disabled={pricing === 'working'}
+            onClick={onPrice}
+          >
+            {pricing === 'working' ? 'Checking prices…' : 'Check catalog prices'}
+          </button>
+        )}
       </details>
+    </div>
+  );
+}
+
+// A contractor's quote, itemized per step as materials plus labour.
+function QuotePopup({ quote, onClose }: { quote: ExampleQuote; onClose: () => void }) {
+  const c = quote.contractor;
+  return (
+    <div className="room3d-popup" role="dialog" aria-label={`Quote from ${c.name}`}>
+      <header>
+        <div>
+          <span className="room3d-step-phase">
+            {c.trade} · <ExampleTag />
+          </span>
+          <h4>{c.name}</h4>
+          <Stars c={c} />
+        </div>
+        <button type="button" className="room3d-close" aria-label="Close" onClick={onClose}>
+          ×
+        </button>
+      </header>
+      <table className="room3d-quote">
+        <thead>
+          <tr>
+            <th>Step</th>
+            <th>Materials</th>
+            <th>Labour</th>
+          </tr>
+        </thead>
+        <tbody>
+          {quote.lines.map((l) => (
+            <tr key={l.packageId}>
+              <td>
+                {l.title}
+                <small>{l.basis}</small>
+              </td>
+              <td>{money(l.materialsMinor, 'USD')}</td>
+              <td>{money(l.labourMinor, 'USD')}</td>
+            </tr>
+          ))}
+        </tbody>
+        <tfoot>
+          <tr>
+            <td>Total</td>
+            <td colSpan={2}>{money(quote.totalMinor, 'USD')}</td>
+          </tr>
+        </tfoot>
+      </table>
+      {quote.notQuoted.length > 0 && (
+        <p className="small-note">Not in this quote: {quote.notQuoted.join(', ')}.</p>
+      )}
+      {quote.needsArea.length > 0 && (
+        <p className="small-note">Needs a measurement first: {quote.needsArea.join(', ')}.</p>
+      )}
+      <blockquote className="room3d-review">
+        “{c.review.text}” <cite>{c.review.author}</cite>
+      </blockquote>
+      <p className="small-note">
+        Example contractor, quote and reviews, made up for this demo. Tax not included.
+      </p>
     </div>
   );
 }
@@ -385,9 +532,8 @@ export function RoomStudio({
   const plans = TIERS.map((t) => state.artifacts[`${projectId}:purchase-plan:${t}`]?.at(-1)).filter(
     (p) => p?.payload.kind === 'purchase-plan',
   );
-  const [tier, setTier] = useState<string | null>(null);
-  const plan =
-    plans.find((p) => (p!.payload as PurchasePlanPayload).tier === tier) ?? plans[0] ?? undefined;
+  // Catalog prices sit in each step's details; the mid-range plan is enough there.
+  const plan = plans[0] ?? undefined;
   // Every command re-reads the workspace into new objects, so key on revisions:
   // unrelated changes (a chat draft, a view switch) must not rebuild the scene.
   const scopeKey = `${draft?.revision ?? 0}:${plan?.id ?? ''}@${plan?.revision ?? 0}`;
@@ -424,9 +570,17 @@ export function RoomStudio({
     () => (source ? floorPlanSvg(source.model, { title, sourceLabel: source.label }) : ''),
     [source, title],
   );
+  // Example quotes only for the labelled example; real projects get none.
+  const isExample = !!scopeDraft?.request.startsWith(EXAMPLE_TAG);
+  const quotes = useMemo(
+    () => (isExample && notes ? exampleQuotes(notes.steps) : []),
+    [isExample, notes],
+  );
+  const [quoteId, setQuoteId] = useState<string | null>(null);
   const allPins = notes ? [...notes.pins, ...notes.unplaced] : [];
   const choosePin = (id: string | null) => {
     setPinId(id);
+    setQuoteId(null);
     setSelectedId(null);
     const pin = allPins.find((p) => p.id === id);
     scene.current?.select(pin?.surfaceIds ?? []);
@@ -435,6 +589,7 @@ export function RoomStudio({
   // Clicking a surface opens the work acting on it; plain surfaces show geometry.
   const chooseSurface = (surfaceId: string | null) => {
     const pin = surfaceId ? notes?.pins.find((p) => p.surfaceIds.includes(surfaceId)) : undefined;
+    setQuoteId(null);
     if (pin) {
       setPinId(pin.id);
       setSelectedId(null);
@@ -483,6 +638,14 @@ export function RoomStudio({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [source, view, surfaces, notes]);
   useEffect(() => scene.current?.setLook(look), [look]);
+  // Esc closes whichever popup is open.
+  const popupOpen = !!(pinId || quoteId || selectedId);
+  useEffect(() => {
+    if (!popupOpen) return;
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && choosePinRef.current(null);
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [popupOpen]);
 
   const run = async (work: () => Promise<unknown>) => {
     setPricing('working');
@@ -523,6 +686,8 @@ export function RoomStudio({
     );
   const selected = surfaces.find((s) => s.id === selectedId) ?? null;
   const activePin = allPins.find((p) => p.id === pinId) ?? null;
+  const activeQuote = quotes.find((q) => q.contractor.id === quoteId) ?? null;
+  const fullQuotes = quotes.filter((q) => !q.notQuoted.length && !q.needsArea.length);
   // Dimension labels are opt-in: the room reads better without them.
   const dimsOn = showDims ?? false;
   const steps = notes?.steps ?? [];
@@ -611,32 +776,50 @@ export function RoomStudio({
         </nav>
       )}
       <div className="room3d-body">
-        {view === '3d' ? (
-          <div
-            key="canvas"
-            ref={host}
-            className={`room3d-canvas${dimsOn ? '' : ' hide-dims'}`}
-            data-testid="room3d-canvas"
-          />
-        ) : (
-          <div key="plan" className="room3d-plan" dangerouslySetInnerHTML={{ __html: svg }} />
-        )}
-        <aside className="room3d-side">
+        <div className="room3d-stage">
+          {view === '3d' ? (
+            <div
+              key="canvas"
+              ref={host}
+              className={`room3d-canvas${dimsOn ? '' : ' hide-dims'}`}
+              data-testid="room3d-canvas"
+            />
+          ) : (
+            <div key="plan" className="room3d-plan" dangerouslySetInnerHTML={{ __html: svg }} />
+          )}
           {activePin ? (
-            <AnnotationDetail pin={activePin} surfaces={surfaces} onBack={() => choosePin(null)} />
+            <TaskPopup
+              key={activePin.id}
+              pin={activePin}
+              quotes={quotes}
+              isExample={isExample}
+              connected={controller.connected}
+              pricing={pricing}
+              onPrice={() => void price()}
+              onClose={() => choosePin(null)}
+            />
+          ) : activeQuote ? (
+            <QuotePopup quote={activeQuote} onClose={() => setQuoteId(null)} />
           ) : selected ? (
-            <>
-              <button
-                type="button"
-                className="link-button subtle"
-                onClick={() => chooseSurface(null)}
-              >
-                ← Overview
-              </button>
+            <div className="room3d-popup" role="dialog" aria-label={selected.label}>
+              <header>
+                <div />
+                <button
+                  type="button"
+                  className="room3d-close"
+                  aria-label="Close"
+                  onClick={() => choosePin(null)}
+                >
+                  ×
+                </button>
+              </header>
               <SurfaceDetail surface={selected} />
-              <p className="small-note">No planned work acts on this surface.</p>
-            </>
-          ) : !scopeDraft || replanning ? (
+              <p className="small-note">No planned work on this surface.</p>
+            </div>
+          ) : null}
+        </div>
+        <aside className="room3d-side">
+          {!scopeDraft || replanning ? (
             <>
               <WorkPlanner
                 busy={pricing === 'working'}
@@ -653,40 +836,43 @@ export function RoomStudio({
                   Keep the current plan
                 </button>
               )}
-              {pricing && pricing !== 'working' && (
-                <p role="alert" className="small-note">
-                  {pricing}
-                </p>
-              )}
             </>
           ) : (
             <>
-              <div className="room3d-summary">
-                <span className="eyebrow">DIY estimate · template prices</span>
-                <strong className="room3d-total">
-                  {template
-                    ? `≈ ${money(template.materialsMinor + template.toolsMinor, 'USD')}`
-                    : 'Not estimated'}
-                </strong>
-                {template && (
+              <div className="room3d-compare">
+                <div>
+                  <span className="eyebrow">Do it yourself</span>
+                  <strong>
+                    {template
+                      ? `≈ ${money(template.materialsMinor + template.toolsMinor, 'USD')}`
+                      : '—'}
+                  </strong>
+                  <span className="small-note">Materials and tools</span>
+                </div>
+                <div>
+                  <span className="eyebrow">Hire a pro</span>
+                  <strong>
+                    {fullQuotes.length ? `${money(fullQuotes[0]!.totalMinor, 'USD')}` : '—'}
+                  </strong>
                   <span className="small-note">
-                    Materials ≈ {money(template.materialsMinor, 'USD')} · DIY tools ≈{' '}
-                    {money(template.toolsMinor, 'USD')}
-                    <br />
-                    Hiring out: materials plus labour (not estimated)
+                    {fullQuotes.length ? 'Lowest full quote' : 'No quotes yet'}
                   </span>
-                )}
-                {!!template?.needsArea && (
-                  <span className="small-note">
-                    {template.needsArea} step{template.needsArea > 1 ? 's need' : ' needs'} a
-                    measurement to price materials.
-                  </span>
-                )}
+                </div>
               </div>
+              {!!template?.needsArea && (
+                <p className="small-note">
+                  {template.needsArea} step{template.needsArea > 1 ? 's need' : ' needs'} a
+                  measurement to price.
+                </p>
+              )}
               <ol className="room3d-order">
                 {steps.map((s) => (
                   <li key={s.id}>
-                    <button type="button" onClick={() => choosePin(s.id)}>
+                    <button
+                      type="button"
+                      aria-current={pinId === s.id || undefined}
+                      onClick={() => choosePin(s.id)}
+                    >
                       <span className="room3d-step-phase">{s.guide?.phase ?? 'Other'}</span>
                       <span className="room3d-pin-title">{s.title}</span>
                       {s.guide && (
@@ -701,45 +887,32 @@ export function RoomStudio({
                   </li>
                 ))}
               </ol>
-              <div className="room3d-store">
-                {notes?.totalMinor != null && notes.currency ? (
-                  <>
-                    <span className="small-note">
-                      Store prices found: {money(notes.totalMinor, notes.currency)} for{' '}
-                      {notes.priced} of {notes.items} items (demo catalog)
-                    </span>
-                    {plans.length > 1 && (
-                      <div className="room3d-tiers" role="group" aria-label="Price tier">
-                        {plans.map((p) => {
-                          const t = (p!.payload as PurchasePlanPayload).tier;
-                          return (
-                            <button
-                              key={t}
-                              type="button"
-                              aria-pressed={p === plan}
-                              onClick={() => setTier(t)}
-                            >
-                              {TIER_LABEL[t as keyof typeof TIER_LABEL] ?? t}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </>
-                ) : controller.connected ? (
-                  <button
-                    type="button"
-                    className="link-button"
-                    disabled={pricing === 'working'}
-                    onClick={() => void price()}
-                  >
-                    {pricing === 'working' ? 'Checking store prices…' : 'Check store prices'}
-                  </button>
-                ) : null}
-                {pricing && pricing !== 'working' && (
-                  <p role="alert" className="small-note">
-                    {pricing}
-                  </p>
+              <div className="room3d-quotes">
+                <span className="eyebrow">Contractor quotes</span>
+                {quotes.length ? (
+                  quotes.map((q) => (
+                    <button
+                      key={q.contractor.id}
+                      type="button"
+                      aria-current={quoteId === q.contractor.id || undefined}
+                      onClick={() => {
+                        choosePin(null);
+                        setQuoteId(q.contractor.id);
+                      }}
+                    >
+                      <span>
+                        <strong>{q.contractor.name}</strong> <ExampleTag />
+                        <br />
+                        <Stars c={q.contractor} />
+                        {q.notQuoted.length > 0 && (
+                          <span className="small-note"> · part of the job</span>
+                        )}
+                      </span>
+                      <strong>{money(q.totalMinor, 'USD')}</strong>
+                    </button>
+                  ))
+                ) : (
+                  <p className="small-note">Add a quote you received (coming soon).</p>
                 )}
               </div>
               <button
@@ -749,12 +922,12 @@ export function RoomStudio({
               >
                 Change the work
               </button>
-              {source.model.notes.map((n) => (
-                <p key={n} className="small-note">
-                  {n}
-                </p>
-              ))}
             </>
+          )}
+          {pricing && pricing !== 'working' && (
+            <p role="alert" className="small-note">
+              {pricing}
+            </p>
           )}
         </aside>
       </div>

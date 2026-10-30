@@ -4,15 +4,18 @@ import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { IDBFactory } from 'fake-indexeddb';
 import { roomDimensionCommands, roomDimensionFact, scopeDraftId } from '@renovagent/core';
-import { RoomDimensionsCard } from '../../apps/web/src/features/scope/room-dimensions-card.js';
+import {
+  RoomDimensionsCard,
+  RoomDimensionsForm,
+} from '../../apps/web/src/features/scope/room-dimensions-card.js';
 import { WorkspaceController } from '../../apps/web/src/app/workspace-controller.js';
 import { IndexedDbProjectRepository } from '../../apps/web/src/adapters/indexeddb/project-repository.js';
 import { Scenario, context } from '../foundation-helpers.js';
 
 const controller = {} as WorkspaceController;
-const render = (s: Scenario) =>
+const render = (s: Scenario, component = RoomDimensionsCard) =>
   renderToStaticMarkup(
-    createElement(RoomDimensionsCard, {
+    createElement(component, {
       state: s.state,
       projectId: 'project-a',
       controller,
@@ -107,14 +110,15 @@ test('the room card starts empty and open, with no invented dimensions', () => {
   const s = new Scenario();
   s.create();
   const html = render(s);
-  assert.match(html, /Measure this room · 0\/5 recorded/);
-  assert.match(html, /<details[^>]*open/);
+  assert.match(html, /Not measured yet/);
+  assert.match(html, /Save measurements/);
+  assert.match(html, /Measure with your phone · coming soon/);
   assert.doesNotMatch(html, /value="\d/);
   assert.match(html, /Phone AR measuring app/);
   assert.match(html, /nothing here is verified/i);
 });
 
-test('saved dimensions show in their original units and a stale draft asks for a re-draft', () => {
+test('saved dimensions collapse to one line in their original units; a stale draft still says so', () => {
   const s = new Scenario();
   s.create();
   s.apply(
@@ -143,8 +147,12 @@ test('saved dimensions show in their original units and a stale draft asks for a
   for (const c of commands) s.apply(c);
   assert.equal(s.state.artifacts[scopeDraftId('project-a')].at(-1)!.freshness, 'stale');
   const html = render(s);
-  assert.match(html, /2\/5 recorded/);
-  assert.match(html, /value="12"/);
-  assert.match(html, /value="96"/);
+  assert.match(html, /12 ft long · 96 in ceiling/);
+  assert.doesNotMatch(html, /Save measurements/);
+  assert.doesNotMatch(html, /Example/);
   assert.match(html, /Ask Muse to re-draft/);
+  // Opening the form starts from the saved values.
+  const form = render(s, RoomDimensionsForm);
+  assert.match(form, /value="12"/);
+  assert.match(form, /value="96"/);
 });

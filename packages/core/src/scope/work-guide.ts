@@ -21,6 +21,8 @@ export type WorkGuide = {
   materialPerSqFtMinor?: number;
   materialFlatMinor?: number;
   materialNote?: string;
+  // A store search for the materials (the person picks the product).
+  shopFor?: string;
 };
 
 const k = (name: string, dollars: number): KitItem => ({
@@ -61,6 +63,7 @@ const GUIDES: Record<string, WorkGuide> = {
     kit: [k('Voltage tester', 20), k('Wire connectors', 6), k('Foil duct tape', 10)],
     materialFlatMinor: 12000,
     materialNote: 'Fan allowance',
+    shopFor: 'bathroom exhaust fan',
   },
   'service-work': {
     phase: 'Rough-in',
@@ -84,6 +87,7 @@ const GUIDES: Record<string, WorkGuide> = {
     ],
     materialPerSqFtMinor: 20,
     materialNote: 'Paint, two coats (≈ $40/gal, 400 sq ft per coat)',
+    shopFor: 'interior wall paint',
   },
   'floor-tile': {
     phase: 'Flooring',
@@ -99,6 +103,7 @@ const GUIDES: Record<string, WorkGuide> = {
     ],
     materialPerSqFtMinor: 420,
     materialNote: 'Tile + thinset and grout, 10% waste (≈ $3/sq ft tile)',
+    shopFor: 'porcelain floor tile',
   },
   'hardwood-floor': {
     phase: 'Flooring',
@@ -108,6 +113,7 @@ const GUIDES: Record<string, WorkGuide> = {
     kit: [k('Flooring install kit', 25), k('Flooring nailer rental, 1 day', 60), k('Spacers', 6)],
     materialPerSqFtMinor: 660,
     materialNote: 'Engineered hardwood, 10% waste (≈ $6/sq ft)',
+    shopFor: 'engineered hardwood flooring',
   },
   'lvp-floor': {
     phase: 'Flooring',
@@ -122,6 +128,7 @@ const GUIDES: Record<string, WorkGuide> = {
     ],
     materialPerSqFtMinor: 330,
     materialNote: 'Vinyl plank, 10% waste (≈ $3/sq ft)',
+    shopFor: 'luxury vinyl plank flooring',
   },
   vanity: {
     phase: 'Fixtures',
@@ -136,6 +143,7 @@ const GUIDES: Record<string, WorkGuide> = {
     ],
     materialFlatMinor: 45000,
     materialNote: 'Vanity, top and faucet allowance',
+    shopFor: 'bathroom vanity with top',
   },
   toilet: {
     phase: 'Fixtures',
@@ -145,6 +153,7 @@ const GUIDES: Record<string, WorkGuide> = {
     kit: [k('Wax ring and closet bolts', 12), k('Supply line', 10), k('Shims', 8)],
     materialFlatMinor: 25000,
     materialNote: 'Toilet allowance',
+    shopFor: 'toilet',
   },
 };
 GUIDES['wall-paint'] = GUIDES.paint!;

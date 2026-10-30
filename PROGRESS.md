@@ -16,31 +16,38 @@ Renovagent carries a persistent property project through investigation, options,
 
 ## What currently exists
 
-| Area | Current state | Important limit |
-|---|---|---|
-| Local frontend | Prompt-first React/Vite workspace on IndexedDB or connected Mongo: projects, conversation/work surfaces, artifacts/revisions, decisions, sources, drafts, activity | Labeled agent fixtures where noted; no reviewed compliance guidance. Original frontend retained at `/legacy.html` |
-| Connected backend | Loopback API + selectable local/cluster Mongo: per-owner workspaces, real in-app Muse photo jobs, sessions, catalog, submissions; shared server-side database selection | Public HTTPS hosting and production hardening remain open |
-| Accounts | Optional Google/Meta sign-in with per-owner workspaces, explicit local adoption, sign-in web surface | No passwords; live round-trips need the owner's OAuth clients |
-| Commerce | Shared catalog with duplicate-proof imports, tiered purchase plans, contractor accept/decline, checkout reviews, price submissions with review quarantine | Seed prices are labeled demo examples; affiliate feeds need the owner's accounts; no live inventory, tax, or checkout |
-| Agents | MCP adapter with 14 tools over stdio and authenticated Streamable HTTP: owner-scoped reads/proposals, project creation, recipe scope/materials drafts, same-room design options, file discovery, catalog recall and checkout assembly | Consumer Muse Mac discovered ten tools, read the migrated projects, created a separate authorized QA project and reread its brief over temporary HTTPS; stable hosting remains open |
-| Technical references | Versioned adoption/scope/permit source register, applicability checks and visible coverage gaps | Exact 2018 clearances and residential exhaust criteria retrieved; local clearance mapping, complete electrical provisions, trade design and qualified review remain blocked |
-| Planning math | Shared deterministic geometry, quantities, money/tier/checkout math; single command authority for all writes | Rectangular playbooks; no inferred routes, no reviewed compliance guidance |
-| Verification | 181 pass (15 legacy + 166 TypeScript, 31 Mongo cases skip); explicit real-Mongo suite 34/34; strict types, boundaries, formatting, builds | Browser QA covers labeled projects; actual consumer-Muse reads and separate QA brief write/read verified; no claim of general model reliability, technical compliance, or full lifecycle coverage |
+| Area                 | Current state                                                                                                                                                                                                                         | Important limit                                                                                                                                                                                   |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Local frontend       | Prompt-first React/Vite workspace on IndexedDB or connected Mongo: projects, conversation/work surfaces, artifacts/revisions, decisions, sources, drafts, activity                                                                    | Labeled agent fixtures where noted; no reviewed compliance guidance. Original frontend retained at `/legacy.html`                                                                                 |
+| Connected backend    | Loopback API + selectable local/cluster Mongo: per-owner workspaces, real in-app Muse photo jobs, sessions, catalog, submissions; shared server-side database selection                                                               | Public HTTPS hosting and production hardening remain open                                                                                                                                         |
+| Accounts             | Optional Google/Meta sign-in with per-owner workspaces, explicit local adoption, sign-in web surface                                                                                                                                  | No passwords; live round-trips need the owner's OAuth clients                                                                                                                                     |
+| Commerce             | Shared catalog with duplicate-proof imports, tiered purchase plans, contractor accept/decline, checkout reviews, price submissions with review quarantine                                                                             | Seed prices are labeled demo examples; affiliate feeds need the owner's accounts; no live inventory, tax, or checkout                                                                             |
+| Agents               | MCP adapter with 14 tools over stdio and authenticated Streamable HTTP: owner-scoped reads/proposals, project creation, recipe scope/materials drafts, same-room design options, file discovery, catalog recall and checkout assembly | Consumer Muse Mac discovered ten tools, read the migrated projects, created a separate authorized QA project and reread its brief over temporary HTTPS; stable hosting remains open               |
+| Technical references | Versioned adoption/scope/permit source register, applicability checks and visible coverage gaps                                                                                                                                       | Exact 2018 clearances and residential exhaust criteria retrieved; local clearance mapping, complete electrical provisions, trade design and qualified review remain blocked                       |
+| Planning math        | Shared deterministic geometry, quantities, money/tier/checkout math; single command authority for all writes                                                                                                                          | Rectangular playbooks; no inferred routes, no reviewed compliance guidance                                                                                                                        |
+| Verification         | 181 pass (15 legacy + 166 TypeScript, 31 Mongo cases skip); explicit real-Mongo suite 34/34; strict types, boundaries, formatting, builds                                                                                             | Browser QA covers labeled projects; actual consumer-Muse reads and separate QA brief write/read verified; no claim of general model reliability, technical compliance, or full lifecycle coverage |
 
 ## Delivery tracking
 
-| Slice | Status |
-|---|---|
-| 0 — Architecture baseline | Documented; implementation choices and open integration questions recorded |
-| 1 — Durable project foundation | Implemented and tested alongside current preview; see linked acceptance evidence |
-| 2 — Working project workspace | Implemented with durable local fixtures and desktop/phone browser checks; see linked evidence |
-| 3 — Technical planning core | Local deterministic core implemented; exact-source/trade coverage and qualified technical review gate remain open |
-| 4 — Connected durable agent workflow | Partial: loopback API/Mongo, photo jobs, accounts, local MCP done; hosted transport and general agent workflow open |
-| 5 — Job preparation and coordination | Partial: catalog, tiered plans, checkout reviews done; scheduling, contractor accounts, tax, live retail open |
-| 6 — Execution, change control, handover | Not implemented; receipt accounting and contractor accountability specified only |
-| 7 — Second project playbook | Not implemented |
+| Slice                                   | Status                                                                                                              |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| 0 — Architecture baseline               | Documented; implementation choices and open integration questions recorded                                          |
+| 1 — Durable project foundation          | Implemented and tested alongside current preview; see linked acceptance evidence                                    |
+| 2 — Working project workspace           | Implemented with durable local fixtures and desktop/phone browser checks; see linked evidence                       |
+| 3 — Technical planning core             | Local deterministic core implemented; exact-source/trade coverage and qualified technical review gate remain open   |
+| 4 — Connected durable agent workflow    | Partial: loopback API/Mongo, photo jobs, accounts, local MCP done; hosted transport and general agent workflow open |
+| 5 — Job preparation and coordination    | Partial: catalog, tiered plans, checkout reviews done; scheduling, contractor accounts, tax, live retail open       |
+| 6 — Execution, change control, handover | Not implemented; receipt accounting and contractor accountability specified only                                    |
+| 7 — Second project playbook             | Not implemented                                                                                                     |
 
 Use each slice's acceptance criteria before changing its status. A mock screen, canned reply, or HTTP 200 does not establish workflow completion.
+
+### DIY or hire, step popups, example quotes — October 30, 2026
+
+- The room's overview compares Do it yourself with Hire a pro. Steps open as popups over the room (DIY / Hire a pro tabs, Home Depot / Lowe's search links, how-to video). The example project shows three fictional contractors' itemized quotes (materials + labour from the measured areas) with example ratings and a review, all tagged Example; real projects get "quote upload coming soon". The measurements card collapses to one line with "Measure with your phone · coming soon"; it no longer opens empty on the example.
+- Landing brief for Codex: `docs/design/landing-muse-and-room.md` (real Muse screenshot, plain copy, room screenshots).
+- Verified: `npm test` 15 + 209; `tests/domain/example-quotes.test.ts`; headless Chrome screenshots in `docs/previews/room-*.png`. Not checked by a person in a browser.
+- Open for Muse beyond a tunnel: the hosted container does not include the MCP endpoint yet (`hosted-deployment.md`).
 
 ### Order of work, DIY difficulty and template prices — October 30, 2026
 

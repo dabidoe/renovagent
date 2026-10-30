@@ -407,6 +407,14 @@
   padding: 4px 0;
   border-bottom: 1px dashed var(--line, #e2e8f0);
 }
+.room3d-kit a {
+  color: inherit;
+  text-decoration: underline dotted #94a3b8;
+  text-underline-offset: 3px;
+}
+.room3d-kit a:hover {
+  color: var(--blue, #2563eb);
+}
 .room3d-video {
   display: inline-flex;
   margin: 2px 0 8px;
@@ -502,4 +510,185 @@
 }
 .room3d-costs dd {
   white-space: nowrap;
+}
+
+/* A step or quote opens as a card over the room; the room stays visible. */
+.room3d-stage {
+  position: relative;
+  min-width: 0;
+}
+.room3d-popup {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 4;
+  width: min(360px, calc(100% - 24px));
+  max-height: calc(100% - 24px);
+  overflow: auto;
+  padding: 14px 16px;
+  border: 1px solid var(--line, #e2e8f0);
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.16);
+}
+.room3d-popup > header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.room3d-popup h4 {
+  margin: 2px 0 4px;
+  font-size: 18px;
+}
+.room3d-close {
+  border: 0;
+  background: none;
+  font-size: 22px;
+  line-height: 1;
+  color: #64748b;
+  cursor: pointer;
+}
+.room3d-popup .room3d-tiers {
+  margin-bottom: 10px;
+}
+.room3d-shop {
+  display: inline-flex;
+  gap: 8px;
+  font-size: 12px;
+}
+.room3d-shop a {
+  color: var(--blue, #2563eb);
+  text-decoration: none;
+}
+.room3d-shop a:hover {
+  text-decoration: underline;
+}
+.room3d-shop-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.room3d-kit .room3d-shop {
+  margin-left: 6px;
+  font-size: 11px;
+}
+.room3d-tag {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: #fef3c7;
+  color: #92400e;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  vertical-align: middle;
+}
+
+/* Overview: the two numbers that matter. */
+.room3d-compare {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.room3d-compare > div {
+  display: grid;
+  gap: 2px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--side, #f1f5f9);
+}
+.room3d-compare strong {
+  font-size: 22px;
+  font-variant-numeric: tabular-nums;
+}
+.room3d-order button[aria-current] {
+  border-color: var(--blue, #2563eb);
+}
+.room3d-quotes {
+  display: grid;
+  gap: 6px;
+  margin: 12px 0 8px;
+}
+.room3d-quotes > button {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--line, #e2e8f0);
+  border-radius: 8px;
+  background: #fff;
+  text-align: left;
+  cursor: pointer;
+}
+.room3d-quotes > button:hover,
+.room3d-quotes > button[aria-current] {
+  border-color: var(--blue, #2563eb);
+}
+.room3d-quote-lines {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 8px;
+  display: grid;
+  gap: 8px;
+}
+.room3d-quote-lines li {
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: var(--side, #f1f5f9);
+}
+.room3d-quote {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+.room3d-quote th,
+.room3d-quote td {
+  padding: 6px 4px;
+  border-bottom: 1px solid var(--line, #e2e8f0);
+  text-align: right;
+  vertical-align: top;
+  font-variant-numeric: tabular-nums;
+}
+.room3d-quote th:first-child,
+.room3d-quote td:first-child {
+  text-align: left;
+}
+.room3d-quote td small {
+  display: block;
+  color: #64748b;
+}
+.room3d-quote tfoot td {
+  border-bottom: 0;
+  font-weight: 700;
+  font-size: 15px;
+}
+.room3d-review {
+  margin: 8px 0;
+  padding: 8px 10px;
+  border-left: 3px solid #fcd34d;
+  background: #fffbeb;
+  font-size: 13px;
+}
+.room3d-review cite {
+  display: block;
+  margin-top: 2px;
+  font-style: normal;
+  color: #64748b;
+}
+@media (max-width: 760px) {
+  .room3d-popup {
+    position: static;
+    width: auto;
+    max-height: none;
+    margin-top: 8px;
+  }
 }

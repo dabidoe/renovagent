@@ -47,4 +47,5 @@ export * from './geometry/plan-drawing.js';
 export * from './geometry/room-surfaces.js';
 export * from './geometry/room-annotations.js';
 export * from './scope/work-guide.js';
+export * from './scope/example-quotes.js';
 export * from './geometry/finish-swatches.js';

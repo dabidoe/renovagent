@@ -5,6 +5,7 @@ import {
   type RoomDimension,
   type RoomDimensionsInput,
   type RoomMeasureMethod,
+  type ScopeDraft,
   type Workspace,
 } from '@renovagent/contracts';
 import { roomDimensionFact, scopeDraftId, summarizeFloorPlan } from '@renovagent/core';
@@ -32,7 +33,8 @@ function savedEntry(state: Workspace, projectId: string, key: RoomDimension): En
     : { amount: '', unit: units[0] };
 }
 
-export function RoomDimensionsCard({
+// The full form; mounted only while editing, so it starts from the saved values.
+export function RoomDimensionsForm({
   state,
   projectId,
   controller,
@@ -53,13 +55,8 @@ export function RoomDimensionsCard({
   const [notes, setNotes] = useState('');
   const [evidence, setEvidence] = useState<File | undefined>();
   const [plan, setPlan] = useState<FloorPlanSummary | null>(null);
-  // Open by default only until something is recorded; the person controls it after.
-  const [open, setOpen] = useState(
-    () => !dimensions.some(({ key }) => roomDimensionFact(state, projectId, key)),
-  );
   const [error, setError] = useState('');
   const [saved, setSaved] = useState('');
-  const recorded = dimensions.filter(({ key }) => roomDimensionFact(state, projectId, key)).length;
   const draft = state.artifacts[scopeDraftId(projectId)]?.at(-1);
 
   // Parsing only proposes values; nothing is recorded until the person saves.
@@ -123,14 +120,7 @@ export function RoomDimensionsCard({
   }
 
   return (
-    <details
-      className="candidate-measurements-panel"
-      open={open}
-      onToggle={(e) => setOpen(e.currentTarget.open)}
-    >
-      <summary>
-        Measure this room · {recorded}/{dimensions.length} recorded
-      </summary>
+    <>
       <p>
         Enter what you measured, or import a floor plan from an iPhone LiDAR scan (RoomPlan JSON) or
         an{' '}
@@ -249,6 +239,77 @@ export function RoomDimensionsCard({
           Save measurements
         </button>
       </form>
-    </details>
+    </>
+  );
+}
+
+// What is recorded, in one line: "14 × 12 ft floor · 8 ft ceiling".
+function measuredLine(state: Workspace, projectId: string) {
+  const v = (key: RoomDimension) => {
+    const e = savedEntry(state, projectId, key);
+    return e.amount ? `${e.amount} ${unitLabel(e.unit)}` : null;
+  };
+  const length = savedEntry(state, projectId, 'length');
+  const width = savedEntry(state, projectId, 'width');
+  const parts = [
+    length.amount && width.amount
+      ? `${length.amount} × ${width.amount} ${unitLabel(width.unit)} floor`
+      : (v('length') && `${v('length')} long`) || (v('width') && `${v('width')} wide`),
+    v('area') && `${v('area')} floor`,
+    v('height') && `${v('height')} ceiling`,
+  ].filter(Boolean);
+  return parts.join(' · ');
+}
+
+// One line once something is measured; the form opens on demand.
+export function RoomDimensionsCard({
+  state,
+  projectId,
+  controller,
+  busy,
+}: {
+  state: Workspace;
+  projectId: string;
+  controller: WorkspaceController;
+  busy: boolean;
+}) {
+  const recorded = dimensions.some(({ key }) => roomDimensionFact(state, projectId, key));
+  // Follows what is recorded until the person opens or closes it.
+  const [editing, setEditing] = useState<boolean | null>(null);
+  const open = editing ?? !recorded;
+  const draft = state.artifacts[scopeDraftId(projectId)]?.at(-1);
+  const example =
+    draft?.payload.kind === 'scope-draft' &&
+    (draft.payload as ScopeDraft).request.startsWith('[Example fixture]');
+  return (
+    <section className="room-measure" aria-label="Room measurements">
+      <div className="room-measure-row">
+        <span>
+          <strong>Measurements</strong>{' '}
+          {recorded ? measuredLine(state, projectId) : 'Not measured yet'}
+          {example && <span className="room3d-tag">Example</span>}
+        </span>
+        <button type="button" className="link-button" onClick={() => setEditing(!open)}>
+          {open ? 'Close' : recorded ? 'Edit' : 'Add measurements'}
+        </button>
+        <span className="room-measure-soon" title="Scan the room with your phone's camera">
+          Measure with your phone · coming soon
+        </span>
+      </div>
+      {!open && draft?.freshness === 'stale' && (
+        <p role="status" className="small-note">
+          The scope draft was made before these measurements. Ask Muse to re-draft the scope to
+          update quantities.
+        </p>
+      )}
+      {open && (
+        <RoomDimensionsForm
+          state={state}
+          projectId={projectId}
+          controller={controller}
+          busy={busy}
+        />
+      )}
+    </section>
   );
 }
