@@ -43,7 +43,8 @@ export type ProviderConfigs = { google?: GoogleConfig; meta?: MetaConfig };
 
 export type OAuthIdentity = { sub: string; email: string };
 
-export function googleConfigFromEnv(): GoogleConfig | null {
+// `publicRedirect` is the hosted callback; an explicit *_REDIRECT_URI still wins.
+export function googleConfigFromEnv(publicRedirect?: string): GoogleConfig | null {
   const clientId = process.env.GOOGLE_CLIENT_ID || '';
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET || '';
   if (!clientId || !clientSecret) return null;
@@ -51,11 +52,13 @@ export function googleConfigFromEnv(): GoogleConfig | null {
     clientId,
     clientSecret,
     redirectUri:
-      process.env.GOOGLE_REDIRECT_URI || 'http://127.0.0.1:8741/api/workspace/auth/google/callback',
+      process.env.GOOGLE_REDIRECT_URI ||
+      publicRedirect ||
+      'http://127.0.0.1:8741/api/workspace/auth/google/callback',
   };
 }
 
-export function metaConfigFromEnv(): MetaConfig | null {
+export function metaConfigFromEnv(publicRedirect?: string): MetaConfig | null {
   const appId = process.env.META_APP_ID || '';
   const appSecret = process.env.META_APP_SECRET || '';
   if (!appId || !appSecret) return null;
@@ -63,7 +66,9 @@ export function metaConfigFromEnv(): MetaConfig | null {
     appId,
     appSecret,
     redirectUri:
-      process.env.META_REDIRECT_URI || 'http://127.0.0.1:8741/api/workspace/auth/meta/callback',
+      process.env.META_REDIRECT_URI ||
+      publicRedirect ||
+      'http://127.0.0.1:8741/api/workspace/auth/meta/callback',
   };
 }
 
@@ -260,6 +265,6 @@ export function accountCookie(token: string, secure: boolean): string {
   return `${ACCOUNT_COOKIE}=${token}; HttpOnly; SameSite=Lax; Path=/api/workspace${secure ? '; Secure' : ''}; Max-Age=${SESSION_DAYS * 24 * 3600}`;
 }
 
-export function clearAccountCookie(): string {
-  return `${ACCOUNT_COOKIE}=; HttpOnly; SameSite=Lax; Path=/api/workspace; Max-Age=0`;
+export function clearAccountCookie(secure = false): string {
+  return `${ACCOUNT_COOKIE}=; HttpOnly; SameSite=Lax; Path=/api/workspace${secure ? '; Secure' : ''}; Max-Age=0`;
 }

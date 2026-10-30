@@ -1,0 +1,17 @@
+.git
+.claude
+.remember
+node_modules
+**/node_modules
+dist
+pages-dist
+.foundation-build
+.local
+.env
+.env.*
+!.env.example
+**/.env
+atlas-credentials.env
+docs/pics
+docs/previews
+.DS_Store

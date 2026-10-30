@@ -42,6 +42,17 @@ Renovagent carries a persistent property project through investigation, options,
 
 Use each slice's acceptance criteria before changing its status. A mock screen, canned reply, or HTTP 200 does not establish workflow completion.
 
+### Hosted deployment scaffolding — October 30, 2026
+
+- One container serves the landing (`/`), workspace (`/workspace.html`) and API from one origin. `RENOVAGENT_PUBLIC_URL`/`RENOVAGENT_HOST`/`PORT`/`RENOVAGENT_STATIC_DIR` drive trusted origin and host, `Secure` cookies, hosted OAuth callbacks and static serving; defaults keep the loopback dev server. A public origin without Google/Meta sign-in refuses to start. Added `/healthz`, `Dockerfile`, `railway.json`, `.env.example` (names only), and CI (build, tests, Docker build; no deploy).
+- Nothing deployed. Owner steps (Railway, production Atlas, provider callbacks, domain/Bunny) and public-launch blockers (16 MB per-owner blob document, no account deletion or privacy policy, `muse` CLI absent from the image, MCP HTTP not containerised) are in [hosted deployment](docs/architecture/hosted-deployment.md).
+- Verified: `npm test` 15 legacy + 200 TypeScript, `npm run test:connected` 36/36 (new public-mode scenario), build/types/boundaries; manual run serving `pages-dist`. Docker build not run locally (no Docker); Railway, Bunny and hosted sign-in not exercised.
+
+### Room studio: 3D room, plan drawing, renders — October 30, 2026
+
+- One `RoomModel` parser (RoomPlan, OpenPlan3D export and project files) feeds the floor-plan summary, a dimensioned SVG plan drawing in named layers (empty electrical layer: nothing records wiring), surface-to-scope links, a clickable three.js room (Existing/Proposed look, GLB export with per-surface data) and Blender Cycles renders (`npm run render:room`). Unknown thickness/height is styled, never dimensioned; quantities come only from the scope draft.
+- Details and limits: [room studio](docs/architecture/room-studio.md). Verified with domain/integration tests and a headless-Chrome end-to-end run; not on our own iPhone scan or by a person in a desktop browser; connected-mode plan blob read checked by inspection.
+
 ### Room measurement capture — October 29, 2026
 
 - "Measure this room" card (options and plan stages) saves floor length, width and ceiling height as project facts with a user observation and optional photo as evidence. The method (tape, phone AR app, LiDAR scan) is recorded; nothing is marked verified. Unchanged values are skipped on re-save.

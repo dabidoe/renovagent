@@ -20,6 +20,17 @@ import { workspaceMongoConfig } from './database-config.js';
 import { PhotoJobFiles } from './photo-job-files.js';
 import { DesignImageStore } from './design-images.js';
 import {
+  hostingConfigFromEnv,
+  isPublic,
+  localHosting,
+  oauthRedirect,
+  secureCookies,
+  serveStatic,
+  trustedHost,
+  trustedOrigins,
+  type HostingConfig,
+} from './hosting.js';
+import {
   DesignPreviewWorker,
   MusePreviewProvider,
   type PreviewProvider,
@@ -38,8 +49,13 @@ export async function createWorkspaceServer(
   catalog?: CatalogStore,
   photoFiles?: PhotoJobFiles,
   design?: { images: DesignImageStore; provider?: PreviewProvider },
+  hosting: HostingConfig = localHosting,
 ) {
   const accountMode = Boolean(accounts);
+  // A public origin with the shared local token would give every visitor one workspace.
+  if (isPublic(hosting) && !accountMode)
+    throw new Error('A public deployment needs Google or Meta sign-in configured');
+  const secure = secureCookies(hosting);
   const designWorkers = new Map<string, DesignPreviewWorker>();
   const designWorkerFor = (repo: MongoWorkspaceRepository) => {
     if (!design?.provider) return undefined;
@@ -66,7 +82,6 @@ export async function createWorkspaceServer(
     for (const id of await repository.collection.distinct('_id'))
       await workerFor(repository.forUser(id));
   }
-  const origins = new Set(['http://127.0.0.1:8741', 'http://localhost:8741']);
   const blobSchema = z
     .object({
       id: z.string().min(1).max(160),
@@ -115,13 +130,20 @@ export async function createWorkspaceServer(
       res.end(JSON.stringify(value));
     };
     try {
+      // Liveness for the host's health check; reveals nothing about any workspace.
+      if (req.url === '/healthz' && req.method === 'GET') {
+        json(200, { ok: true });
+        return;
+      }
       const host = req.headers.host || '';
       const bound = server.address();
       const port = bound && typeof bound !== 'string' ? bound.port : 4000;
-      const allowedHost = new RegExp(`^(127\\.0\\.0\\.1|localhost):(${port}|8741)$`);
+      if (!trustedHost(hosting, port, host))
+        throw new DomainError('FORBIDDEN', 'Only the workspace origin is allowed');
+      // Pages are public and linked from anywhere; the API checks below stay strict.
+      if (hosting.staticDir && (await serveStatic(hosting.staticDir, req, res))) return;
       if (
-        !allowedHost.test(host) ||
-        (req.headers.origin && !origins.has(req.headers.origin)) ||
+        (req.headers.origin && !trustedOrigins(hosting, port).has(req.headers.origin)) ||
         (req.headers['sec-fetch-site'] &&
           !['same-origin', 'none'].includes(String(req.headers['sec-fetch-site'])))
       )
@@ -160,16 +182,19 @@ export async function createWorkspaceServer(
         const state = url.searchParams.get('state') || '',
           code = url.searchParams.get('code') || '';
         if (!code || !accounts.consumeState(state, provider)) {
-          res.writeHead(302, { Location: '/?auth=error' });
+          res.writeHead(302, { Location: `${hosting.appPath}?auth=error` });
           res.end();
           return;
         }
         try {
           const login = await accounts.completeLogin(provider, code);
           await repository.forUser(login.user._id).ensure();
-          res.writeHead(302, { Location: '/', 'Set-Cookie': accountCookie(login.token, false) });
+          res.writeHead(302, {
+            Location: hosting.appPath,
+            'Set-Cookie': accountCookie(login.token, secure),
+          });
         } catch {
-          res.writeHead(302, { Location: '/?auth=error' });
+          res.writeHead(302, { Location: `${hosting.appPath}?auth=error` });
         }
         res.end();
         return;
@@ -197,7 +222,7 @@ export async function createWorkspaceServer(
         if (accounts) await accounts.destroySession(cookies[ACCOUNT_COOKIE] || '');
         res.writeHead(200, {
           'Content-Type': 'application/json',
-          'Set-Cookie': clearAccountCookie(),
+          'Set-Cookie': clearAccountCookie(secure),
         });
         res.end(JSON.stringify({ ok: true }));
         return;
@@ -599,8 +624,9 @@ if (process.argv[1]?.endsWith('/apps/api/src/server.ts')) {
   }
   const database = await workspaceMongoConfig();
   const { repository, client } = await MongoWorkspaceRepository.connect(database.uri);
-  const google = googleConfigFromEnv();
-  const meta = metaConfigFromEnv();
+  const hosting = hostingConfigFromEnv();
+  const google = googleConfigFromEnv(oauthRedirect(hosting, 'google'));
+  const meta = metaConfigFromEnv(oauthRedirect(hosting, 'meta'));
   const accounts =
     google || meta
       ? new AccountService(client.db(), {
@@ -621,10 +647,11 @@ if (process.argv[1]?.endsWith('/apps/api/src/server.ts')) {
       images: new DesignImageStore(client.db()),
       ...((await configuredMuseKey()) ? { provider: new MusePreviewProvider() } : {}),
     },
+    hosting,
   );
-  server.listen(4000, '127.0.0.1', () =>
+  server.listen(hosting.listenPort, hosting.listenHost, () =>
     console.log(
-      `Workspace API ready on 127.0.0.1:4000; Mongo ${database.target} selected (${database.source}); ${accounts ? `account mode (${accounts.providers().join(' + ')} sign-in)` : 'local single-owner mode'}`,
+      `Workspace API ready on ${hosting.listenHost}:${hosting.listenPort}${hosting.publicUrl ? ` for ${hosting.publicUrl.origin}` : ''}${hosting.staticDir ? `, serving ${hosting.staticDir}` : ''}; Mongo ${database.target} selected (${database.source}); ${accounts ? `account mode (${accounts.providers().join(' + ')} sign-in)` : 'local single-owner mode'}`,
     ),
   );
   const stop = () =>

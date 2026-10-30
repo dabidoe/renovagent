@@ -6,6 +6,11 @@ import { MongoClient, type Db } from 'mongodb';
 import { MongoWorkspaceRepository, OWNER, type Aggregate } from '../../apps/api/src/repository.js';
 import { AccountService } from '../../apps/api/src/accounts.js';
 import { createWorkspaceServer } from '../../apps/api/src/server.js';
+import type { HostingConfig } from '../../apps/api/src/hosting.js';
+import { request } from 'node:http';
+import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { Scenario } from '../foundation-helpers.js';
 
 const uri = process.env.TEST_WORKSPACE_MONGO_URI;
@@ -46,6 +51,7 @@ async function withAccountServer(
     base: string,
     login: (provider: 'google' | 'meta', code: string) => Promise<string>,
   ) => Promise<void>,
+  hosting?: HostingConfig,
 ) {
   const client = new MongoClient(uri!);
   await client.connect();
@@ -58,6 +64,10 @@ async function withAccountServer(
     'synthetic-account-test-token',
     false,
     accounts,
+    undefined,
+    undefined,
+    undefined,
+    hosting,
   );
   await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
   const base = `http://127.0.0.1:${(server.address() as AddressInfo).port}/api/workspace`;
@@ -78,8 +88,10 @@ async function withAccountServer(
       { headers, redirect: 'manual' },
     );
     assert.equal(done.status, 302);
-    assert.equal(done.headers.get('location'), '/');
-    return done.headers.getSetCookie()[0].split(';')[0];
+    assert.equal(done.headers.get('location'), hosting?.appPath ?? '/');
+    const cookie = done.headers.getSetCookie()[0];
+    assert.equal(/; Secure/.test(cookie), hosting?.publicUrl?.protocol === 'https:');
+    return cookie.split(';')[0];
   };
   try {
     await fn(base, login);
@@ -206,8 +218,83 @@ test('local mode is unchanged when Google is not configured', { skip: !uri }, as
     } finally {
       await new Promise((resolve) => server.close(resolve));
     }
+    // The shared local token must never be offered on a public origin.
+    await assert.rejects(
+      createWorkspaceServer(
+        repo,
+        'synthetic-local-test-token',
+        false,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        publicHosting,
+      ),
+      /needs Google or Meta sign-in/,
+    );
   } finally {
     await db.dropDatabase();
     await client.close();
   }
 });
+
+const publicHosting: HostingConfig = {
+  listenHost: '0.0.0.0',
+  listenPort: 0,
+  publicUrl: new URL('https://renovagent.example'),
+  appPath: '/workspace.html',
+};
+
+// Sends a request as a browser on the public origin would (fetch cannot set Host).
+const asPublic = (base: string, path: string, origin?: string) =>
+  new Promise<{ status: number; body: string }>((done, fail) =>
+    request(
+      `${base.replace(/\/api\/workspace$/, '')}${path}`,
+      {
+        headers: { ...headers, Host: 'renovagent.example', ...(origin ? { Origin: origin } : {}) },
+      },
+      (res) => {
+        let body = '';
+        res.on('data', (c) => (body += c));
+        res.on('end', () => done({ status: res.statusCode!, body }));
+      },
+    )
+      .on('error', fail)
+      .end(),
+  );
+
+test(
+  'a public deployment serves the site, trusts only its origin and sets secure cookies',
+  { skip: !uri },
+  async () => {
+    const site = await mkdtemp(join(tmpdir(), 'renovagent-public-'));
+    await writeFile(join(site, 'index.html'), '<h1>Renovagent</h1>');
+    try {
+      await withAccountServer(
+        async (base, login) => {
+          assert.equal((await asPublic(base, '/healthz')).status, 200);
+          const page = await asPublic(base, '/', 'https://elsewhere.example');
+          assert.equal(page.body, '<h1>Renovagent</h1>');
+          const own = await asPublic(base, '/api/workspace/auth/me', 'https://renovagent.example');
+          assert.equal(own.status, 200);
+          assert.equal(JSON.parse(own.body).mode, 'account');
+          const foreign = await asPublic(base, '/api/workspace/auth/me', 'https://evil.example');
+          assert.equal(foreign.status, 403);
+          const wrongHost = await fetch(`${base}/auth/me`, {
+            headers: { ...headers, Origin: 'https://renovagent.example.evil' },
+          });
+          assert.equal(wrongHost.status, 403);
+          // Sign-in lands on the workspace page with a Secure cookie (asserted in login).
+          const alice = await login('google', 'alice');
+          const me = await (
+            await fetch(`${base}/auth/me`, { headers: { ...headers, Cookie: alice } })
+          ).json();
+          assert.equal(me.signedIn, true);
+        },
+        { ...publicHosting, staticDir: site },
+      );
+    } finally {
+      await rm(site, { recursive: true, force: true });
+    }
+  },
+);
