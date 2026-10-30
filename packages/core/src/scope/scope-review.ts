@@ -1,5 +1,24 @@
 import type { LocalContext, ScopeDraft, ScopeRequirement } from '@renovagent/contracts';
 import { technicalSources } from '../planning/sources.js';
+import { modelCodeDigest } from '../planning/model-code-digest.js';
+
+type Provision = (typeof modelCodeDigest)[number];
+// Public-domain copies posted by Public.Resource.Org (codes incorporated into law).
+const modelCitation = (e: Provision): ReviewCitation => ({
+  id: `${e.code.toLowerCase()}-${e.edition}-${e.id}`,
+  title: `${e.code} ${e.edition} ${e.id} ${e.title}`,
+  publisher: 'International Code Council model code (public-domain copy, Public.Resource.Org)',
+  kind: 'code-provision',
+  url: `https://archive.org/details/gov.law.icc.${e.code.toLowerCase()}.${e.edition}`,
+  locator: `Section ${e.id}`,
+  edition: `${e.edition} ${e.code} (model code, not an adopted edition)`,
+  retrievedOn: '2026-10-30',
+  excerpt: e.excerpt,
+  reviewed: false,
+});
+const dedupe = (cs: ReviewCitation[]) => [
+  ...new Map(cs.map((c) => [`${c.id}\n${c.excerpt}`, c])).values(),
+];
 
 // "Does this work?" for a scope draft, without a model. Deterministic checks
 // run against rules quoted from the draft's own fetched sources; everything
@@ -234,16 +253,40 @@ export function reviewScope(
         : 'Record the property location and jurisdiction, then re-run the review.',
     });
   }
+  // 5. Model-code provisions for the planned work, from the verified digest of
+  // the public-domain 2012 I-codes. Text is the model code; whether and in
+  // which edition a jurisdiction adopted it is a separate, open question.
+  const adopted =
+    'Check it in the edition your jurisdiction adopted (2015–2024 at codes.iccsafe.org).';
+  const provisions = modelCodeDigest.filter(
+    (e) => ids.has(e.packageId) || (e.packageId === 'permits-general' && ids.size > 0),
+  );
+  const permitRules = provisions.filter((e) => e.kind === 'permit');
   if (!topics.size)
     add({
       packageId: null,
       packageTitle: 'Permits',
       status: 'authority_confirmation_required',
-      summary:
-        'Whether this work needs a permit was not researched; no permit source is on file for it.',
+      summary: permitRules.length
+        ? `The 2012 model code lists which work needs a permit and which finish work is exempt (${[...new Set(permitRules.map((e) => `${e.code} ${e.id}`))].join(', ')}). The adopted edition and local amendments decide for this property.`
+        : 'Whether this work needs a permit was not researched; no permit source is on file for it.',
       evidence: local?.authority ? [`Authority on file: ${local.authority}`] : [],
-      citations: [],
-      action: 'Ask the contractor or the local permit office.',
+      citations: dedupe(permitRules.map(modelCitation)),
+      action: permitRules.length
+        ? `Confirm with the local permit office. ${adopted}`
+        : 'Ask the contractor or the local permit office.',
+    });
+  for (const e of provisions.filter((x) => x.kind !== 'permit'))
+    add({
+      packageId: e.packageId,
+      packageTitle: e.packageId === 'permits-general' ? 'Permits and scope' : title(e.packageId),
+      status: 'contractor_review_required',
+      summary: e.check
+        ? `Confirm ${e.check.quantity} ${e.check.comparator} ${e.check.value} ${e.check.unit} (${e.code} ${e.edition} ${e.id}, ${e.title}). ${e.why}`
+        : `${e.code} ${e.edition} ${e.id} (${e.title}): ${e.why}`,
+      evidence: [],
+      citations: [modelCitation(e)],
+      action: `Contractor confirms on site. ${adopted}`,
     });
 
   const order: FindingGroup[] = ['conflicts', 'unresolved', 'passes'];

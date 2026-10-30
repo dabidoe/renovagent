@@ -1,7 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { emptyPlanningInputs, type Workspace } from '@renovagent/contracts';
-import { compileScopeDraft, resolveLocalContext, reviewScope } from '@renovagent/core';
+import {
+  compileScopeDraft,
+  modelCodeDigest,
+  resolveLocalContext,
+  reviewScope,
+} from '@renovagent/core';
 
 const state = { facts: {}, artifacts: {}, projects: {} } as unknown as Workspace;
 const draft = (recipeId: string, packageIds: string[]) =>
@@ -49,10 +54,16 @@ test('missing measurements and open conditions stay unknown, never passed', () =
   const r = reviewScope(draft('living-room-refresh', ['wall-paint']));
   assert.ok(r.findings.some((f) => f.status === 'needs_measurement'));
   assert.ok(r.findings.some((f) => f.status === 'contractor_review_required'));
-  // No permit research on file: an explicit open question, not a pass.
+  // Permits stay an open question for the authority, citing the model code's
+  // exemption for finish work as model text, not as this property's rule.
   const permit = r.findings.find((f) => f.packageTitle === 'Permits')!;
   assert.equal(permit.status, 'authority_confirmation_required');
-  assert.deepEqual(permit.citations, []);
+  const exempt = permit.citations.find(
+    (c) => /R105\.2 /.test(c.title) && /Painting/.test(c.excerpt),
+  )!;
+  assert.match(exempt.edition!, /model code, not an adopted edition/);
+  assert.equal(exempt.url, 'https://archive.org/details/gov.law.icc.irc.2012');
+  assert.match(permit.action, /adopted/);
   assert.match(r.method, /No model interpretation/);
 });
 
@@ -75,6 +86,21 @@ test('code provisions are cited only in their jurisdiction and never as complian
   assert.ok(
     phila.findings.every(
       (f) => !/complian|approved|passes code/i.test(f.summary) || /not reviewed/.test(f.summary),
+    ),
+  );
+});
+
+test('the model-code digest keeps only stated numbers and 2012 model text', () => {
+  assert.ok(modelCodeDigest.length > 50);
+  for (const e of modelCodeDigest) {
+    assert.equal(e.edition, '2012');
+    assert.ok(e.excerpt.length <= 300, e.id);
+    if (e.check) assert.ok(e.excerpt.includes(String(e.check.value)), `${e.id} ${e.check.value}`);
+  }
+  // Painting, carpeting and tiling are finish work in R105.2.
+  assert.ok(
+    modelCodeDigest.some(
+      (e) => e.id === 'R105.2' && /Painting, papering, tiling, carpeting/.test(e.excerpt),
     ),
   );
 });

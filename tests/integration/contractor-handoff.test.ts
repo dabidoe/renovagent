@@ -31,7 +31,11 @@ test('the example project hands off its work, evidence, sources and open questio
   assert.doesNotMatch(md, /Toilet rough-in/);
   // Sources carry their URL and retrieval date; gaps say so.
   assert.match(md, /\(https:\/\/cdn\.shopify\.com\/[^)]+\), retrieved 2026-10-29/);
-  assert.match(md, /Whether this work needs a permit was not researched/);
+  // Permit question cites the public-domain model code with its link.
+  assert.match(
+    md,
+    /IRC 2012 R105\.2 Work exempt from permit\]\(https:\/\/archive\.org\/details\/gov\.law\.icc\.irc\.2012\)/,
+  );
   assert.match(md, /## Contractor response/);
   // Prep is a note before the steps, not a numbered step.
   assert.doesNotMatch(md, /\d\. Protection and furniture/);

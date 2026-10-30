@@ -44,6 +44,11 @@ Renovagent carries a persistent property project through investigation, options,
 
 Use each slice's acceptance criteria before changing its status. A mock screen, canned reply, or HTTP 200 does not establish workflow completion.
 
+### Model-code digest and Jev client — October 30, 2026
+
+- The 2012 IRC, IEBC, IPC, IMC and IECC (newest public-domain editions, Public.Resource.Org) are downloaded and split into 4,523 sections; a reviewing subagent picked 74 provisions across 13 work packages, and every excerpt is re-verified verbatim before it becomes `modelCodeDigest`. The review cites them (permits incl. the R105.2 finish-work exemption, clearances, exhaust rates, GFCI, smoke/CO) as model text, never as the adopted code. 2015–2024 editions are copyrighted; only ICC's licensed API provides them.
+- `apps/api/src/jev.ts`: TypeSafe Jev client for ranking code sections per project and photo checks with boxes. Tested against a fake; the live key returned 401.
+
 ### "Does this work?", approval before change, contractor handoff — October 30, 2026
 
 - First slice of `docs/MODEL_INTEGRATION.md`. Any project with a scope draft gets a deterministic review (potential conflicts / to measure or confirm / passes known checks), each finding with the action that resolves it and citations copied from stored sources (URL, edition, section, retrieval date, unreviewed flag). Code provisions are cited only in their own jurisdiction and never as compliance. "Use this design" now shows what changes and needs "Approve and save". A Markdown contractor handoff (work in order, measurement provenance, allowances, requirements register, verify list, reply fields) downloads or copies. MCP tools `review_scope` and `export_contractor_handoff` expose both to Muse.
