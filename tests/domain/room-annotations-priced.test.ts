@@ -67,16 +67,17 @@ test('the example living room prices its pinned work from the demo catalog', () 
   assert.deepEqual(pin('lvp-floor').surfaceIds, ['floor']);
   assert.equal(a.tier, 'mid');
   assert.ok(a.totalMinor! >= pin('wall-paint').costMinor! + pin('lvp-floor').costMinor!);
-  // Order of operations: prep, demo, paint, flooring.
+  // Order of operations: demo, paint, flooring. Moving furniture and covering
+  // floors is folded into prep, not a step of its own, but still in the totals.
   assert.deepEqual(
     a.steps.map((s) => [s.id, s.guide?.phase, s.number]),
     [
-      ['removal-protection', 'Prep', 1],
-      ['carpet-removal', 'Demo', 2],
-      ['wall-paint', 'Paint', 3],
-      ['lvp-floor', 'Flooring', 4],
+      ['carpet-removal', 'Demo', 1],
+      ['wall-paint', 'Paint', 2],
+      ['lvp-floor', 'Flooring', 3],
     ],
   );
+  assert.equal(a.prep?.id, 'removal-protection');
   // Template materials scale with the plan's measured base area, not 3D geometry:
   // 416 sq ft of wall at $0.20, 168 sq ft of floor at $3.30 (10% waste included).
   const paint = pin('wall-paint').estimate!;

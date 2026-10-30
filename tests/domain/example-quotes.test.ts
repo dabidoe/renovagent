@@ -3,7 +3,6 @@ import assert from 'node:assert/strict';
 import { exampleQuotes } from '@renovagent/core';
 
 const steps = [
-  { id: 'removal-protection', title: 'Protection', estimate: { materialMinor: 0, areaSqFt: null } },
   { id: 'carpet-removal', title: 'Carpet removal', estimate: { materialMinor: 0, areaSqFt: 168 } },
   { id: 'wall-paint', title: 'Wall paint', estimate: { materialMinor: 8320, areaSqFt: 416 } },
   { id: 'lvp-floor', title: 'Vinyl plank', estimate: { materialMinor: 55440, areaSqFt: 168 } },
@@ -29,7 +28,7 @@ test('a specialist quotes only its trade and says what it leaves out', () => {
     ferro.lines.map((l) => l.packageId),
     ['carpet-removal', 'lvp-floor'],
   );
-  assert.deepEqual(ferro.notQuoted, ['Protection', 'Wall paint']);
+  assert.deepEqual(ferro.notQuoted, ['Wall paint']);
   // Full-coverage quotes come first, cheapest first.
   assert.equal(quotes.at(-1), ferro);
   assert.ok(quotes[0]!.totalMinor <= quotes[1]!.totalMinor);
@@ -38,11 +37,11 @@ test('a specialist quotes only its trade and says what it leaves out', () => {
 test('labour by area waits for a measurement instead of guessing', () => {
   const [q] = exampleQuotes([
     { id: 'lvp-floor', title: 'Vinyl plank', estimate: { materialMinor: 0, areaSqFt: null } },
-    { id: 'removal-protection', title: 'Protection', estimate: null },
+    { id: 'exhaust-fan', title: 'Exhaust fan', estimate: null },
   ]);
   assert.deepEqual(q!.needsArea, ['Vinyl plank']);
   assert.deepEqual(
     q!.lines.map((l) => l.packageId),
-    ['removal-protection'],
+    ['exhaust-fan'],
   );
 });

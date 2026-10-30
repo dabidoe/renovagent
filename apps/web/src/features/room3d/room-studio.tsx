@@ -6,6 +6,7 @@ import type {
   Workspace,
 } from '@renovagent/contracts';
 import {
+  compileScopeDraft,
   designOptionsId,
   dimensionLabel,
   EXAMPLE_TAG,
@@ -22,6 +23,17 @@ import {
 } from '@renovagent/core';
 import type { WorkspaceController } from '../../app/workspace-controller.js';
 import { loadRoomSource, type RoomSource } from './room-source.js';
+import { workspaceRequest } from '../../adapters/http/project-repository.js';
+import {
+  DesignPicker,
+  directionFor,
+  ExampleRoomPhoto,
+  packagesFor,
+  savedPick,
+  variantFor,
+  type MuseRender,
+  type Pick,
+} from './example-photo.js';
 import type { RoomLook, RoomScene } from './room-scene.js';
 
 const EXISTING: RoomLook = { wallColor: 'white', floorFinish: 'existing', label: 'Existing' };
@@ -499,7 +511,7 @@ export function RoomStudio({
 }) {
   const [source, setSource] = useState<RoomSource | null>(null);
   const [loadError, setLoadError] = useState('');
-  const [view, setView] = useState<'3d' | 'plan'>('3d');
+  const [viewChoice, setView] = useState<'photo' | '3d' | 'plan' | null>(null);
   const [webglError, setWebglError] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [pinId, setPinId] = useState<string | null>(null);
@@ -572,12 +584,36 @@ export function RoomStudio({
   );
   // Example quotes only for the labelled example; real projects get none.
   const isExample = !!scopeDraft?.request.startsWith(EXAMPLE_TAG);
+  // The example living room opens on its rendered photo with a finish picker.
+  // A pick is previewed in memory (draft, steps, quotes) until "Use this design".
+  const photoMode = isExample && scopeDraft?.recipe.id === 'living-room-refresh';
+  const view = viewChoice ?? (photoMode ? 'photo' : '3d');
+  const saved = useMemo(() => savedPick(scopeDraft), [scopeDraft]);
+  const [picked, setPicked] = useState<Pick | null>(null);
+  const pick = picked ?? saved;
+  const changed = photoMode && (pick.wall !== saved.wall || pick.floor !== saved.floor);
+  const shownNotes = useMemo(() => {
+    if (!changed || !source || !scopeDraft) return notes;
+    const { draft: preview } = compileScopeDraft(state, projectId, {
+      recipeId: scopeDraft.recipe.id,
+      packageIds: packagesFor(pick.floor),
+      request: scopeDraft.request,
+      direction: directionFor(pick),
+      reported: [],
+      expectedDraftRevision: 0,
+    });
+    return roomAnnotations(source.model, preview, null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [changed, pick.floor, pick.wall, source, scopeKey, notes]);
   const quotes = useMemo(
-    () => (isExample && notes ? exampleQuotes(notes.steps) : []),
-    [isExample, notes],
+    () => (isExample && shownNotes ? exampleQuotes(shownNotes.steps) : []),
+    [isExample, shownNotes],
   );
+  const [showAfter, setShowAfter] = useState(true);
+  const [muse, setMuse] = useState<Record<string, MuseRender>>({});
+  const [showMuse, setShowMuse] = useState(true);
   const [quoteId, setQuoteId] = useState<string | null>(null);
-  const allPins = notes ? [...notes.pins, ...notes.unplaced] : [];
+  const allPins = shownNotes ? [...shownNotes.pins, ...shownNotes.unplaced] : [];
   const choosePin = (id: string | null) => {
     setPinId(id);
     setQuoteId(null);
@@ -690,8 +726,53 @@ export function RoomStudio({
   const fullQuotes = quotes.filter((q) => !q.notQuoted.length && !q.needsArea.length);
   // Dimension labels are opt-in: the room reads better without them.
   const dimsOn = showDims ?? false;
-  const steps = notes?.steps ?? [];
-  const template = notes?.template ?? null;
+  const steps = shownNotes?.steps ?? [];
+  const template = shownNotes?.template ?? null;
+  const variant = variantFor(pinId, pick, showAfter);
+  const museKey = variantFor(null, pick, true);
+  const museNow = muse[museKey] ?? null;
+  const renderWithMuse = () => {
+    setMuse((m) => ({ ...m, [museKey]: { status: 'working' } }));
+    setShowMuse(true);
+    workspaceRequest('/design/example-render', { variant: museKey })
+      .then((r: { image: { sha256: string }; model: string }) =>
+        setMuse((m) => ({
+          ...m,
+          [museKey]: {
+            status: 'done',
+            url: `/api/workspace/design-images/${r.image.sha256}`,
+            model: r.model,
+          },
+        })),
+      )
+      .catch((e: unknown) =>
+        setMuse((m) => ({
+          ...m,
+          [museKey]: {
+            status: 'error',
+            // The CLI error is long; a used-up quota is the common case.
+            message: /quota|429|rate.?limit/i.test(String(e))
+              ? 'Muse is out of quota for now. Try again later.'
+              : (e instanceof Error ? e.message : String(e)).slice(0, 160),
+          },
+        })),
+      );
+  };
+  const saveDesign = async () => {
+    if (!scopeDraft) return;
+    const ok = await run(() =>
+      controller.draftScope(
+        projectId,
+        scopeDraft.recipe.id,
+        packagesFor(pick.floor),
+        scopeDraft.request,
+        directionFor(pick),
+      ),
+    );
+    if (!ok) return;
+    setPicked(null);
+    if (controller.connected) await price();
+  };
   return (
     <section className="room3d" aria-label={heading}>
       <header className="room3d-head">
@@ -700,20 +781,31 @@ export function RoomStudio({
           <p className="small-note">{source.label} · measured, not verified</p>
         </div>
         <div className="room3d-actions" role="group" aria-label="Room view">
+          {photoMode && (
+            <button type="button" aria-pressed={view === 'photo'} onClick={() => setView('photo')}>
+              Photo
+            </button>
+          )}
           <button type="button" aria-pressed={view === '3d'} onClick={() => setView('3d')}>
             3D
           </button>
           <button type="button" aria-pressed={view === 'plan'} onClick={() => setView('plan')}>
             Plan
           </button>
-          {proposed && (
-            <button
-              type="button"
-              aria-pressed={showProposed}
-              onClick={() => setShowProposed((v) => !v)}
-            >
-              {showProposed ? 'After' : 'Before'}
+          {view === 'photo' ? (
+            <button type="button" aria-pressed={showAfter} onClick={() => setShowAfter((v) => !v)}>
+              {showAfter ? 'After' : 'Before'}
             </button>
+          ) : (
+            proposed && (
+              <button
+                type="button"
+                aria-pressed={showProposed}
+                onClick={() => setShowProposed((v) => !v)}
+              >
+                {showProposed ? 'After' : 'Before'}
+              </button>
+            )
           )}
           <details className="room3d-menu">
             <summary aria-label="More">⋯</summary>
@@ -777,7 +869,22 @@ export function RoomStudio({
       )}
       <div className="room3d-body">
         <div className="room3d-stage">
-          {view === '3d' ? (
+          {view === 'photo' ? (
+            <ExampleRoomPhoto
+              variant={variant}
+              pins={steps.map((s) => ({
+                id: s.id,
+                number: s.number,
+                title: s.title,
+                price: s.estimate ? `≈ ${money(s.estimate.totalMinor, 'USD')} DIY` : '',
+              }))}
+              activeId={pinId}
+              onPin={(id) => choosePin(id)}
+              muse={museNow}
+              showMuse={showMuse}
+              onShowMuse={setShowMuse}
+            />
+          ) : view === '3d' ? (
             <div
               key="canvas"
               ref={host}
@@ -839,6 +946,51 @@ export function RoomStudio({
             </>
           ) : (
             <>
+              {photoMode && (
+                <>
+                  <DesignPicker pick={pick} onPick={setPicked} shop={(q) => <Shop query={q} />} />
+                  {changed ? (
+                    <div className="room3d-use">
+                      <button
+                        type="button"
+                        className="primary"
+                        disabled={pricing === 'working'}
+                        onClick={() => void saveDesign()}
+                      >
+                        Use this design
+                      </button>
+                      <button
+                        type="button"
+                        className="link-button subtle"
+                        onClick={() => setPicked(null)}
+                      >
+                        Back to saved
+                      </button>
+                    </div>
+                  ) : null}
+                  {controller.connected ? (
+                    <button
+                      type="button"
+                      className="room3d-muse"
+                      disabled={museNow?.status === 'working'}
+                      onClick={renderWithMuse}
+                    >
+                      {museNow?.status === 'working'
+                        ? 'Muse is rendering… (about 30 s)'
+                        : museNow?.status === 'done'
+                          ? 'Rendered with Muse ✓'
+                          : '✦ Render with Muse'}
+                    </button>
+                  ) : (
+                    <p className="small-note">Render with Muse: open the connected app.</p>
+                  )}
+                  {museNow?.status === 'error' && (
+                    <p role="alert" className="small-note">
+                      Muse render failed: {museNow.message}
+                    </p>
+                  )}
+                </>
+              )}
               <div className="room3d-compare">
                 <div>
                   <span className="eyebrow">Do it yourself</span>

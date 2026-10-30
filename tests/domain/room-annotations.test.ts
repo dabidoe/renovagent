@@ -66,13 +66,14 @@ test('a box room pins wall, floor and ceiling work and lists work without a reco
   const unplaced = Object.fromEntries(a.unplaced.map((p) => [p.id, p.unplacedReason]));
   assert.match(unplaced.toilet!, /No toilet location recorded/);
   assert.match(unplaced.vanity!, /No sink location recorded/);
-  assert.equal(unplaced['removal-protection'], 'Whole-room work');
+  assert.equal(unplaced['removal-protection'], undefined);
+  assert.equal(a.prep?.unplacedReason, 'Whole-room work');
   // Without a purchase plan there is no cost at all.
   assert.equal(a.totalMinor, null);
   assert.ok(a.pins.every((p) => p.costMinor === null));
   assert.deepEqual(
     [...a.pins, ...a.unplaced].map((p) => p.number).sort((x, y) => x - y),
-    [1, 2, 3, 4, 5, 6],
+    [1, 2, 3, 4, 5],
   );
 });
 

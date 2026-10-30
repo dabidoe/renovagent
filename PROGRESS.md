@@ -44,6 +44,13 @@ Renovagent carries a persistent property project through investigation, options,
 
 Use each slice's acceptance criteria before changing its status. A mock screen, canned reply, or HTTP 200 does not establish workflow completion.
 
+### Example room photo: steps change the image, finishes change the quote — October 30, 2026
+
+- The example living room opens on a furnished render (Poly Haven CC0 furniture and floor textures, one fixed camera) labelled "Example · 3D render". Step tabs show their stage (carpet out → painted → new floor); Before/After shows the original room. A picker for walls (warm white, sage, soft blue) and floor (keep carpet, vinyl plank, hardwood) swaps the image and recomputes the DIY total and example quotes in memory; "Use this design" saves it as the scope draft. Each option names a product spec with store searches.
+- Protection/furniture is no longer its own step; it is folded into prep (still in catalog totals), and contractors quote it inside carpet and paint lines.
+- "Render with Muse" (connected app) sends the chosen still to Muse for a photoreal concept, labelled as generated. With the API key, a direct provider call returned a photoreal version of the still in 22 s (layout and furniture kept).
+- Verified: `npm test` (see below), `tests/integration/example-photo.test.ts`, headless Chrome. Not checked by a person in a browser.
+
 ### DIY or hire, step popups, example quotes — October 30, 2026
 
 - The room's overview compares Do it yourself with Hire a pro. Steps open as popups over the room (DIY / Hire a pro tabs, Home Depot / Lowe's search links, how-to video). The example project shows three fictional contractors' itemized quotes (materials + labour from the measured areas) with example ratings and a review, all tagged Example; real projects get "quote upload coming soon". The measurements card collapses to one line with "Measure with your phone · coming soon"; it no longer opens empty on the example.

@@ -1,0 +1,50 @@
+{
+ "room": {
+  "lengthFt": 14,
+  "widthFt": 12,
+  "heightFt": 8
+ },
+ "image": {
+  "width": 1600,
+  "height": 1000
+ },
+ "anchors": {
+  "wall-paint": [
+   0.7454,
+   0.34
+  ],
+  "carpet-removal": [
+   0.334,
+   0.8136
+  ],
+  "floor": [
+   0.4612,
+   0.8991
+  ]
+ },
+ "walls": {
+  "existing": "#cbbd9f",
+  "warm-white": "#f1ebdd",
+  "sage": "#a9b79c",
+  "soft-blue": "#a3b8cc"
+ },
+ "variants": [
+  "before",
+  "carpet-out",
+  "painted-warm-white-subfloor",
+  "painted-warm-white-carpet",
+  "done-warm-white-carpet",
+  "done-warm-white-lvp",
+  "done-warm-white-hardwood",
+  "painted-sage-subfloor",
+  "painted-sage-carpet",
+  "done-sage-carpet",
+  "done-sage-lvp",
+  "done-sage-hardwood",
+  "painted-soft-blue-subfloor",
+  "painted-soft-blue-carpet",
+  "done-soft-blue-carpet",
+  "done-soft-blue-lvp",
+  "done-soft-blue-hardwood"
+ ]
+}

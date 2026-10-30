@@ -41,6 +41,7 @@ import {
   summarizeDesignOptions,
   uploadDesignPhoto,
 } from './design-service.js';
+import { renderExample } from './example-render.js';
 export async function createWorkspaceServer(
   repository: MongoWorkspaceRepository,
   token: string,
@@ -67,6 +68,7 @@ export async function createWorkspaceServer(
     return worker;
   };
   if (!accountMode) designWorkerFor(repository);
+  const exampleRenders = new Map<string, ReturnType<typeof renderExample>>();
   const workers = new Map<string, PhotoWorker>();
   async function workerFor(repo: MongoWorkspaceRepository) {
     let worker = workers.get(repo.ownerId);
@@ -321,6 +323,28 @@ export async function createWorkspaceServer(
               permission: input.permission,
             }),
           );
+          return;
+        }
+        if (path === '/design/example-render' && req.method === 'POST') {
+          // The example room's chosen finishes, rendered in 3D, made photoreal by
+          // Muse. Only the named render variants are accepted; one paid call per
+          // owner and variant, then the stored result is reused.
+          if (!design.provider)
+            throw new DomainError('VALIDATION', 'Muse is not configured on this server');
+          const { variant } = z
+            .object({
+              variant: z.string().regex(/^done-(warm-white|sage|soft-blue)-(carpet|lvp|hardwood)$/),
+            })
+            .strict()
+            .parse(await body(req));
+          const key = `${activeRepo.ownerId}:${variant}`;
+          let done = exampleRenders.get(key);
+          if (!done) {
+            done = renderExample(design.images, design.provider, activeRepo.ownerId, variant);
+            exampleRenders.set(key, done);
+            done.catch(() => exampleRenders.delete(key));
+          }
+          json(200, await done);
           return;
         }
         if (path === '/design/options' && req.method === 'POST') {

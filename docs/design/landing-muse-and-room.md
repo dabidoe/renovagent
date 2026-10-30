@@ -63,9 +63,23 @@ Crop to the room card. They are from the labelled example project. Keep the
 "Example" tags visible in any crop, since the contractors, reviews and quotes
 are made up.
 
+**Update (later on October 30):** the example now opens on a furnished
+render of the room. Prefer these captures over the 3D ones above:
+
+| File                        | Shows                                                       |
+| --------------------------- | ----------------------------------------------------------- |
+| `room-photo-home.png`       | The rendered room with numbered work pins and the picker    |
+| `room-photo-hardwood.png`   | Same room, sage walls + hardwood: image and prices changed  |
+| `room-photo-stage.png`      | A step tab: the room mid-job (carpet out / walls painted)   |
+
+The stills themselves (`public/example-room/*.jpg`, 1600 × 1000) also work
+as a before/after pair: `before.jpg` and `done-sage-hardwood.jpg`. Label any
+use "Example room · 3D render", never "photo".
+
 **Copy:**
 
 - Heading: `See your room, the work and the price.`
+- Optional fourth point: `Try a colour or a floor: the room and the quote change with it.`
 - Three points:
   - `Every job pinned where it happens, in order: prep, demo, paint, floors.`
   - `DIY or hire out: what it costs you, and what a pro quoted.`

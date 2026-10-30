@@ -26,7 +26,8 @@
     "test:connected": "TEST_WORKSPACE_MONGO_URI=mongodb://127.0.0.1:27018/renovagent_workspace node --import tsx --test tests/integration/connected-workspace.test.ts tests/integration/mcp-workspace.test.ts tests/integration/mcp-http.test.ts tests/integration/cluster-migration.test.ts tests/integration/accounts.test.ts tests/integration/blob-store.test.ts tests/integration/catalog.test.ts tests/integration/design-options.test.ts",
     "seed:catalog": "node --import tsx scripts/seed-catalog.ts",
     "build:pages": "npm run build && node scripts/package-pages.mjs",
-    "render:room": "node --import tsx scripts/render-room.ts"
+    "render:room": "node --import tsx scripts/render-room.ts",
+    "render:example-room": "node scripts/fetch-example-assets.mjs && \"${BLENDER:-/Applications/Blender.app/Contents/MacOS/Blender}\" --background --factory-startup --python scripts/blender/example_room.py -- .local/assets/polyhaven public/example-room 128"
   },
   "devDependencies": {
     "@types/react": "19.2.0",

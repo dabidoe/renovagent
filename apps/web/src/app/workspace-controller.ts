@@ -6,6 +6,7 @@ import {
 import { inventoryImportSchema } from '@renovagent/contracts';
 import {
   type CandidateSurvey,
+  type DesignDirection,
   type InputRef,
   type RoomDimensionsInput,
 } from '@renovagent/contracts';
@@ -444,6 +445,7 @@ export class WorkspaceController {
       'living-room-refresh',
       ['removal-protection', 'wall-paint', 'carpet-removal', 'lvp-floor'],
       '[Example fixture] Repaint and put vinyl plank down in this living room',
+      { wallColor: 'warm white', floorFinish: 'vinyl plank' },
     );
     if (this.connected) await this.priceScopeDraft(id).catch(() => {});
     return id;
@@ -756,13 +758,20 @@ export class WorkspaceController {
   }
   // Drafts the scope from a recipe's packages. Pure domain work: it reads the
   // recorded room facts and runs the same way locally and connected.
-  draftScope(projectId: string, recipeId: string, packageIds: string[], request: string) {
+  draftScope(
+    projectId: string,
+    recipeId: string,
+    packageIds: string[],
+    request: string,
+    direction?: DesignDirection,
+  ) {
     return this.mutate((state) => ({
       commands: [
         this.command(state, projectId, 'DraftScope', {
           recipeId,
           packageIds,
           request,
+          ...(direction ? { direction } : {}),
           reported: [],
           expectedDraftRevision: latest(state.artifacts[scopeDraftId(projectId)])?.revision ?? 0,
         }),

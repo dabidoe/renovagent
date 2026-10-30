@@ -47,6 +47,9 @@ export type RoomAnnotations = {
   unplaced: RoomAnnotation[];
   // Every package in order of operations (numbers follow this order).
   steps: RoomAnnotation[];
+  // Moving furniture and covering what stays, folded into the steps it serves
+  // rather than shown as a step of its own (its lines still count in totals).
+  prep: RoomAnnotation | null;
   // Template totals (USD): materials only, and materials plus DIY tools.
   template: { materialsMinor: number; toolsMinor: number; needsArea: number } | null;
   tier: PurchasePlanPayload['tier'] | null;
@@ -57,6 +60,7 @@ export type RoomAnnotations = {
   notes: string[];
 };
 
+const PREP = 'removal-protection';
 const WALLS = new Set(['paint', 'wall-paint']);
 const FLOOR = new Set(['floor-tile', 'hardwood-floor', 'lvp-floor', 'carpet-removal']);
 const CEILING = new Set(['exhaust-fan']);
@@ -85,6 +89,7 @@ export function roomAnnotations(
     pins: [],
     unplaced: [],
     steps: [],
+    prep: null,
     template: null,
     tier: null,
     totalMinor: null,
@@ -140,17 +145,20 @@ export function roomAnnotations(
     });
   // Numbered in order of operations: prep, demo, rough-in, paint, flooring, fixtures.
   const phase = (a: RoomAnnotation) => (a.guide ? PHASES.indexOf(a.guide.phase) : PHASES.length);
-  all.sort((a, b) => phase(a) - phase(b));
+  const every = [...all].sort((a, b) => phase(a) - phase(b));
+  const prep = every.length > 1 ? (every.find((a) => a.id === PREP) ?? null) : null;
+  all.splice(0, all.length, ...every.filter((a) => a !== prep));
   all.forEach((a, i) => (a.number = i + 1));
   const guided = all.filter((a) => a.estimate);
   const pins = all.filter((a) => a.surfaceIds.length);
-  const priced = all.reduce((n, a) => n + a.priced, 0);
-  const items = all.reduce((n, a) => n + a.lines.length, 0);
-  const costed = all.filter((a) => a.costMinor !== null);
+  const priced = every.reduce((n, a) => n + a.priced, 0);
+  const items = every.reduce((n, a) => n + a.lines.length, 0);
+  const costed = every.filter((a) => a.costMinor !== null);
   return {
     pins,
     unplaced: all.filter((a) => !a.surfaceIds.length),
     steps: all,
+    prep,
     template: guided.length
       ? {
           materialsMinor: guided.reduce((n, a) => n + a.estimate!.materialMinor, 0),
