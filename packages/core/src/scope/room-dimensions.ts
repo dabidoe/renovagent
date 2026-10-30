@@ -35,7 +35,21 @@ export function roomDimensionCommands(
   if (!parsed.success)
     throw new DomainError('VALIDATION', parsed.error.issues[0]?.message || 'Invalid dimensions');
   const input = parsed.data;
-  const measured = order.filter((d) => input[d]);
+  // The form prefills saved values; re-recording an unchanged one would stale
+  // every draft and plan that depends on it for nothing.
+  const measured = order.filter((d) => {
+    const entered = input[d];
+    const saved = roomDimensionFact(state, projectId, d)?.originalValue;
+    return (
+      entered &&
+      !(
+        saved?.kind === 'quantity' &&
+        saved.amount === entered.amount &&
+        saved.unit === entered.unit
+      )
+    );
+  });
+  if (!measured.length) throw new DomainError('VALIDATION', 'These measurements are already saved');
   const base = { projectId, basePropertyRevision: state.properties[project.propertyId].revision };
   const summary = measured
     .map((d) => `${labels[d]} ${input[d]!.amount} ${input[d]!.unit}`)

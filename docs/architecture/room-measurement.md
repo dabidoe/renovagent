@@ -55,10 +55,17 @@ Expected side effect: `finishedWidth`/`finishedLength` are also bathroom
 technical-planning keys, so saving them stales technical artifacts that depend
 on them.
 
-Verified: domain tests (`tests/domain/room-dimensions.test.ts`), card render
-tests (`tests/integration/room-dimensions-card.test.ts`), MCP re-draft against
-real local Mongo (`tests/integration/mcp-workspace.test.ts`). Not verified in a
-live browser session.
+Unchanged values are skipped on re-save (the form prefills saved values), so
+fixing one dimension does not stale work that depends only on the others.
+
+Verified: domain tests (`tests/domain/room-dimensions.test.ts`); controller save
+with a photo blob and card render tests (`tests/integration/room-dimensions-card.test.ts`,
+fake IndexedDB); MCP re-draft plus stale BOM and purchase plans against real
+local Mongo (`tests/integration/mcp-workspace.test.ts`). Not verified in a live
+browser session.
+
+Scope drafts saved before this change have no `factContext`; re-draft them once
+so later measurements stale them.
 
 ## Step 2 — RoomPlan scan import (not started)
 

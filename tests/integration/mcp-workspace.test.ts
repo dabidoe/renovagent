@@ -432,15 +432,19 @@ test(
   'MCP draft_scope re-drafts after the person records room dimensions, even with the same requestId',
   { skip: !uri },
   () =>
-    withClient(async (mcp, repo) => {
+    withClient(async (mcp, repo, catalog) => {
+      await catalog.importBatch(vanityCatalog);
       const ask = {
         requestId: 'muse-measure-1',
         projectId: 'project-a',
         recipeId: 'bathroom-refresh',
-        packageIds: ['floor-tile', 'paint'],
-        request: 'Retile and paint this bathroom.',
+        packageIds: ['vanity', 'floor-tile', 'paint'],
+        request: 'New vanity, retile and paint this bathroom.',
       };
       const blocked = JSON.parse((await call(mcp, 'draft_scope', ask)).text);
+      const priced = (await repo.read()).workspace.artifacts;
+      assert.ok(priced['project-a:bom']?.length);
+      assert.ok(priced['project-a:purchase-plan:builder']?.length);
       // The person saves their own measurements in the workspace (not via MCP).
       const { workspace } = await repo.read();
       let n = 0;
@@ -463,8 +467,11 @@ test(
           },
         ),
       );
-      const stale = (await repo.read()).workspace.artifacts['project-a:scope-draft'].at(-1)!;
-      assert.equal(stale.freshness, 'stale');
+      const after = (await repo.read()).workspace.artifacts;
+      assert.equal(after['project-a:scope-draft'].at(-1)!.freshness, 'stale');
+      // Downstream materials list and purchase plans are flagged too.
+      assert.notEqual(after['project-a:bom'].at(-1)!.freshness, 'current');
+      assert.notEqual(after['project-a:purchase-plan:builder'].at(-1)!.freshness, 'current');
       const fresh = JSON.parse((await call(mcp, 'draft_scope', ask)).text);
       assert.equal(fresh.replay, false);
       assert.equal(fresh.draftRef.revision, blocked.draftRef.revision + 1);

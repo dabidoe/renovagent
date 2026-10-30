@@ -45,6 +45,10 @@ export function RoomDimensionsCard({
   const [method, setMethod] = useState<RoomMeasureMethod>('tape-measure');
   const [notes, setNotes] = useState('');
   const [photo, setPhoto] = useState<File | undefined>();
+  // Open by default only until something is recorded; the person controls it after.
+  const [open, setOpen] = useState(
+    () => !dimensions.some(({ key }) => roomDimensionFact(state, projectId, key)),
+  );
   const [error, setError] = useState('');
   const [saved, setSaved] = useState('');
   const recorded = dimensions.filter(({ key }) => roomDimensionFact(state, projectId, key)).length;
@@ -78,7 +82,11 @@ export function RoomDimensionsCard({
   }
 
   return (
-    <details className="candidate-measurements-panel" open={recorded === 0}>
+    <details
+      className="candidate-measurements-panel"
+      open={open}
+      onToggle={(e) => setOpen(e.currentTarget.open)}
+    >
       <summary>Measure this room · {recorded}/3 recorded</summary>
       <p>
         Enter what you measured. Leave a value blank if you don&apos;t know it. Paint, flooring and
