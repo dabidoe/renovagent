@@ -189,7 +189,8 @@ export class MongoWorkspaceRepository {
     }));
   }
   static async connect(uri: string) {
-    const client = new MongoClient(uri, { serverSelectionTimeoutMS: 5000 });
+    // Atlas over SRV can take longer than 5 s to select a server on first connect.
+    const client = new MongoClient(uri, { serverSelectionTimeoutMS: 20000 });
     await client.connect();
     const repository = MongoWorkspaceRepository.forDb(client.db());
     await repository.ensure();
