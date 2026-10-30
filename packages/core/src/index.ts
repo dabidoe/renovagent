@@ -42,3 +42,4 @@ export * from './scope/design-options.js';
 export * from './scope/living-room-refresh.js';
 export * from './scope/room-dimensions.js';
 export * from './scope/floor-plan.js';
+export * from './geometry/room-model.js';

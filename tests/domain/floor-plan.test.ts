@@ -39,11 +39,13 @@ const rectangleWalls = (height = 2.44) => [
   wall(-2, 0, 0, 1, 3, height),
   wall(2, 0, 0, 1, 3, height),
 ];
+// Floor surfaces lie flat: local x → plan x, local y → −plan y, local z → up,
+// as in real captures. Corners are given here in plan coordinates.
 const floor = (corners: number[][]) => ({
   identifier: 'floor',
   dimensions: [4, 3, 0],
-  transform: transform(0, 0, 1, 0),
-  polygonCorners: corners.map(([x, y]) => [x, y, 0]),
+  transform: [1, 0, 0, 0, 0, 0, -1, 0, 0, 1, 0, 0, 0, 0, 0, 1],
+  polygonCorners: corners.map(([x, y]) => [x, -y, 0]),
   confidence: high,
   category: { floor: {} },
 });
