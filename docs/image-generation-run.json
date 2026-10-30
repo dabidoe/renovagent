@@ -1,0 +1,67 @@
+{
+  "generator": "built-in image_gen",
+  "purpose": "Illustrative website concepts; not photos of a real project",
+  "assets": [
+    {
+      "filename": "apps/web/src/assets/examples/kitchen.jpg",
+      "reference": ".local/design-shots/crops/pp-kitchen.png",
+      "referenceRole": "Loose composition reference, requested about 40% influence; no numerical strength control is exposed by this tool",
+      "nativePixels": [1448, 1086],
+      "exportPixels": [1448, 1086],
+      "export": "JPEG quality 88; workspace photo resized to requested minimum; others retain native dimensions",
+      "sourceOutput": "exec-9d5bbf31-de7e-4565-a72e-ca59395e7159.png",
+      "prompt": "Photorealistic interior photo, bright soft daylight, neutral white and warm oak palette, clean modern American home, eye-level wide-angle 24mm, uncluttered, no people, no text, no logos, no watermarks, no measurement labels.\nUse case: photorealistic-natural. Asset: Renovagent kitchen idea card, a generated illustrative concept, not a real project photo. Create one single photograph at 4:3 landscape, 1600\u00d71200 pixels or larger with that exact aspect ratio. A modest kitchen ready for an update: white shaker cabinets, white quartz counters, stainless range, small window over the sink, light wood floor. Lived-in but tidy, slightly dated hardware. Use the attached crop ONLY as a loose composition reference, around 40% influence: a compact L-shaped kitchen, window and sink to the left, range toward the back, counter return to the right. Recreate crisp natural material detail and coherent cabinet/appliance geometry rather than copying the reference's blurry pixels. Slight everyday wear; attainable ordinary home, not luxury showroom. The entire output is the photo, no borders, UI, labels, captions, arrows or graphics."
+    },
+    {
+      "filename": "apps/web/src/assets/examples/bath.jpg",
+      "reference": ".local/design-shots/crops/pp-bath.png",
+      "referenceRole": "Loose composition reference, requested about 40% influence; no numerical strength control is exposed by this tool",
+      "nativePixels": [1448, 1086],
+      "exportPixels": [1448, 1086],
+      "export": "JPEG quality 88; workspace photo resized to requested minimum; others retain native dimensions",
+      "sourceOutput": "exec-2038a58b-4f20-47f2-aa11-2fdac49bbe38.png",
+      "prompt": "Photorealistic interior photo, bright soft daylight, neutral white and warm oak palette, clean modern American home, eye-level wide-angle 24mm, uncluttered, no people, no text, no logos, no watermarks, no measurement labels.\nUse case: photorealistic-natural. Asset: Renovagent bathroom idea card, illustrative concept only. Single 4:3 landscape photo, at least 1600\u00d71200 requested. A small bathroom: oak single vanity with white top, black-framed mirror, glass walk-in shower with white subway tile, toilet, dark hex floor tile. Straight-on view across the vanity toward the shower. Use the attached crop only as a loose framing reference at around 40% influence: vanity in the foreground left, glass shower beyond, coherent compact room geometry. Recreate sharp natural wood, ceramic and glass detail; do not retain blurry crop pixels. Attainable clean modern bathroom, not an extravagant luxury spa. No UI, overlays, diagrams, brackets, dimension callouts or decorative text. Fill the full image with the photograph."
+    },
+    {
+      "filename": "apps/web/src/assets/examples/basement.jpg",
+      "reference": ".local/design-shots/crops/pp-basement.png",
+      "referenceRole": "Loose composition reference, requested about 40% influence; no numerical strength control is exposed by this tool",
+      "nativePixels": [1448, 1086],
+      "exportPixels": [1448, 1086],
+      "export": "JPEG quality 88; workspace photo resized to requested minimum; others retain native dimensions",
+      "sourceOutput": "exec-f0667cb4-ba66-4819-a808-673f9600da15.png",
+      "prompt": "Photorealistic interior photo, bright soft daylight, neutral white and warm oak palette, clean modern American home, eye-level wide-angle 24mm, uncluttered, no people, no text, no logos, no watermarks, no measurement labels.\nUse case: photorealistic-natural. Asset: Renovagent basement idea card, illustrative concept only. Single 4:3 landscape photo, at least 1600\u00d71200 requested. A partially finished basement: drywall painted greige, recessed lights, low ceiling, beige carpet, one egress window, a simple sofa. Feels like a space that's ready to be made into a real room. Use attached crop only as a loose composition reference at around 40% influence: broad view across open carpeted space toward a simple sofa, window daylight on one side, natural low basement ceiling. Keep the room modest and spare, not fully styled or luxury; crisp material detail, sensible structure and lighting, no blurry upscaled look. No patio doors replacing the egress window. No people, UI, overlays, text, floor plans or measurement graphics.",
+      "correction": "Photorealistic interior photo, bright soft daylight, neutral white and warm oak palette, clean modern American home, eye-level wide-angle 24mm, uncluttered, no people, no text, no logos, no watermarks, no measurement labels.\nPrecise edit to the attached generated basement photo: replace ONLY the smaller, more distant window on the rear-left wall beside the sofa with a continuous plain greige drywall wall matching its surroundings. Preserve the single large foreground-left egress window and its well, all existing room geometry, low ceiling, ceiling lights, beige carpet, simple sofa, lighting, framing and 4:3 landscape aspect ratio. The room must have exactly one window after this change. No other changes or additions. This is an illustrative basement renovation concept."
+    },
+    {
+      "filename": "apps/web/src/assets/examples/floor.jpg",
+      "reference": ".local/design-shots/crops/pp-floor.png",
+      "referenceRole": "Loose composition reference, requested about 40% influence; no numerical strength control is exposed by this tool",
+      "nativePixels": [1448, 1086],
+      "exportPixels": [1448, 1086],
+      "export": "JPEG quality 88; workspace photo resized to requested minimum; others retain native dimensions",
+      "sourceOutput": "exec-80f01099-0cf3-4dec-b197-88fb62a7091d.png",
+      "prompt": "Photorealistic interior photo, bright soft daylight, neutral white and warm oak palette, clean modern American home, eye-level wide-angle 24mm, uncluttered, no people, no text, no logos, no watermarks, no measurement labels.\nUse case: photorealistic-natural. Asset: Renovagent flooring idea card, illustrative concept only. Single 4:3 landscape photo, at least 1600\u00d71200 requested. For this flooring shot, prioritize this camera direction over the general eye-level style: low-angle close view across newly installed light-oak wide plank flooring meeting a white baseboard, soft window light raking across the boards, shallow depth of field. The attached crop is a loose framing and palette reference at around 40% influence only. Show natural oak grain, subtle matte finish, clean staggered plank joins and the white wall/baseboard in the distance. Close focus on the flooring, simple uncluttered architectural detail. No dimension arrows, labels, UI, logos or watermarks."
+    },
+    {
+      "filename": "apps/web/src/assets/examples/hero-blueprint.jpg",
+      "reference": ".local/design-shots/crops/hero-house.png",
+      "referenceRole": "Loose composition reference, requested about 40% influence; no numerical strength control is exposed by this tool",
+      "nativePixels": [1145, 1374],
+      "exportPixels": [1145, 1374],
+      "export": "JPEG quality 88; workspace photo resized to requested minimum; others retain native dimensions",
+      "sourceOutput": "exec-68cc4828-9fda-4815-8635-afa0c295f7bf.png",
+      "prompt": "Architectural visualization of a modern two-story house shown as a semi-transparent blueprint overlay on a photoreal render: cutaway living rooms visible on both floors, blue (#3B82F6) translucent wireframe volumes and thin construction lines extending past the building, perspective floor grid underneath, pure white background, airy, technical, minimal. No text, no numbers, no dimension labels.\nUse case: stylized-concept. Asset: Renovagent landing-page illustrative architectural hero. One 5:6 portrait image, at least 1200\u00d71440 requested. Use the attached reference only for approximate composition and camera at about 40% influence: a warm oak and white rectilinear modern two-story home in three-quarter perspective, with clean glass and wood framing, readable cutaway interior rooms on both levels, transparent blue structural boxes aligned to the actual house and a fine perspective grid on a pure white ground. Create crisp new architectural detail instead of copying soft pixels. Keep all of the house in frame with white breathing room around it. No people. Remove ALL reference writing, strings, numbers, feet/inch symbols, labels, callout panels, arrows, UI and watermarks. Thin construction lines are allowed, but absolutely no text, numerals or dimension marks anywhere. No decorative graphic border."
+    },
+    {
+      "filename": "apps/web/src/assets/examples/workspace-bath.jpg",
+      "reference": ".local/design-shots/crops/bath-b.png",
+      "referenceRole": "Loose composition reference, requested about 40% influence; no numerical strength control is exposed by this tool",
+      "nativePixels": [1448, 1086],
+      "exportPixels": [1600, 1200],
+      "export": "JPEG quality 88; workspace photo resized to requested minimum; others retain native dimensions",
+      "sourceOutput": "exec-6bfd362d-d6ef-4822-bddb-456863b24227.png",
+      "prompt": "Photorealistic interior photo, bright soft daylight, neutral white and warm oak palette, clean modern American home, eye-level wide-angle 24mm, uncluttered, no people, no text, no logos, no watermarks, no measurement labels.\nUse case: photorealistic-natural. Asset: Renovagent project-screen bathroom concept photo, not an actual measured project. Single 4:3 landscape photograph, at least 1800\u00d71350 requested, minimum final size 1600\u00d71200. A small bathroom: oak single vanity with white top, black-framed mirror, glass walk-in shower with white subway tile, toilet, dark hex floor tile. Straight-on view across the vanity toward the shower. Eye-level, camera 6 ft back, full vanity and shower visible, centered. Use the attached crop only as a loose framing/architectural reference at around 40% influence: oak vanity on left with white top and black rectangular mirror, glass shower on right, dark shower hardware. Make the new image sharp and coherent, with visible natural oak grain and plausible glass/tile geometry. It is a clean photograph only. Do NOT reproduce any of the reference's UI: absolutely no text boxes, vanity labels, shower labels, 96-inch/60-inch numbers, brackets, measurement lines, arrows, circles, selection polygons or interface overlays. All measurements will be added separately in SVG by the app."
+    }
+  ]
+}

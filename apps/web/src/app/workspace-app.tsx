@@ -258,7 +258,7 @@ export function App({ controller }: { controller: WorkspaceController }) {
             ? 'Your house'
             : stageCopy[view.stage].label;
   return (
-    <div className="prompt-workspace">
+    <div className={`prompt-workspace ${!project ? 'is-landing' : ''}`}>
       <header className="prompt-header">
         <button
           className="prompt-brand"
@@ -273,16 +273,26 @@ export function App({ controller }: { controller: WorkspaceController }) {
             renov<span>agent</span>
           </span>
         </button>
-        <button
-          className="prompt-project-picker"
-          aria-label={project ? `Switch project: ${project.name}` : 'Choose a home'}
-          onClick={() => setModal('projects')}
-        >
-          <span>
-            {project ? state.properties[project.propertyId].name.split(',')[0] : 'Choose a home'}
-          </span>
-          <Glyph name="chevron" />
-        </button>
+        {!project ? (
+          <nav className="landing-nav" aria-label="Main navigation">
+            <a href="#how-it-works">How it works</a>
+            <button onClick={() => safe(controller.sampleProject())} disabled={busy}>
+              Example project
+            </button>
+            <button className="landing-workspace-link" onClick={() => setModal('projects')}>
+              Open workspace <Glyph name="right" />
+            </button>
+          </nav>
+        ) : (
+          <button
+            className="prompt-project-picker"
+            aria-label={`Switch project: ${project.name}`}
+            onClick={() => setModal('projects')}
+          >
+            <span>{state.properties[project.propertyId].name.split(',')[0]}</span>
+            <Glyph name="chevron" />
+          </button>
+        )}
         {controller.connected && auth.email && (
           <span className="prompt-account">
             {auth.email}

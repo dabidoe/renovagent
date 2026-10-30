@@ -2,6 +2,8 @@
 
 Updated October 29, 2026. This tracker distinguishes prototypes from the reliable product workflow we are building.
 
+**Landing V2:** compact header and first-screen prompt, uniform drafting background, a single bathroom example with before/after and material views, and responsive pricing/capability panels are implemented at `/`. Product specs/fit checks expand on demand; prototype selections survive demo view switches. Build and 1280px/390px/360px browser checks pass; visuals and allowances remain illustrative. See [evidence and limitations](docs/landing-v2-evidence.md).
+
 **Resume work:** [current handoff](HANDOFF.md) records the Atlas/Muse verification, runtime and connection expiry, preserved data, uncommitted changes, next implementation sequence. Step 1 commerce findings are addressed (entry below).
 
 ## Direction
