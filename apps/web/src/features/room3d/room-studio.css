@@ -1,0 +1,126 @@
+.room3d {
+  margin: 16px 0;
+  border: 1px solid var(--line, #d6dbe1);
+  border-radius: 10px;
+  padding: 14px;
+  background: var(--surface, #fff);
+}
+.room3d h3 {
+  margin: 0;
+}
+.room3d-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: flex-start;
+}
+.room3d-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.room3d-actions button[aria-pressed='true'],
+.room3d-surfaces button[aria-pressed='true'] {
+  outline: 2px solid #1d4ed8;
+}
+.room3d-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 12px;
+  margin-top: 10px;
+}
+.room3d-canvas {
+  position: relative;
+  height: 480px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #eef1f4;
+  touch-action: none;
+}
+.room3d-canvas canvas {
+  display: block;
+}
+.room3d-labels {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.room3d-dim,
+.room3d-fixture {
+  font:
+    11px/1.2 ui-sans-serif,
+    system-ui,
+    sans-serif;
+  padding: 2px 5px;
+  border-radius: 4px;
+  background: rgba(15, 23, 42, 0.78);
+  color: #fff;
+  white-space: nowrap;
+}
+.room3d-fixture {
+  background: rgba(71, 85, 105, 0.7);
+}
+.room3d-plan {
+  overflow: auto;
+  max-height: 520px;
+  border-radius: 8px;
+  background: #fff;
+}
+.room3d-plan svg {
+  max-width: 100%;
+  height: auto;
+}
+.room3d-side {
+  max-height: 520px;
+  overflow: auto;
+}
+.room3d-detail dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2px 10px;
+  margin: 6px 0;
+}
+.room3d-detail dt {
+  color: #64748b;
+}
+.room3d-links,
+.room3d-surfaces {
+  list-style: none;
+  padding: 0;
+  margin: 6px 0;
+  display: grid;
+  gap: 6px;
+}
+.room3d-surfaces button {
+  width: 100%;
+  text-align: left;
+}
+.room3d-product {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 4px;
+}
+.room3d-product-image {
+  flex: 0 0 56px;
+  height: 56px;
+  border: 1px dashed #94a3b8;
+  border-radius: 6px;
+  font-size: 9px;
+  color: #64748b;
+  display: grid;
+  place-items: center;
+  text-align: center;
+}
+@media (max-width: 760px) {
+  .room3d-body {
+    grid-template-columns: 1fr;
+  }
+  .room3d-canvas {
+    height: 360px;
+  }
+}
+.room3d-canvas.hide-dims .room3d-dim {
+  display: none;
+}
