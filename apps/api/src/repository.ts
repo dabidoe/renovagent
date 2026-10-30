@@ -109,6 +109,7 @@ export class MongoWorkspaceRepository {
       },
       { upsert: true },
     );
+    await this.blobStore.createIndex({ '_id.ownerId': 1, '_id.blobId': 1 });
     await this.moveEmbeddedBlobs();
   }
   // Idempotent: copies are content-checked, and the aggregate is cleared only
@@ -149,28 +150,37 @@ export class MongoWorkspaceRepository {
     const record = await this.blobStore.findOne({ _id: { ownerId: this.ownerId, blobId } });
     return record ? { mediaType: record.mediaType, bytes: Buffer.from(record.bytes.buffer) } : null;
   }
-  // Every reference in the state has stored bytes with the same type and hash.
-  private async assertStored(state: Workspace) {
-    const refs = attachmentRefs(state);
-    if (new Set(refs.map((a) => a.blobId)).size !== refs.length)
-      throw new DomainError('VALIDATION', 'Attachment IDs must be unique');
-    if (!refs.length) return;
-    const stored = await this.blobStore
+  // Exact compound ids use the _id index; queries on `_id.*` subfields scan the
+  // whole collection (every owner's attachments).
+  private storedMeta(blobIds: string[]) {
+    return this.blobStore
       .find(
-        { '_id.ownerId': this.ownerId, '_id.blobId': { $in: refs.map((r) => r.blobId) } },
+        { _id: { $in: blobIds.map((blobId) => ({ ownerId: this.ownerId, blobId })) } },
         { projection: { bytes: 0 } },
       )
       .toArray();
-    for (const ref of refs) {
+  }
+  // References this commit adds have stored bytes with the same type and hash;
+  // earlier ones were checked when they were committed.
+  private async assertStored(state: Workspace, before: Workspace) {
+    const refs = attachmentRefs(state);
+    if (new Set(refs.map((a) => a.blobId)).size !== refs.length)
+      throw new DomainError('VALIDATION', 'Attachment IDs must be unique');
+    const known = new Set(attachmentRefs(before).map((r) => `${r.blobId}\n${r.sha256}`));
+    const added = refs.filter((r) => !known.has(`${r.blobId}\n${r.sha256}`));
+    if (!added.length) return;
+    const stored = await this.storedMeta(added.map((r) => r.blobId));
+    for (const ref of added) {
       const blob = stored.find((b) => b._id.blobId === ref.blobId);
       if (!blob || blob.mediaType !== ref.mediaType || blob.sha256 !== ref.sha256 || !blob.size)
         throw new DomainError('VALIDATION', 'Attachment content or hash mismatch');
     }
   }
+  // Backup only; served by the owner index created in ensure().
   async listBlobs(): Promise<StoredBlob[]> {
     const records = await this.blobStore
       .find({ '_id.ownerId': this.ownerId })
-      .sort({ '_id.blobId': 1 })
+      .sort({ '_id.ownerId': 1, '_id.blobId': 1 })
       .toArray();
     return records.map((r) => ({
       id: r._id.blobId,
@@ -256,12 +266,7 @@ export class MongoWorkspaceRepository {
     // Check bytes against the references this batch would create before storing
     // any, so wrong bytes are never kept under an id the retry needs.
     if (supplied.length) {
-      const stored = await this.blobStore
-        .find(
-          { '_id.ownerId': this.ownerId, '_id.blobId': { $in: supplied.map((b) => b.id) } },
-          { projection: { bytes: 0 } },
-        )
-        .toArray();
+      const stored = await this.storedMeta(supplied.map((b) => b.id));
       for (const blob of supplied) {
         const prior = stored.find((r) => r._id.blobId === blob.id);
         if (prior && (prior.sha256 !== sha256(bytes(blob)) || prior.mediaType !== blob.mediaType))
@@ -273,7 +278,7 @@ export class MongoWorkspaceRepository {
     return this.update(async (doc) => {
       const { state, results } = this.apply(doc.workspace, commands);
       this.matchSupplied(state, supplied);
-      await this.assertStored(state);
+      await this.assertStored(state, doc.workspace);
       doc.workspace = state;
       return results;
     });
