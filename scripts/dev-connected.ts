@@ -3,12 +3,27 @@
 // (database, provider keys), from whichever checkout or worktree runs it.
 //   npm run dev:connected   the configured database (Atlas); refuses if none
 //   npm run dev:local       an explicit local Mongo on 27018, started here
+//   npm run dev:accounts    as dev:connected, with Google/Meta sign-in
 import { spawn, type ChildProcess } from 'node:child_process';
 import { MongoClient } from 'mongodb';
 import { LOCAL_URI, projectEnv, workspaceMongoConfig } from '../apps/api/src/database-config.js';
 
 const local = process.argv.includes('--local');
 const { env } = await projectEnv();
+// Sign-in is opt-in. Google/Meta login settings exported in a shell would
+// otherwise put the demo behind a login and an empty per-account workspace;
+// without them the API runs one shared workspace. --accounts keeps sign-in.
+const accounts = process.argv.includes('--accounts');
+const SIGN_IN = [
+  'GOOGLE_CLIENT_ID',
+  'GOOGLE_CLIENT_SECRET',
+  'GOOGLE_REDIRECT_URI',
+  'GOOGLE_CALLBACK_URL',
+  'META_APP_ID',
+  'META_APP_SECRET',
+  'META_REDIRECT_URI',
+];
+if (!accounts) for (const name of SIGN_IN) delete env[name];
 if (local) {
   env.RENOVAGENT_MONGO_TARGET = 'local';
   env.RENOVAGENT_LOCAL_MONGO_URI = LOCAL_URI;
@@ -20,6 +35,11 @@ try {
   console.error((error as Error).message);
   process.exit(1);
 }
+console.log(
+  accounts
+    ? 'Sign-in: on (Google/Meta settings).'
+    : 'Sign-in: off, one shared workspace (npm run dev:accounts to require sign-in).',
+);
 console.log(
   `Workspace database: ${database.target} (${database.source}` +
     `${database.envFile ? `, settings from ${database.envFile}` : ''}).`,
