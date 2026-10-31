@@ -15,7 +15,7 @@ export default defineConfig({
   server: {
     host: '127.0.0.1',
     port: 8741,
-    proxy: { '/api': 'http://127.0.0.1:4000', '/mcp': 'http://127.0.0.1:4000' },
+    proxy: { '/api': 'http://127.0.0.1:4000', '/mcp': 'http://127.0.0.1:4010' },
   },
   preview: { host: '127.0.0.1', port: 8741 },
 });

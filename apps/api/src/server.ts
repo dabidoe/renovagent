@@ -148,6 +148,17 @@ export async function createWorkspaceServer(
       await workerFor(repository.forUser(id));
     }
   }
+  // Staged uploads match the intake's per-file allowance (20 MiB originals).
+  const STAGED_MAX = 20 * 1024 * 1024;
+  const STAGED_TYPES = new Set([
+    'image/jpeg',
+    'image/png',
+    'image/webp',
+    'image/heic',
+    'image/heif',
+    'image/gif',
+    'application/pdf',
+  ]);
   const blobSchema = z
     .object({
       id: z.string().min(1).max(160),
@@ -191,6 +202,15 @@ export async function createWorkspaceServer(
   const server = createServer(async (req, res) => {
     res.setHeader('Cache-Control', 'no-store');
     res.setHeader('X-Content-Type-Options', 'nosniff');
+    // Slow requests are logged by method, path (no query), status and time only.
+    const started = performance.now();
+    res.on('finish', () => {
+      const ms = Math.round(performance.now() - started);
+      if (ms >= 1000)
+        console.warn(
+          `[slow] ${req.method} ${(req.url || '').split('?')[0]} ${res.statusCode} ${ms}ms`,
+        );
+    });
     const json = (status: number, value: unknown) => {
       res.writeHead(status, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify(value));
@@ -199,6 +219,20 @@ export async function createWorkspaceServer(
       // Liveness for the host's health check; reveals nothing about any workspace.
       if (req.url === '/healthz' && req.method === 'GET') {
         json(200, { ok: true });
+        return;
+      }
+      // Readiness: the workspace database answers a version lookup in time.
+      // Liveness alone can't show that useful workspace access works.
+      if (req.url === '/readyz' && req.method === 'GET') {
+        const t = performance.now();
+        const ready = await Promise.race([
+          repository.version().then(
+            () => true,
+            () => false,
+          ),
+          new Promise<boolean>((r) => setTimeout(() => r(false), 2000)),
+        ]);
+        json(ready ? 200 : 503, { ok: ready, ms: Math.round(performance.now() - t) });
         return;
       }
       const host = req.headers.host || '';
@@ -808,6 +842,29 @@ export async function createWorkspaceServer(
         }
         res.writeHead(302, { Location: photo.imageUrl, 'Referrer-Policy': 'no-referrer' });
         res.end();
+        return;
+      }
+      if (path.startsWith('/blobs/') && req.method === 'POST') {
+        // Staged upload: the raw bytes of one attachment, before the command
+        // that references it. Same origin, client header and owner as commands.
+        const id = decodeURIComponent(path.slice('/blobs/'.length));
+        if (!/^[a-zA-Z0-9][a-zA-Z0-9_.:-]{0,159}$/.test(id))
+          throw new DomainError('VALIDATION', 'Invalid attachment id');
+        const mediaType = String(req.headers['content-type'] || '')
+          .split(';')[0]!
+          .trim();
+        if (!STAGED_TYPES.has(mediaType))
+          throw new DomainError('VALIDATION', 'Unsupported attachment type');
+        let size = 0;
+        const parts: Buffer[] = [];
+        for await (const part of req) {
+          size += part.length;
+          if (size > STAGED_MAX) throw new DomainError('VALIDATION', 'Attachment exceeds 20 MB');
+          parts.push(part);
+        }
+        if (!size) throw new DomainError('VALIDATION', 'Empty attachment');
+        await activeRepo.stageBlob(id, mediaType, Buffer.concat(parts));
+        json(200, { ok: true, id, size });
         return;
       }
       if (path.startsWith('/blobs/') && req.method === 'GET') {

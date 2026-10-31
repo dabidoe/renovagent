@@ -460,6 +460,69 @@ test(
     }),
 );
 
+test(
+  'staged uploads carry large photos as raw bytes, then commit with the command',
+  { skip: !uri },
+  () =>
+    withRepo(async (repo) => {
+      const { createHash } = await import('node:crypto');
+      const { s } = setup();
+      await repo.importWorkspace(mongoState(s.state), []);
+      const { server } = await createWorkspaceServer(repo, 'synthetic-staged-upload-token', true);
+      await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
+      const address = server.address();
+      if (!address || typeof address === 'string') throw Error('No address');
+      const base = `http://127.0.0.1:${address.port}/api/workspace`;
+      const headers = { Host: '127.0.0.1:4000', 'X-Renovagent-Client': 'workspace' };
+      try {
+        const session = await fetch(base + '/session', { headers });
+        const auth = { ...headers, Cookie: session.headers.get('set-cookie')!.split(';')[0]! };
+        // 10 MiB: past the old inline cap (12 MiB of base64, about 9 MiB of bytes).
+        const photo = Buffer.alloc(10 * 1024 * 1024, 7);
+        const stage = (id: string, type: string, bytes: Buffer, h: Record<string, string> = auth) =>
+          fetch(`${base}/blobs/${encodeURIComponent(id)}`, {
+            method: 'POST',
+            headers: { ...h, 'Content-Type': type },
+            body: new Uint8Array(bytes),
+          });
+        assert.equal((await stage('blob:big', 'image/png', photo)).status, 200);
+        // Same guards as commands: client header, allowed types, no overwrite.
+        const { 'X-Renovagent-Client': _, ...noClient } = auth;
+        assert.equal((await stage('blob:x', 'image/png', photo, noClient)).status, 403);
+        assert.equal((await stage('blob:x', 'text/html', Buffer.from('<p>'))).status, 400);
+        assert.equal((await stage('blob:big', 'image/png', Buffer.from('other'))).status, 400);
+        const command = s.command('AttachEvidence', {
+          scope: 'project',
+          evidence: {
+            id: 'staged-photo',
+            kind: 'attachment',
+            description: 'QA only',
+            attachment: {
+              blobId: 'blob:big',
+              sha256: createHash('sha256').update(photo).digest('hex'),
+              name: 'big.png',
+              mediaType: 'image/png',
+              role: 'original',
+            },
+          },
+        });
+        const committed = await fetch(base + '/commands', {
+          method: 'POST',
+          headers: { ...auth, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ commands: [command], blobs: [] }),
+        });
+        assert.equal(committed.status, 200);
+        assert.ok((await repo.read()).workspace.evidence['staged-photo']);
+        const back = await fetch(base + '/blobs/' + encodeURIComponent('blob:big'), {
+          headers: auth,
+        });
+        assert.equal(Buffer.from(await back.arrayBuffer()).length, photo.length);
+      } finally {
+        await new Promise<void>((resolve) => server.close(() => resolve()));
+      }
+    }),
+);
+
 test('bounded photo refresh keeps earlier source references discoverable without claiming they were refreshed', async () => {
   const { savedPhotoReferences } = await import('@renovagent/core');
   const { s, research } = setup();

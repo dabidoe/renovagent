@@ -3,23 +3,15 @@ import { AsyncLocalStorage } from 'node:async_hooks';
 const execution = new AsyncLocalStorage<{ signal: AbortSignal; remaining: number }>();
 export const withMuseBudget = <T>(signal: AbortSignal, calls: number, fn: () => Promise<T>) =>
   execution.run({ signal, remaining: calls }, fn);
-import { readFile } from 'node:fs/promises';
 import { spawn } from 'node:child_process';
-import { parseEnv } from 'node:util';
 import { fileURLToPath } from 'node:url';
+import { projectEnvFiles } from '../apps/api/src/database-config.js';
+// The environment, else the project settings (see projectEnvFiles: this
+// checkout, or a worktree's main checkout), resolved from this file's repo.
 export async function configuredMuseKey() {
   if (process.env.MUSE_API_KEY?.trim()) return process.env.MUSE_API_KEY.trim();
-  for (const relative of ['../server/.env', '../.env']) {
-    try {
-      const vars = parseEnv(
-        await readFile(fileURLToPath(new URL(relative, import.meta.url)), 'utf8'),
-      );
-      if (vars.MUSE_API_KEY?.trim()) return vars.MUSE_API_KEY.trim();
-    } catch (error) {
-      if (!(error instanceof Error && 'code' in error && error.code === 'ENOENT')) throw error;
-    }
-  }
-  return undefined;
+  const { vars } = await projectEnvFiles({}, fileURLToPath(new URL('..', import.meta.url)));
+  return vars.MUSE_API_KEY?.trim() || undefined;
 }
 export async function runMuse(args: string[], timeoutMs = 180000) {
   const scope = execution.getStore();

@@ -44,6 +44,16 @@ Renovagent carries a persistent property project through investigation, options,
 
 Use each slice's acceptance criteria before changing its status. A mock screen, canned reply, or HTTP 200 does not establish workflow completion.
 
+### Runtime fixes: cached reads, one launcher, staged uploads — October 31, 2026
+
+- **Measured on Atlas (read-only):** fetching the 3 MB workspace takes about 34.6 s, validating it 69 ms. Reads now check a version and reuse a validated copy: 43–79 ms once warm.
+- **Workers and monitoring:** the photo worker can no longer stack ticks. `/readyz` and a slow-request log were added.
+- **Startup (`dev:connected`):** with nothing configured it stops with an error instead of choosing local Mongo. A worktree uses its main checkout's settings, the Jev and Muse keys use the same lookup, and it starts the API, MCP (4010) and Vite together.
+- **`dev:local`** is the explicit local option. Vite's `/mcp` proxy now points at 4010.
+- **Uploads:** images and PDFs upload raw (up to 20 MiB each) before their command, past the old ~9 MiB effective limit.
+- **Default storage:** browsers with no saved choice and no local projects open the shared workspace.
+- **Details and open items:** [runtime fixes](docs/architecture/runtime-fixes-2026-10-31.md). Open: shrinking the workspace (a history migration), a storage label, alias cleanup, the workflow, and container parity. When the Atlas password is rotated, update it in both `.env` and `server/.env`.
+
 ### Looks (inspo) and designer catalog; faucet rule v3 — October 30, 2026
 
 - **Designer and big-box catalog:** `fixtures/catalog/retail-inspo-2026-10.ts` adds 34 hand-checked products. Bathroom: IKEA, Wayfair, Pottery Barn, West Elm, Signature Hardware, Kohler, Brizo and Hansgrohe. Living room: Farrow & Ball, Clare, Backdrop, BM Aura, SW Emerald, Hurst, Kährs and COREtec. They use a new ID prefix, because imported reference records are frozen. `seed:catalog --set retail` imports both sets.

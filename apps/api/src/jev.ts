@@ -5,26 +5,16 @@
 // the code already holds and never becomes a source itself.
 //
 // Docs: https://docs.typesafe.ai/api/system-one.md, /images.md
-import { readFile } from 'node:fs/promises';
-import { parseEnv } from 'node:util';
 import { fileURLToPath } from 'node:url';
 import type { PhotoRead } from '@renovagent/core';
+import { projectEnvFiles } from './database-config.js';
 
 const BASE = process.env.TYPESAFE_BASE_URL ?? 'https://api.typesafe.ai';
 
 export async function configuredJevKey() {
   if (process.env.TYPESAFE_API_KEY?.trim()) return process.env.TYPESAFE_API_KEY.trim();
-  for (const relative of ['../../../.env', '../../../server/.env']) {
-    try {
-      const vars = parseEnv(
-        await readFile(fileURLToPath(new URL(relative, import.meta.url)), 'utf8'),
-      );
-      if (vars.TYPESAFE_API_KEY?.trim()) return vars.TYPESAFE_API_KEY.trim();
-    } catch (error) {
-      if (!(error instanceof Error && 'code' in error && error.code === 'ENOENT')) throw error;
-    }
-  }
-  return undefined;
+  const { vars } = await projectEnvFiles({}, fileURLToPath(new URL('../../../', import.meta.url)));
+  return vars.TYPESAFE_API_KEY?.trim() || undefined;
 }
 
 type Question =

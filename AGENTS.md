@@ -20,7 +20,8 @@ Before architecture or substantial feature work, read `docs/architecture/README.
 ## Current commands
 
 - `npm run dev` — local Vite frontend, normally at http://127.0.0.1:8741/.
-- `npm run dev:connected` — local Mongo + API + frontend for the connected workspace.
+- `npm run dev:connected` — API, MCP HTTP (4010) and frontend against the configured workspace database (Atlas). Settings come from `.env`/`server/.env`, a worktree's main checkout, or `RENOVAGENT_ENV_FILE`; with none it stops with an error instead of choosing local Mongo.
+- `npm run dev:local` — the same against an explicit local Mongo on 27018, started for you.
 - `npm test` — legacy JavaScript tests plus contract, domain, and integration TypeScript suites.
 - `npm run test:connected` — integration suites against real local MongoDB.
 - `npm run serve:mcp` — stdio MCP adapter for standard agent clients.
