@@ -145,13 +145,7 @@ export function OutlineOverlay({
   );
 }
 
-export function OutlineControls({
-  state,
-  swatches = [],
-}: {
-  state: ReturnType<typeof usePhotoOutline>;
-  swatches?: { name: string; color: string; brand?: string }[];
-}) {
+export function OutlineControls({ state }: { state: ReturnType<typeof usePhotoOutline> }) {
   const [custom, setCustom] = useState('');
   const { outline, working, message, tint, render, rendering } = state;
   return (
@@ -198,19 +192,16 @@ export function OutlineControls({
             {outline.segments.length > 1 ? 's' : ''}, about {share(outline)}% of the photo (
             {outline.model}). A share of the picture, not a measured area.
           </p>
+          <PaintPicker
+            selected={tint?.name ?? null}
+            onPick={(color) =>
+              state.setTint({
+                color: color.hex,
+                name: [color.brand, color.name, color.code].filter(Boolean).join(' '),
+              })
+            }
+          />
           <div className="outline-tints" role="group" aria-label="Try a colour">
-            {swatches.map((s) => (
-              <button
-                key={s.name}
-                type="button"
-                title={s.brand ? `${s.brand} · ${s.name}` : s.name}
-                aria-pressed={tint?.name === s.name}
-                style={{ background: s.color }}
-                onClick={() => state.setTint({ color: s.color, name: s.name })}
-              >
-                <span className="sr-only">{s.name}</span>
-              </button>
-            ))}
             <label className="outline-custom-color">
               <input
                 type="color"
@@ -266,6 +257,178 @@ export function OutlineControls({
             </button>
           </p>
         </div>
+      )}
+    </div>
+  );
+}
+
+type PaintColor = {
+  id: string;
+  brand: string;
+  collection: string;
+  code: string | null;
+  name: string;
+  hex: string;
+  family: string;
+};
+type PaintPage = {
+  total: number;
+  colors: PaintColor[];
+  brands: { brand: string; count: number }[];
+};
+const FAMILIES: [string, string][] = [
+  ['white', 'Whites'],
+  ['neutral', 'Neutrals'],
+  ['red', 'Reds'],
+  ['orange', 'Orange & brown'],
+  ['yellow', 'Yellows'],
+  ['green', 'Greens'],
+  ['blue', 'Blues'],
+  ['purple', 'Purples'],
+];
+
+// The brand's own page for a colour, where the owner sees the real chip,
+// finishes and samples. Only for brands whose page address is known.
+export function brandColorLink(color: Pick<PaintColor, 'brand' | 'code' | 'name' | 'family'>) {
+  const digits = /^SW (\d{4})$/.exec(color.code ?? '')?.[1];
+  if (color.brand !== 'Sherwin-Williams' || !digits) return null;
+  const slug = color.name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+  return `https://www.sherwin-williams.com/en-us/color/color-family/${color.family}-paint-colors/sw${digits}-${slug}`;
+}
+
+function PaintPicker({
+  selected,
+  onPick,
+}: {
+  selected: string | null;
+  onPick: (color: PaintColor) => void;
+}) {
+  const [brand, setBrand] = useState('');
+  const [family, setFamily] = useState('');
+  const [q, setQ] = useState('');
+  const [page, setPage] = useState<PaintPage | null>(null);
+  const [picked, setPicked] = useState<PaintColor | null>(null);
+  const [error, setError] = useState('');
+  const query = (offset: number) => {
+    const params = new URLSearchParams();
+    if (brand) params.set('brand', brand);
+    if (family) params.set('family', family);
+    if (q.trim()) params.set('q', q.trim());
+    if (offset) params.set('offset', String(offset));
+    return workspaceRequest(`/paint/colors?${params}`) as Promise<PaintPage>;
+  };
+  useEffect(() => {
+    let live = true;
+    const timer = setTimeout(() => {
+      query(0)
+        .then((result) => live && (setPage(result), setError('')))
+        .catch((e) => live && setError(e instanceof Error ? e.message : String(e)));
+    }, 200);
+    return () => {
+      live = false;
+      clearTimeout(timer);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [brand, family, q]);
+  if (error) return null;
+  if (page && !page.brands.length)
+    return (
+      <p className="small-note">
+        No paint colours loaded yet: npm run seed:paint with a brand's swatch file.
+      </p>
+    );
+  const link = picked ? brandColorLink(picked) : null;
+  return (
+    <div className="paint-picker">
+      <div className="paint-picker-filters">
+        <select value={brand} aria-label="Paint brand" onChange={(e) => setBrand(e.target.value)}>
+          <option value="">All brands</option>
+          {page?.brands.map((b) => (
+            <option key={b.brand} value={b.brand}>
+              {b.brand} ({b.count})
+            </option>
+          ))}
+        </select>
+        <input
+          value={q}
+          maxLength={60}
+          placeholder="Search name or number"
+          aria-label="Search paint colours"
+          onChange={(e) => setQ(e.target.value)}
+        />
+      </div>
+      <div className="outline-chips" role="group" aria-label="Colour family">
+        <button type="button" aria-pressed={!family} onClick={() => setFamily('')}>
+          All
+        </button>
+        {FAMILIES.map(([id, label]) => (
+          <button
+            key={id}
+            type="button"
+            aria-pressed={family === id}
+            onClick={() => setFamily(family === id ? '' : id)}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+      <div className="paint-grid" role="group" aria-label="Paint colours">
+        {page?.colors.map((color) => {
+          const label = [color.brand, color.name, color.code].filter(Boolean).join(' ');
+          return (
+            <button
+              key={color.id}
+              type="button"
+              title={`${color.name}${color.code ? ` · ${color.code}` : ''}`}
+              aria-pressed={selected === label}
+              style={{ background: color.hex }}
+              onClick={() => {
+                setPicked(color);
+                onPick(color);
+              }}
+            >
+              <span className="sr-only">{label}</span>
+            </button>
+          );
+        })}
+      </div>
+      {page && (
+        <p className="small-note">
+          {page.total} colour{page.total === 1 ? '' : 's'}
+          {page.colors.length < page.total && (
+            <>
+              {' · '}
+              <button
+                type="button"
+                className="link-button"
+                onClick={() =>
+                  void query(page.colors.length).then((more) =>
+                    setPage({ ...more, colors: [...page.colors, ...more.colors] }),
+                  )
+                }
+              >
+                Show more
+              </button>
+            </>
+          )}
+        </p>
+      )}
+      {picked && (
+        <p className="paint-picked small-note">
+          <span className="paint-picked-chip" style={{ background: picked.hex }} />
+          <span>
+            <b>{picked.name}</b> {picked.code} · {picked.brand} {picked.collection}. Screen colour;
+            check a real chip before buying.{' '}
+            {link && (
+              <a href={link} target="_blank" rel="noreferrer">
+                See it on sherwin-williams.com
+              </a>
+            )}
+          </span>
+        </p>
       )}
     </div>
   );

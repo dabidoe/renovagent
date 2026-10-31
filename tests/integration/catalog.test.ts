@@ -9,6 +9,7 @@ import { AccountService } from '../../apps/api/src/accounts.js';
 import { createWorkspaceServer } from '../../apps/api/src/server.js';
 import { vanityCatalog } from '../../fixtures/catalog/vanity-philadelphia.js';
 import { emptyWorkspace } from '@renovagent/contracts';
+import { paintColorsFrom } from '@renovagent/core';
 
 const uri = process.env.TEST_WORKSPACE_MONGO_URI;
 const headers = { 'X-Renovagent-Client': 'workspace' };
@@ -402,5 +403,34 @@ test('a conflicting import writes nothing from any collection', { skip: !uri }, 
       },
       before,
     );
+  }),
+);
+
+test('paint colours load by ID and search by name, code and family', { skip: !uri }, () =>
+  withDb(async (db) => {
+    const store = new CatalogStore(db);
+    await store.ensureIndexes();
+    const colors = paintColorsFrom('Test Paints', 'Fan deck', [
+      { name: 'Quiet Greige (TP 7029)', rgb: [209, 203, 193] },
+      { name: 'Harbor Navy (TP 6244)', rgb: [47, 61, 76] },
+      { name: 'Paper White (TP 7005)', rgb: [237, 236, 230] },
+    ]);
+    assert.deepEqual(await store.importPaint(colors), { upserted: 3, modified: 0 });
+    assert.deepEqual(await store.importPaint(colors), { upserted: 0, modified: 0 });
+    const names = async (query: Parameters<CatalogStore['searchPaint']>[0]) =>
+      (await store.searchPaint(query)).colors.map((c) => c.name);
+    assert.deepEqual(await names({ q: 'greige' }), ['Quiet Greige']);
+    for (const code of ['TP 6244', 'tp6244', 'TP-62'])
+      assert.deepEqual(await names({ q: code }), ['Harbor Navy']);
+    assert.deepEqual(await names({ family: 'white' }), ['Paper White']);
+    assert.deepEqual(await names({ q: '.*' }), [], 'search text is literal');
+    const all = await store.searchPaint({});
+    assert.equal(all.total, 3);
+    assert.deepEqual(
+      all.colors.map((c) => c.name),
+      ['Paper White', 'Quiet Greige', 'Harbor Navy'],
+    );
+    assert.deepEqual(all.brands, [{ brand: 'Test Paints', count: 3 }]);
+    assert.equal('codeKey' in all.colors[0]!, false);
   }),
 );

@@ -13,8 +13,13 @@ import {
   checkCatalogReferences,
   sameRecord,
   validateCatalogImport,
+  type PaintColor,
   type PricedOffer,
 } from '@renovagent/core';
+
+type StoredPaint = PaintColor & { _id: string; codeKey: string | null };
+const codeKey = (code: string) => code.replace(/[^a-z0-9]/gi, '').toLowerCase();
+const escape = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 // Shared reference data: one catalog for all owners. Writes are curated
 // imports (operator-gated at the HTTP layer), never agent prose. Re-importing
@@ -24,12 +29,14 @@ export class CatalogStore {
   readonly offers: Collection<Offer>;
   readonly observations: Collection<PriceObservation>;
   readonly submissions: Collection<PriceSubmission>;
+  readonly paint: Collection<StoredPaint>;
 
   constructor(db: Db) {
     this.products = db.collection<Product>('catalog_products');
     this.offers = db.collection<Offer>('retailer_offers');
     this.observations = db.collection<PriceObservation>('price_observations');
     this.submissions = db.collection<PriceSubmission>('price_submissions');
+    this.paint = db.collection<StoredPaint>('paint_colors');
   }
 
   async ensureIndexes() {
@@ -41,6 +48,58 @@ export class CatalogStore {
     await this.products.createIndex({ name: 'text', manufacturer: 'text', model: 'text' });
     await this.offers.createIndex({ sku: 1, retailer: 1 });
     await this.submissions.createIndex({ offerId: 1, status: 1 });
+    await this.paint.createIndex({ brand: 1, family: 1, lightness: -1 });
+  }
+
+  // Paint colours loaded from a brand's swatch file (scripts/seed-paint.ts).
+  // Re-loading replaces each colour by its ID.
+  async importPaint(colors: PaintColor[]) {
+    if (!colors.length) return { upserted: 0, modified: 0 };
+    const result = await this.paint.bulkWrite(
+      colors.map((color) => ({
+        replaceOne: {
+          filter: { _id: color.id },
+          replacement: {
+            _id: color.id,
+            ...color,
+            codeKey: color.code ? codeKey(color.code) : null,
+          },
+          upsert: true,
+        },
+      })),
+    );
+    return { upserted: result.upsertedCount, modified: result.modifiedCount };
+  }
+
+  async searchPaint(query: { q?: string; brand?: string; family?: string; offset?: number }) {
+    const filter: Record<string, unknown> = {};
+    if (query.brand) filter.brand = query.brand;
+    if (query.family) filter.family = query.family;
+    const q = query.q?.trim();
+    if (q) {
+      const key = codeKey(q);
+      filter.$or = [
+        { name: { $regex: escape(q), $options: 'i' } },
+        ...(key ? [{ codeKey: { $regex: '^' + escape(key) } }] : []),
+      ];
+    }
+    const offset = Math.max(0, query.offset ?? 0);
+    const [total, rows, brands] = await Promise.all([
+      this.paint.countDocuments(filter),
+      this.paint.find(filter).sort({ lightness: -1, _id: 1 }).skip(offset).limit(96).toArray(),
+      this.paint
+        .aggregate<{
+          _id: string;
+          count: number;
+        }>([{ $group: { _id: '$brand', count: { $sum: 1 } } }, { $sort: { _id: 1 } }])
+        .toArray(),
+    ]);
+    return {
+      total,
+      offset,
+      colors: rows.map(({ _id, codeKey: _key, ...color }) => color),
+      brands: brands.map((b) => ({ brand: b._id, count: b.count })),
+    };
   }
 
   async importBatch(raw: unknown): Promise<{

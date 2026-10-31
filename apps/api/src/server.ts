@@ -49,7 +49,14 @@ import {
 } from './design-service.js';
 import { renderExample } from './example-render.js';
 import { configuredJevKey, judgeProducts, rankReviewFindings, readRoomPhoto } from './jev.js';
-import { bestValue, priceLook, scopeDraftId, valueCandidates } from '@renovagent/core';
+import {
+  bestValue,
+  paintFamilies,
+  priceLook,
+  scopeDraftId,
+  valueCandidates,
+  type PaintFamily,
+} from '@renovagent/core';
 import { curatedLooks, lookRoomFor, lookView } from './looks.js';
 import type { BomPayload, PurchasePlanPayload, ScopeDraft } from '@renovagent/contracts';
 import { imageSize } from 'image-size';
@@ -451,6 +458,20 @@ export async function createWorkspaceServer(
           relevance: Object.fromEntries(ranked.findings.map((f) => [f.id, f.relevance])),
           note: 'Probability that a provision applies to this work, judged by the Jev model; an interpretation, not a code source or determination.',
         });
+        return;
+      }
+      if (path === '/paint/colors' && req.method === 'GET') {
+        // Brand paint colours loaded with seed:paint, for choosing and previewing.
+        if (!catalog) throw new DomainError('VALIDATION', 'Catalog is unavailable');
+        const query = z
+          .object({
+            q: z.string().trim().max(60).optional(),
+            brand: z.string().trim().max(60).optional(),
+            family: z.enum(paintFamilies as [PaintFamily, ...PaintFamily[]]).optional(),
+            offset: z.coerce.number().int().min(0).max(10000).optional(),
+          })
+          .parse(Object.fromEntries(url.searchParams));
+        json(200, await catalog.searchPaint(query));
         return;
       }
       if (path === '/looks/price' && req.method === 'POST') {
