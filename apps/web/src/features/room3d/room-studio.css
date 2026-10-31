@@ -1326,11 +1326,18 @@
   flex-wrap: wrap;
   gap: 6px;
   align-items: center;
-  max-width: 60%;
+  max-width: 55%;
 }
 .room3d-photoreal-downloads a {
   font-size: 12px;
   background: rgb(255 255 255 / 0.92);
   border-radius: 999px;
   padding: 3px 10px;
+}
+.room3d-photoreal .room3d-muse,
+.room3d-photoreal-downloads .room3d-muse {
+  width: auto;
+  margin: 0;
+  padding: 5px 12px;
+  font-size: 13px;
 }

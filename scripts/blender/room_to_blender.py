@@ -231,7 +231,9 @@ bpy.ops.object.light_add(type="AREA", location=(cx, cy, top - 0.05))
 lamp = bpy.context.object.data
 lamp.shape = "RECTANGLE"
 lamp.size, lamp.size_y = max(dx * 0.5, 0.5), max(dy * 0.5, 0.5)
-lamp.energy = 30 * dx * dy
+# Pale walls bounce much more light: scale by the wall colour's luminance.
+r, g, b, _ = hex_rgba(look["wallHex"])
+lamp.energy = 7 * dx * dy / max(0.2126 * r + 0.7152 * g + 0.0722 * b, 0.3)
 lamp.color = (1.0, 0.95, 0.88)
 shoot(
     "interior.png",
