@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { CSS2DObject, CSS2DRenderer } from 'three/examples/jsm/renderers/CSS2DRenderer.js';
 import { GLTFExporter } from 'three/examples/jsm/exporters/GLTFExporter.js';
+import { attachPhotoreal } from './photoreal.js';
 import {
   dimensionLabel,
   floorFinishKind,
@@ -26,6 +27,8 @@ export type RoomScene = {
   focusPin(annotationId: string | null): void;
   setLook(look: RoomLook): void;
   exportGlb(): Promise<ArrayBuffer>;
+  // An eye-level JPEG of the room for image models (see photoreal.ts).
+  captureEyeLevel(): Promise<Blob>;
   dispose(): void;
 };
 
@@ -410,6 +413,66 @@ export function mountRoomScene(
     onSelect(hit ? (hit.userData.surfaceId as string) : null);
   });
 
+  // Standing in one corner at eye height looking across, with every wall
+  // solid, a ceiling and a room light: a photo-like still that image models
+  // can keep the geometry of. Rendered offscreen; the live view is untouched.
+  const captureEyeLevel = async (width = 1536, height = 1024) => {
+    const shot = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+    shot.setSize(width, height, false);
+    shot.outputColorSpace = renderer.outputColorSpace;
+    shot.toneMapping = renderer.toneMapping;
+    shot.toneMappingExposure = renderer.toneMappingExposure;
+    shot.shadowMap.enabled = true;
+    shot.shadowMap.type = THREE.PCFSoftShadowMap;
+    const eye = new THREE.PerspectiveCamera(68, width / height, 0.05, 200);
+    const dx = maxX - minX,
+      dz = maxY - minY;
+    eye.position.set(center.x + dx * 0.4, 1.55, center.z + dz * 0.4);
+    eye.lookAt(center.x - dx * 0.25, 1.15, center.z - dz * 0.25);
+    const ceiling = new THREE.Mesh(
+      floorGeo.clone(),
+      new THREE.MeshStandardMaterial({ color: '#f4f3ef', roughness: 0.95, side: THREE.DoubleSide }),
+    );
+    ceiling.position.y = roomHeight;
+    const lamp = new THREE.PointLight('#fff4e6', 6, 0, 1.6);
+    lamp.position.set(center.x, roomHeight - 0.3, center.z);
+    const faded = cutaway.map((c) => [c.mat.opacity, c.mat.transparent, c.mat.depthWrite] as const);
+    for (const c of cutaway) {
+      c.mat.opacity = c.base;
+      c.mat.transparent = c.base < 1;
+      c.mat.depthWrite = true;
+      c.mat.needsUpdate = true;
+    }
+    const reselect = selected.map((x) => x.mesh);
+    highlight([]);
+    const background = scene.background;
+    scene.background = new THREE.Color('#ffffff');
+    scene.add(ceiling, lamp);
+    try {
+      shot.render(scene, eye);
+      return await new Promise<Blob>((ok, fail) =>
+        shot.domElement.toBlob(
+          (blob) => (blob ? ok(blob) : fail(Error('Could not capture the 3D view'))),
+          'image/jpeg',
+          0.9,
+        ),
+      );
+    } finally {
+      scene.remove(ceiling, lamp);
+      scene.background = background;
+      ceiling.geometry.dispose();
+      (ceiling.material as THREE.Material).dispose();
+      cutaway.forEach((c, i) => {
+        [c.mat.opacity, c.mat.transparent, c.mat.depthWrite] = faded[i]!;
+        c.mat.needsUpdate = true;
+      });
+      highlight(reselect);
+      shot.dispose();
+    }
+  };
+  let currentLook = look;
+  const photoreal = attachPhotoreal(host, captureEyeLevel, () => currentLook);
+
   const resize = () => {
     const { clientWidth: w, clientHeight: h } = host;
     renderer.setSize(w, h);
@@ -459,8 +522,10 @@ export function mountRoomScene(
       floorMat.map = tex;
       floorMat.needsUpdate = true;
       room.userData.renovagent.look = next;
+      currentLook = next;
       highlight(reselect);
     },
+    captureEyeLevel: () => captureEyeLevel(),
     async exportGlb() {
       const result = await new GLTFExporter().parseAsync(room, { binary: true, onlyVisible: true });
       return result as ArrayBuffer;
@@ -472,6 +537,7 @@ export function mountRoomScene(
       renderer.dispose();
       renderer.domElement.remove();
       labels.domElement.remove();
+      photoreal.dispose();
     },
   };
 }

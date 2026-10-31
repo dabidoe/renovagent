@@ -981,6 +981,40 @@ export async function createWorkspaceServer(
         json(200, result);
         return;
       }
+      if (path === '/model/photoreal' && req.method === 'POST') {
+        // Muse Image renders an eye-level still of the measured 3D model as a
+        // photo of the same room in the chosen finishes. Returned only.
+        if (!providerConfigured)
+          throw new DomainError('VALIDATION', 'Configure MUSE_API_KEY on the server first');
+        const words = /^[\p{L}\p{N} #'(),./&-]+$/u;
+        const input = z
+          .object({
+            image: z.string().min(1).max(8_000_000),
+            wall: z.string().trim().min(1).max(80).regex(words),
+            floor: z.string().trim().min(1).max(80).regex(words),
+          })
+          .strict()
+          .parse(await body(req));
+        const bytes = new Uint8Array(Buffer.from(input.image, 'base64'));
+        let mediaType: string;
+        try {
+          mediaType = imageMediaType(bytes);
+        } catch {
+          throw new DomainError('VALIDATION', 'The 3D still must be JPEG, PNG or WebP');
+        }
+        spendRepaintCall(activeRepo.ownerId);
+        const result = await repaint({
+          image: { bytes, mediaType },
+          prompt: `Turn this plain 3D model view into a photorealistic interior photograph of the same empty room. Keep exactly the same camera position, room shape, wall positions, proportions, ceiling height and any window or door openings. Walls painted ${input.wall}, white baseboards and ceiling, floor: ${input.floor}. Soft natural daylight. Do not add, move or remove windows, doors, furniture or fixtures.`,
+        });
+        json(200, {
+          model: result.model,
+          mediaType: imageMediaType(result.bytes),
+          image: Buffer.from(result.bytes).toString('base64'),
+          note: 'A generated preview, not a photo of the room; not saved to the project.',
+        });
+        return;
+      }
       if (path === '/photos/repaint' && req.method === 'POST') {
         // A Muse Image preview of one attached photo with one outlined part
         // refinished. Returned to the viewer only; nothing is saved.
