@@ -17,6 +17,7 @@ import {
 import {
   configuredMuseKey,
   imageMediaType,
+  museEditImage,
   samSegmentText,
 } from '../../../scripts/muse-provider.js';
 import { parseSegmentation, type PhotoSegmentation } from './segmentation.js';
@@ -58,6 +59,8 @@ const RANK_LIMIT = { calls: 20, windowMs: 10 * 60 * 1000 };
 // SAM 3.1 outlines per owner per window; repeats of the same photo and phrase are cached.
 const SEGMENT_LIMIT = { calls: 60, windowMs: 10 * 60 * 1000 };
 const SEGMENT_CACHE_SIZE = 200;
+// Muse Image repaint previews ($0.01 each) per owner per window.
+const REPAINT_LIMIT = { calls: 12, windowMs: 10 * 60 * 1000 };
 const rankInput = z
   .object({
     work: z
@@ -113,6 +116,8 @@ export async function createWorkspaceServer(
   },
   // SAM 3.1 concept segmentation; injectable for tests.
   segment: typeof samSegmentText = samSegmentText,
+  // Muse Image edits for repaint previews; injectable for tests.
+  repaint: typeof museEditImage = museEditImage,
 ) {
   const accountMode = Boolean(accounts);
   // A public origin with the shared local token would give every visitor one workspace.
@@ -141,6 +146,7 @@ export async function createWorkspaceServer(
     jevCalls.set(ownerId, [...recent, now]);
   };
   const segmentCalls = new Map<string, number[]>();
+  const repaintCalls = new Map<string, number[]>();
   const segmentCache = new Map<string, PhotoSegmentation & { model: string; runId: string }>();
   const spendSegmentCall = (ownerId: string) => {
     const now = Date.now();
@@ -150,6 +156,15 @@ export async function createWorkspaceServer(
     if (recent.length >= SEGMENT_LIMIT.calls)
       throw new DomainError('VALIDATION', 'Outline limit reached; try again in a few minutes');
     segmentCalls.set(ownerId, [...recent, now]);
+  };
+  const spendRepaintCall = (ownerId: string) => {
+    const now = Date.now();
+    const recent = (repaintCalls.get(ownerId) ?? []).filter(
+      (t) => now - t < REPAINT_LIMIT.windowMs,
+    );
+    if (recent.length >= REPAINT_LIMIT.calls)
+      throw new DomainError('VALIDATION', 'Preview limit reached; try again in a few minutes');
+    repaintCalls.set(ownerId, [...recent, now]);
   };
   const workers = new Map<string, PhotoWorker>();
   async function workerFor(repo: MongoWorkspaceRepository) {
@@ -943,6 +958,55 @@ export async function createWorkspaceServer(
             segmentCache.delete(segmentCache.keys().next().value!);
         }
         json(200, result);
+        return;
+      }
+      if (path === '/photos/repaint' && req.method === 'POST') {
+        // A Muse Image preview of one attached photo with one outlined part
+        // refinished. Returned to the viewer only; nothing is saved.
+        if (!providerConfigured)
+          throw new DomainError('VALIDATION', 'Configure MUSE_API_KEY on the server first');
+        const { blobId, phrase, finish } = z
+          .object({
+            blobId: z.string().min(1).max(200),
+            phrase: z
+              .string()
+              .trim()
+              .min(1)
+              .max(60)
+              .regex(/^[\p{L}\p{N} '-]+$/u),
+            finish: z
+              .string()
+              .trim()
+              .min(1)
+              .max(120)
+              .regex(/^[\p{L}\p{N} #'(),.-]+$/u),
+          })
+          .strict()
+          .parse(await body(req));
+        const doc = await activeRepo.read();
+        if (
+          !Object.values(doc.workspace.evidence).some((e) => e.source.attachment?.blobId === blobId)
+        )
+          throw new DomainError('NOT_FOUND', 'Attachment not found');
+        const blob = await activeRepo.readBlob(blobId);
+        if (!blob) throw new DomainError('NOT_FOUND', 'Attachment not found');
+        let mediaType: string;
+        try {
+          mediaType = imageMediaType(blob.bytes);
+        } catch {
+          throw new DomainError('VALIDATION', 'Previews work on JPEG, PNG or WebP photos');
+        }
+        spendRepaintCall(activeRepo.ownerId);
+        const result = await repaint({
+          image: { bytes: blob.bytes, mediaType },
+          prompt: `Change only the ${phrase} to ${finish}. Keep everything else in the photo exactly the same: layout, furniture, fixtures, lighting, shadows and camera angle. Photorealistic.`,
+        });
+        json(200, {
+          model: result.model,
+          mediaType: imageMediaType(result.bytes),
+          image: Buffer.from(result.bytes).toString('base64'),
+          note: 'Generated preview; not a photo of finished work and not saved to the project.',
+        });
         return;
       }
       if (path === '/photo-jobs' && req.method === 'GET') {

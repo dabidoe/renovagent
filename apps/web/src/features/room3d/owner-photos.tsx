@@ -3,6 +3,12 @@ import type { ScopeDraft, Workspace } from '@renovagent/contracts';
 import { photoNotes, photoPins, type PhotoRead } from '@renovagent/core';
 import type { WorkspaceController } from '../../app/workspace-controller.js';
 import { workspaceRequest, type SessionInfo } from '../../adapters/http/project-repository.js';
+import {
+  OutlineControls,
+  OutlineOverlay,
+  shownPreview,
+  usePhotoOutline,
+} from './photo-outlines.js';
 
 // The owner's own room photos, read by Jev on the server: what it sees and
 // where. Code turns that into pins for the planned work and suggestions; a
@@ -100,6 +106,7 @@ export function OwnerPhotos({
   const fileInput = useRef<HTMLInputElement>(null);
   const photo = photos[selected] ?? photos[0];
   const url = useBlobUrl(controller, photo?.source.attachment?.blobId);
+  const outline = usePhotoOutline(photo?.source.attachment?.blobId);
   const addPhotos = async (files: File[]) => {
     setUpload('Adding…');
     try {
@@ -196,7 +203,17 @@ export function OwnerPhotos({
       </header>
       <div className="owner-photos-body">
         <figure className="owner-photo">
-          {url && <img src={url} alt={photo.source.attachment?.name ?? photo.source.description} />}
+          {shownPreview(outline) ? (
+            <img
+              src={shownPreview(outline)!.url}
+              alt={`Generated preview: ${outline.outline?.phrase} in ${shownPreview(outline)!.finish}`}
+            />
+          ) : (
+            url && <img src={url} alt={photo.source.attachment?.name ?? photo.source.description} />
+          )}
+          {outline.outline && !shownPreview(outline) && (
+            <OutlineOverlay outline={outline.outline} tint={outline.tint} />
+          )}
           {read &&
             // Outline only what carries a pin, so the photo stays readable.
             [...new Set(pins.map((p) => p.box))].map((b, k) => (
@@ -243,6 +260,7 @@ export function OwnerPhotos({
               ))}
             </div>
           )}
+          <OutlineControls state={outline} />
           {reading?.status === 'error' && (
             <p role="alert" className="small-note">
               {reading.message}
