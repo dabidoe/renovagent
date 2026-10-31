@@ -1,6 +1,7 @@
 import { RoomWelcome } from './room-welcome.js';
 import { OwnerPhotos, ownerPhotos } from './owner-photos.js';
 import { BestValuePopup, type BestValueResult, type BestValueState } from './best-value.js';
+import { LooksPopup, type LookResult, type LooksState } from './looks.js';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type {
   DesignOptions,
@@ -628,7 +629,7 @@ export function RoomStudio({
   const [showMuse, setShowMuse] = useState(true);
   const [quoteId, setQuoteId] = useState<string | null>(null);
   // Review and handoff read the saved draft; a pick must be approved first.
-  const [panel, setPanel] = useState<'review' | 'handoff' | 'value' | null>(null);
+  const [panel, setPanel] = useState<'review' | 'handoff' | 'value' | 'looks' | null>(null);
   // Best value across tiers (connected): the server holds the catalog and key.
   const [value, setValue] = useState<BestValueState | null>(null);
   const findBestValue = async () => {
@@ -642,6 +643,22 @@ export function RoomStudio({
       setValue({ status: 'done', result });
     } catch (e) {
       setValue({
+        status: 'error',
+        message: (e instanceof Error ? e.message : String(e)).slice(0, 200),
+      });
+    }
+  };
+  // Curated looks priced for this room (connected): real catalog products.
+  const [looks, setLooks] = useState<LooksState | null>(null);
+  const openLooks = async () => {
+    choosePinRef.current(null);
+    setPanel('looks');
+    setLooks({ status: 'working' });
+    try {
+      const result = (await workspaceRequest('/looks/price', { projectId })) as LookResult;
+      setLooks({ status: 'done', result });
+    } catch (e) {
+      setLooks({
         status: 'error',
         message: (e instanceof Error ? e.message : String(e)).slice(0, 200),
       });
@@ -1044,7 +1061,9 @@ export function RoomStudio({
           ) : (
             <div key="plan" className="room3d-plan" dangerouslySetInnerHTML={{ __html: svg }} />
           )}
-          {panel === 'value' && value ? (
+          {panel === 'looks' && looks ? (
+            <LooksPopup state={looks} onClose={() => setPanel(null)} />
+          ) : panel === 'value' && value ? (
             <BestValuePopup state={value} onClose={() => setPanel(null)} />
           ) : panel === 'review' && review ? (
             <ReviewPopup
@@ -1281,6 +1300,15 @@ export function RoomStudio({
                     onClick={() => void findBestValue()}
                   >
                     ✦ Best value with Jev
+                  </button>
+                )}
+                {controller.connected && plan && (
+                  <button
+                    type="button"
+                    aria-pressed={panel === 'looks'}
+                    onClick={() => void openLooks()}
+                  >
+                    ✦ Looks
                   </button>
                 )}
               </div>

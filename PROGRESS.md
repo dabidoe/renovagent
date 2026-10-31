@@ -44,6 +44,18 @@ Renovagent carries a persistent property project through investigation, options,
 
 Use each slice's acceptance criteria before changing its status. A mock screen, canned reply, or HTTP 200 does not establish workflow completion.
 
+### Looks (inspo) and designer catalog; faucet rule v3 — October 30, 2026
+
+- **Designer and big-box catalog:** `fixtures/catalog/retail-inspo-2026-10.ts` adds 34 hand-checked products. Bathroom: IKEA, Wayfair, Pottery Barn, West Elm, Signature Hardware, Kohler, Brizo and Hansgrohe. Living room: Farrow & Ball, Clare, Backdrop, BM Aura, SW Emerald, Hurst, Kährs and COREtec. They use a new ID prefix, because imported reference records are frozen. `seed:catalog --set retail` imports both sets.
+- **✦ Looks** in the room studio: ten curated looks, five per room, priced for the project's materials list by `priceLook` with the shared hard rules (`POST /looks/price`, no model call).
+  - Fitting alternatives, "doesn't fit your plan" reasons, combo vanities that include their top, and products outside the plan are all shown; nothing is dropped.
+  - Tips are labelled as Renovagent's general advice.
+  - "Best of" badges come only from fetched articles that name the product or its line: three Composite Paint picks and a Bob Vila pick for the Moen Genta line.
+  - Example living room: looks run $566.84 to $1,482.65.
+- **Faucet rule:** bathroom recipe v3 accepts faucets with 1/2 in IPS shanks or 3/8 in compression lines. The supply-line text says attached lines need no separate supply.
+- **Best value:** Jev product judging now runs in batches of 40, up to 120 candidates, instead of silently dropping everything past 40.
+- **Open:** looks are fixed data; there are no product images; the IKEA and Kohler faucets don't state a 3/8 in compression connection, so they show as not fitting.
+
 ### Retail reference prices; CI fix — October 30, 2026
 
 - **The catalog:** `fixtures/catalog/retail-reference-2026-10.ts` holds 25 real products (Home Depot, Floor & Decor, Benjamin Moore, Delta, Ferguson and others) across the ten catalog categories, with shelf prices checked by hand on October 30.

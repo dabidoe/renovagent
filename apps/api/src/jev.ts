@@ -354,9 +354,26 @@ export async function readRoomPhoto(
 
 // For each candidate (a requirement paired with a catalog product that already
 // passed the hard rules): does the product really meet the requirement for
-// this project, and what quality level is it? One request; prices are left
-// out so the judgment is about the product, and code weighs it against cost.
+// this project, and what quality level is it? Prices are left out so the
+// judgment is about the product, and code weighs it against cost. Batches of
+// 40 per request, at most three requests per call.
 export async function judgeProducts(
+  project: { request: string; design: string | null },
+  candidates: Parameters<typeof judgeBatch>[1],
+  options: Parameters<typeof askJev>[2] = {},
+) {
+  const batches = [0, 40, 80].map((n) => candidates.slice(n, n + 40)).filter((b) => b.length);
+  const results = await Promise.all(batches.map((b) => judgeBatch(project, b, options)));
+  return {
+    model: results.find((r) => r.model)?.model ?? null,
+    judged: Object.assign({}, ...results.map((r) => r.judged)) as Record<
+      string,
+      { fit: number; quality: number }
+    >,
+  };
+}
+
+async function judgeBatch(
   project: { request: string; design: string | null },
   candidates: {
     key: string;
@@ -371,7 +388,7 @@ export async function judgeProducts(
   }[],
   options: Parameters<typeof askJev>[2] = {},
 ) {
-  const list = candidates.slice(0, 40);
+  const list = candidates;
   if (!list.length)
     return { model: null, judged: {} as Record<string, { fit: number; quality: number }> };
   const questions: Record<string, Question> = {};

@@ -30,29 +30,44 @@ export type ValueLine = {
   passedOver: { key: string; productName: string; totalMinor: number; reason: string }[];
 };
 
+type BomItem = BomPayload['items'][number];
+
+// The hard rules shared by tier plans, best value and looks: why this offer
+// cannot fill this item, or null when it can.
+export function hardRuleReason(item: BomItem, p: PricedOffer, currency = 'USD'): string | null {
+  const match = matchConstraints(p.product.specs, item.constraints);
+  if (!match.ok) return match.reasons.join('; ');
+  if (p.observation.unitPrice.currency !== currency)
+    return `priced in ${p.observation.unitPrice.currency}`;
+  if (p.observation.stock === 'out_of_stock') return 'out of stock when checked';
+  if (!sameUnit(p.offer.packUnit, item.unit))
+    return `sold per ${p.offer.packUnit}, needs ${item.unit}`;
+  return null;
+}
+
+export function candidateFor(item: BomItem, p: PricedOffer): ValueCandidate {
+  const units = purchaseUnits(item.quantity, p.offer.packQuantity);
+  return {
+    key: `${item.id}|${p.offer.id}`,
+    itemId: item.id,
+    priced: p,
+    units,
+    totalMinor: lineTotalMinor(units, p.observation.unitPrice.amountMinor),
+    shippingMinor: shippingMinor(p),
+  };
+}
+
 export function valueCandidates(bom: BomPayload, priced: PricedOffer[], currency = 'USD') {
   const out: ValueCandidate[] = [];
   for (const item of bom.items)
     for (const p of priced) {
       if (!item.candidateProductIds.includes(p.product.id)) continue;
-      if (!matchConstraints(p.product.specs, item.constraints).ok) continue;
-      if (p.observation.unitPrice.currency !== currency) continue;
-      if (p.observation.stock === 'out_of_stock') continue;
-      if (!sameUnit(p.offer.packUnit, item.unit)) continue;
-      const units = purchaseUnits(item.quantity, p.offer.packQuantity);
-      out.push({
-        key: `${item.id}|${p.offer.id}`,
-        itemId: item.id,
-        priced: p,
-        units,
-        totalMinor: lineTotalMinor(units, p.observation.unitPrice.amountMinor),
-        shippingMinor: shippingMinor(p),
-      });
+      if (hardRuleReason(item, p, currency) === null) out.push(candidateFor(item, p));
     }
   return out;
 }
 
-const cost = (c: ValueCandidate) => c.totalMinor + (c.shippingMinor ?? 0);
+export const cost = (c: ValueCandidate) => c.totalMinor + (c.shippingMinor ?? 0);
 const pct = (n: number) => `${Math.round(n * 100)}%`;
 
 export function bestValue(

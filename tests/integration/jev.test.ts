@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   askJev,
   JevError,
+  judgeProducts,
   photoChecks,
   rankReviewFindings,
   rankSections,
@@ -159,4 +160,36 @@ test('review findings are only annotated and reordered by relevance', async () =
     ],
   );
   assert.deepEqual(r.findings.find((x) => x.id === 'f1')!.citations, findings[0]!.citations);
+});
+
+test('product judging batches 40 candidates per request and keeps every answer', async () => {
+  const { f, calls } = fake((q) =>
+    Object.fromEntries(
+      Object.entries(q).map(([id, question]) => [
+        id,
+        question.type === 'noul' ? { noul: 0.9 } : { score: 1 },
+      ]),
+    ),
+  );
+  const candidates = Array.from({ length: 45 }, (_, i) => ({
+    key: `c${i}`,
+    requirement: 'Single-hole faucet',
+    product: {
+      name: `Faucet ${i}`,
+      manufacturer: 'M',
+      category: 'faucet',
+      specs: {},
+      certifications: [],
+    },
+  }));
+  const { judged } = await judgeProducts({ request: 'r', design: null }, candidates, {
+    key: 'test-key-123',
+    fetch: f,
+  });
+  assert.deepEqual(
+    calls.map((c) => c.body.state.candidates.length),
+    [40, 5],
+  );
+  assert.equal(Object.keys(judged).length, 45);
+  assert.deepEqual(judged.c44, { fit: 0.9, quality: 1 });
 });

@@ -1,7 +1,8 @@
 // Operator script: import a curated catalog into Mongo.
 // Usage: node --import tsx scripts/seed-catalog.ts [--uri mongodb://...]
 //          [--set retail|demo] [--file catalog.json] [--retire-demo]
-// --set retail (default) imports the hand-checked retail reference prices;
+// --set retail (default) imports the hand-checked retail reference prices and
+// the designer/big-box picks used by curated looks;
 // --set demo imports the fictional vanity and living-room fixtures. Load one
 // set per database: tier plans take every product in a category, so mixing
 // fictional and real products would blend their prices. --retire-demo deletes
@@ -15,6 +16,7 @@ import { CatalogStore } from '../apps/api/src/catalog.js';
 import { vanityCatalog } from '../fixtures/catalog/vanity-philadelphia.js';
 import { livingRoomCatalog } from '../fixtures/catalog/living-room-philadelphia.js';
 import { retailReferenceCatalog } from '../fixtures/catalog/retail-reference-2026-10.js';
+import { retailInspoCatalog } from '../fixtures/catalog/retail-inspo-2026-10.js';
 import { workspaceMongoConfig } from '../apps/api/src/database-config.js';
 
 const option = (name: string) => {
@@ -29,15 +31,16 @@ const demo: CatalogImport = {
   offers: [...vanityCatalog.offers, ...livingRoomCatalog.offers],
   observations: [...vanityCatalog.observations, ...livingRoomCatalog.observations],
 };
+const retail: CatalogImport = {
+  products: [...retailReferenceCatalog.products, ...retailInspoCatalog.products],
+  offers: [...retailReferenceCatalog.offers, ...retailInspoCatalog.offers],
+  observations: [...retailReferenceCatalog.observations, ...retailInspoCatalog.observations],
+};
 const set = option('set') ?? 'retail';
 if (!['retail', 'demo'].includes(set)) throw new Error(`Unknown --set ${set}; use retail or demo.`);
 const uri = option('uri') ?? (await workspaceMongoConfig()).uri;
 const file = option('file');
-const batch = file
-  ? JSON.parse(await readFile(file, 'utf8'))
-  : set === 'demo'
-    ? demo
-    : retailReferenceCatalog;
+const batch = file ? JSON.parse(await readFile(file, 'utf8')) : set === 'demo' ? demo : retail;
 const client = new MongoClient(uri);
 await client.connect();
 const store = new CatalogStore(client.db());

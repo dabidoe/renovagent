@@ -51,12 +51,13 @@ test('every bathroom vanity item has a real product that clears the recipe’s h
       candidates.some((c) => c.itemId === item.id),
       `${item.id} has no qualifying retail product`,
     );
-  // Unpublished or mismatched specs keep a product out instead of guessing.
+  // Either supply connection fits; an unpublished connection (Glacier Bay) or
+  // an out-of-stock listing (Delta) keeps a faucet out instead of guessing.
   const faucets = candidates.filter((c) => c.itemId === 'vanity:faucet');
-  assert.deepEqual(
-    faucets.map((c) => c.priced.product.id),
-    ['rr-fau-pfister-pfirst-modern'],
-  );
+  assert.deepEqual(faucets.map((c) => c.priced.product.id).sort(), [
+    'rr-fau-moen-genta',
+    'rr-fau-pfister-pfirst-modern',
+  ]);
   assert.ok(
     !candidates.some((c) => c.priced.product.id === 'rr-van-homeibro-plywood-30'),
     'mount not published',

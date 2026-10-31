@@ -12,7 +12,7 @@ const CHECKED = '2026-10-30';
 const OBSERVED_AT = '2026-10-30T20:00:00Z';
 const FD_STORE = 'Floor & Decor Springfield PA (19064)';
 
-type Row = {
+export type RetailRow = {
   key: string;
   category: string;
   tier: Offer['tier'];
@@ -25,14 +25,17 @@ type Row = {
   price: number; // USD per pack, as listed
   pack: [quantity: number, unit: string];
   specs: Product['specs'];
-  seen: 'page' | 'snippet';
+  // page: the retailer or brand product page; snippet: a search result for it
+  // (page blocked); review: a review site listing the brand's price.
+  seen: 'page' | 'snippet' | 'review';
+  sale?: boolean; // a sale price when checked
   shipping?: boolean; // online-only retailer
   store?: string;
   stock?: PriceObservation['stock'];
   note?: string;
 };
 
-const ROWS: Row[] = [
+const ROWS: RetailRow[] = [
   {
     key: 'paint-glidden-premium-flat',
     category: 'interior-paint',
@@ -434,55 +437,78 @@ const ROWS: Row[] = [
   },
 ];
 
-const productId = (r: Row) => `rr-${r.key}`;
-const offerId = (r: Row) => `rr-offer-${r.key}`;
+const SEEN = {
+  page: 'fetched product page',
+  snippet: 'search result only (page blocked)',
+  review: 'price from a review site listing',
+};
 
-function note(r: Row) {
-  const seen = r.seen === 'page' ? 'fetched product page' : 'search result only (page blocked)';
-  return [`Checked ${CHECKED}, ${seen}: ${r.url}`, r.note].filter(Boolean).join(' ').slice(0, 500);
+function note(r: RetailRow, checked: string) {
+  return [
+    `Checked ${checked}, ${SEEN[r.seen]}: ${r.url}`,
+    r.sale && 'Sale price when checked.',
+    r.note,
+  ]
+    .filter(Boolean)
+    .join(' ')
+    .slice(0, 500);
 }
 
-export const retailReferenceCatalog: CatalogImport = {
-  products: ROWS.map(
-    (r): Product => ({
-      schemaVersion: 1,
-      id: productId(r),
-      manufacturer: r.manufacturer,
-      model: r.model,
-      name: r.name,
-      category: r.category,
-      identifiers: { mpn: r.model.slice(0, 60) },
-      specs: r.specs,
-      certifications: [],
-    }),
-  ),
-  offers: ROWS.map(
-    (r): Offer => ({
-      schemaVersion: 1,
-      id: offerId(r),
-      productId: productId(r),
-      retailer: r.retailer,
-      sku: r.sku,
-      fulfillmentRegion: r.store ? '19064' : 'US',
-      ...(r.store ? { storeName: r.store } : {}),
-      url: r.url,
-      fulfillment: r.shipping ? 'shipping' : 'both',
-      tier: r.tier,
-      packQuantity: r.pack[0],
-      packUnit: r.pack[1],
-    }),
-  ),
-  observations: ROWS.map(
-    (r): PriceObservation => ({
-      schemaVersion: 1,
-      id: `rr-obs-${r.key}-${CHECKED}`,
-      offerId: offerId(r),
-      observedAt: OBSERVED_AT,
-      unitPrice: { amountMinor: Math.round(r.price * 100), currency: 'USD' },
-      stock: r.stock ?? 'unknown',
-      source: 'manual-entry',
-      freshness: 'recent',
-      note: note(r),
-    }),
-  ),
-};
+// Builds products, offers and one dated manual-entry observation per row.
+// IDs are `${prefix}-${key}`; existing records are frozen, so new rows go in
+// a new prefix rather than changing these.
+export function retailCatalog(
+  rows: RetailRow[],
+  prefix: string,
+  checked: string,
+  observedAt: string,
+): CatalogImport {
+  const productId = (r: RetailRow) => `${prefix}-${r.key}`;
+  const offerId = (r: RetailRow) => `${prefix}-offer-${r.key}`;
+  return {
+    products: rows.map(
+      (r): Product => ({
+        schemaVersion: 1,
+        id: productId(r),
+        manufacturer: r.manufacturer,
+        model: r.model,
+        name: r.name,
+        category: r.category,
+        identifiers: { mpn: r.model.slice(0, 60) },
+        specs: r.specs,
+        certifications: [],
+      }),
+    ),
+    offers: rows.map(
+      (r): Offer => ({
+        schemaVersion: 1,
+        id: offerId(r),
+        productId: productId(r),
+        retailer: r.retailer,
+        sku: r.sku,
+        fulfillmentRegion: r.store ? '19064' : 'US',
+        ...(r.store ? { storeName: r.store } : {}),
+        url: r.url,
+        fulfillment: r.shipping ? 'shipping' : 'both',
+        tier: r.tier,
+        packQuantity: r.pack[0],
+        packUnit: r.pack[1],
+      }),
+    ),
+    observations: rows.map(
+      (r): PriceObservation => ({
+        schemaVersion: 1,
+        id: `${prefix}-obs-${r.key}-${checked}`,
+        offerId: offerId(r),
+        observedAt,
+        unitPrice: { amountMinor: Math.round(r.price * 100), currency: 'USD' },
+        stock: r.stock ?? 'unknown',
+        source: 'manual-entry',
+        freshness: 'recent',
+        note: note(r, checked),
+      }),
+    ),
+  };
+}
+
+export const retailReferenceCatalog = retailCatalog(ROWS, 'rr', CHECKED, OBSERVED_AT);

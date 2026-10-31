@@ -251,6 +251,24 @@ $511.48 against $724.32 mid tier (`docs/previews/room-best-value-jev.png`).
 A first wording without the colour note judged no paint a fit because the
 requirement named "warm white" and the catalog lists tintable bases.
 
+### Looks: curated inspo, priced for the room (October 30, 2026)
+
+**✦ Looks** appears in connected mode once a plan is priced. It opens curated sets of real products for the room (`fixtures/catalog/looks-2026-10.ts`), for example "Bright on a budget", "Designer matte" or "Gold splurge". Each set comes with Renovagent tips and linked "best of" badges.
+
+- **Pricing:** `POST /looks/price` prices every look against the project's materials list with `priceLook` (core). It uses the plan's quantities and the hard rules shared with tier plans and Best value (`hardRuleReason`). There is no model call, so it doesn't use the Jev allowance.
+- **What each plan line can show:**
+  - the look's cheapest fitting product, with its other fitting options and their price difference;
+  - "doesn't fit your plan", with the rule's reason, such as an IKEA cabinet that is wall-hung or a faucet whose connection isn't published;
+  - "included with", when a vanity is sold with its top;
+  - "not part of this look".
+- **Look products the plan doesn't cover** are listed separately.
+- **Matching:** it goes by category and constraints rather than the materials list's saved candidates, so products added to the catalog after a plan was priced still count.
+- **Separate from the references board:** this is curated catalog data. The other session's "Inspiration & products" board, where users save their own links and photos, is a different feature.
+- **Limits:**
+  - looks are fixed data, with no per-user saving;
+  - prices are October 30 shelf checks;
+  - no product images are shown, because retailer photos aren't ours to use.
+
 ## Wiring and other trades
 
 The drawing has an empty `layer-electrical` (`data-status="not-recorded"`).

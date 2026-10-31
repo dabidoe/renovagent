@@ -43,7 +43,8 @@ import {
 } from './design-service.js';
 import { renderExample } from './example-render.js';
 import { configuredJevKey, judgeProducts, rankReviewFindings, readRoomPhoto } from './jev.js';
-import { bestValue, scopeDraftId, valueCandidates } from '@renovagent/core';
+import { bestValue, priceLook, scopeDraftId, valueCandidates } from '@renovagent/core';
+import { curatedLooks, lookRoomFor, lookView } from './looks.js';
 import type { BomPayload, PurchasePlanPayload, ScopeDraft } from '@renovagent/contracts';
 import { imageSize } from 'image-size';
 
@@ -379,6 +380,37 @@ export async function createWorkspaceServer(
           model: ranked.model,
           relevance: Object.fromEntries(ranked.findings.map((f) => [f.id, f.relevance])),
           note: 'Probability that a provision applies to this work, judged by the Jev model; an interpretation, not a code source or determination.',
+        });
+        return;
+      }
+      if (path === '/looks/price' && req.method === 'POST') {
+        // Curated looks priced for the project's current materials list, with
+        // the same hard rules as tier plans. No model call.
+        if (!catalog) throw new DomainError('VALIDATION', 'Catalog is unavailable');
+        const { projectId } = z
+          .object({ projectId: z.string().min(1).max(160) })
+          .strict()
+          .parse(await body(req));
+        const { workspace } = await activeRepo.read();
+        if (!workspace.projects[projectId]) throw new DomainError('NOT_FOUND', 'Unknown project');
+        const bom = workspace.artifacts[`${projectId}:bom`]?.at(-1)?.payload;
+        if (bom?.kind !== 'bom')
+          throw new DomainError(
+            'VALIDATION',
+            'Price the plan first: there is no materials list yet',
+          );
+        const draft = workspace.artifacts[scopeDraftId(projectId)]?.at(-1)?.payload as
+          | ScopeDraft
+          | undefined;
+        const room = lookRoomFor(draft?.recipe.id);
+        const looks = curatedLooks.filter((l) => l.room === room);
+        const priced = await catalog.pricedOffers([...new Set(looks.flatMap((l) => l.productIds))]);
+        json(200, {
+          room,
+          looks: looks.map((look) =>
+            lookView(look, priceLook(bom as BomPayload, priced, look.productIds), priced),
+          ),
+          note: 'Real products at the shelf prices checked on the date shown; not live quotes. Tips are Renovagent’s general advice.',
         });
         return;
       }
