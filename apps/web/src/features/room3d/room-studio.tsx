@@ -1,4 +1,7 @@
 import { RoomWelcome } from './room-welcome.js';
+import { OwnerPhotos, ownerPhotos } from './owner-photos.js';
+import { BestValuePopup, type BestValueResult, type BestValueState } from './best-value.js';
+import { LooksPopup, type LookResult, type LooksState } from './looks.js';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type {
   DesignOptions,
@@ -13,6 +16,9 @@ import {
   EXAMPLE_TAG,
   exampleQuotes,
   floorPlanSvg,
+  projectHandoff,
+  projectScopeReview,
+  reviewLocations,
   roomAnnotations,
   roomSurfaces,
   scopeDraftId,
@@ -24,17 +30,25 @@ import {
 } from '@renovagent/core';
 import type { WorkspaceController } from '../../app/workspace-controller.js';
 import { loadRoomSource, type RoomSource } from './room-source.js';
-import { workspaceRequest } from '../../adapters/http/project-repository.js';
+import { workspaceRequest, type SessionInfo } from '../../adapters/http/project-repository.js';
 import {
   DesignPicker,
   directionFor,
   ExampleRoomPhoto,
   packagesFor,
+  requestFor,
   savedPick,
   variantFor,
   type MuseRender,
   type Pick,
 } from './example-photo.js';
+import {
+  ChangeConfirm,
+  HandoffPopup,
+  ReviewPopup,
+  type ChangeRow,
+  type JevRanking,
+} from './review-handoff.js';
 import type { RoomLook, RoomScene } from './room-scene.js';
 
 const EXISTING: RoomLook = { wallColor: 'white', floorFinish: 'existing', label: 'Existing' };
@@ -614,11 +628,106 @@ export function RoomStudio({
   const [muse, setMuse] = useState<Record<string, MuseRender>>({});
   const [showMuse, setShowMuse] = useState(true);
   const [quoteId, setQuoteId] = useState<string | null>(null);
+  // Review and handoff read the saved draft; a pick must be approved first.
+  const [panel, setPanel] = useState<'review' | 'handoff' | 'value' | 'looks' | null>(null);
+  // Best value across tiers (connected): the server holds the catalog and key.
+  const [value, setValue] = useState<BestValueState | null>(null);
+  const findBestValue = async () => {
+    choosePinRef.current(null);
+    setPanel('value');
+    setValue({ status: 'working' });
+    try {
+      const result = (await workspaceRequest('/products/best', {
+        projectId,
+      })) as BestValueResult;
+      setValue({ status: 'done', result });
+    } catch (e) {
+      setValue({
+        status: 'error',
+        message: (e instanceof Error ? e.message : String(e)).slice(0, 200),
+      });
+    }
+  };
+  // Curated looks priced for this room (connected): real catalog products.
+  const [looks, setLooks] = useState<LooksState | null>(null);
+  const openLooks = async () => {
+    choosePinRef.current(null);
+    setPanel('looks');
+    setLooks({ status: 'working' });
+    try {
+      const result = (await workspaceRequest('/looks/price', { projectId })) as LookResult;
+      setLooks({ status: 'done', result });
+    } catch (e) {
+      setLooks({
+        status: 'error',
+        message: (e instanceof Error ? e.message : String(e)).slice(0, 200),
+      });
+    }
+  };
+  const [confirming, setConfirming] = useState(false);
+  // A location assumed for the review and handoff only (not recorded).
+  const [reviewAt, setReviewAt] = useState('');
+  const assumed = reviewLocations.find((l) => l.id === reviewAt)?.locality ?? null;
+  const review = useMemo(
+    () => (panel === 'review' ? projectScopeReview(state, projectId, assumed) : null),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [panel, projectId, scopeKey, reviewAt],
+  );
+  const handoff = useMemo(
+    () =>
+      panel === 'handoff'
+        ? projectHandoff(state, projectId, new Date().toISOString(), assumed)
+        : null,
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [panel, projectId, scopeKey, reviewAt],
+  );
+  // Jev relevance for the review on screen; a different review (location,
+  // saved design) drops the old scores. The server holds the key.
+  const rankKey = `${scopeKey}|${reviewAt}`;
+  const [ranked, setRanked] = useState<{ key: string; value: JevRanking } | null>(null);
+  const jevRanking = ranked?.key === rankKey ? ranked.value : null;
+  const rankWithJev = async () => {
+    if (!review || !scopeDraft) return;
+    const key = rankKey;
+    setRanked({ key, value: { status: 'working' } });
+    try {
+      const session = (await workspaceRequest('/session')) as SessionInfo;
+      if (session.mode === 'account' && !session.signedIn)
+        throw Error('Sign in to the connected app to rank with Jev.');
+      if (!session.jev) throw Error('Jev is not configured on this server.');
+      const r = (await workspaceRequest('/review/rank', {
+        work: {
+          request: scopeDraft.request.replace(EXAMPLE_TAG, '').trim(),
+          packages: scopeDraft.packages.filter((p) => p.included).map((p) => p.title),
+          facts: [
+            ...scopeDraft.inputs
+              .filter((i) => i.amount !== null)
+              .map((i) => `${i.label}: ${i.amount} ${i.unit}`),
+            ...(review.codeBasis.adopted ? [review.codeBasis.label] : []),
+          ].slice(0, 10),
+        },
+        findings: review.findings.map((f) => ({ id: f.id, citations: f.citations })),
+      })) as { model: string | null; relevance: Record<string, number | null> };
+      setRanked({ key, value: { status: 'done', model: r.model, relevance: r.relevance } });
+    } catch (e) {
+      const message = e instanceof Error ? e.message : String(e);
+      setRanked({
+        key,
+        value: {
+          status: 'error',
+          message: /unavailable|fetch|Failed/i.test(message)
+            ? 'Jev ranking needs the Renovagent server (npm run dev:connected).'
+            : message.slice(0, 200),
+        },
+      });
+    }
+  };
   const allPins = shownNotes ? [...shownNotes.pins, ...shownNotes.unplaced] : [];
   const choosePin = (id: string | null) => {
     setPinId(id);
     setQuoteId(null);
     setSelectedId(null);
+    setPanel(null);
     const pin = allPins.find((p) => p.id === id);
     scene.current?.select(pin?.surfaceIds ?? []);
     scene.current?.focusPin(id);
@@ -676,7 +785,7 @@ export function RoomStudio({
   }, [source, view, surfaces, notes]);
   useEffect(() => scene.current?.setLook(look), [look]);
   // Esc closes whichever popup is open.
-  const popupOpen = !!(pinId || quoteId || selectedId);
+  const popupOpen = !!(pinId || quoteId || selectedId || panel);
   useEffect(() => {
     if (!popupOpen) return;
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && choosePinRef.current(null);
@@ -707,10 +816,44 @@ export function RoomStudio({
     if (controller.connected) await price();
   };
 
+  // A package a photo suggested, added after the owner approved it in the
+  // photo panel: a new proposed scope revision with the same request.
+  const addPackage = async (packageId: string) => {
+    if (!scopeDraft) return;
+    const ids = scopeDraft.packages.filter((p) => p.included).map((p) => p.id);
+    const ok = await run(() =>
+      controller.draftScope(
+        projectId,
+        scopeDraft.recipe.id,
+        [...ids, packageId],
+        scopeDraft.request,
+        scopeDraft.direction,
+      ),
+    );
+    if (ok && controller.connected) await price();
+  };
+  const photosPanel = (
+    <OwnerPhotos
+      state={state}
+      projectId={projectId}
+      controller={controller}
+      draft={scopeDraft}
+      onAdd={addPackage}
+    />
+  );
+
   if (loadError) return <p role="alert">Could not read the floor plan: {loadError}</p>;
   if (!source)
     return (
-      <RoomWelcome state={state} projectId={projectId} controller={controller} heading={heading} />
+      <>
+        <RoomWelcome
+          state={state}
+          projectId={projectId}
+          controller={controller}
+          heading={heading}
+        />
+        {ownerPhotos(state, projectId).length > 0 && photosPanel}
+      </>
     );
   const selected = surfaces.find((s) => s.id === selectedId) ?? null;
   const activePin = allPins.find((p) => p.id === pinId) ?? null;
@@ -750,6 +893,37 @@ export function RoomStudio({
         })),
       );
   };
+  // What approving the pick changes, saved plan first.
+  const lowestFull = (qs: ReturnType<typeof exampleQuotes>) =>
+    qs.find((q) => !q.notQuoted.length && !q.needsArea.length)?.totalMinor ?? null;
+  const diy = (n: typeof notes) =>
+    n?.template ? money(n.template.materialsMinor + n.template.toolsMinor, 'USD') : '—';
+  const changeRows: ChangeRow[] = !changed
+    ? []
+    : (() => {
+        const before = directionFor(saved);
+        const after = directionFor(pick);
+        const was = new Set(notes?.steps.map((s) => s.title));
+        const now = new Set(steps.map((s) => s.title));
+        const pro = (n: typeof notes) => {
+          const v = isExample && n ? lowestFull(exampleQuotes(n.steps)) : null;
+          return v === null ? '—' : money(v, 'USD');
+        };
+        return [
+          ...(before.wallColor !== after.wallColor
+            ? [{ label: 'Walls', from: before.wallColor, to: after.wallColor }]
+            : []),
+          ...(before.floorFinish !== after.floorFinish
+            ? [{ label: 'Floor', from: before.floorFinish, to: after.floorFinish }]
+            : []),
+          ...[...now].filter((t) => !was.has(t)).map((t) => ({ label: 'Adds', from: '', to: t })),
+          ...[...was]
+            .filter((t) => !now.has(t))
+            .map((t) => ({ label: 'Removes', from: t, to: '—' })),
+          { label: 'Do it yourself', from: diy(notes), to: diy(shownNotes) },
+          { label: 'Hire a pro', from: pro(notes), to: pro(shownNotes) },
+        ];
+      })();
   const saveDesign = async () => {
     if (!scopeDraft) return;
     const ok = await run(() =>
@@ -757,11 +931,12 @@ export function RoomStudio({
         projectId,
         scopeDraft.recipe.id,
         packagesFor(pick.floor),
-        scopeDraft.request,
+        `${EXAMPLE_TAG} ${requestFor(pick)}`,
         directionFor(pick),
       ),
     );
     if (!ok) return;
+    setConfirming(false);
     setPicked(null);
     if (controller.connected) await price();
   };
@@ -886,7 +1061,31 @@ export function RoomStudio({
           ) : (
             <div key="plan" className="room3d-plan" dangerouslySetInnerHTML={{ __html: svg }} />
           )}
-          {activePin ? (
+          {panel === 'looks' && looks ? (
+            <LooksPopup state={looks} onClose={() => setPanel(null)} />
+          ) : panel === 'value' && value ? (
+            <BestValuePopup state={value} onClose={() => setPanel(null)} />
+          ) : panel === 'review' && review ? (
+            <ReviewPopup
+              review={review}
+              location={reviewAt}
+              onLocation={setReviewAt}
+              ranking={jevRanking}
+              onRank={() => void rankWithJev()}
+              draftNote={
+                changed
+                  ? 'This reviews the saved design; approve your new pick to review it.'
+                  : null
+              }
+              onClose={() => setPanel(null)}
+            />
+          ) : panel === 'handoff' && handoff ? (
+            <HandoffPopup
+              markdown={handoff}
+              fileName={`${title} - contractor handoff.md`}
+              onClose={() => setPanel(null)}
+            />
+          ) : activePin ? (
             <TaskPopup
               key={activePin.id}
               pin={activePin}
@@ -940,14 +1139,28 @@ export function RoomStudio({
             <>
               {photoMode && (
                 <>
-                  <DesignPicker pick={pick} onPick={setPicked} shop={(q) => <Shop query={q} />} />
-                  {changed ? (
+                  <DesignPicker
+                    pick={pick}
+                    onPick={(p) => {
+                      setPicked(p);
+                      setConfirming(false);
+                    }}
+                    shop={(q) => <Shop query={q} />}
+                  />
+                  {changed && confirming ? (
+                    <ChangeConfirm
+                      rows={changeRows}
+                      busy={pricing === 'working'}
+                      onApprove={() => void saveDesign()}
+                      onCancel={() => setConfirming(false)}
+                    />
+                  ) : changed ? (
                     <div className="room3d-use">
                       <button
                         type="button"
                         className="primary"
                         disabled={pricing === 'working'}
-                        onClick={() => void saveDesign()}
+                        onClick={() => setConfirming(true)}
                       >
                         Use this design
                       </button>
@@ -1059,6 +1272,46 @@ export function RoomStudio({
                   <p className="small-note">Add a quote you received (coming soon).</p>
                 )}
               </div>
+              <div className="room3d-tools">
+                <button
+                  type="button"
+                  aria-pressed={panel === 'review'}
+                  onClick={() => {
+                    choosePin(null);
+                    setPanel('review');
+                  }}
+                >
+                  Does this work?
+                </button>
+                <button
+                  type="button"
+                  aria-pressed={panel === 'handoff'}
+                  onClick={() => {
+                    choosePin(null);
+                    setPanel('handoff');
+                  }}
+                >
+                  Contractor handoff
+                </button>
+                {controller.connected && plan && (
+                  <button
+                    type="button"
+                    aria-pressed={panel === 'value'}
+                    onClick={() => void findBestValue()}
+                  >
+                    ✦ Best value with Jev
+                  </button>
+                )}
+                {controller.connected && plan && (
+                  <button
+                    type="button"
+                    aria-pressed={panel === 'looks'}
+                    onClick={() => void openLooks()}
+                  >
+                    ✦ Looks
+                  </button>
+                )}
+              </div>
               <button
                 type="button"
                 className="link-button subtle"
@@ -1075,6 +1328,7 @@ export function RoomStudio({
           )}
         </aside>
       </div>
+      {photosPanel}
     </section>
   );
 }

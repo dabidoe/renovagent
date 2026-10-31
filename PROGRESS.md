@@ -48,6 +48,70 @@ Renovagent carries a persistent property project through investigation, options,
 
 Use each slice's acceptance criteria before changing its status. A mock screen, canned reply, or HTTP 200 does not establish workflow completion.
 
+### Runtime fixes: cached reads, one launcher, staged uploads — October 31, 2026
+
+- **Measured on Atlas (read-only):** fetching the 3 MB workspace takes about 34.6 s, validating it 69 ms. Reads now check a version and reuse a validated copy: 43–79 ms once warm.
+- **Workers and monitoring:** the photo worker can no longer stack ticks. `/readyz` and a slow-request log were added.
+- **Startup (`dev:connected`):** with nothing configured it stops with an error instead of choosing local Mongo. A worktree uses its main checkout's settings, the Jev and Muse keys use the same lookup, and it starts the API, MCP (4010) and Vite together.
+- **`dev:local`** is the explicit local option. Vite's `/mcp` proxy now points at 4010.
+- **Uploads:** images and PDFs upload raw (up to 20 MiB each) before their command, past the old ~9 MiB effective limit.
+- **Default storage:** browsers with no saved choice and no local projects open the shared workspace.
+- **Details and open items:** [runtime fixes](docs/architecture/runtime-fixes-2026-10-31.md). Open: shrinking the workspace (a history migration), a storage label, alias cleanup, the workflow, and container parity. When the Atlas password is rotated, update it in both `.env` and `server/.env`.
+
+### Looks (inspo) and designer catalog; faucet rule v3 — October 30, 2026
+
+- **Designer and big-box catalog:** `fixtures/catalog/retail-inspo-2026-10.ts` adds 34 hand-checked products. Bathroom: IKEA, Wayfair, Pottery Barn, West Elm, Signature Hardware, Kohler, Brizo and Hansgrohe. Living room: Farrow & Ball, Clare, Backdrop, BM Aura, SW Emerald, Hurst, Kährs and COREtec. They use a new ID prefix, because imported reference records are frozen. `seed:catalog --set retail` imports both sets.
+- **✦ Looks** in the room studio: ten curated looks, five per room, priced for the project's materials list by `priceLook` with the shared hard rules (`POST /looks/price`, no model call).
+  - Fitting alternatives, "doesn't fit your plan" reasons, combo vanities that include their top, and products outside the plan are all shown; nothing is dropped.
+  - Tips are labelled as Renovagent's general advice.
+  - "Best of" badges come only from fetched articles that name the product or its line: three Composite Paint picks and a Bob Vila pick for the Moen Genta line.
+  - Example living room: looks run $566.84 to $1,482.65.
+- **Faucet rule:** bathroom recipe v3 accepts faucets with 1/2 in IPS shanks or 3/8 in compression lines. The supply-line text says attached lines need no separate supply.
+- **Best value:** Jev product judging now runs in batches of 40, up to 120 candidates, instead of silently dropping everything past 40.
+- **Open:** looks are fixed data; there are no product images; the IKEA and Kohler faucets don't state a 3/8 in compression connection, so they show as not fitting.
+
+### Retail reference prices; CI fix — October 30, 2026
+
+- **The catalog:** `fixtures/catalog/retail-reference-2026-10.ts` holds 25 real products (Home Depot, Floor & Decor, Benjamin Moore, Delta, Ferguson and others) across the ten catalog categories, with shelf prices checked by hand on October 30.
+  - **Labelled:** the prices are `manual-entry` and `recent`, never `live`, and each note names its page and whether the price came from the fetched page or only a search result.
+  - **Specs:** only published specs are recorded, so a product without a published spec is listed but never picked for a rule that depends on it.
+  - **Sources:** every source and choice is listed in [retail reference prices](docs/retail-reference-prices.md).
+- **Seeding:** `seed:catalog` now loads one set per database (`--set retail`, the default, or `--set demo`). `--retire-demo` deletes exactly the demo fixture records.
+- **Verified on the local test database:** Best value on the example living room picks $566.84 against $827.19 for the cheapest mid-tier plan, at 75% to 91% Jev fit.
+- **Open:**
+  - projects priced against the demo set need re-pricing;
+  - mid-tier vanity top and several high tiers are missing;
+  - the bathroom faucet rule (`1/2-fip`) excludes typical 3/8 in compression faucets, a recipe decision left open.
+- **CI:** the build had failed since 5eda479, because `owner-photos.tsx` read an evidence field that exists only in uncommitted contracts work. It is fixed in 43a2d62, and CI passes. Local checks now run on an export whose workspace packages resolve inside the export.
+
+### Best value with Jev — October 30, 2026
+
+- Connected projects with a priced plan get "Best value with Jev": every offer of every tier that passes the hard rules is judged by Jev for fit (does it meet this requirement for this project) and quality; code picks the cheapest fit, lists cheaper options passed over and the cheapest step up, and compares with the mid tier. Demo example: $511.48 vs $724.32 mid tier with every pick ≥ 82% fit. Demo prices are labelled as such.
+
+### Your photos pinned by Jev — October 30, 2026
+
+- The room studio's "Your photos" panel uploads room photos and reads one with Jev (`POST /api/workspace/photo/read`): room, floor covering, visible fixtures, damage, dated vanity, and boxes. Code pins the planned work on what was located and suggests plan changes (no bathroom fan → exhaust fan, dated vanity, carpet under a new floor), each added only after approval. Verified with unit and route tests and headless Chrome on a real bathroom photo with the real model.
+
+### Jev in the review card — October 30, 2026
+
+- "Rank by relevance with Jev" in the "Does this work?" card: the server scores each cited provision for the described work (`POST /api/workspace/review/rank`, key server-side, session required, size caps, 20 calls / 10 min per owner) and the card shows percentages, ranks code findings first and folds those under 15% (nothing removed), labelled as Jev's interpretation. Verified with a connected route test, a render test and headless Chrome on the real model (Bay Area example: CALGreen paints 97%, flooring 96%, permits 90%).
+
+### Adopted codes for the Bay Area, NYC and Austin; Jev live — October 30, 2026
+
+- Enacted code text for our markets: California 2025 Title 24 (residential, plumbing, electrical, mechanical, existing, energy, CALGreen) and 2016 residential; NYC 2022 Construction Codes chapters (DOB PDFs) and NY State 2025 code; City of Austin amendments to the 2024 codes. 33,213 sections; a second reviewing agent picked 167 provisions by market and package, all excerpts re-verified. A reported location (`codePlace`) switches the review and handoff to that market's adopted text, falling back to the 2012 model code per package; the review card has a Location picker ("assumed"). MCP review tools take `location`, and `review_scope rank=true` orders findings by Jev-judged relevance.
+- Jev live (jev-1.14.0) with the replacement key: rankings and photo boxes checked on the example; 429/529 retried with backoff.
+- Gaps: NYC 2022 partial chapters, Austin base 2024 codes not held, no other Bay Area city amendments. Copyrighted ICC books are not scraped.
+
+### Model-code digest and Jev client — October 30, 2026
+
+- The 2012 IRC, IEBC, IPC, IMC and IECC (newest public-domain editions, Public.Resource.Org) are downloaded and split into 4,523 sections; a reviewing subagent picked 74 provisions across 13 work packages, and every excerpt is re-verified verbatim before it becomes `modelCodeDigest`. The review cites them (permits incl. the R105.2 finish-work exemption, clearances, exhaust rates, GFCI, smoke/CO) as model text, never as the adopted code. 2015–2024 editions are copyrighted; only ICC's licensed API provides them.
+- `apps/api/src/jev.ts`: TypeSafe Jev client for ranking code sections per project and photo checks with boxes. Tested against a fake; the live key returned 401.
+
+### "Does this work?", approval before change, contractor handoff — October 30, 2026
+
+- First slice of `docs/MODEL_INTEGRATION.md`. Any project with a scope draft gets a deterministic review (potential conflicts / to measure or confirm / passes known checks), each finding with the action that resolves it and citations copied from stored sources (URL, edition, section, retrieval date, unreviewed flag). Code provisions are cited only in their own jurisdiction and never as compliance. "Use this design" now shows what changes and needs "Approve and save". A Markdown contractor handoff (work in order, measurement provenance, allowances, requirements register, verify list, reply fields) downloads or copies. MCP tools `review_scope` and `export_contractor_handoff` expose both to Muse.
+- Not shipped: any model ("Jev") in the review, living-room code/permit sources, PAUGO, `/connect`. See `docs/architecture/requirements-review-and-handoff.md`.
+
 ### Example room photo: steps change the image, finishes change the quote — October 30, 2026
 
 - The example living room opens on a furnished render (Poly Haven CC0 furniture and floor textures, one fixed camera) labelled "Example · 3D render". Step tabs show their stage (carpet out → painted → new floor); Before/After shows the original room. A picker for walls (warm white, sage, soft blue) and floor (keep carpet, vinyl plank, hardwood) swaps the image and recomputes the DIY total and example quotes in memory; "Use this design" saves it as the scope draft. Each option names a product spec with store searches.

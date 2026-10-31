@@ -182,6 +182,93 @@ Assets: Poly Haven (polyhaven.com), CC0: Sofa_01, ArmChair_01,
 modern_coffee_table_01, potted_plant_01, throw_pillows_01, laminate_floor_02,
 wood_floor_deck.
 
+### Your photos, read by Jev (October 30, 2026)
+
+The room studio has a **Your photos** panel: the project's image evidence
+(add more with "Add room photos", `controller.attachFile`) and **✦ Pin with
+Jev**.
+
+- The browser resizes the photo to Jev's 280–1568 px range and sends one JPEG
+  to `POST /api/workspace/photo/read` (session required, size checked with
+  `image-size`, shared 20-calls-per-10-minutes Jev limit). `readRoomPhoto`
+  (`apps/api/src/jev.ts`) asks one batch: room type, floor covering (choice),
+  toilet / vanity / shower / tub / fan / window visible, water damage,
+  how dated the vanity looks (score), and boxes for toilet, vanity, shower,
+  floor, a plain painted wall, fan and window. Boxes are kept only for things
+  Jev also judges visible. The image is referenced once in the state: each
+  mention of a reference adds another copy of the image (a first version
+  that named it in every question exceeded the token limit).
+- Code decides everything after that (`packages/core/src/scope/photo-read.ts`):
+  `photoPins` pins each planned package on its surface or fixture (nothing is
+  pinned for things not seen); `photoNotes` turns findings into observations
+  ("floor looks like tile, 80% confident, confirm"), checks (existing tile or
+  vinyl under a planned floor, possible water damage) and suggestions to add a
+  package (no fan visible in a bathroom → exhaust fan; dated vanity →
+  vanity; carpet under a planned floor → carpet removal). A suggestion is
+  added only after "Approve: add …", as a new proposed scope revision.
+- Readings are held in the page, not recorded as facts: Jev's output is an
+  observation for the owner to confirm, never a measurement.
+
+Verified: `tests/domain/photo-read.test.ts`, the photo cases in
+`tests/integration/review-rank.test.ts` (size checks before any model call,
+shared limit), and headless Chrome with the real model on a real bathroom
+photo (`docs/previews/room-photo-jev-pins.png`): vanity, toilet, floor and
+wall pinned; "no exhaust fan visible (4%)" suggested and added after
+approval; 0.6 s and about 5k input tokens per photo. Jev read the sheet-vinyl
+floor as tile (66–80%), which is why floor findings ask for confirmation.
+
+### Best value with Jev (October 30, 2026)
+
+Connected projects with a priced plan get **✦ Best value with Jev**. Tier
+plans pick the cheapest acceptable offer inside each tier; best value looks
+across all tiers and asks whether the cheap option is actually right.
+
+- `valueCandidates` (`packages/core/src/commerce/best-value.ts`) applies the
+  same hard rules as tier plans (constraints, currency, stock, pack unit) to
+  every offer of every tier for each BOM item.
+- `POST /api/workspace/products/best` (session, catalog, shared Jev limit)
+  sends the survivors to `judgeProducts` in one request: per candidate a
+  **fit** yes-probability ("does this product meet this requirement for this
+  project?", judged from name, category and specs; colour/tint chosen at
+  purchase does not count against it) and a **quality** score (basic /
+  standard / premium). Prices are not sent, so the judgment is about the
+  product.
+- `bestValue` (code) picks the cheapest candidate with fit ≥ 70% (unknown
+  shipping ranks after known costs), lists cheaper candidates passed over
+  with their fit, and offers the cheapest step up at least ~one quality level
+  higher. No fitting candidate means no pick, never a guess.
+- The card compares the picks with the same items in the mid-tier plan and
+  shows each pick's retailer, tier, units, unit price, fit, quality and price
+  date; demo catalog prices are labelled "example price (demo data)".
+
+Verified: `tests/domain/best-value.test.ts` (all-tier candidates and pack
+rounding, poor fit passed over with its reason, step up, no fit no pick,
+never above the mid-tier line), and headless Chrome in connected mode against
+a local database seeded with the demo catalog and the real model: paint
+(builder, 88% fit), vinyl plank (builder 4 mm, 85%, step up to rigid-core
+6 mm for $133.84) and quarter-round (primed, 82%, step up to oak for $105):
+$511.48 against $724.32 mid tier (`docs/previews/room-best-value-jev.png`).
+A first wording without the colour note judged no paint a fit because the
+requirement named "warm white" and the catalog lists tintable bases.
+
+### Looks: curated inspo, priced for the room (October 30, 2026)
+
+**✦ Looks** appears in connected mode once a plan is priced. It opens curated sets of real products for the room (`fixtures/catalog/looks-2026-10.ts`), for example "Bright on a budget", "Designer matte" or "Gold splurge". Each set comes with Renovagent tips and linked "best of" badges.
+
+- **Pricing:** `POST /looks/price` prices every look against the project's materials list with `priceLook` (core). It uses the plan's quantities and the hard rules shared with tier plans and Best value (`hardRuleReason`). There is no model call, so it doesn't use the Jev allowance.
+- **What each plan line can show:**
+  - the look's cheapest fitting product, with its other fitting options and their price difference;
+  - "doesn't fit your plan", with the rule's reason, such as an IKEA cabinet that is wall-hung or a faucet whose connection isn't published;
+  - "included with", when a vanity is sold with its top;
+  - "not part of this look".
+- **Look products the plan doesn't cover** are listed separately.
+- **Matching:** it goes by category and constraints rather than the materials list's saved candidates, so products added to the catalog after a plan was priced still count.
+- **Separate from the references board:** this is curated catalog data. The other session's "Inspiration & products" board, where users save their own links and photos, is a different feature.
+- **Limits:**
+  - looks are fixed data, with no per-user saving;
+  - prices are October 30 shelf checks;
+  - no product images are shown, because retailer photos aren't ours to use.
+
 ## Wiring and other trades
 
 The drawing has an empty `layer-electrical` (`data-status="not-recorded"`).

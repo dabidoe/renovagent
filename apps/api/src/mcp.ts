@@ -9,6 +9,7 @@ import {
   type Artifact,
   type Command,
   type Fact,
+  type ScopeDraft,
   type Workspace,
 } from '@renovagent/contracts';
 import { MongoWorkspaceRepository, OWNER } from './repository.js';
@@ -17,8 +18,13 @@ import {
   buildCheckoutReview,
   buildTierPlans,
   fingerprint,
+  projectHandoff,
+  projectScopeReview,
+  reviewLocations,
   referenceCurrent,
+  scopeDraftId,
 } from '@renovagent/core';
+import { configuredJevKey, rankReviewFindings } from './jev.js';
 import { startAgentProject } from './agent-projects.js';
 import { draftProjectScope } from './scope-drafts.js';
 import { DesignImageStore } from './design-images.js';
@@ -44,6 +50,8 @@ const CAPABILITIES = {
     'list_homes',
     'list_projects',
     'get_project_context',
+    'review_scope',
+    'export_contractor_handoff',
     'list_project_files',
     'get_artifact',
     'start_project',
@@ -68,6 +76,14 @@ const CAPABILITIES = {
 function latest<T extends { revision: number }>(records: T[]): T {
   return records.reduce((a, b) => (b.revision > a.revision ? b : a));
 }
+
+// Review against an assumed market (not recorded) when the project has no location.
+const LOCATION = z
+  .enum(['bay-area', 'nyc', 'austin', 'philadelphia'])
+  .optional()
+  .describe('Assume this location for the code citations (not recorded on the project).');
+const assumedAt = (location?: string) =>
+  reviewLocations.find((l) => l.id === location)?.locality ?? null;
 
 function text(value: unknown) {
   return { content: [{ type: 'text' as const, text: JSON.stringify(value, null, 2) }] };
@@ -344,6 +360,74 @@ export function createWorkspaceMcpServer(
           })),
           capabilities,
         });
+      } catch (error) {
+        failure(error);
+      }
+    },
+  );
+
+  server.tool(
+    'review_scope',
+    '"Does this work?" for the project’s current scope draft: potential conflicts, unresolved items (measure, choose a product, contractor or authority to confirm) and checks that pass, each with its cited sources. Deterministic; not a code review, permit determination or approval. Relay unknowns as unknowns. With rank=true, code findings are also ordered by how likely the Jev model judges each to apply to this project (relevance, an interpretation).',
+    {
+      projectId: id,
+      location: LOCATION,
+      rank: z
+        .boolean()
+        .optional()
+        .describe('Order code findings by Jev-judged relevance to this project.'),
+    },
+    { readOnlyHint: true, openWorldHint: true },
+    async ({ projectId, location, rank }) => {
+      try {
+        const { workspace } = await repository.read();
+        if (!workspace.projects[projectId])
+          throw new DomainError('NOT_FOUND', `Unknown project ${projectId}`);
+        const review = projectScopeReview(workspace, projectId, assumedAt(location));
+        if (!review)
+          throw new DomainError('VALIDATION', 'No scope draft yet; call draft_scope first');
+        if (!rank || !(await configuredJevKey())) return text(review);
+        const draft = workspace.artifacts[scopeDraftId(projectId)]!.at(-1)!.payload as ScopeDraft;
+        const ranked = await rankReviewFindings(review.findings, {
+          request: draft.request,
+          packages: draft.packages.filter((p) => p.included).map((p) => p.title),
+          facts: draft.inputs
+            .filter((i) => i.amount !== null)
+            .map((i) => `${i.label}: ${i.amount} ${i.unit}`),
+        });
+        return text({
+          ...review,
+          findings: ranked.findings,
+          relevance: {
+            model: ranked.model,
+            note: 'Relevance is the Jev model’s probability that a provision applies to this work; an interpretation, not a source or a determination.',
+          },
+        });
+      } catch (error) {
+        failure(error);
+      }
+    },
+  );
+
+  server.tool(
+    'export_contractor_handoff',
+    'Markdown contractor handoff for the current scope draft: work in order with quantities, measurements and their provenance, material allowances, the requirements register with sources, what the contractor must verify, open questions and response fields. Proposed scope, not approved.',
+    { projectId: id, location: LOCATION },
+    { readOnlyHint: true, openWorldHint: false },
+    async ({ projectId, location }) => {
+      try {
+        const { workspace } = await repository.read();
+        if (!workspace.projects[projectId])
+          throw new DomainError('NOT_FOUND', `Unknown project ${projectId}`);
+        const markdown = projectHandoff(
+          workspace,
+          projectId,
+          new Date().toISOString(),
+          assumedAt(location),
+        );
+        if (!markdown)
+          throw new DomainError('VALIDATION', 'No scope draft yet; call draft_scope first');
+        return { content: [{ type: 'text' as const, text: markdown }] };
       } catch (error) {
         failure(error);
       }

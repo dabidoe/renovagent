@@ -1,6 +1,30 @@
+// One launcher for the connected product: the workspace API, the MCP HTTP
+// listener and Vite, all started with the same resolved project settings
+// (database, provider keys), from whichever checkout or worktree runs it.
+//   npm run dev:connected   the configured database (Atlas); refuses if none
+//   npm run dev:local       an explicit local Mongo on 27018, started here
 import { spawn, type ChildProcess } from 'node:child_process';
 import { MongoClient } from 'mongodb';
-import { workspaceMongoConfig } from '../apps/api/src/database-config.js';
+import { LOCAL_URI, projectEnv, workspaceMongoConfig } from '../apps/api/src/database-config.js';
+
+const local = process.argv.includes('--local');
+const { env } = await projectEnv();
+if (local) {
+  env.RENOVAGENT_MONGO_TARGET = 'local';
+  env.RENOVAGENT_LOCAL_MONGO_URI = LOCAL_URI;
+}
+let database;
+try {
+  database = await workspaceMongoConfig(env);
+} catch (error) {
+  console.error((error as Error).message);
+  process.exit(1);
+}
+console.log(
+  `Workspace database: ${database.target} (${database.source}` +
+    `${database.envFile ? `, settings from ${database.envFile}` : ''}).`,
+);
+
 const children: ChildProcess[] = [];
 let stopping = false;
 const stop = () => {
@@ -10,23 +34,27 @@ const stop = () => {
 };
 process.on('SIGINT', stop);
 process.on('SIGTERM', stop);
-const start = (args: string[]) => {
-  const child = spawn(process.execPath, args, { stdio: 'inherit', env: process.env });
+// A required child exiting stops everything; an optional one only warns.
+const start = (label: string, args: string[], optional = false) => {
+  const child = spawn(process.execPath, args, { stdio: 'inherit', env });
   children.push(child);
-  child.on('exit', () => {
-    if (!stopping) {
-      process.exitCode = 1;
-      stop();
+  child.on('exit', (code) => {
+    if (stopping) return;
+    if (optional) {
+      console.warn(`${label} exited (${code}); the website and API keep running.`);
+      return;
     }
+    process.exitCode = 1;
+    stop();
   });
   return child;
 };
-const database = await workspaceMongoConfig();
-console.log(`Connected workspace uses Mongo ${database.target} (${database.source}).`);
-if (database.target === 'local') start(['--import', 'tsx', 'scripts/local-mongo.ts']);
+
+if (database.target === 'local')
+  start('Local Mongo', ['--import', 'tsx', 'scripts/local-mongo.ts']);
 let ready = false;
 for (let attempt = 0; attempt < 120 && !stopping; attempt++) {
-  const client = new MongoClient(database.uri, { serverSelectionTimeoutMS: 500 });
+  const client = new MongoClient(database.uri, { serverSelectionTimeoutMS: 2000 });
   try {
     await client.connect();
     ready = true;
@@ -38,9 +66,18 @@ for (let attempt = 0; attempt < 120 && !stopping; attempt++) {
   }
 }
 if (ready && !stopping) {
-  start(['--import', 'tsx', 'apps/api/src/server.ts']);
-  start(['node_modules/vite/bin/vite.js', '--host', '127.0.0.1', '--port', '8741', '--strictPort']);
+  start('Workspace API', ['--import', 'tsx', 'apps/api/src/server.ts']);
+  start('MCP HTTP', ['--import', 'tsx', 'apps/api/src/mcp-http.ts'], true);
+  start('Vite', [
+    'node_modules/vite/bin/vite.js',
+    '--host',
+    '127.0.0.1',
+    '--port',
+    '8741',
+    '--strictPort',
+  ]);
 } else {
+  console.error('The workspace database did not answer; nothing else was started.');
   stop();
   process.exitCode = 1;
 }

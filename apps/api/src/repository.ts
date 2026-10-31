@@ -85,6 +85,15 @@ export function validateBlobs(state: Workspace, blobs: StoredBlob[]) {
       throw new DomainError('VALIDATION', 'Attachment content or hash mismatch');
   }
 }
+// Validated aggregates by database, collection and owner. Every write goes
+// through update(), which bumps `version` in a compare-and-swap, so a cached
+// copy is current exactly when the stored version still matches; a read then
+// costs one projected lookup instead of fetching and validating the whole
+// document. Callers mutate what read() returns, so copies go in and out.
+// (Offline tools that replace aggregates directly, such as cluster migration,
+// run with servers stopped.)
+const readCache = new Map<string, Aggregate>();
+
 export class MongoWorkspaceRepository {
   constructor(
     readonly collection: Collection<Aggregate>,
@@ -124,26 +133,26 @@ export class MongoWorkspaceRepository {
   }
   // Insert-if-absent. Orphans from a later failed commit are unreferenced and harmless.
   async putBlobs(blobs: StoredBlob[]) {
-    for (const blob of blobs) {
-      const data = bytes(blob);
-      const record: BlobRecord = {
-        _id: { ownerId: this.ownerId, blobId: blob.id },
-        mediaType: blob.mediaType,
-        sha256: sha256(data),
-        size: data.length,
-        bytes: new Binary(data),
-      };
-      try {
-        await this.blobStore.insertOne(record);
-      } catch (error) {
-        if (!(error instanceof MongoServerError && error.code === 11000)) throw error;
-        const prior = await this.blobStore.findOne(
-          { _id: record._id },
-          { projection: { bytes: 0 } },
-        );
-        if (prior?.sha256 !== record.sha256 || prior.mediaType !== record.mediaType)
-          throw new DomainError('VALIDATION', 'Cannot overwrite an attachment');
-      }
+    for (const blob of blobs) await this.stageBlob(blob.id, blob.mediaType, bytes(blob));
+  }
+  // One attachment's bytes, ahead of the command that references it (staged
+  // uploads skip base64 and the JSON size cap). A later command is accepted
+  // only if its reference matches these bytes' hash and type (assertStored).
+  async stageBlob(blobId: string, mediaType: string, data: Buffer) {
+    const record: BlobRecord = {
+      _id: { ownerId: this.ownerId, blobId },
+      mediaType,
+      sha256: sha256(data),
+      size: data.length,
+      bytes: new Binary(data),
+    };
+    try {
+      await this.blobStore.insertOne(record);
+    } catch (error) {
+      if (!(error instanceof MongoServerError && error.code === 11000)) throw error;
+      const prior = await this.blobStore.findOne({ _id: record._id }, { projection: { bytes: 0 } });
+      if (prior?.sha256 !== record.sha256 || prior.mediaType !== record.mediaType)
+        throw new DomainError('VALIDATION', 'Cannot overwrite an attachment');
     }
   }
   async readBlob(blobId: string) {
@@ -215,10 +224,24 @@ export class MongoWorkspaceRepository {
     });
     await this.moveEmbeddedBlobs();
   }
+  private get cacheKey() {
+    return `${this.collection.dbName}/${this.collection.collectionName}/${this.ownerId}`;
+  }
+  // Cheap readiness check and cache probe: the stored version only.
+  async version(): Promise<number | null> {
+    const head = await this.collection.findOne(
+      { _id: this.ownerId },
+      { projection: { version: 1 } },
+    );
+    return head ? head.version : null;
+  }
   async read() {
+    const cached = readCache.get(this.cacheKey);
+    if (cached && cached.version === (await this.version())) return structuredClone(cached);
     const doc = await this.collection.findOne({ _id: this.ownerId });
     if (!doc) throw new DomainError('STORAGE', 'Workspace is unavailable');
     checkedWorkspace(doc.workspace, this.ownerId);
+    readCache.set(this.cacheKey, structuredClone(doc));
     return doc;
   }
   async update<T>(apply: (doc: Aggregate) => T | Promise<T>): Promise<T> {
@@ -237,7 +260,10 @@ export class MongoWorkspaceRepository {
         );
       doc.version = version + 1;
       const saved = await this.collection.replaceOne({ _id: this.ownerId, version }, doc);
-      if (saved.modifiedCount === 1) return result;
+      if (saved.modifiedCount === 1) {
+        readCache.set(this.cacheKey, structuredClone(doc));
+        return result;
+      }
     }
     throw new DomainError('CONFLICT', 'Workspace changed; reload and retry');
   }

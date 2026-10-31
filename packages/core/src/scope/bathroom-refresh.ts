@@ -16,7 +16,7 @@ export type { RecipeValues } from './recipe-kit.js';
 // each requirement. It never supplies physical defaults: an unknown dimension
 // leaves the dependent quantity null, and product-specific rates (coverage,
 // airflow) wait for a selected product's published data.
-export const bathroomRefreshRecipe = { id: 'bathroom-refresh', version: 2 } as const;
+export const bathroomRefreshRecipe = { id: 'bathroom-refresh', version: 3 } as const;
 
 export const bathroomPackages = [
   {
@@ -60,7 +60,7 @@ export const bathroomPackages = [
 export const bathroomSources: ScopeDraft['sources'] = [
   {
     id: 'recipe-bathroom-refresh-1',
-    title: 'Renovagent bathroom-refresh recipe v2',
+    title: 'Renovagent bathroom-refresh recipe v3',
     publisher: 'Renovagent',
     retrieval: 'internal-recipe',
     supports:
@@ -217,7 +217,7 @@ export function bathroomRequirements(packageId: string, v: RecipeValues): ScopeR
             category: 'material',
             purpose: 'Lavatory faucet.',
             specification:
-              'Single-hole faucet, 1/2 in FIP connections, max 1.5 gpm (demo selections).',
+              'Single-hole faucet, max 1.5 gpm, with either 1/2 in IPS shanks (separate supply lines) or 3/8 in compression lines, usually attached (demo selections).',
             kind: 'count',
             unit: 'ea',
             sourceIds: template,
@@ -226,7 +226,7 @@ export function bathroomRequirements(packageId: string, v: RecipeValues): ScopeR
               category: 'faucet',
               constraints: [
                 { attribute: 'holes', operator: 'eq', value: 1 },
-                { attribute: 'connection', operator: 'eq', value: '1/2-fip' },
+                { attribute: 'connection', operator: 'oneOf', value: ['1/2-fip', '3/8-comp'] },
                 { attribute: 'flow_gpm', operator: 'lte', value: 1.5 },
               ],
             },
@@ -258,7 +258,8 @@ export function bathroomRequirements(packageId: string, v: RecipeValues): ScopeR
           {
             category: 'material',
             purpose: 'Hot and cold supply connections from the stop valves to the faucet.',
-            specification: 'Supply lines, 3/8 in compression × 1/2 in FIP (demo selection).',
+            specification:
+              'Supply lines, 3/8 in compression × 1/2 in FIP (demo selection), for a faucet with 1/2 in IPS shanks. A faucet with attached 3/8 in lines connects straight to the stops and needs none.',
             kind: 'count',
             unit: 'ea',
             condition: 'Assumes existing 3/8 in compression stop valves; confirm on site.',

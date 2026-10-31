@@ -122,6 +122,27 @@ export const clearStoredMode = () => {
   localStorage.removeItem(STORAGE_MODE_KEY);
   localStorage.removeItem(LEGACY_STORAGE_MODE_KEY);
 };
+// With no saved choice, open the shared workspace when the API answers and
+// this browser holds no local projects. Local records are never hidden behind
+// a silent switch; their owner connects them deliberately. Remembered once set.
+async function connectedByDefault() {
+  try {
+    const local = await IndexedDbProjectRepository.open({
+      name: 'unpermitted-workspace',
+      ownerId: 'local-homeowner',
+    });
+    if (Object.keys((await local.read()).projects).length) return 'local';
+    const session = await fetch('/api/workspace/session', {
+      credentials: 'same-origin',
+      headers: { 'X-Renovagent-Client': 'workspace' },
+    });
+    if (!session.ok) return 'local';
+    setStoredMode('mongo');
+    return 'mongo';
+  } catch {
+    return 'local';
+  }
+}
 export const defaultView: ProjectView = {
   surface: 'overview',
   artifactRef: null,
@@ -211,7 +232,7 @@ export class WorkspaceController {
     return id ? `/api/workspace/blobs/${encodeURIComponent(id)}` : url;
   }
   static async open() {
-    if (storedMode() === 'mongo') {
+    if ((storedMode() ?? (await connectedByDefault())) === 'mongo') {
       try {
         const repository = await HttpProjectRepository.open();
         const controller = new WorkspaceController(repository, await repository.read());

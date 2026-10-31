@@ -20,6 +20,30 @@ export async function workspaceRequest(path: string, body?: unknown) {
     throw new DomainError(result.code || 'STORAGE', result.message || 'Server request failed');
   return result;
 }
+// Attachments the API accepts as raw staged uploads (POST /blobs/:id, up to
+// 20 MiB each): one request per file, no base64, no JSON size cap. Other types
+// still travel inline with their command.
+const STAGED_TYPES = new Set([
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/heic',
+  'image/heif',
+  'image/gif',
+  'application/pdf',
+]);
+async function stageBlob({ id, blob }: AttachmentBlob) {
+  const response = await fetch(`/api/workspace/blobs/${encodeURIComponent(id)}`, {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: { 'X-Renovagent-Client': 'workspace', 'Content-Type': blob.type },
+    body: blob,
+  });
+  if (!response.ok) {
+    const result = await response.json().catch(() => ({ message: 'Upload failed' }));
+    throw new DomainError(result.code || 'STORAGE', result.message || 'Upload failed');
+  }
+}
 export async function encodeBlobs(blobs: AttachmentBlob[]) {
   return Promise.all(
     blobs.map(async ({ id, blob }) => {
@@ -41,6 +65,7 @@ export type SessionInfo = {
   user?: { email: string };
   providers?: string[];
   muse?: boolean;
+  jev?: boolean;
 };
 export const signInUrlFor = (provider: string) => `/api/workspace/auth/${provider}`;
 export async function accountStatus(): Promise<SessionInfo> {
@@ -72,7 +97,11 @@ export class HttpProjectRepository implements ProjectRepository {
     _context: CommandContext,
     blobs: AttachmentBlob[] = [],
   ): Promise<CommandResult[]> {
-    return workspaceRequest('/commands', { commands, blobs: await encodeBlobs(blobs) });
+    const inline: AttachmentBlob[] = [];
+    for (const b of blobs)
+      if (STAGED_TYPES.has(b.blob.type)) await stageBlob(b);
+      else inline.push(b);
+    return workspaceRequest('/commands', { commands, blobs: await encodeBlobs(inline) });
   }
   async readBlob(id: string) {
     const response = await fetch(`/api/workspace/blobs/${encodeURIComponent(id)}`);

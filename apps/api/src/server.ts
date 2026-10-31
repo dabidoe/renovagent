@@ -42,6 +42,46 @@ import {
   uploadDesignPhoto,
 } from './design-service.js';
 import { renderExample } from './example-render.js';
+import { configuredJevKey, judgeProducts, rankReviewFindings, readRoomPhoto } from './jev.js';
+import { bestValue, priceLook, scopeDraftId, valueCandidates } from '@renovagent/core';
+import { curatedLooks, lookRoomFor, lookView } from './looks.js';
+import type { BomPayload, PurchasePlanPayload, ScopeDraft } from '@renovagent/contracts';
+import { imageSize } from 'image-size';
+
+// Paid model calls per owner per window, so a session cannot drain the key.
+const RANK_LIMIT = { calls: 20, windowMs: 10 * 60 * 1000 };
+const rankInput = z
+  .object({
+    work: z
+      .object({
+        request: z.string().max(2000),
+        packages: z.array(z.string().max(160)).max(20),
+        facts: z.array(z.string().max(200)).max(10),
+      })
+      .strict(),
+    findings: z
+      .array(
+        z
+          .object({
+            id: z.string().min(1).max(40),
+            citations: z
+              .array(
+                z
+                  .object({
+                    kind: z.string().max(40),
+                    title: z.string().max(300),
+                    locator: z.string().max(120).nullable(),
+                    excerpt: z.string().max(600),
+                  })
+                  .strip(),
+              )
+              .max(12),
+          })
+          .strip(),
+      )
+      .max(80),
+  })
+  .strict();
 export async function createWorkspaceServer(
   repository: MongoWorkspaceRepository,
   token: string,
@@ -51,6 +91,18 @@ export async function createWorkspaceServer(
   photoFiles?: PhotoJobFiles,
   design?: { images: DesignImageStore; provider?: PreviewProvider },
   hosting: HostingConfig = localHosting,
+  // Jev judgments (review ranking, room photo reading); injectable for tests.
+  jev: {
+    configured: () => Promise<boolean>;
+    rank: typeof rankReviewFindings;
+    readPhoto: typeof readRoomPhoto;
+    judgeProducts: typeof judgeProducts;
+  } = {
+    configured: async () => Boolean(await configuredJevKey()),
+    rank: rankReviewFindings,
+    readPhoto: readRoomPhoto,
+    judgeProducts,
+  },
 ) {
   const accountMode = Boolean(accounts);
   // A public origin with the shared local token would give every visitor one workspace.
@@ -69,6 +121,15 @@ export async function createWorkspaceServer(
   };
   if (!accountMode) designWorkerFor(repository);
   const exampleRenders = new Map<string, ReturnType<typeof renderExample>>();
+  // Paid Jev calls per owner per window (review ranking and photo reading).
+  const jevCalls = new Map<string, number[]>();
+  const spendJevCall = (ownerId: string) => {
+    const now = Date.now();
+    const recent = (jevCalls.get(ownerId) ?? []).filter((t) => now - t < RANK_LIMIT.windowMs);
+    if (recent.length >= RANK_LIMIT.calls)
+      throw new DomainError('VALIDATION', 'Jev limit reached; try again in a few minutes');
+    jevCalls.set(ownerId, [...recent, now]);
+  };
   const workers = new Map<string, PhotoWorker>();
   async function workerFor(repo: MongoWorkspaceRepository) {
     let worker = workers.get(repo.ownerId);
@@ -87,6 +148,17 @@ export async function createWorkspaceServer(
       await workerFor(repository.forUser(id));
     }
   }
+  // Staged uploads match the intake's per-file allowance (20 MiB originals).
+  const STAGED_MAX = 20 * 1024 * 1024;
+  const STAGED_TYPES = new Set([
+    'image/jpeg',
+    'image/png',
+    'image/webp',
+    'image/heic',
+    'image/heif',
+    'image/gif',
+    'application/pdf',
+  ]);
   const blobSchema = z
     .object({
       id: z.string().min(1).max(160),
@@ -130,6 +202,15 @@ export async function createWorkspaceServer(
   const server = createServer(async (req, res) => {
     res.setHeader('Cache-Control', 'no-store');
     res.setHeader('X-Content-Type-Options', 'nosniff');
+    // Slow requests are logged by method, path (no query), status and time only.
+    const started = performance.now();
+    res.on('finish', () => {
+      const ms = Math.round(performance.now() - started);
+      if (ms >= 1000)
+        console.warn(
+          `[slow] ${req.method} ${(req.url || '').split('?')[0]} ${res.statusCode} ${ms}ms`,
+        );
+    });
     const json = (status: number, value: unknown) => {
       res.writeHead(status, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify(value));
@@ -138,6 +219,20 @@ export async function createWorkspaceServer(
       // Liveness for the host's health check; reveals nothing about any workspace.
       if (req.url === '/healthz' && req.method === 'GET') {
         json(200, { ok: true });
+        return;
+      }
+      // Readiness: the workspace database answers a version lookup in time.
+      // Liveness alone can't show that useful workspace access works.
+      if (req.url === '/readyz' && req.method === 'GET') {
+        const t = performance.now();
+        const ready = await Promise.race([
+          repository.version().then(
+            () => true,
+            () => false,
+          ),
+          new Promise<boolean>((r) => setTimeout(() => r(false), 2000)),
+        ]);
+        json(ready ? 200 : 503, { ok: ready, ms: Math.round(performance.now() - t) });
         return;
       }
       const host = req.headers.host || '';
@@ -251,6 +346,7 @@ export async function createWorkspaceServer(
                   providers: accounts!.providers(),
                   mongo: true,
                   muse: providerConfigured,
+                  jev: await jev.configured(),
                 }
               : {
                   mode: 'account',
@@ -258,6 +354,7 @@ export async function createWorkspaceServer(
                   providers: accounts!.providers(),
                   mongo: true,
                   muse: providerConfigured,
+                  jev: await jev.configured(),
                 },
           );
           return;
@@ -267,7 +364,12 @@ export async function createWorkspaceServer(
           `renovagent_local=${token}; HttpOnly; SameSite=Strict; Path=/api/workspace`,
         );
         await repository.read();
-        json(200, { mode: 'local-single-owner', mongo: true, muse: providerConfigured });
+        json(200, {
+          mode: 'local-single-owner',
+          mongo: true,
+          muse: providerConfigured,
+          jev: await jev.configured(),
+        });
         return;
       }
       let activeRepo = repository;
@@ -297,6 +399,169 @@ export async function createWorkspaceServer(
         if (!found) throw new DomainError('NOT_FOUND', 'Image is outside this workspace');
         res.writeHead(200, { 'Content-Type': found.mediaType });
         res.end(Buffer.from(found.bytes));
+        return;
+      }
+      if (path === '/review/rank' && req.method === 'POST') {
+        // Scores only: the browser holds the review; Jev judges how likely each
+        // cited provision applies to the described work. Interpretation, not a source.
+        if (!(await jev.configured()))
+          throw new DomainError('VALIDATION', 'Jev is not configured on this server');
+        // Validate first: only requests that reach the model count toward the limit.
+        const input = rankInput.parse(await body(req));
+        spendJevCall(activeRepo.ownerId);
+        const ranked = await jev.rank(input.findings, input.work);
+        json(200, {
+          model: ranked.model,
+          relevance: Object.fromEntries(ranked.findings.map((f) => [f.id, f.relevance])),
+          note: 'Probability that a provision applies to this work, judged by the Jev model; an interpretation, not a code source or determination.',
+        });
+        return;
+      }
+      if (path === '/looks/price' && req.method === 'POST') {
+        // Curated looks priced for the project's current materials list, with
+        // the same hard rules as tier plans. No model call.
+        if (!catalog) throw new DomainError('VALIDATION', 'Catalog is unavailable');
+        const { projectId } = z
+          .object({ projectId: z.string().min(1).max(160) })
+          .strict()
+          .parse(await body(req));
+        const { workspace } = await activeRepo.read();
+        if (!workspace.projects[projectId]) throw new DomainError('NOT_FOUND', 'Unknown project');
+        const bom = workspace.artifacts[`${projectId}:bom`]?.at(-1)?.payload;
+        if (bom?.kind !== 'bom')
+          throw new DomainError(
+            'VALIDATION',
+            'Price the plan first: there is no materials list yet',
+          );
+        const draft = workspace.artifacts[scopeDraftId(projectId)]?.at(-1)?.payload as
+          | ScopeDraft
+          | undefined;
+        const room = lookRoomFor(draft?.recipe.id);
+        const looks = curatedLooks.filter((l) => l.room === room);
+        const priced = await catalog.pricedOffers([...new Set(looks.flatMap((l) => l.productIds))]);
+        json(200, {
+          room,
+          looks: looks.map((look) =>
+            lookView(look, priceLook(bom as BomPayload, priced, look.productIds), priced),
+          ),
+          note: 'Real products at the shelf prices checked on the date shown; not live quotes. Tips are Renovagent’s general advice.',
+        });
+        return;
+      }
+      if (path === '/products/best' && req.method === 'POST') {
+        // Best value across tiers for the project's current BOM: hard rules
+        // filter, Jev judges fit and quality, code picks the cheapest fit.
+        if (!catalog) throw new DomainError('VALIDATION', 'Catalog is unavailable');
+        if (!(await jev.configured()))
+          throw new DomainError('VALIDATION', 'Jev is not configured on this server');
+        const { projectId } = z
+          .object({ projectId: z.string().min(1).max(160) })
+          .strict()
+          .parse(await body(req));
+        const { workspace } = await activeRepo.read();
+        if (!workspace.projects[projectId]) throw new DomainError('NOT_FOUND', 'Unknown project');
+        const latestOf = (id: string) => workspace.artifacts[id]?.at(-1);
+        const bomArtifact = latestOf(`${projectId}:bom`);
+        if (bomArtifact?.payload.kind !== 'bom')
+          throw new DomainError(
+            'VALIDATION',
+            'Price the plan first: there is no materials list yet',
+          );
+        const bom = bomArtifact.payload as BomPayload;
+        const draft = latestOf(scopeDraftId(projectId))?.payload as ScopeDraft | undefined;
+        const priced = await catalog.pricedOffers([
+          ...new Set(bom.items.flatMap((i) => i.candidateProductIds)),
+        ]);
+        const candidates = valueCandidates(bom, priced);
+        spendJevCall(activeRepo.ownerId);
+        const { model, judged } = await jev.judgeProducts(
+          {
+            request: (draft?.request ?? '').replace(/^\[Example fixture\]\s*/, ''),
+            design: draft?.direction
+              ? `walls ${draft.direction.wallColor}; floor ${draft.direction.floorFinish}`
+              : null,
+          },
+          candidates.map((c) => ({
+            key: c.key,
+            requirement: bom.items.find((i) => i.id === c.itemId)!.description,
+            product: {
+              name: c.priced.product.name,
+              manufacturer: c.priced.product.manufacturer,
+              category: c.priced.product.category,
+              specs: c.priced.product.specs,
+              certifications: c.priced.product.certifications,
+            },
+          })),
+        );
+        const lines = bestValue(bom, candidates, judged);
+        const mid = latestOf(`${projectId}:purchase-plan:mid`)?.payload as
+          | PurchasePlanPayload
+          | undefined;
+        const view = (c: (typeof lines)[number]['pick']) =>
+          c && {
+            productName: c.priced.product.name,
+            manufacturer: c.priced.product.manufacturer,
+            retailer: c.priced.offer.retailer,
+            sku: c.priced.offer.sku,
+            tier: c.priced.offer.tier,
+            units: c.units,
+            packQuantity: c.priced.offer.packQuantity,
+            packUnit: c.priced.offer.packUnit,
+            unitPriceMinor: c.priced.observation.unitPrice.amountMinor,
+            totalMinor: c.totalMinor,
+            shippingMinor: c.shippingMinor,
+            observedAt: c.priced.observation.observedAt,
+            freshness: c.priced.observation.freshness,
+            source: c.priced.observation.source,
+            fit: c.fit,
+            quality: c.quality,
+          };
+        const picked = lines.filter((l) => l.pick);
+        json(200, {
+          model,
+          lines: lines.map((l) => ({ ...l, pick: view(l.pick), upgrade: view(l.upgrade) })),
+          totals: {
+            bestValueMinor: picked.reduce(
+              (n, l) => n + l.pick!.totalMinor + (l.pick!.shippingMinor ?? 0),
+              0,
+            ),
+            midMinor: mid
+              ? mid.lines
+                  .filter((pl) => picked.some((l) => l.itemId === pl.bomItemId))
+                  .reduce((n, pl) => n + pl.lineTotalMinor, 0)
+              : null,
+          },
+          note: 'Fit and quality are the Jev model’s judgments from product specs; prices are the catalog’s dated observations, not live quotes.',
+        });
+        return;
+      }
+      if (path === '/photo/read' && req.method === 'POST') {
+        // The browser sends one already-resized photo; Jev reports what it sees
+        // and where. Observations only: code decides pins and suggestions.
+        if (!(await jev.configured()))
+          throw new DomainError('VALIDATION', 'Jev is not configured on this server');
+        const input = z
+          .object({
+            format: z.enum(['jpg', 'png']),
+            data: z
+              .string()
+              .max(6 * 1024 * 1024)
+              .regex(/^[A-Za-z0-9+/]*={0,2}$/),
+          })
+          .strict()
+          .parse(await body(req));
+        const bytes = new Uint8Array(Buffer.from(input.data, 'base64'));
+        let size: { width?: number; height?: number; type?: string };
+        try {
+          size = imageSize(bytes);
+        } catch {
+          throw new DomainError('VALIDATION', 'The photo could not be read');
+        }
+        const fits = (n?: number) => !!n && n >= 280 && n <= 1568;
+        if (!fits(size.width) || !fits(size.height) || !['jpg', 'png'].includes(size.type ?? ''))
+          throw new DomainError('VALIDATION', 'Send a JPEG or PNG 280–1568 px on each side');
+        spendJevCall(activeRepo.ownerId);
+        json(200, await jev.readPhoto({ format: input.format, bytes }));
         return;
       }
       if (path.startsWith('/design/')) {
@@ -577,6 +842,29 @@ export async function createWorkspaceServer(
         }
         res.writeHead(302, { Location: photo.imageUrl, 'Referrer-Policy': 'no-referrer' });
         res.end();
+        return;
+      }
+      if (path.startsWith('/blobs/') && req.method === 'POST') {
+        // Staged upload: the raw bytes of one attachment, before the command
+        // that references it. Same origin, client header and owner as commands.
+        const id = decodeURIComponent(path.slice('/blobs/'.length));
+        if (!/^[a-zA-Z0-9][a-zA-Z0-9_.:-]{0,159}$/.test(id))
+          throw new DomainError('VALIDATION', 'Invalid attachment id');
+        const mediaType = String(req.headers['content-type'] || '')
+          .split(';')[0]!
+          .trim();
+        if (!STAGED_TYPES.has(mediaType))
+          throw new DomainError('VALIDATION', 'Unsupported attachment type');
+        let size = 0;
+        const parts: Buffer[] = [];
+        for await (const part of req) {
+          size += part.length;
+          if (size > STAGED_MAX) throw new DomainError('VALIDATION', 'Attachment exceeds 20 MB');
+          parts.push(part);
+        }
+        if (!size) throw new DomainError('VALIDATION', 'Empty attachment');
+        await activeRepo.stageBlob(id, mediaType, Buffer.concat(parts));
+        json(200, { ok: true, id, size });
         return;
       }
       if (path.startsWith('/blobs/') && req.method === 'GET') {

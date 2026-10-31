@@ -294,6 +294,15 @@ export class PhotoWorker {
   }
   async tick() {
     if (this.running || this.stopping) return;
+    // Claim the tick before the first await, so slow reads never overlap ticks.
+    this.running = true;
+    try {
+      await this.claimAndRun();
+    } finally {
+      this.running = false;
+    }
+  }
+  private async claimAndRun() {
     const pending = await this.repo.read();
     if (
       pending.jobs.some(
@@ -302,7 +311,6 @@ export class PhotoWorker {
     )
       await this.recover();
     if (!(await this.repo.read()).jobs.some((j) => j.status === 'queued')) return;
-    this.running = true;
     let id: string | undefined;
     try {
       const job = await this.repo.update((doc) => {
@@ -363,7 +371,6 @@ export class PhotoWorker {
           job.updatedAt = new Date().toISOString();
         });
     } finally {
-      this.running = false;
       this.abort = undefined;
       this.activeId = undefined;
     }

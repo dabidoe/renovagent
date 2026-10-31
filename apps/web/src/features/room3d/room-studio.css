@@ -828,3 +828,294 @@
     padding: 3px;
   }
 }
+
+/* "Does this work?", contractor handoff and the approval step. */
+.room3d-review-card {
+  width: min(460px, calc(100% - 24px));
+  max-height: calc(100% - 24px);
+  overflow: auto;
+}
+.room3d-findings h5 {
+  margin: 12px 0 4px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.room3d-findings.is-conflicts h5 {
+  color: #b91c1c;
+}
+.room3d-findings.is-unresolved h5 {
+  color: #92400e;
+}
+.room3d-findings.is-passes h5 {
+  color: #166534;
+}
+.room3d-findings > ul {
+  margin: 0;
+  padding-left: 16px;
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+}
+.room3d-findings em {
+  display: block;
+  color: #4b5563;
+  font-size: 12px;
+}
+.room3d-cites {
+  margin: 2px 0 0;
+  padding-left: 14px;
+  font-size: 11px;
+  color: #6b7280;
+}
+.room3d-handoff {
+  margin: 0;
+  max-height: 380px;
+  overflow: auto;
+  padding: 10px;
+  border-radius: 6px;
+  background: #f6f7f9;
+  font-size: 11px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+}
+.room3d-confirm {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 12px;
+  padding: 10px;
+  border: 1px solid #c7d2fe;
+  border-radius: 8px;
+  background: #f8faff;
+  font-size: 13px;
+}
+.room3d-confirm table {
+  border-collapse: collapse;
+}
+.room3d-confirm th {
+  text-align: left;
+  font-weight: 500;
+  color: #4b5563;
+  padding: 2px 8px 2px 0;
+}
+.room3d-confirm td {
+  padding: 2px 6px 2px 0;
+}
+.room3d-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 8px 0;
+}
+.room3d-tools button[aria-pressed='true'] {
+  outline: 2px solid #1d4ed8;
+}
+
+/* Which code text the review cites, and the location it assumes. */
+.room3d-basis {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 6px 0 2px;
+}
+.room3d-location {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.room3d-location select {
+  font-size: 12px;
+  padding: 2px 4px;
+}
+
+/* Jev relevance on review findings (interpretation, not a source). */
+.room3d-jev {
+  display: inline-block;
+  min-width: 34px;
+  margin-right: 6px;
+  padding: 0 5px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  text-align: center;
+}
+.room3d-jev.is-high {
+  background: #e0e7ff;
+  color: #3730a3;
+}
+.room3d-jev.is-mid {
+  background: #f3f4f6;
+  color: #374151;
+}
+.room3d-jev.is-low {
+  background: #f9fafb;
+  color: #9ca3af;
+}
+.room3d-folded summary {
+  margin: 6px 0;
+  font-size: 12px;
+  color: #6b7280;
+  cursor: pointer;
+}
+.room3d-folded > ul {
+  margin: 0;
+  padding-left: 16px;
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+  opacity: 0.8;
+}
+
+/* The owner's photos, read by Jev: outlines, pins on planned work, notes. */
+.owner-photos {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid #e5e7eb;
+}
+.owner-photos > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.owner-photos > header h4 {
+  margin: 0;
+}
+.owner-photos > header .room3d-muse {
+  width: auto;
+  margin: 0;
+  padding: 6px 12px;
+}
+.owner-photos-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 12px;
+  margin-top: 8px;
+}
+.owner-photo {
+  position: relative;
+  margin: 0;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #f3f4f6;
+  align-self: start;
+}
+.owner-photo img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.owner-photo-box {
+  position: absolute;
+  border: 1.5px dashed rgb(29 78 216 / 0.7);
+  border-radius: 4px;
+  pointer-events: none;
+}
+.owner-photos-thumbs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+.owner-photos-thumbs button {
+  font-size: 12px;
+  padding: 2px 8px;
+}
+.owner-photos-thumbs button[aria-pressed='true'] {
+  outline: 2px solid #1d4ed8;
+}
+.owner-photo-notes {
+  margin: 0 0 8px;
+  padding-left: 16px;
+  display: grid;
+  gap: 8px;
+  font-size: 13px;
+}
+.owner-photo-notes li.is-suggest-add {
+  color: #1e3a8a;
+}
+.owner-photo-notes li.is-check {
+  color: #92400e;
+}
+.owner-photo-notes button {
+  display: block;
+  margin-top: 4px;
+}
+@media (max-width: 720px) {
+  .owner-photos-body {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Best value picks (Jev fit and quality, catalog prices). */
+.best-value-lines {
+  list-style: none;
+  margin: 10px 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+  font-size: 13px;
+}
+.best-value-lines > li {
+  padding: 8px;
+  border-radius: 6px;
+  background: #f8fafc;
+}
+
+/* Looks: curated real products priced for this room. */
+.looks-card .look-tabs {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+.looks-card .look-tabs button {
+  display: grid;
+  gap: 2px;
+  min-width: 112px;
+  padding: 8px 10px;
+  border: 1px solid var(--line, #e2e8f0);
+  border-radius: 8px;
+  background: var(--side, #f1f5f9);
+  text-align: left;
+  cursor: pointer;
+}
+.looks-card .look-tabs button[aria-selected='true'] {
+  border-color: var(--blue, #2563eb);
+  background: var(--surface, #fff);
+}
+.looks-card .look-tabs span {
+  font-size: 12px;
+}
+.look-blurb {
+  margin: 10px 0 4px;
+}
+.look-style {
+  display: inline-block;
+  margin-left: 4px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--side, #f1f5f9);
+  font-size: 11px;
+}
+.look-badge {
+  display: inline-block;
+  margin-right: 6px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: #fef3c7;
+  color: #92400e;
+  font-size: 11px;
+  text-decoration: none;
+}
+.look-tips {
+  margin-top: 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: var(--side, #f1f5f9);
+}
+.look-tips ul {
+  margin: 4px 0 0;
+  padding-left: 18px;
+}
