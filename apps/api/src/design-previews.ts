@@ -1,6 +1,3 @@
-import { mkdtemp, readdir, readFile, rm, stat, writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
-import { tmpdir } from 'node:os';
 import {
   DomainError,
   type Command,
@@ -15,7 +12,7 @@ import {
   handleCommand,
   previewCurrent,
 } from '@renovagent/core';
-import { runMuse } from '../../../scripts/muse-provider.js';
+import { imageMediaType, museEditImage } from '../../../scripts/muse-provider.js';
 import { normalizeImage, type DesignImageStore } from './design-images.js';
 import type { MongoWorkspaceRepository } from './repository.js';
 
@@ -24,71 +21,15 @@ export interface PreviewProvider {
   generate(input: { image: Uint8Array; prompt: string }): Promise<PreviewResult>;
 }
 
-// Muse image editing through the CLI's image_generation tool. Each call runs
-// in a throwaway workspace that holds only a copy of the source photo; shell
-// and web tools, reminders, personal context and contributor mode are off.
+// Muse Image editing through the Meta Model API (images/edits): the source
+// photo and the direction prompt in, one generated image out.
 export class MusePreviewProvider implements PreviewProvider {
   async generate({ image, prompt }: { image: Uint8Array; prompt: string }) {
-    const dir = await mkdtemp(join(tmpdir(), 'renovagent-preview-'));
-    try {
-      const source = join(dir, 'room.jpg');
-      await writeFile(source, image);
-      const events = await runMuse(
-        [
-          'exec',
-          '--json',
-          '--workspace',
-          dir,
-          '--reasoning-effort',
-          'low',
-          '--contributor-mode',
-          'off',
-          '--no-session-log',
-          '--disable-shell',
-          '--disable-web-tools',
-          '--disable-reminders',
-          '--no-foreign-personal-context',
-          '--max-model-steps',
-          '4',
-          `Call the image_generation tool exactly once with image_paths [${JSON.stringify(source)}] and this prompt: ${JSON.stringify(prompt)}. Do not call any other tool. Then reply with only the saved file path.`,
-        ],
-        240000,
-      );
-      let model: string | undefined, runId: string | undefined;
-      for (const line of events.split('\n')) {
-        let event: { payload_type?: string; payload?: Record<string, unknown> };
-        try {
-          event = JSON.parse(line);
-        } catch {
-          continue;
-        }
-        const payload = event.payload ?? {};
-        if (event.payload_type === 'run.model.configured') model = String(payload.model_id ?? '');
-        if (event.payload_type === 'run.terminal.completed')
-          runId = (payload.run_stream as { id?: string } | undefined)?.id;
-      }
-      // The result is the image file the tool wrote into this throwaway
-      // workspace; the model's reply text is not trusted as a path.
-      const output = join(dir, 'generated_images');
-      const files = (await readdir(output).catch(() => [] as string[])).filter((name) =>
-        /\.(png|jpe?g|webp)$/i.test(name),
-      );
-      if (!files.length || !model)
-        throw new DomainError('VALIDATION', 'Muse returned no preview image');
-      const newest = (
-        await Promise.all(
-          files.map(async (name) => ({ name, at: (await stat(join(output, name))).mtimeMs })),
-        )
-      ).sort((a, b) => b.at - a.at)[0];
-      return {
-        bytes: new Uint8Array(await readFile(join(output, newest.name))),
-        provider: 'Muse CLI image_generation tool',
-        model,
-        ...(runId ? { runId } : {}),
-      };
-    } finally {
-      await rm(dir, { recursive: true, force: true });
-    }
+    const result = await museEditImage({
+      image: { bytes: image, mediaType: imageMediaType(image) },
+      prompt,
+    });
+    return { bytes: result.bytes, provider: 'Meta Model API images/edits', model: result.model };
   }
 }
 

@@ -14,7 +14,12 @@ import {
   metaConfigFromEnv,
   type OAuthProvider,
 } from './accounts.js';
-import { configuredMuseKey } from '../../../scripts/muse-provider.js';
+import {
+  configuredMuseKey,
+  imageMediaType,
+  samSegmentText,
+} from '../../../scripts/muse-provider.js';
+import { parseSegmentation, type PhotoSegmentation } from './segmentation.js';
 import { CatalogStore } from './catalog.js';
 import { workspaceMongoConfig } from './database-config.js';
 import { PhotoJobFiles } from './photo-job-files.js';
@@ -50,6 +55,9 @@ import { imageSize } from 'image-size';
 
 // Paid model calls per owner per window, so a session cannot drain the key.
 const RANK_LIMIT = { calls: 20, windowMs: 10 * 60 * 1000 };
+// SAM 3.1 outlines per owner per window; repeats of the same photo and phrase are cached.
+const SEGMENT_LIMIT = { calls: 60, windowMs: 10 * 60 * 1000 };
+const SEGMENT_CACHE_SIZE = 200;
 const rankInput = z
   .object({
     work: z
@@ -103,6 +111,8 @@ export async function createWorkspaceServer(
     readPhoto: readRoomPhoto,
     judgeProducts,
   },
+  // SAM 3.1 concept segmentation; injectable for tests.
+  segment: typeof samSegmentText = samSegmentText,
 ) {
   const accountMode = Boolean(accounts);
   // A public origin with the shared local token would give every visitor one workspace.
@@ -129,6 +139,17 @@ export async function createWorkspaceServer(
     if (recent.length >= RANK_LIMIT.calls)
       throw new DomainError('VALIDATION', 'Jev limit reached; try again in a few minutes');
     jevCalls.set(ownerId, [...recent, now]);
+  };
+  const segmentCalls = new Map<string, number[]>();
+  const segmentCache = new Map<string, PhotoSegmentation & { model: string; runId: string }>();
+  const spendSegmentCall = (ownerId: string) => {
+    const now = Date.now();
+    const recent = (segmentCalls.get(ownerId) ?? []).filter(
+      (t) => now - t < SEGMENT_LIMIT.windowMs,
+    );
+    if (recent.length >= SEGMENT_LIMIT.calls)
+      throw new DomainError('VALIDATION', 'Outline limit reached; try again in a few minutes');
+    segmentCalls.set(ownerId, [...recent, now]);
   };
   const workers = new Map<string, PhotoWorker>();
   async function workerFor(repo: MongoWorkspaceRepository) {
@@ -880,6 +901,48 @@ export async function createWorkspaceServer(
           'Content-Disposition': 'inline',
         });
         res.end(blob.bytes);
+        return;
+      }
+      if (path === '/photos/segment' && req.method === 'POST') {
+        // SAM 3.1 outlines for one attached photo and a short phrase ("floor",
+        // "vanity"). A visual aid for the viewer; nothing is saved to the project.
+        if (!providerConfigured)
+          throw new DomainError('VALIDATION', 'Configure MUSE_API_KEY on the server first');
+        const { blobId, phrase } = z
+          .object({
+            blobId: z.string().min(1).max(200),
+            phrase: z.string().trim().min(1).max(60),
+          })
+          .strict()
+          .parse(await body(req));
+        const doc = await activeRepo.read();
+        if (
+          !Object.values(doc.workspace.evidence).some((e) => e.source.attachment?.blobId === blobId)
+        )
+          throw new DomainError('NOT_FOUND', 'Attachment not found');
+        const key = `${activeRepo.ownerId}\n${blobId}\n${phrase.toLowerCase()}`;
+        let result = segmentCache.get(key);
+        if (!result) {
+          const blob = await activeRepo.readBlob(blobId);
+          if (!blob) throw new DomainError('NOT_FOUND', 'Attachment not found');
+          let mediaType: string;
+          try {
+            mediaType = imageMediaType(blob.bytes);
+          } catch {
+            throw new DomainError('VALIDATION', 'Outlines work on JPEG, PNG or WebP photos');
+          }
+          spendSegmentCall(activeRepo.ownerId);
+          const raw = await segment({ image: { bytes: blob.bytes, mediaType }, phrase });
+          result = {
+            ...(await parseSegmentation(phrase, raw.text)),
+            model: raw.model,
+            runId: raw.runId,
+          };
+          segmentCache.set(key, result);
+          if (segmentCache.size > SEGMENT_CACHE_SIZE)
+            segmentCache.delete(segmentCache.keys().next().value!);
+        }
+        json(200, result);
         return;
       }
       if (path === '/photo-jobs' && req.method === 'GET') {

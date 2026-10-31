@@ -6,7 +6,7 @@ import { createHash } from 'node:crypto';
 import { lookup } from 'node:dns/promises';
 import { isIP } from 'node:net';
 import { request as httpsRequest } from 'node:https';
-import { runMuse } from './muse-provider.js';
+import { imageMediaType, museJson } from './muse-provider.js';
 import { z } from 'zod';
 import {
   httpsSourceUrl,
@@ -20,7 +20,6 @@ import {
   validateInspectionBatch,
   validateResearchForJob,
 } from '@renovagent/core';
-import { museResultFromEvents } from './muse-property-research.js';
 const manifestSchema = z
   .object({
     schemaVersion: z.literal(1),
@@ -213,7 +212,6 @@ export async function imageBytes(url: string) {
     sha256: createHash('sha256').update(bytes).digest('hex'),
   };
 }
-const museBatch = (args: string[]) => runMuse(args);
 export function planningOutputSchema(ids: string[]) {
   const entry = {
     type: 'object',
@@ -245,53 +243,17 @@ export function planningOutputSchema(ids: string[]) {
 }
 async function finishPhotoPlanning(
   research: ReturnType<typeof validatePropertyResearch>,
-  temp: string,
   evidence: string,
   goal: string,
 ) {
   const review = research.photoReview!;
   const photos = review.photos.filter((photo) => photo.status === 'reviewed');
   const prompt = `Use ONLY Muse's attached-image observations below, not external research, earlier human labels or source-audit notes. These observations are unreviewed visual proposals, not verified site facts. For the project goal, propose 3–6 non-redundant decisions/questions and 4–8 ordered next steps, grounded in specific photo IDs. Cover relevant kitchen, existing bathroom, basement/service-access and circulation decisions when present. Keep sentences short, complete and under 35 words. Questions end with ?, next steps end with a period. Never estimate dimensions, infer hidden services, diagnose hazards or release construction. Separate user choices, site measurements and qualified review. Do not add room labels or facts; use only this model-generated evidence.\n${JSON.stringify({ goal, photos: photos.map(({ id, roomType, confidence, observations, uncertainties }) => ({ id, roomType, confidence, observations, uncertainties })) })}`;
-  const promptFile = join(temp, 'planning-prompt.txt'),
-    schema = join(temp, 'planning.schema.json');
-  await writeFile(promptFile, prompt);
-  await writeFile(schema, JSON.stringify(planningOutputSchema(photos.map((photo) => photo.id))));
-  const events = await museBatch([
-    'exec',
-    '--provider',
-    'meta',
-    '--preset',
-    'empty',
-    '--workspace',
-    temp,
-    '--json',
-    '--prompt-file',
-    promptFile,
-    '--output-schema',
-    schema,
-    '--disable-shell',
-    '--disable-write',
-    '--disable-web-tools',
-    '--disable-reminders',
-    '--disable-request-user-input',
-    '--no-session-log',
-    '--no-foreign-personal-context',
-    '--max-model-steps',
-    '2',
-  ]);
-  const raw = museResultFromEvents(events),
-    records = events
-      .split('\n')
-      .filter(Boolean)
-      .map((line) => JSON.parse(line));
-  const terminal = [...records]
-      .reverse()
-      .find((record) => record.payload_type === 'run.terminal.completed'),
-    usage = [...records].reverse().find((record) => record.payload_type === 'run.usage');
-  const runId = terminal?.payload?.run_stream?.id,
-    model = usage?.payload?.models?.[0]?.model;
-  if (typeof runId !== 'string' || typeof model !== 'string')
-    throw Error('Missing planning-run provenance');
+  const {
+    result: raw,
+    runId,
+    model,
+  } = await museJson({ prompt, schema: planningOutputSchema(photos.map((photo) => photo.id)) });
   await writeFile(
     join(evidence, 'planning.json'),
     JSON.stringify({ prompt, runId, model, result: raw }, null, 2),
@@ -314,7 +276,7 @@ export async function refineExistingPhotoReview(file: string, output: string, sc
   try {
     const goal = scopeGoal || base.photoReview.planning?.goal || base.photoReview.goal;
     if (!goal) throw Error('Provide --goal for a review without a saved project scope.');
-    const result = await finishPhotoPlanning(base, temp, evidence, goal);
+    const result = await finishPhotoPlanning(base, evidence, goal);
     await writeFile(output, JSON.stringify(result, null, 2) + '\n', { flag: 'wx' });
     console.log(
       `Saved Muse-generated planning questions and next steps to ${output}. No room labels were edited.`,
@@ -438,51 +400,25 @@ export async function runPhotoReview(
           }
         }
       }
-      await writeFile(
-        schema,
-        JSON.stringify(photoOutputSchemaForIds(batch.map((photo) => photo.id))),
-      );
       const prompt = photoInspectionPrompt(
-          job.goal,
-          batch.map((p) => p.id),
-        ),
-        promptFile = join(temp, 'prompt.txt');
-      await writeFile(promptFile, prompt);
-      const events = await museBatch([
-        'exec',
-        '--provider',
-        'meta',
-        '--preset',
-        'empty',
-        '--workspace',
-        temp,
-        '--json',
-        '--prompt-file',
-        promptFile,
-        '--output-schema',
-        schema,
-        ...attachments.flatMap((a) => ['--image', a.path]),
-        '--disable-shell',
-        '--disable-write',
-        '--disable-web-tools',
-        '--disable-reminders',
-        '--disable-request-user-input',
-        '--no-session-log',
-        '--no-foreign-personal-context',
-        '--max-model-steps',
-        '2',
-      ]);
-      const raw = museResultFromEvents(events);
-      const records = events
-          .split('\n')
-          .filter(Boolean)
-          .map((line) => JSON.parse(line)),
-        terminal = [...records].reverse().find((r) => r.payload_type === 'run.terminal.completed'),
-        usage = [...records].reverse().find((r) => r.payload_type === 'run.usage');
-      const runId = terminal?.payload?.run_stream?.id,
-        model = usage?.payload?.models?.[0]?.model;
-      if (typeof runId !== 'string' || typeof model !== 'string')
-        throw Error('Muse did not provide run/model provenance');
+        job.goal,
+        batch.map((p) => p.id),
+      );
+      const images = await Promise.all(
+        attachments.map(async (a) => {
+          const bytes = await readFile(a.path);
+          return { bytes, mediaType: imageMediaType(bytes) };
+        }),
+      );
+      const {
+        result: raw,
+        runId,
+        model,
+      } = await museJson({
+        prompt,
+        schema: photoOutputSchemaForIds(batch.map((photo) => photo.id)),
+        images,
+      });
       await writeFile(
         join(evidence, `batch-${number}.json`),
         JSON.stringify(
@@ -516,7 +452,7 @@ export async function runPhotoReview(
     }
     review.reviewedAt = new Date().toISOString();
     const visualResult = applyPhotoReview(base, review, job.goal);
-    const result = await finishPhotoPlanning(visualResult, temp, evidence, job.goal);
+    const result = await finishPhotoPlanning(visualResult, evidence, job.goal);
     await writeFile(outputFile, JSON.stringify(result, null, 2) + '\n', { flag: 'wx' });
     await writeFile(join(evidence, 'manifest.json'), JSON.stringify(job, null, 2), { flag: 'wx' });
     console.log(

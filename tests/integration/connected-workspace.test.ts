@@ -461,6 +461,97 @@ test(
 );
 
 test(
+  'photo outlines come from SAM for attached photos only, cached, without changing the project',
+  { skip: !uri },
+  () =>
+    withRepo(async (repo) => {
+      const { s } = setup();
+      await repo.importWorkspace(mongoState(s.state), []);
+      // Real SAM 3.1 output for the example room and "pillow" (two objects).
+      const sam = readFileSync(
+        new URL('../fixtures/sam/before-pillow.txt', import.meta.url),
+        'utf8',
+      );
+      const phrases: string[] = [];
+      const { server } = await createWorkspaceServer(
+        repo,
+        'synthetic-segment-token',
+        true,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        async ({ phrase }) => {
+          phrases.push(phrase);
+          return { text: sam, runId: 'resp_fake', model: 'sam-3.1' };
+        },
+      );
+      await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
+      const address = server.address();
+      if (!address || typeof address === 'string') throw Error('No address');
+      const base = `http://127.0.0.1:${address.port}/api/workspace`;
+      const headers = { Host: '127.0.0.1:4000', 'X-Renovagent-Client': 'workspace' };
+      try {
+        const session = await fetch(base + '/session', { headers });
+        const auth = { ...headers, Cookie: session.headers.get('set-cookie')!.split(';')[0]! };
+        const photo = Buffer.concat([Buffer.from([0xff, 0xd8, 0xff, 0xe0]), Buffer.alloc(64, 1)]);
+        await fetch(`${base}/blobs/${encodeURIComponent('blob:room')}`, {
+          method: 'POST',
+          headers: { ...auth, 'Content-Type': 'image/jpeg' },
+          body: photo,
+        });
+        const attach = s.command('AttachEvidence', {
+          scope: 'project',
+          evidence: {
+            id: 'room-photo',
+            kind: 'attachment',
+            description: 'QA only',
+            attachment: {
+              blobId: 'blob:room',
+              sha256: createHash('sha256').update(photo).digest('hex'),
+              name: 'room.jpg',
+              mediaType: 'image/jpeg',
+              role: 'original',
+            },
+          },
+        });
+        assert.equal(
+          (
+            await fetch(base + '/commands', {
+              method: 'POST',
+              headers: { ...auth, 'Content-Type': 'application/json' },
+              body: JSON.stringify({ commands: [attach], blobs: [] }),
+            })
+          ).status,
+          200,
+        );
+        const before = (await repo.read()).version;
+        const outline = (blobId: string, phrase: string) =>
+          fetch(base + '/photos/segment', {
+            method: 'POST',
+            headers: { ...auth, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ blobId, phrase }),
+          });
+        assert.equal((await outline('blob:not-attached', 'pillow')).status, 404);
+        const first = await outline('blob:room', 'pillow');
+        assert.equal(first.status, 200);
+        const result = await first.json();
+        assert.equal(result.width, 1600);
+        assert.equal(result.segments.length, 2);
+        assert.equal(result.model, 'sam-3.1');
+        // Same photo and phrase (any case): served from the cache.
+        assert.equal((await outline('blob:room', 'Pillow')).status, 200);
+        assert.deepEqual(phrases, ['pillow']);
+        assert.equal((await repo.read()).version, before);
+      } finally {
+        await new Promise<void>((resolve) => server.close(() => resolve()));
+      }
+    }),
+);
+
+test(
   'staged uploads carry large photos as raw bytes, then commit with the command',
   { skip: !uri },
   () =>

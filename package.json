@@ -24,7 +24,7 @@
     "dev:mongo": "node --import tsx scripts/local-mongo.ts",
     "dev:connected": "node --import tsx scripts/dev-connected.ts",
     "dev:local": "node --import tsx scripts/dev-connected.ts --local",
-    "test:connected": "TEST_WORKSPACE_MONGO_URI=mongodb://127.0.0.1:27018/renovagent_workspace node --import tsx --test tests/integration/connected-workspace.test.ts tests/integration/mcp-workspace.test.ts tests/integration/mcp-http.test.ts tests/integration/cluster-migration.test.ts tests/integration/accounts.test.ts tests/integration/blob-store.test.ts tests/integration/catalog.test.ts tests/integration/design-options.test.ts tests/integration/review-rank.test.ts tests/integration/workspace-cache.test.ts",
+    "test:connected": "TEST_WORKSPACE_MONGO_URI=mongodb://127.0.0.1:27018/renovagent_workspace node --import tsx --test tests/integration/connected-workspace.test.ts tests/integration/mcp-workspace.test.ts tests/integration/mcp-http.test.ts tests/integration/cluster-migration.test.ts tests/integration/accounts.test.ts tests/integration/blob-store.test.ts tests/integration/catalog.test.ts tests/integration/design-options.test.ts tests/integration/review-rank.test.ts tests/integration/workspace-cache.test.ts tests/integration/meta-model-api.test.ts",
     "seed:catalog": "node --import tsx scripts/seed-catalog.ts",
     "build:pages": "npm run build && node scripts/package-pages.mjs",
     "render:room": "node --import tsx scripts/render-room.ts",
@@ -42,6 +42,7 @@
     "vite": "^6.0.7"
   },
   "dependencies": {
+    "@meta-sam/parser": "^0.1.0",
     "@modelcontextprotocol/sdk": "^1.32.2",
     "firebase": "^13.1.0",
     "image-size": "^2.0.4",
