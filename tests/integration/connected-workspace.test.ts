@@ -708,3 +708,143 @@ test('bounded photo refresh keeps earlier source references discoverable without
   );
   assert.equal(savedPhotoReferences(s.state, 'project-a').length, 0);
 });
+
+test('Blender HD renders go to the render service and come back as files', { skip: !uri }, () =>
+  withRepo(async (repo) => {
+    const { s } = setup();
+    await repo.importWorkspace(mongoState(s.state), []);
+    const sent: unknown[] = [];
+    const service = {
+      async submit(model: unknown) {
+        sent.push(model);
+        return { id: 'fc-abcdefghij123' };
+      },
+      async result(id: string) {
+        assert.equal(id, 'fc-abcdefghij123');
+        return {
+          status: 'done' as const,
+          device: 'OPTIX',
+          blender: '3.6.19',
+          files: {
+            'interior.png': 'aW50',
+            'perspective.png': 'cGVy',
+            'plan-top.png': 'cGxh',
+            'room.glb': 'Z2xi',
+          },
+        };
+      },
+    };
+    const serve = async (render: typeof service | undefined) => {
+      const { server } = await createWorkspaceServer(
+        repo,
+        'synthetic-hq-token',
+        true,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        render,
+      );
+      await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
+      const address = server.address();
+      if (!address || typeof address === 'string') throw Error('No address');
+      return { server, base: `http://127.0.0.1:${address.port}/api/workspace` };
+    };
+    const headers = { Host: '127.0.0.1:4000', 'X-Renovagent-Client': 'workspace' };
+    const model = {
+      format: 'openplan3d',
+      storey: 0,
+      walls: [
+        {
+          id: 'n',
+          a: [0, 0],
+          b: [4, 0],
+          lengthM: 4,
+          heightM: 2.4,
+          thicknessM: 0.1,
+          curved: false,
+          openings: [],
+        },
+        {
+          id: 'e',
+          a: [4, 0],
+          b: [4, 3],
+          lengthM: 3,
+          heightM: 2.4,
+          thicknessM: 0.1,
+          curved: false,
+          openings: [],
+        },
+        {
+          id: 's',
+          a: [4, 3],
+          b: [0, 3],
+          lengthM: 4,
+          heightM: 2.4,
+          thicknessM: 0.1,
+          curved: false,
+          openings: [],
+        },
+        {
+          id: 'w',
+          a: [0, 3],
+          b: [0, 0],
+          lengthM: 3,
+          heightM: 2.4,
+          thicknessM: 0.1,
+          curved: false,
+          openings: [],
+        },
+      ],
+      fixtures: [],
+      floorOutlines: [],
+      storeyCount: 1,
+      looseOpenings: [],
+      rooms: [],
+      spaces: [],
+      notes: [],
+    };
+    for (const render of [undefined, service]) {
+      const { server, base } = await serve(render);
+      try {
+        const session = await fetch(base + '/session', { headers });
+        assert.equal((await session.clone().json()).render, Boolean(render));
+        const auth = { ...headers, Cookie: session.headers.get('set-cookie')!.split(';')[0]! };
+        const start = await fetch(base + '/model/hq-render', {
+          method: 'POST',
+          headers: { ...auth, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ model, wall: 'sage', floor: 'light oak' }),
+        });
+        if (!render) {
+          assert.equal(start.status, 400);
+          continue;
+        }
+        assert.equal(start.status, 202);
+        const { id } = await start.json();
+        const payload = sent[0] as {
+          look: Record<string, string>;
+          samples: number;
+          floorOutline: unknown;
+        };
+        assert.equal(payload.look.wallName, 'sage');
+        assert.equal(payload.look.floorKind, 'wood');
+        assert.equal(payload.samples, 128);
+        assert.ok(payload.floorOutline);
+        const done = await (await fetch(`${base}/model/hq-render/${id}`, { headers: auth })).json();
+        assert.equal(done.status, 'done');
+        assert.equal(done.interior, 'aW50');
+        assert.equal(done.glb, 'Z2xi');
+        assert.equal(
+          (await fetch(`${base}/model/hq-render/fc-unknownjob123`, { headers: auth })).status,
+          404,
+        );
+      } finally {
+        await new Promise<void>((resolve) => server.close(() => resolve()));
+      }
+    }
+  }),
+);

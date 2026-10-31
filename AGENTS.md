@@ -24,6 +24,7 @@ Before architecture or substantial feature work, read `docs/architecture/README.
 - `npm run dev:local` — the same against an explicit local Mongo on 27018, started for you.
 - Sign-in is off by default (one shared workspace, no login), even if Google/Meta settings are exported; `npm run dev:accounts` turns Google/Meta sign-in on.
 - `npm test` — legacy JavaScript tests plus contract, domain, and integration TypeScript suites.
+- `.local/modal-venv/bin/modal deploy modal/render_room.py` — deploy the Blender HD render job to Modal (needs the `renovagent-render` secret with `RENDER_TOKEN`; the API needs `RENOVAGENT_RENDER_URL` and `RENOVAGENT_RENDER_TOKEN`).
 - `npm run test:connected` — integration suites against real local MongoDB.
 - `npm run serve:mcp` — stdio MCP adapter for standard agent clients.
 - `npm run seed:catalog` — import the curated demo catalog into local Mongo.

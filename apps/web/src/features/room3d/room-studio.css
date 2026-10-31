@@ -1317,3 +1317,20 @@
 .room3d-canvas.is-photoreal .room3d-labels {
   display: none;
 }
+.room3d-photoreal-downloads {
+  position: absolute;
+  left: 10px;
+  top: 10px;
+  z-index: 3;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  max-width: 60%;
+}
+.room3d-photoreal-downloads a {
+  font-size: 12px;
+  background: rgb(255 255 255 / 0.92);
+  border-radius: 999px;
+  padding: 3px 10px;
+}

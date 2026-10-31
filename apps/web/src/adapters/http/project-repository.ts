@@ -66,6 +66,8 @@ export type SessionInfo = {
   providers?: string[];
   muse?: boolean;
   jev?: boolean;
+  // Blender on Modal is configured for high-quality renders.
+  render?: boolean;
 };
 export const signInUrlFor = (provider: string) => `/api/workspace/auth/${provider}`;
 export async function accountStatus(): Promise<SessionInfo> {

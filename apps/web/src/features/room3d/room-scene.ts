@@ -471,7 +471,7 @@ export function mountRoomScene(
     }
   };
   let currentLook = look;
-  const photoreal = attachPhotoreal(host, captureEyeLevel, () => currentLook);
+  const photoreal = attachPhotoreal(host, captureEyeLevel, () => currentLook, model);
 
   const resize = () => {
     const { clientWidth: w, clientHeight: h } = host;

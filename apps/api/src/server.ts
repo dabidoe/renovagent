@@ -21,6 +21,12 @@ import {
   samSegmentText,
 } from '../../../scripts/muse-provider.js';
 import { parseSegmentation, type PhotoSegmentation } from './segmentation.js';
+import {
+  blenderPayload,
+  renderInput,
+  renderServiceFromEnv,
+  type RenderService,
+} from './hq-render.js';
 import { CatalogStore } from './catalog.js';
 import { workspaceMongoConfig } from './database-config.js';
 import { PhotoJobFiles } from './photo-job-files.js';
@@ -68,6 +74,8 @@ const SEGMENT_LIMIT = { calls: 60, windowMs: 10 * 60 * 1000 };
 const SEGMENT_CACHE_SIZE = 200;
 // Muse Image repaint previews ($0.01 each) per owner per window.
 const REPAINT_LIMIT = { calls: 12, windowMs: 10 * 60 * 1000 };
+// Blender GPU renders per owner per window.
+const HQ_LIMIT = { calls: 6, windowMs: 10 * 60 * 1000 };
 const rankInput = z
   .object({
     work: z
@@ -125,6 +133,8 @@ export async function createWorkspaceServer(
   segment: typeof samSegmentText = samSegmentText,
   // Muse Image edits for repaint previews; injectable for tests.
   repaint: typeof museEditImage = museEditImage,
+  // Blender on Modal for high-quality renders; absent when not configured.
+  render: RenderService | undefined = renderServiceFromEnv(),
 ) {
   const accountMode = Boolean(accounts);
   // A public origin with the shared local token would give every visitor one workspace.
@@ -154,6 +164,9 @@ export async function createWorkspaceServer(
   };
   const segmentCalls = new Map<string, number[]>();
   const repaintCalls = new Map<string, number[]>();
+  const hqCalls = new Map<string, number[]>();
+  // Render job → owner, so one owner cannot read another's render.
+  const hqJobs = new Map<string, string>();
   const segmentCache = new Map<string, PhotoSegmentation & { model: string; runId: string }>();
   const spendSegmentCall = (ownerId: string) => {
     const now = Date.now();
@@ -389,6 +402,7 @@ export async function createWorkspaceServer(
                   providers: accounts!.providers(),
                   mongo: true,
                   muse: providerConfigured,
+                  render: Boolean(render),
                   jev: await jev.configured(),
                 }
               : {
@@ -397,6 +411,7 @@ export async function createWorkspaceServer(
                   providers: accounts!.providers(),
                   mongo: true,
                   muse: providerConfigured,
+                  render: Boolean(render),
                   jev: await jev.configured(),
                 },
           );
@@ -411,6 +426,7 @@ export async function createWorkspaceServer(
           mode: 'local-single-owner',
           mongo: true,
           muse: providerConfigured,
+          render: Boolean(render),
           jev: await jev.configured(),
         });
         return;
@@ -979,6 +995,53 @@ export async function createWorkspaceServer(
             segmentCache.delete(segmentCache.keys().next().value!);
         }
         json(200, result);
+        return;
+      }
+      if (path === '/model/hq-render' && req.method === 'POST') {
+        if (!render)
+          throw new DomainError(
+            'VALIDATION',
+            'High-quality renders need the Blender service (RENOVAGENT_RENDER_URL and RENOVAGENT_RENDER_TOKEN)',
+          );
+        const input = renderInput.parse(await body(req));
+        if (JSON.stringify(input.model).length > 500_000)
+          throw new DomainError('VALIDATION', 'Room model is too large to render');
+        const now = Date.now();
+        const recent = (hqCalls.get(activeRepo.ownerId) ?? []).filter(
+          (t) => now - t < HQ_LIMIT.windowMs,
+        );
+        if (recent.length >= HQ_LIMIT.calls)
+          throw new DomainError('VALIDATION', 'Render limit reached; try again in a few minutes');
+        hqCalls.set(activeRepo.ownerId, [...recent, now]);
+        const { id } = await render.submit(blenderPayload(input));
+        hqJobs.set(id, activeRepo.ownerId);
+        json(202, { id });
+        return;
+      }
+      if (path.startsWith('/model/hq-render/') && req.method === 'GET') {
+        const id = decodeURIComponent(path.slice('/model/hq-render/'.length));
+        if (!render || hqJobs.get(id) !== activeRepo.ownerId)
+          throw new DomainError('NOT_FOUND', 'Unknown render');
+        const result = await render.result(id);
+        if (result.status !== 'done') {
+          json(200, result);
+          return;
+        }
+        const file = (name: string) => {
+          const value = result.files[name];
+          if (typeof value !== 'string')
+            throw new DomainError('VALIDATION', `Render is missing ${name}`);
+          return value;
+        };
+        json(200, {
+          status: 'done',
+          device: result.device,
+          blender: result.blender,
+          interior: file('interior.png'),
+          perspective: file('perspective.png'),
+          plan: file('plan-top.png'),
+          glb: file('room.glb'),
+        });
         return;
       }
       if (path === '/model/photoreal' && req.method === 'POST') {

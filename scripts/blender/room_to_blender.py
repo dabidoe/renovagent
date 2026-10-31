@@ -168,29 +168,40 @@ bpy.context.object.data.angle = math.radians(4)
 bpy.context.object.data.color = (1.0, 0.92, 0.8)
 
 scene.render.engine = "CYCLES"
-try:
-    prefs = bpy.context.preferences.addons["cycles"].preferences
-    prefs.compute_device_type = "METAL"
-    prefs.get_devices()
-    for dev in prefs.devices:
-        dev.use = True
-    scene.cycles.device = "GPU"
-except Exception as e:
-    print("GPU unavailable, rendering on CPU:", e)
+# NVIDIA (OptiX, then CUDA) on Linux GPU hosts such as Modal; Metal on a Mac.
+gpu = None
+prefs = bpy.context.preferences.addons["cycles"].preferences
+for kind in ("OPTIX", "CUDA", "METAL"):
+    try:
+        prefs.compute_device_type = kind
+        prefs.get_devices()
+    except Exception:
+        continue
+    if any(d.type == kind for d in prefs.devices):
+        for d in prefs.devices:
+            d.use = d.type == kind
+        scene.cycles.device = "GPU"
+        gpu = kind
+        break
+print("Cycles device:", gpu or "CPU")
 scene.cycles.samples = int(model.get("samples", 96))
 scene.cycles.use_denoising = True
-scene.view_settings.view_transform = "Filmic"
-scene.view_settings.look = "Medium High Contrast"
+# Filmic and its looks exist in Blender 3.x; newer versions rename them.
+try:
+    scene.view_settings.view_transform = "Filmic"
+    scene.view_settings.look = "Medium High Contrast"
+except TypeError as e:
+    print("Keeping the default view transform:", e)
 
 
-def shoot(name, location, target, ortho=None, size=(1600, 1000)):
+def shoot(name, location, target, ortho=None, size=(1600, 1000), lens=20):
     bpy.ops.object.camera_add(location=location)
     cam = bpy.context.object
     if ortho:
         cam.data.type = "ORTHO"
         cam.data.ortho_scale = ortho
     else:
-        cam.data.lens = 20
+        cam.data.lens = lens
     cam.rotation_euler = (Vector(target) - cam.location).to_track_quat("-Z", "Y").to_euler()
     scene.camera = cam
     scene.render.resolution_x, scene.render.resolution_y = size
@@ -207,5 +218,26 @@ bpy.ops.export_scene.gltf(
     export_extras=True,
     export_apply=True,
     use_renderable=True,
+)
+# Eye level from one corner, the same view as the web Photoreal still, with a
+# ceiling and a ceiling light. Added after the export so room.glb stays the
+# measured geometry only.
+dx, dy = max(xs) - min(xs), max(ys) - min(ys)
+bpy.ops.mesh.primitive_plane_add(size=1, location=(cx, cy, top))
+ceiling = bpy.context.object
+ceiling.scale = (dx + 0.4, dy + 0.4, 1)
+ceiling.data.materials.append(material("Ceiling", hex_rgba("#f4f3ef"), 0.95))
+bpy.ops.object.light_add(type="AREA", location=(cx, cy, top - 0.05))
+lamp = bpy.context.object.data
+lamp.shape = "RECTANGLE"
+lamp.size, lamp.size_y = max(dx * 0.5, 0.5), max(dy * 0.5, 0.5)
+lamp.energy = 30 * dx * dy
+lamp.color = (1.0, 0.95, 0.88)
+shoot(
+    "interior.png",
+    (cx + dx * 0.4, cy - dy * 0.4, 1.55),
+    (cx - dx * 0.25, cy + dy * 0.25, 1.15),
+    size=(1536, 1024),
+    lens=16,
 )
 print("RENOVAGENT rendered", len(model["walls"]), "walls to", out_dir)
