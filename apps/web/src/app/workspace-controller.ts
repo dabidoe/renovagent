@@ -1,4 +1,10 @@
 import {
+  validateProjectPhotos,
+  type ProjectIntakeInput,
+  type ReferenceInput,
+} from './project-intake.js';
+import { projectReferenceSchema } from '@renovagent/contracts';
+import {
   HttpProjectRepository,
   workspaceRequest,
   encodeBlobs,
@@ -50,6 +56,60 @@ import {
   type LegacyImportPreview,
 } from '../adapters/fixtures/import-legacy.js';
 const uid = (prefix: string) => `${prefix}:${crypto.randomUUID()}`;
+async function prepareReferences(inputs: ReferenceInput[]) {
+  if (inputs.length > 20) throw Error('Save up to 20 references at a time.');
+  if (inputs.reduce((sum, item) => sum + (item.photos?.length || 0), 0) > 10)
+    throw Error('Save up to 10 photos at a time.');
+  const checked = inputs.map((item) => {
+    const reference = projectReferenceSchema.parse(item.reference);
+    const photos = item.photos ?? [];
+    validateProjectPhotos(photos);
+    if (!reference.url && !photos.length) throw Error('Add a photo or a reference link.');
+    return { reference, photos };
+  });
+  return Promise.all(
+    checked.flatMap(({ reference, photos }) =>
+      (photos.length ? photos : [null]).map(async (file) => ({
+        reference,
+        file,
+        evidenceId: uid('reference'),
+        blobId: file ? uid('blob') : null,
+        sha256: file ? await blobDigest(file) : null,
+      })),
+    ),
+  );
+}
+function referenceEvidence(item: Awaited<ReturnType<typeof prepareReferences>>[number]) {
+  const { reference, file } = item;
+  return {
+    id: item.evidenceId,
+    kind: file ? ('attachment' as const) : ('user-observation' as const),
+    description: [
+      reference.kind === 'room'
+        ? 'User-supplied room photo. Original, not analyzed.'
+        : `User-saved ${reference.kind} reference; not evidence of existing site conditions.`,
+      reference.title,
+      reference.url,
+      reference.note,
+      reference.price &&
+        `User-saved price: ${reference.price.minorUnits / 100} ${reference.price.currency}. Not a retrieved offer.`,
+    ]
+      .filter(Boolean)
+      .join('\n'),
+    reference,
+    ...(file
+      ? {
+          attachment: {
+            blobId: item.blobId!,
+            sha256: item.sha256!,
+            name: file.name,
+            mediaType: file.type,
+            role: 'original' as const,
+          },
+        }
+      : {}),
+  };
+}
 const STORAGE_MODE_KEY = 'renovagent-storage-mode';
 const LEGACY_STORAGE_MODE_KEY = 'unpermitted-storage-mode';
 export const storedMode = () =>
@@ -296,71 +356,138 @@ export class WorkspaceController {
       true,
     );
   }
-  async createProject(input: {
-    name: string;
-    goal: string;
-    propertyId?: string;
-    propertyName: string;
-    underway: boolean;
-    sample?: boolean;
-    address?: string;
-  }) {
+  async createProject(input: ProjectIntakeInput) {
+    const prepared = await prepareReferences([
+      ...(input.photos?.length
+        ? [{ reference: { kind: input.photoKind ?? 'room' }, photos: input.photos }]
+        : []),
+      ...(input.references ?? []),
+    ]);
     const projectId = uid('project');
-    await this.mutate((state) => {
+    return this.mutate((state) => {
       const propertyId = input.propertyId || uid('property');
       const commands: Command[] = [];
       let revision = 0;
-      const add = (type: Command['type'], payload: unknown) =>
+      let propertyRevision = state.properties[propertyId]?.revision || 0;
+      const add = (type: Command['type'], payload: unknown) => {
         commands.push({
           commandId: uid('command'),
           projectId,
           baseRevision: revision++,
-          basePropertyRevision: state.properties[propertyId]?.revision || 0,
+          basePropertyRevision: propertyRevision,
           type,
           payload,
         } as Command);
+        if (
+          type === 'CreateProject' ||
+          ((type === 'AttachEvidence' || type === 'RecordFact') &&
+            (payload as { scope: string }).scope === 'property')
+        )
+          propertyRevision++;
+      };
       add('CreateProject', {
         propertyId,
         name: input.name,
         newProperty: input.propertyId ? undefined : { name: input.propertyName },
-        spaces: [],
+        spaces: input.room?.trim() ? [{ id: uid('space'), name: input.room.trim() }] : [],
       });
+      for (const item of prepared)
+        add('AttachEvidence', { scope: 'project', evidence: referenceEvidence(item) });
+      const approachLabels = {
+        diy: 'Do it myself',
+        contractor: 'Work with a contractor',
+        undecided: 'Deciding between DIY and hiring',
+      };
+      const details = [
+        input.room && `Room: ${input.room}`,
+        input.approach && `Approach: ${approachLabels[input.approach]}`,
+        input.budgetMinor !== undefined &&
+          `Target budget (USD): ${(input.budgetMinor / 100).toFixed(2)}`,
+      ].filter(Boolean);
       const messageId = uid('message');
       add('AppendMessage', {
         messageId,
-        text: `${input.sample ? '[Example fixture] ' : ''}${input.goal}`,
-        evidenceIds: [],
+        text: `${input.sample ? '[Example fixture] ' : ''}${input.goal}${details.length ? '\n\n' + details.join('\n') : ''}`,
+        evidenceIds: prepared.map((p) => p.evidenceId),
       });
-      add('RecordFact', {
-        factId: uid('fact'),
-        subjectId: projectId,
-        key: 'goal',
-        scope: 'project',
-        supersedesRevision: 0,
-        value: { kind: 'text', text: input.goal },
-        assertion: input.sample ? 'assumed' : 'user_reported',
-        evidenceIds: [messageId],
+      const fact = (key: string, value: Fact['value']) =>
+        add('RecordFact', {
+          factId: uid('fact'),
+          subjectId: projectId,
+          key,
+          scope: 'project',
+          supersedesRevision: 0,
+          value,
+          assertion: input.sample ? 'assumed' : 'user_reported',
+          evidenceIds: [messageId],
+        });
+      fact('goal', { kind: 'text', text: input.goal });
+      fact('startingPoint', {
+        kind: 'text',
+        text: input.underway
+          ? 'Work already underway; completion evidence needs reconciliation.'
+          : 'Exploring / planning',
       });
-      add('RecordFact', {
-        factId: uid('fact'),
-        subjectId: projectId,
-        key: 'startingPoint',
-        scope: 'project',
-        supersedesRevision: 0,
-        value: {
-          kind: 'text',
-          text: input.underway
-            ? 'Work already underway; completion evidence needs reconciliation.'
-            : 'Exploring / planning',
-        },
-        assertion: input.sample ? 'assumed' : 'user_reported',
-        evidenceIds: [messageId],
-      });
+      if (input.approach)
+        fact('workApproach', { kind: 'text', text: approachLabels[input.approach] });
+      if (input.budgetMinor !== undefined)
+        fact('targetBudget', { kind: 'money', minorUnits: input.budgetMinor, currency: 'USD' });
+      if (input.address?.trim()) {
+        const address = input.address.trim();
+        const old = Object.values(state.facts)
+          .map((v) => latest(v)!)
+          .find(
+            (f) =>
+              f.propertyId === propertyId && f.projectId === null && f.key === 'propertyAddress',
+          );
+        const evidenceId = uid('address-observation');
+        add('AttachEvidence', {
+          scope: 'property',
+          evidence: {
+            id: evidenceId,
+            kind: 'user-observation',
+            description: `User-reported property location: ${address}`,
+          },
+        });
+        add('RecordFact', {
+          factId: old?.id || uid('fact'),
+          subjectId: propertyId,
+          key: 'propertyAddress',
+          scope: 'property',
+          supersedesRevision: old?.revision || 0,
+          value: { kind: 'text', text: address },
+          assertion: 'user_reported',
+          evidenceIds: [evidenceId],
+        });
+      }
       add('SetWorkspaceView', { ...defaultView, stage: input.underway ? 'execution' : 'brief' });
-      return { commands, value: undefined };
+      return {
+        commands,
+        blobs: prepared.flatMap((p) => (p.file ? [{ id: p.blobId!, blob: p.file }] : [])),
+        value: projectId,
+      };
     });
-    if (input.address?.trim()) await this.savePropertyAddress(projectId, input.address.trim());
-    return projectId;
+  }
+  async saveReferences(projectId: string, inputs: ReferenceInput[]) {
+    if (!inputs.length) throw Error('Add a reference first.');
+    const prepared = await prepareReferences(inputs);
+    return this.mutate((state) => {
+      if (!state.projects[projectId]) throw Error('Choose a project first.');
+      const commands = prepared.map((item, index) => ({
+        ...this.command(state, projectId, 'AttachEvidence', {
+          scope: 'project',
+          evidence: referenceEvidence(item),
+        }),
+        baseRevision: state.projects[projectId].revision + index,
+      }));
+      return {
+        commands,
+        blobs: prepared.flatMap((item) =>
+          item.file ? [{ id: item.blobId!, blob: item.file }] : [],
+        ),
+        value: prepared.map((item) => item.evidenceId),
+      };
+    });
   }
   savePropertyAddress(projectId: string, address: string) {
     return this.mutate((state) => {

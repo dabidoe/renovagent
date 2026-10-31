@@ -106,16 +106,17 @@ test('an imported plan file is kept verbatim as evidence for its area and perime
   repo.close();
 });
 
-test('the room card starts empty and open, with no invented dimensions', () => {
+test('the room card starts collapsed, with no invented dimensions', () => {
   const s = new Scenario();
   s.create();
   const html = render(s);
   assert.match(html, /Not measured yet/);
-  assert.match(html, /Save measurements/);
-  assert.match(html, /Measure with your phone · coming soon/);
+  assert.match(html, /Add measurements/);
+  assert.doesNotMatch(html, /Save measurements/);
   assert.doesNotMatch(html, /value="\d/);
-  assert.match(html, /Phone AR measuring app/);
-  assert.match(html, /nothing here is verified/i);
+  const form = render(s, RoomDimensionsForm);
+  assert.match(form, /Phone AR measuring app/);
+  assert.match(form, /reported measurements/i);
 });
 
 test('saved dimensions collapse to one line in their original units; a stale draft still says so', () => {

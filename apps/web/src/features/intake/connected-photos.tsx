@@ -68,6 +68,7 @@ export function ConnectedPhotos({
   const attachments = Object.values(state.evidence).filter(
     (e) =>
       e.projectId === projectId &&
+      (!e.source.reference || e.source.reference.kind === 'room') &&
       /^image\/(jpeg|png|webp)$/.test(e.source.attachment?.mediaType || ''),
   );
   const toggle = (id: string, list: string[], set: (v: string[]) => void) => {

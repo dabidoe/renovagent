@@ -1,0 +1,249 @@
+.prompt-workspace .workspace-dialog.project-start-dialog {
+  width: min(900px, calc(100vw - 48px));
+  max-width: 900px;
+  padding: 30px;
+  background: #fff;
+  border-color: #dce5f1;
+  color: #142038;
+}
+.prompt-workspace .workspace-dialog.project-start-dialog h2 {
+  font-family: inherit;
+  font-size: 32px;
+  font-weight: 600;
+  letter-spacing: -0.045em;
+  margin: 0;
+}
+.project-start-dialog > header {
+  margin-bottom: 12px;
+}
+.project-start-intro {
+  color: #64748b;
+  line-height: 1.7;
+  font-size: 14px;
+  margin: 0 0 28px;
+}
+.project-start-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 32px;
+}
+.project-start-form fieldset {
+  margin: 0 0 24px;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+.project-start-form legend {
+  font-size: 13px;
+  font-weight: 600;
+  padding: 0;
+  margin-bottom: 14px;
+  display: flex;
+  gap: 7px;
+  align-items: center;
+}
+.project-start-form legend .glyph {
+  color: #0866ff;
+  width: 17px;
+  height: 17px;
+}
+.project-room-options {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.project-room-options button {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+  padding: 13px 6px;
+  min-height: 75px;
+  font-size: 11px;
+  color: #64748b;
+  border: 1px solid #dce5f1;
+  border-radius: 7px;
+  background: #fff;
+}
+.project-room-options .glyph {
+  width: 20px;
+  height: 20px;
+  color: #64748b;
+}
+.project-room-options button[aria-pressed='true'] {
+  border-color: #92bdff;
+  background: #edf5ff;
+  color: #0866ff;
+}
+.project-room-options button[aria-pressed='true'] .glyph {
+  color: #0866ff;
+}
+.project-start-form label {
+  display: block;
+  color: #52627c;
+  font-size: 12px;
+  line-height: 1.5;
+  margin: 14px 0;
+}
+.project-start-form label > span {
+  color: #94a3b8;
+  font-size: 10px;
+  margin-left: 5px;
+}
+.prompt-workspace .workspace-dialog.project-start-dialog input:not([type='checkbox']),
+.prompt-workspace .workspace-dialog.project-start-dialog select,
+.prompt-workspace .workspace-dialog.project-start-dialog textarea {
+  font-size: 14px;
+  padding: 12px;
+  color: #142038;
+  background: #fff;
+  border: 1px solid #dce5f1;
+  border-radius: 6px;
+  margin-top: 7px;
+}
+.prompt-workspace .workspace-dialog.project-start-dialog textarea {
+  min-height: 118px;
+  line-height: 1.6;
+}
+.project-start-main > .photo-picker {
+  margin-top: 20px;
+}
+.project-start-details {
+  border-left: 1px solid #e8edf5;
+  padding-left: 28px;
+}
+.project-field-hint {
+  color: #64748b;
+  font-size: 11px;
+  line-height: 1.6;
+  margin: 0 0 14px;
+}
+.project-location-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.project-location-row > label {
+  margin: 0;
+}
+.project-approach-options {
+  display: flex;
+  gap: 6px;
+}
+.project-approach-options button {
+  padding: 10px 11px;
+  font-size: 11px;
+  border: 1px solid #dce5f1;
+  border-radius: 5px;
+  background: white;
+  color: #64748b;
+}
+.project-approach-options button[aria-pressed='true'] {
+  background: #edf5ff;
+  color: #0866ff;
+  border-color: #92bdff;
+}
+.project-extra-details {
+  border-top: 1px solid #e8edf5;
+  padding-top: 18px;
+}
+.project-extra-details summary {
+  font-size: 12px;
+  color: #52627c;
+  cursor: pointer;
+}
+.project-extra-details summary > span {
+  color: #94a3b8;
+  font-size: 10px;
+  margin-left: 8px;
+}
+.project-start-form .project-underway {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.project-start-form .project-underway input {
+  width: 14px;
+  height: 14px;
+}
+.project-start-actions {
+  margin-top: 28px;
+  padding-top: 22px;
+  border-top: 1px solid #e8edf5;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.project-start-actions > span {
+  margin-right: auto;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #64748b;
+  font-size: 10px;
+  line-height: 1.6;
+}
+.project-start-actions > span .glyph {
+  width: 16px;
+  height: 16px;
+  color: #0866ff;
+}
+.project-start-actions button {
+  padding: 12px 16px;
+  border-radius: 6px;
+  font-size: 12px;
+}
+.project-start-dialog .project-start-actions .primary {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  background: #0866ff;
+  color: white;
+}
+.project-start-dialog .project-start-actions .primary .glyph {
+  width: 15px;
+  height: 15px;
+}
+.project-start-actions .secondary {
+  color: #64748b;
+  background: transparent;
+}
+.project-start-error {
+  color: #b42318;
+  font-size: 12px;
+  line-height: 1.6;
+}
+@media (max-width: 700px) {
+  .prompt-workspace .workspace-dialog.project-start-dialog {
+    padding: 22px 18px;
+    max-height: 94dvh;
+  }
+  .prompt-workspace .workspace-dialog.project-start-dialog h2 {
+    font-size: 28px;
+  }
+  .project-start-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 26px;
+  }
+  .project-start-intro {
+    font-size: 13px;
+    margin-bottom: 22px;
+  }
+  .project-start-details {
+    border-left: 0;
+    border-top: 1px solid #e8edf5;
+    padding: 24px 0 0;
+  }
+  .project-start-actions {
+    flex-wrap: wrap;
+    justify-content: end;
+  }
+  .project-start-actions > span {
+    flex-basis: 100%;
+    margin-bottom: 10px;
+  }
+  .project-room-options button {
+    min-height: 70px;
+  }
+}

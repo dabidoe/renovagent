@@ -1,0 +1,276 @@
+{
+  "reviewDate": "2026-10-30 America/New_York",
+  "method": "Read-only source/configuration, selected process/listener inspection and bounded Atlas/HTTP probes. No repository ensure/import/update or model calls.",
+  "sourceCommits": {
+    "main": "e892174",
+    "roomWorktree": "1e3ce99",
+    "uncommittedChangesPresent": true
+  },
+  "notes": [
+    "Configuration values, cluster hostname, credentials, project names and project contents are excluded.",
+    "Database selections reproduce the resolver and active wrapper; no running process environment was dumped.",
+    "Full document read used a 15000 ms operation budget and timed out; workspace validation was not reached.",
+    "No listeners were found on 27017 or 27018 during this review."
+  ],
+  "runs": [
+    [
+      {
+        "kind": "config-file",
+        "id": "root/.env",
+        "settings": {
+          "RENOVAGENT_MONGO_URI": {
+            "configured": true,
+            "target": "remote",
+            "scheme": "mongodb+srv:",
+            "database": "omitted"
+          }
+        }
+      },
+      {
+        "kind": "config-file",
+        "id": "root/server/.env",
+        "settings": {
+          "RENOVAGENT_MONGO_URI": {
+            "configured": true,
+            "target": "remote",
+            "scheme": "mongodb+srv:",
+            "database": "omitted"
+          },
+          "MONGODB_URI_LOCAL": {
+            "configured": true,
+            "target": "loopback",
+            "scheme": "mongodb:",
+            "port": "27017",
+            "database": "unpermitted"
+          }
+        }
+      },
+      {
+        "kind": "config-file",
+        "id": "room-worktree/.env",
+        "present": false
+      },
+      {
+        "kind": "config-file",
+        "id": "room-worktree/server/.env",
+        "present": false
+      },
+      {
+        "kind": "selection",
+        "label": "root-normal",
+        "target": "cluster",
+        "source": "RENOVAGENT_MONGO_URI",
+        "database": "renovagent_workspace",
+        "sameUriAsApiWrapper": true
+      },
+      {
+        "kind": "selection",
+        "label": "room-normal",
+        "target": "local",
+        "source": "default-local",
+        "database": "renovagent_workspace",
+        "sameUriAsApiWrapper": false
+      },
+      {
+        "kind": "selection",
+        "label": "active-api-wrapper",
+        "target": "cluster",
+        "source": "RENOVAGENT_MONGO_URI",
+        "database": "renovagent_workspace",
+        "sameUriAsApiWrapper": true
+      },
+      {
+        "kind": "db-connect",
+        "ms": 496
+      },
+      {
+        "kind": "db-ping",
+        "ms": 33
+      },
+      {
+        "kind": "aggregate-metadata",
+        "ms": 42,
+        "records": [
+          {
+            "bsonBytes": 3058258,
+            "projectCount": 8,
+            "messageCount": 71,
+            "jobCount": 2
+          }
+        ]
+      },
+      {
+        "kind": "http-check",
+        "name": "api-health",
+        "status": 200,
+        "ms": 20
+      },
+      {
+        "kind": "http-check",
+        "name": "session",
+        "status": 200,
+        "ms": 35222,
+        "mode": "local-single-owner",
+        "mongo": true,
+        "muse": true,
+        "jev": true
+      },
+      {
+        "kind": "http-check",
+        "name": "mcp-health",
+        "status": 200,
+        "ms": 6
+      }
+    ],
+    [
+      {
+        "kind": "config-file",
+        "id": "root/.env",
+        "settings": {
+          "RENOVAGENT_MONGO_URI": {
+            "configured": true,
+            "target": "remote",
+            "scheme": "mongodb+srv:",
+            "database": "omitted"
+          }
+        }
+      },
+      {
+        "kind": "config-file",
+        "id": "root/server/.env",
+        "settings": {
+          "RENOVAGENT_MONGO_URI": {
+            "configured": true,
+            "target": "remote",
+            "scheme": "mongodb+srv:",
+            "database": "omitted"
+          },
+          "MONGODB_URI_LOCAL": {
+            "configured": true,
+            "target": "loopback",
+            "scheme": "mongodb:",
+            "port": "27017",
+            "database": "unpermitted"
+          }
+        }
+      },
+      {
+        "kind": "config-file",
+        "id": "room-worktree/.env",
+        "present": false
+      },
+      {
+        "kind": "config-file",
+        "id": "room-worktree/server/.env",
+        "present": false
+      },
+      {
+        "kind": "duplicate-config",
+        "key": "RENOVAGENT_MONGO_URI",
+        "sameValue": true
+      },
+      {
+        "kind": "selection",
+        "label": "root-normal",
+        "target": "cluster",
+        "source": "RENOVAGENT_MONGO_URI",
+        "database": "renovagent_workspace",
+        "sameUriAsApiWrapper": true
+      },
+      {
+        "kind": "selection",
+        "label": "room-normal",
+        "target": "local",
+        "source": "default-local",
+        "database": "renovagent_workspace",
+        "sameUriAsApiWrapper": false
+      },
+      {
+        "kind": "selection",
+        "label": "active-api-wrapper",
+        "target": "cluster",
+        "source": "RENOVAGENT_MONGO_URI",
+        "database": "renovagent_workspace",
+        "sameUriAsApiWrapper": true
+      },
+      {
+        "kind": "db-connect",
+        "ms": 6681
+      },
+      {
+        "kind": "db-ping",
+        "ms": 43
+      },
+      {
+        "kind": "aggregate-metadata",
+        "ms": 41,
+        "records": [
+          {
+            "bsonBytes": 3058258,
+            "projectCount": 8,
+            "messageCount": 71,
+            "jobCount": 2
+          }
+        ]
+      },
+      {
+        "kind": "db-check",
+        "errorName": "MongoOperationTimeoutError"
+      },
+      {
+        "kind": "http-check",
+        "name": "api-health",
+        "status": 200,
+        "ms": 33
+      },
+      {
+        "kind": "http-check",
+        "name": "session",
+        "status": 200,
+        "ms": 32675,
+        "mode": "local-single-owner",
+        "mongo": true,
+        "muse": true,
+        "jev": true
+      },
+      {
+        "kind": "http-check",
+        "name": "mcp-health",
+        "status": 200,
+        "ms": 4
+      }
+    ]
+  ],
+  "processes": [
+    {
+      "pid": 7260,
+      "service": "Vite",
+      "port": 8741,
+      "cwd": "room-worktree",
+      "startedLocal": "2026-10-30 08:43:09"
+    },
+    {
+      "pid": 1356,
+      "service": "workspace API",
+      "port": 4000,
+      "cwd": "main checkout",
+      "source": "room-worktree via .local/with-main-env.ts",
+      "startedLocal": "2026-10-30 19:25:32"
+    },
+    {
+      "pid": 7484,
+      "service": "MCP HTTP",
+      "port": 4010,
+      "cwd": "main checkout",
+      "source": "main checkout via /tmp/renovagent-mcp-observed.ts",
+      "startedLocal": "2026-10-30 08:43:30"
+    }
+  ],
+  "checks": {
+    "databaseConfigTests": {
+      "passed": 2,
+      "failed": 0,
+      "liveMongo": false
+    }
+  }
+}

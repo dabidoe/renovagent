@@ -18,7 +18,7 @@ export function Modal({
     const el = ref.current!;
     el.showModal();
     el.querySelector<HTMLInputElement | HTMLTextAreaElement>(
-      'input:not([type=hidden]):not([readonly]), textarea',
+      'input:not([type=hidden]):not([type=file]):not([hidden]):not([readonly]), textarea, select',
     )?.focus();
     return () => el.close();
   }, []);

@@ -1,198 +1,133 @@
 import { useState } from 'react';
 import { lineTotalMinor } from '@renovagent/core';
 import { Glyph } from '../../components/glyph.js';
+import { costMaterials, costLabor, laborTotalMinor, costMoney as money } from './cost-demo.js';
 import './project-preview.css';
-
-// Marketing-only mock data, not a takeoff, productivity standard, or project estimate.
-// These values never enter the workspace, catalog, or purchase plan.
-const materialGroups = [
-  {
-    id: 'finishes',
-    icon: 'tile',
-    label: 'Finishes',
-    summary: 'Vanity, basin & tile',
-    items: [
-      ['Vanity + basin', '1 set'],
-      ['Wall tile', '80 sq ft'],
-      ['Floor tile', '35 sq ft'],
-    ],
-  },
-  {
-    id: 'rough',
-    icon: 'pipe',
-    label: 'Behind the walls',
-    summary: 'PEX, fittings & backer',
-    items: [
-      ['½-inch PEX supply', '25 ft'],
-      ['Supply fittings', '8 pcs'],
-      ['Tile backer board', '6 sheets'],
-    ],
-  },
-  {
-    id: 'fixings',
-    icon: 'screw',
-    label: 'The small things',
-    summary: 'Screws, anchors & sealant',
-    items: [
-      ['Backer-board screws', '1 box'],
-      ['Mounting anchors', '8 pcs'],
-      ['Sanitary sealant', '2 tubes'],
-    ],
-  },
-] as const;
-const crew = [
-  { trade: 'Plumbing', hours: 6, rateMinor: 7500 },
-  { trade: 'Tile installation', hours: 24, rateMinor: 6000 },
-] as const;
-const money = (minor: number) =>
-  new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    maximumFractionDigits: 0,
-  }).format(minor / 100);
-const sampleLaborMinor = crew.reduce(
-  (total, item) => total + lineTotalMinor(item.hours, item.rateMinor),
-  0,
-);
-
+import './cost-demo.css';
+const groups = [
+  { id: 'all', label: 'All materials' },
+  { id: 'plumbing', label: 'Plumbing' },
+  { id: 'tile', label: 'Tile prep' },
+  { id: 'fixings', label: 'Fixings & supplies' },
+];
 export function ProjectPreview() {
   const [view, setView] = useState<'materials' | 'labor'>('materials');
-  const [group, setGroup] = useState<(typeof materialGroups)[number]['id']>('rough');
-  const active = materialGroups.find((item) => item.id === group)!;
-  const selectGroup = (id: typeof group) => {
-    setGroup(id);
-    setView('materials');
-  };
+  const [group, setGroup] = useState('all');
+  const visible = costMaterials.filter((item) => group === 'all' || item.group === group);
   return (
-    <div className="project-preview" aria-label="Illustrative bathroom work breakdown">
-      <div className="project-preview-scene">
-        <img
-          src={new URL('../../assets/examples/workspace-bath.jpg', import.meta.url).href}
-          alt="Generated bathroom concept with oak vanity, tiled shower and dark floor; annotations link to example work packages"
-          width={1600}
-          height={1200}
-          fetchPriority="high"
-        />
-        <span className="preview-image-label">
-          <Glyph name="home" /> Bathroom concept
-        </span>
-        <button
-          className="preview-pin preview-pin-finishes"
-          aria-pressed={view === 'materials' && group === 'finishes'}
-          onClick={() => selectGroup('finishes')}
-        >
-          <Glyph name="tile" />
-          <span>Tile & finishes</span>
-        </button>
-        <button
-          className="preview-pin preview-pin-rough"
-          aria-pressed={view === 'materials' && group === 'rough'}
-          onClick={() => selectGroup('rough')}
-        >
-          <Glyph name="pipe" />
-          <span>Plumbing & prep</span>
-        </button>
-        <button
-          className="preview-pin preview-pin-fixings"
-          aria-pressed={view === 'materials' && group === 'fixings'}
-          onClick={() => selectGroup('fixings')}
-        >
-          <Glyph name="screw" />
-          <span>Fixings & supplies</span>
-        </button>
-      </div>
-      <div className="preview-workup">
-        <div className="preview-workup-heading">
-          <strong>The whole job, broken down.</strong>
-          <span>Illustrative</span>
+    <div className="cost-demo" aria-label="Bathroom materials and labor breakdown">
+      <div className="cost-demo-heading">
+        <div>
+          <h3>The details behind the finish.</h3>
+          <p>Bathroom refresh · From the pipe to the last screw.</p>
         </div>
-        <div className="preview-view-switch" role="group" aria-label="Example work breakdown views">
+        <div className="cost-view-switch" role="group" aria-label="Cost breakdown views">
           <button aria-pressed={view === 'materials'} onClick={() => setView('materials')}>
-            <Glyph name="materials" /> Materials
+            <Glyph name="materials" />
+            Materials
           </button>
           <button aria-pressed={view === 'labor'} onClick={() => setView('labor')}>
-            <Glyph name="clock" /> Labor
+            <Glyph name="clock" />
+            Labor
           </button>
         </div>
-        <div className="preview-workup-content" aria-live="polite">
-          {view === 'materials' ? (
-            <>
-              <div
-                className="preview-material-groups"
-                role="group"
-                aria-label="Material categories"
-              >
-                {materialGroups.map((item) => (
-                  <button
-                    key={item.id}
-                    aria-label={item.label}
-                    aria-pressed={group === item.id}
-                    onClick={() => selectGroup(item.id)}
-                  >
-                    <Glyph name={item.icon} />
-                    <span>{item.label}</span>
-                  </button>
-                ))}
-              </div>
-              <div className="preview-package-title">
-                <strong>{active.summary}</strong>
-                <span>Sample quantities</span>
-              </div>
-              <dl className="preview-quantity-list">
-                {active.items.map(([name, quantity]) => (
-                  <div key={name}>
-                    <dt>{name}</dt>
-                    <dd>{quantity}</dd>
-                  </div>
-                ))}
-              </dl>
-            </>
-          ) : (
-            <>
-              <div className="preview-crew-header">
-                <span>Trade</span>
-                <span>Hours × rate · line total</span>
-              </div>
-              <dl className="preview-quantity-list preview-crew-list">
-                {crew.map((item) => (
-                  <div key={item.trade}>
-                    <dt>
-                      <Glyph name="people" />
-                      {item.trade}
-                    </dt>
-                    <dd>
-                      <span>
-                        {item.hours}h @ {money(item.rateMinor)}/hr
-                      </span>
-                      <b>{money(lineTotalMinor(item.hours, item.rateMinor))}</b>
-                    </dd>
-                  </div>
-                ))}
-              </dl>
-              <p className="preview-hours-note">
-                Sample hours and rates for illustration, not a contractor quote.
-              </p>
-            </>
-          )}
-        </div>
-        <button
-          className="preview-labor-total"
-          onClick={() => setView(view === 'labor' ? 'materials' : 'labor')}
-          aria-label={view === 'labor' ? 'Show sample materials' : 'Show sample labor costs'}
-        >
-          <span>
-            <Glyph name="clock" />
-            <span>
-              Example labor <strong>{money(sampleLaborMinor)}</strong>
-            </span>
-          </span>
-          <Glyph name="right" />
-        </button>
       </div>
-      <p className="preview-fixture-note">
-        Generated concept · Mock quantities & labor for illustration. Site measurements and
-        contractor review required.
-      </p>
+      {view === 'materials' ? (
+        <>
+          <div className="cost-material-filters" role="group" aria-label="Material categories">
+            {groups.map((item) => (
+              <button
+                key={item.id}
+                aria-pressed={group === item.id}
+                onClick={() => setGroup(item.id)}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+          <div className="cost-product-grid">
+            {visible.map((item) => (
+              <article className="cost-product" key={item.id}>
+                <a
+                  href={item.source}
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label={`${item.brand} ${item.name}, view retail reference`}
+                >
+                  <img
+                    src={item.photo}
+                    alt={`${item.brand} ${item.name}`}
+                    width={150}
+                    height={150}
+                    loading="lazy"
+                  />
+                </a>
+                <span className="cost-product-brand">{item.brand}</span>
+                <h4>{item.name}</h4>
+                <p>
+                  {item.quantity} × {item.pack}
+                </p>
+                <div className="cost-product-price">
+                  <strong>{money(lineTotalMinor(item.quantity, item.unitMinor))}</strong>
+                  <span>{money(item.unitMinor)} each</span>
+                </div>
+                <a className="cost-source" href={item.source} target="_blank" rel="noreferrer">
+                  {item.retailer} <Glyph name="right" />
+                </a>
+              </article>
+            ))}
+          </div>
+          <div className="cost-demo-total">
+            <div>
+              <strong>Materials subtotal</strong>
+              <span>{visible.length} product lines · Retail references, Oct 30</span>
+            </div>
+            <b>
+              {money(
+                visible.reduce(
+                  (sum, item) => sum + lineTotalMinor(item.quantity, item.unitMinor),
+                  0,
+                ),
+              )}
+            </b>
+          </div>
+        </>
+      ) : (
+        <>
+          <div className="cost-labor-summary">
+            <span>
+              <Glyph name="people" />2 trades
+            </span>
+            <span>
+              <Glyph name="clock" />
+              {costLabor.reduce((sum, item) => sum + item.hours, 0)} worker-hours
+            </span>
+            <small>Labor allowance</small>
+          </div>
+          <div className="cost-labor-lines">
+            {costLabor.map((item) => (
+              <article key={item.trade}>
+                <img src={item.photo} alt="" width={70} height={70} />
+                <div>
+                  <h4>{item.trade}</h4>
+                  <p>{item.task}</p>
+                  <span>
+                    {item.hours}h @ {money(item.rateMinor)}/hr
+                  </span>
+                </div>
+                <strong>{money(lineTotalMinor(item.hours, item.rateMinor))}</strong>
+              </article>
+            ))}
+          </div>
+          <div className="cost-demo-total">
+            <div>
+              <strong>Labor allowance</strong>
+              <span>Hours × trade rate</span>
+            </div>
+            <b>{money(laborTotalMinor)}</b>
+          </div>
+        </>
+      )}
     </div>
   );
 }

@@ -1,5 +1,72 @@
 # Landing V2 — October 29, 2026
 
+## Product costs and photo-first project setup — October 30, 2026
+
+Work & costs now separates Materials and Labor. Six named retail products have real packshots, quantities, unit/line prices, retailer links and category filters; filtering recomputes the subtotal. All six materials total $129.42. Labor shows trade tasks, worker-hours and rates separately. Product references are dated, and labor is an illustrative allowance. See [price and photo provenance](landing-material-price-sources.md). No fixture prices or quantities enter the homeowner project or live catalog.
+
+The hero accepts up to five JPG/PNG/WebP/GIF photos, with previews and removal in setup. The new responsive intake includes optional room choice, city/region/postcode/street, existing home selection, DIY/pro preference, budget, name and underway state. No location permission or external geocoder is used. Photos, initial message, user-reported facts and optional location commit in one validated repository batch. Originals survive reopening; a rejected batch leaves no partial property, project or attachment.
+
+Unmeasured rooms now open on their saved photo and brief, with photo switching/addition. With no photo, a direct photo action replaces the bare paragraph. Measurements start collapsed and remain available; existing floor-plan and 3D workflows remain. New intake does not infer dimensions, generate designs, analyze photos or automatically request research. Existing projects and database selection were preserved.
+
+Verification: production builds (root and active 8741 checkout), types and boundary checks pass. Full root test run: 15 legacy + 216 TypeScript pass, 38 connected-environment tests skip. The existing hosting test needed loopback access and passed after rerunning with it. New tests cover original blob recovery, metadata/location provenance, invalid-photo rejection, whole-batch rollback and preservation of an existing home. Browser review at 1280×900, 390×844 and 360×800 covered hero upload → setup preview → project creation → reload with the saved photo, optional fields, cost categories/subtotals, separate labor and loaded photos. Zero horizontal overflow on the narrow cost panel and phone intake. Creation QA used a separate localhost:8753 IndexedDB origin and a public demo image; no existing user project was changed. Concurrent Claude room-review/handoff changes in the active checkout were preserved.
+
+Previews: [desktop setup](previews/project-start-desktop.png), [phone setup](previews/project-start-mobile.png), [saved room](previews/project-photo-desktop.png), [phone room](previews/project-photo-mobile.png), [phone hero](previews/landing-photo-input-mobile.png), [cost panel](previews/landing-costs-materials.png), [phone costs](previews/landing-costs-mobile.png).
+
+
+## Agent context visual + dedicated phone comparison — October 30, 2026
+
+The “Works with Muse” kicker, connector screenshot and screenshot framing have been removed. “Your agent. On the same page.” now accompanies a code-native diagram: actual Muse icon → room/project context → homeowner approval. The room still is an existing example render; quantities are read from the core-compiled landing fixture. This is an explanatory graphic, not a fabricated Muse conversation or live connection state. The short tested-with-Muse line and MCP source link remain.
+
+The desktop capability matrix is retained. Phones now use their own two-column comparison built from the same keyed product records: a native platform picker, paired brand headers, feature labels spanning both columns, 14px values, and secondary plan prices. Audience is shown in the headers to remove a repetitive row. The cramped third label column and three-button selector are removed. There is no sideways table or carousel.
+
+Verification: production build, boundaries, Prettier and diff checks pass. Browser review at 1280 × 900, 390 × 844 and 360 × 800; no horizontal overflow. Native selection changes JobTread, Buildertrend and Handoff content, logo and price correctly. The narrow-phone context sheet has 238px width and the 1600px room asset loads. Desktop matrix and source links remain present. No workspace records, database configuration, or deployment changes.
+
+Previews: [agent desktop](previews/landing-agent-context-desktop.png), [agent phone](previews/landing-agent-context-mobile.png), [phone comparison](previews/landing-capabilities-mobile-redesign.png). This entry supersedes the earlier screenshot and phone-table layouts.
+
+
+## Full capability panel — October 30, 2026
+
+The comparison is now one full-width capability table, headed “Built around your renovation.” The pricing chart, separate sidebar, tabs, counter, arrows and swipe state/CSS are removed. Prices remain a compact secondary footer row, retaining the previously requested plan references. Muse remains immediately above. Product capabilities are keyed by named fields in a typed product record instead of relying on parallel array positions.
+
+Verification: production build, boundaries, Prettier and diff checks pass. Desktop (1280px) displays all four products. Phone (390px / 360px) displays Renovagent and a selectable competitor; JobTread, Buildertrend and Handoff selection was verified. Zero horizontal page overflow; no carousel remains in the DOM. Both checkout copies are synchronized for 8741. No workspace or database changes.
+
+Previews: [desktop](previews/landing-capabilities-full-panel.png), [phone](previews/landing-capabilities-full-panel-mobile.png). This supersedes the two-view layout below.
+
+
+## Muse placement + two-view comparison — October 30, 2026
+
+Muse now sits directly above “Big plans. Without the monthly overhead.” The separate offering cards are replaced by one compact Renovagent sidebar and two manually controlled views: a three-vendor price chart and a capability table. Logo, $0 and three concise product strengths stay visible in the sidebar; it becomes a compact horizontal strip on phones. Published plans remain JobTread $199, Buildertrend from $499 and Handoff Scale $899, with pricing at the bottom in both views. Phone capabilities show Renovagent alongside a selectable competitor rather than shrinking the entire table. Source data and original brand artwork are unchanged.
+
+Checks: production build, boundaries and changed-file formatting pass. Browser checks cover 1280 × 900, 390 × 844 and 360 × 800, panel controls, arrow-key tabs, phone competitor selection, correct visible prices and zero page overflow. Touch-swipe handling is implemented; a physical touchscreen was not tested. Both checkout copies are synchronized for the existing 8741 preview. No workspace/data or deployment changes.
+
+Previews: [pricing](previews/landing-comparison-two-view-pricing.png), [capabilities](previews/landing-comparison-two-view-capabilities.png), [phone](previews/landing-comparison-two-view-mobile.png).
+
+
+## Final marketing pass + Claude room handoff — October 30, 2026
+
+The active review is **http://localhost:8741/**, served by `.claude/worktrees/room-3d`. Both that checkout and the root now contain the same landing changes atop `e892174`. The root's old 8742 preview is retired to avoid competing review URLs. Database configuration and records were not changed.
+
+- Navigation sits over the image, with a charcoal surface and a native expandable phone menu. The original stacked logo remains unchanged.
+- Hero annotations name IKEA ÄNGSJÖN (36-inch cabinet, $339 reference) and a 2-inch matte charcoal porcelain hex concept. Parts are grouped concisely; labor remains explicit hours × rate. Added parts prices are presentation fixtures, never catalog offers or project facts.
+- The isolated living-room fixture relays 20 × 14 × 8 ft to the existing core compiler. Its 280 sq ft flooring, 68 linear ft trim and 544 sq ft wall area come from core calculations. Package buttons show those quantities instead of unresolved internal statuses. These dimensions do not change the actual example-room project.
+- The third section retains the titled before/after slider on a full-width cobalt field. Materials retain product cutouts, interactive popovers, line-item quantities and the optional detailed receipt. Redundant marketing disclaimers are removed; sourcing details stay in the receipt and this evidence.
+- The fourth section follows `docs/design/landing-muse-and-room.md`: real `room-photo-home.png` and `room-quote-itemized.png` captures switch with buttons. CSS crops the workspace chrome while preserving example tags on fictional contractors/quotes. Its CTA uses the existing sample-project handler.
+- Comparison is four concise, branded offering cards, all visible on a wide desktop and swipeable on a phone. Prices sit at the bottom: Renovagent $0 local build, JobTread $199 for one internal user, Buildertrend starting $499, Handoff Scale $899. Selecting relevant strengths replaces the noisy checkmark matrix; no invented competitor absence or feature-parity claim is made. Model/hosting costs are not a published free hosted plan.
+- Muse uses the owner's real connector capture. A CSS viewport shows only the connector and connected reply, excluding the dead tunnel URL and credential discussion. Copy describes project read/propose/save with user approval. A short caption retains the tested-build/hosted-launch boundary. No conversation is fabricated.
+- Footer now has one large project CTA and a restrained original-logo/source/navigation signature.
+
+Verification:
+
+- `npm run build` passes strict types, domain boundaries, frontend and foundation production builds. Existing bundle-size warning remains. Changed files pass Prettier and `git diff --check`.
+- Core fixture assertions confirm 280 sq ft floor, 68 linear ft trim and 544 sq ft walls.
+- Browser review at 1280 × 900, 390 × 844 and 360 × 800. No horizontal page overflow or broken visible imagery. Phone menu opens, navigates and closes; the carousel reaches Handoff and updates its selection.
+- Scope tabs switch 280 sq ft flooring to 544 sq ft walls. Vanity/floor annotations and material popovers switch correctly. Work/Labor displays $450 plumbing, $1,440 tile installation and $1,890 total. Slider keyboard Right changes 50 → 51 and Left restores 50.
+- Footer focuses the hero prompt. A typed brief reaches “Start with your place”; QA cancelled before creating a project, cleared the brief and restored default views. No sample-project command, data migration, server connection or deployment was performed by QA.
+
+Previews: [hero](previews/landing-final-hero.png), [phone](previews/landing-final-mobile.png), [scope / blue slider](previews/landing-final-scope.png), [comparison](previews/landing-final-comparison.png), [Muse / footer](previews/landing-final-muse-footer.png).
+
+Earlier entries below describe earlier revisions; this section supersedes their layout, copy and preview URL.
+
 ## Slider third and copy reduction — October 30, 2026
 
 The owner's latest placement supersedes the earlier request to place the slider immediately after the hero. Current order: hero → compact idea-to-scope example → **See your space transform.** slider → contractor handoff → comparison → MCP/source → project CTA. The slider opens on before/after; the materials, measurement and work/cost controls sit underneath it. There is no repeated slider.

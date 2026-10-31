@@ -1,3 +1,4 @@
+import { RoomWelcome } from './room-welcome.js';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type {
   DesignOptions,
@@ -709,16 +710,7 @@ export function RoomStudio({
   if (loadError) return <p role="alert">Could not read the floor plan: {loadError}</p>;
   if (!source)
     return (
-      <section className="room3d room3d-empty" aria-label={heading}>
-        <h3>{heading}</h3>
-        <p>
-          Bring in your room to see it in 3D, with every planned piece of work pinned where it
-          happens and what it costs.
-        </p>
-        <p className="small-note">
-          Import a floor plan from a scanning app, or enter the room&apos;s length and width.
-        </p>
-      </section>
+      <RoomWelcome state={state} projectId={projectId} controller={controller} heading={heading} />
     );
   const selected = surfaces.find((s) => s.id === selectedId) ?? null;
   const activePin = allPins.find((p) => p.id === pinId) ?? null;

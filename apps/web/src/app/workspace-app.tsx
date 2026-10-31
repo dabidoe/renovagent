@@ -1,3 +1,8 @@
+import { ProjectStart } from '../features/project-start/project-start.js';
+import { ReferenceBoard } from '../features/references/reference-board.js';
+import { ReferenceEditor } from '../features/references/reference-editor.js';
+import '../features/references/references.css';
+import '../features/room3d/room-welcome.css';
 import { InventoryWorkbench } from '../features/work/inventory-workbench.js';
 import { homeInventory } from '@renovagent/core';
 import { HomePlan } from '../features/work/home-plan.js';
@@ -59,6 +64,7 @@ export function App({ controller }: { controller: WorkspaceController }) {
     | 'materials'
     | 'contractors'
     | 'connections'
+    | 'reference'
     | null
   >(null);
   const [editingFact, setEditingFact] = useState<Fact | undefined>();
@@ -67,6 +73,7 @@ export function App({ controller }: { controller: WorkspaceController }) {
   const [showRecent, setShowRecent] = useState(false);
   const [showQuestions, setShowQuestions] = useState(false);
   const [startPrompt, setStartPrompt] = useState('');
+  const [startPhotos, setStartPhotos] = useState<File[]>([]);
   useEffect(() => {
     // A landing-page brief is a draft for a new project, never a write to the active home.
     try {
@@ -274,11 +281,26 @@ export function App({ controller }: { controller: WorkspaceController }) {
         </button>
         {!project ? (
           <nav className="landing-nav" aria-label="Main navigation">
-            <a href="#how-it-works">How it works</a>
-            <a href="#compare-tools">Compare tools</a>
-            <button onClick={() => safe(controller.sampleProject())} disabled={busy}>
-              Example project
-            </button>
+            <a href="#how-it-works">The plan</a>
+            <a href="#product-proof">See it work</a>
+            <a href="#compare-tools">Compare</a>
+            <a href="#agent-connection">Muse</a>
+            <details className="landing-mobile-menu">
+              <summary aria-label="Navigation menu">
+                <Glyph name="menu" />
+              </summary>
+              <div
+                onClick={(event) => {
+                  if ((event.target as HTMLElement).closest('a'))
+                    event.currentTarget.closest('details')?.removeAttribute('open');
+                }}
+              >
+                <a href="#how-it-works">The plan</a>
+                <a href="#product-proof">See it work</a>
+                <a href="#compare-tools">Compare</a>
+                <a href="#agent-connection">Works with Muse</a>
+              </div>
+            </details>
             <button className="landing-workspace-link" onClick={() => setModal('projects')}>
               Open workspace <Glyph name="right" />
             </button>
@@ -339,6 +361,8 @@ export function App({ controller }: { controller: WorkspaceController }) {
           <Landing
             prompt={startPrompt}
             onPrompt={setStartPrompt}
+            photos={startPhotos}
+            onPhotos={setStartPhotos}
             onStart={() => setModal('new')}
             onExample={() => safe(controller.sampleProject())}
             busy={busy}
@@ -361,6 +385,12 @@ export function App({ controller }: { controller: WorkspaceController }) {
               projectId={active}
               controller={controller}
               busy={busy}
+            />
+            <ReferenceBoard
+              state={state}
+              projectId={active}
+              controller={controller}
+              onAdd={() => setModal('reference')}
             />
           </section>
           <div className="prompt-intro">
@@ -894,88 +924,26 @@ export function App({ controller }: { controller: WorkspaceController }) {
         </Modal>
       )}
       {modal === 'new' && (
-        <Modal title="Start with your place" onClose={() => setModal(null)}>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              const data = new FormData(e.currentTarget);
-              safe(
-                controller
-                  .createProject({
-                    name: String(data.get('name')),
-                    goal: String(data.get('goal')),
-                    propertyId: String(data.get('propertyId')) || undefined,
-                    propertyName:
-                      String(data.get('propertyName')) ||
-                      String(data.get('address')) ||
-                      'My property',
-                    address: String(data.get('address')),
-                    underway: data.get('underway') === 'on',
-                  })
-                  .then(() => {
-                    setModal(null);
-                    setStartPrompt('');
-                  }),
-              );
+        <Modal
+          title="Start your project"
+          className="project-start-dialog"
+          onClose={() => setModal(null)}
+        >
+          <ProjectStart
+            goal={startPrompt}
+            onGoal={setStartPrompt}
+            photos={startPhotos}
+            onPhotos={setStartPhotos}
+            properties={Object.values(state.properties)}
+            busy={busy}
+            onCancel={() => setModal(null)}
+            onCreate={async (input) => {
+              await controller.createProject(input);
+              setModal(null);
+              setStartPrompt('');
+              setStartPhotos([]);
             }}
-          >
-            <label>
-              Property address
-              <input
-                name="address"
-                maxLength={300}
-                placeholder="Street address, city, state (or add later)"
-                autoFocus
-              />
-            </label>
-            <label>
-              Project name
-              <input name="name" required maxLength={300} placeholder="Kitchen renovation" />
-            </label>
-            <label>
-              What do you have in mind?
-              <textarea
-                name="goal"
-                defaultValue={startPrompt}
-                required
-                maxLength={300}
-                placeholder="The work you want to do, and what matters to you."
-              />
-            </label>
-            <details>
-              <summary>Use an existing property</summary>
-              <label>
-                Property
-                <select name="propertyId" aria-label="Property">
-                  <option value="">Create a property record</option>
-                  {Object.values(state.properties).map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                New property name (for a new record)
-                <input name="propertyName" maxLength={300} placeholder="My home" />
-              </label>
-            </details>
-            <label className="checkbox-label">
-              <input type="checkbox" name="underway" />
-              Work is already underway
-            </label>
-            <p className="small-note">
-              Nothing is assumed about the building, costs, permits, or completed work.
-            </p>
-            <div className="dialog-actions">
-              <button type="button" className="secondary" onClick={() => setModal(null)}>
-                Cancel
-              </button>
-              <button className="primary" disabled={busy}>
-                Create project
-              </button>
-            </div>
-          </form>
+          />
         </Modal>
       )}
       {modal === 'facts' && project && (
@@ -1053,6 +1021,14 @@ export function App({ controller }: { controller: WorkspaceController }) {
               </button>
             </div>
           </form>
+        </Modal>
+      )}
+      {modal === 'reference' && project && (
+        <Modal title="Add a reference" className="reference-dialog" onClose={() => setModal(null)}>
+          <ReferenceEditor
+            onSave={(inputs) => controller.saveReferences(active, inputs)}
+            onCancel={() => setModal(null)}
+          />
         </Modal>
       )}
       {modal === 'projects' && (

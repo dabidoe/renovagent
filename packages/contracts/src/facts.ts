@@ -33,11 +33,41 @@ export const valueSchema = z
   });
 export type FactValue = z.infer<typeof valueSchema>;
 export const assertionSchema = z.enum(['unknown', 'user_reported', 'observed', 'assumed']);
+// User-saved references are preferences and leads, never observations of the site.
+export const projectReferenceSchema = z
+  .object({
+    kind: z.enum(['room', 'inspiration', 'product']),
+    url: z
+      .string()
+      .url()
+      .max(2000)
+      .refine((value) => {
+        const url = new URL(value);
+        return ['https:', 'http:'].includes(url.protocol) && !url.username && !url.password;
+      }, 'Use an http or https link without embedded credentials.')
+      .optional(),
+    title: z.string().trim().min(1).max(200).optional(),
+    note: z.string().trim().max(1000).optional(),
+    price: z
+      .object({
+        minorUnits: z.number().int().nonnegative().safe(),
+        currency: z.literal('USD'),
+      })
+      .strict()
+      .optional(),
+  })
+  .strict()
+  .superRefine((reference, ctx) => {
+    if (reference.price && reference.kind !== 'product')
+      ctx.addIssue({ code: 'custom', message: 'Only a product reference can have a saved price.' });
+  });
+export type ProjectReference = z.infer<typeof projectReferenceSchema>;
 export const evidenceInputSchema = z
   .object({
     id,
     kind: z.enum(['user-message', 'user-observation', 'document', 'attachment', 'legacy-import']),
     description: z.string().min(1).max(8000),
+    reference: projectReferenceSchema.optional(),
     attachment: z
       .object({
         blobId: id,

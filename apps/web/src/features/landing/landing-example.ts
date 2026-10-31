@@ -26,7 +26,12 @@ export const exampleScope = compileScopeDraft(state, projectId, {
   recipeId: 'living-room-refresh',
   packageIds: ['carpet-removal', 'lvp-floor', 'wall-paint'],
   request: 'Replace the carpet. Paint the walls warm white. Keep the stairs.',
-  reported: [],
+  // Presentation fixture requested for the landing; never saved as project facts.
+  reported: [
+    { key: 'floorLengthFt', amount: 20, unit: 'ft' },
+    { key: 'floorWidthFt', amount: 14, unit: 'ft' },
+    { key: 'ceilingHeightFt', amount: 8, unit: 'ft' },
+  ],
   expectedDraftRevision: 0,
 }).draft;
 

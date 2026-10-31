@@ -1,0 +1,258 @@
+.reference-board {
+  margin-top: 24px;
+  padding: 24px;
+  background: #fff;
+  border-top: 1px solid #dce5f1;
+  color: #142038;
+}
+.reference-board > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+.reference-board h3 {
+  font-size: 19px;
+  letter-spacing: -0.035em;
+  margin: 0;
+  font-weight: 600;
+}
+.reference-board header p {
+  font-size: 12px;
+  color: #64748b;
+  margin: 8px 0 0;
+}
+.reference-board header button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #0866ff;
+  background: #edf5ff;
+  border-radius: 6px;
+  padding: 10px 14px;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+.reference-board .glyph {
+  height: 16px;
+  width: 16px;
+}
+.reference-board-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  margin-top: 22px;
+}
+.reference-board-grid article {
+  min-width: 0;
+  border: 1px solid #e2e9f3;
+  border-radius: 9px;
+  overflow: hidden;
+}
+.reference-card-photo {
+  height: 190px;
+  background: #f1f5f9;
+}
+.reference-card-photo > img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.reference-card-link {
+  height: 110px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 12px;
+  background: #f4f8ff;
+  color: #52627c;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.reference-card-link .glyph {
+  width: 28px;
+  height: 28px;
+  color: #0866ff;
+}
+.reference-card-copy {
+  padding: 18px;
+}
+.reference-card-copy > span {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #64748b;
+}
+.reference-card-copy h4 {
+  font-size: 15px;
+  line-height: 1.5;
+  margin: 7px 0;
+  color: #142038;
+  overflow-wrap: anywhere;
+}
+.reference-card-copy p {
+  font-size: 12px;
+  color: #52627c;
+  line-height: 1.7;
+  margin: 10px 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.reference-card-copy .reference-card-price {
+  font-size: 17px;
+  color: #142038;
+  font-weight: 600;
+}
+.reference-card-price small {
+  display: block;
+  font-size: 10px;
+  color: #64748b;
+  font-weight: 400;
+}
+.reference-card-copy a {
+  display: inline-flex;
+  gap: 7px;
+  align-items: center;
+  font-size: 12px;
+  color: #0866ff;
+  margin-top: 8px;
+}
+.reference-fields label {
+  display: block;
+  font-size: 12px;
+  color: #52627c;
+  line-height: 1.6;
+  margin: 15px 0;
+}
+.reference-fields label > span {
+  font-size: 10px;
+  color: #94a3b8;
+  margin-left: 5px;
+}
+.reference-fields input,
+.reference-fields select,
+.reference-fields textarea {
+  display: block;
+  width: 100%;
+  margin-top: 6px;
+  min-width: 0;
+}
+.project-photo-kind {
+  display: flex;
+  gap: 6px;
+  margin: 18px 0 12px;
+}
+.project-photo-kind button {
+  background: #f4f7fc;
+  color: #64748b;
+  padding: 8px 12px;
+  border-radius: 5px;
+  font-size: 12px;
+}
+.project-photo-kind button[aria-pressed='true'] {
+  background: #edf5ff;
+  color: #0866ff;
+  box-shadow: inset 0 0 0 1px #92bdff;
+}
+.project-start-reference {
+  margin-top: 24px;
+  border-top: 1px solid #e8edf5;
+  padding-top: 18px;
+}
+.project-start-reference summary {
+  font-size: 12px;
+  color: #52627c;
+  cursor: pointer;
+}
+.reference-editor > p {
+  font-size: 13px;
+  color: #64748b;
+  line-height: 1.7;
+}
+.reference-editor fieldset {
+  border: 0;
+  padding: 0;
+  margin: 20px 0;
+  min-width: 0;
+}
+.prompt-workspace .workspace-dialog.reference-dialog {
+  width: min(560px, calc(100vw - 32px));
+  padding: 28px;
+  background: #fff;
+  color: #142038;
+}
+.reference-dialog .reference-fields input,
+.reference-dialog .reference-fields select,
+.reference-dialog .reference-fields textarea {
+  border: 1px solid #dce5f1;
+  background: #fff;
+  border-radius: 6px;
+  padding: 12px;
+  font-size: 14px;
+  color: #142038;
+}
+.reference-dialog .reference-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  border-top: 1px solid #e8edf5;
+  padding-top: 20px;
+}
+.reference-dialog .reference-actions button {
+  padding: 12px 16px;
+  border-radius: 6px;
+  font-size: 12px;
+}
+.reference-dialog .reference-actions .primary {
+  background: #0866ff;
+  color: #fff;
+}
+.reference-editor .reference-error {
+  color: #b42318;
+  font-size: 12px;
+  line-height: 1.6;
+}
+@media (max-width: 760px) {
+  .reference-board {
+    padding: 20px 4px;
+    margin-top: 16px;
+  }
+  .reference-board > header {
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .reference-board h3 {
+    font-size: 17px;
+  }
+  .reference-board header button {
+    font-size: 11px;
+    padding: 10px;
+    gap: 5px;
+  }
+  .reference-board-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+  .reference-card-photo {
+    height: 145px;
+  }
+  .reference-card-link {
+    height: 90px;
+    font-size: 11px;
+    padding: 12px;
+  }
+  .reference-card-copy {
+    padding: 12px;
+  }
+  .reference-card-copy h4 {
+    font-size: 13px;
+  }
+  .reference-card-copy p {
+    font-size: 11px;
+  }
+  .prompt-workspace .workspace-dialog.reference-dialog {
+    padding: 22px 18px;
+  }
+}

@@ -122,13 +122,11 @@ export function RoomDimensionsForm({
   return (
     <>
       <p>
-        Enter what you measured, or import a floor plan from an iPhone LiDAR scan (RoomPlan JSON) or
-        an{' '}
+        Add your measurements, or import a RoomPlan JSON file or an{' '}
         <a href="https://openplan3d.com" target="_blank" rel="noreferrer">
           OpenPlan3D
         </a>{' '}
-        export. Leave a value blank if you don&apos;t know it. Floor area and perimeter from a plan
-        replace length × width. Nothing here is verified.
+        export. Leave anything you don’t know blank. Values are saved as your reported measurements.
       </p>
       <form className="candidate-editor" onSubmit={save} aria-label="Room dimensions">
         <label>
@@ -276,7 +274,7 @@ export function RoomDimensionsCard({
   const recorded = dimensions.some(({ key }) => roomDimensionFact(state, projectId, key));
   // Follows what is recorded until the person opens or closes it.
   const [editing, setEditing] = useState<boolean | null>(null);
-  const open = editing ?? !recorded;
+  const open = editing ?? false;
   const draft = state.artifacts[scopeDraftId(projectId)]?.at(-1);
   const example =
     draft?.payload.kind === 'scope-draft' &&
@@ -292,9 +290,6 @@ export function RoomDimensionsCard({
         <button type="button" className="link-button" onClick={() => setEditing(!open)}>
           {open ? 'Close' : recorded ? 'Edit' : 'Add measurements'}
         </button>
-        <span className="room-measure-soon" title="Scan the room with your phone's camera">
-          Measure with your phone · coming soon
-        </span>
       </div>
       {!open && draft?.freshness === 'stale' && (
         <p role="status" className="small-note">

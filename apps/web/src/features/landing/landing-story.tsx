@@ -18,10 +18,56 @@ const titles: Record<string, string> = {
   'lvp-floor': 'Flooring, trim & transitions',
 };
 const packages = exampleScope.packages.filter((p) => p.included);
+const quantity = (id: string) => exampleScope.requirements.find((r) => r.id === id)!.quantity!;
+const packageDetail: Record<
+  string,
+  { amount: number; unit: string; title: string; rows: string[][] }
+> = {
+  'lvp-floor': {
+    amount: quantity('lvp-floor:planks'),
+    unit: 'sq ft',
+    title: 'Oak-look vinyl plank',
+    rows: [
+      ['Quarter-round trim', `${quantity('lvp-floor:quarter-round')} linear ft`],
+      ['Finish', 'Warm natural oak'],
+      ['Installation', 'Click-lock plank'],
+    ],
+  },
+  'wall-paint': {
+    amount: quantity('wall-paint:walls'),
+    unit: 'sq ft',
+    title: 'Warm white walls',
+    rows: [
+      ['Finish coats', '2 coats'],
+      ['Surface', 'Walls · 8 ft ceiling'],
+      ['Keep', 'Existing stairs & woodwork'],
+    ],
+  },
+  'carpet-removal': {
+    amount: quantity('carpet-removal:carpet'),
+    unit: 'sq ft',
+    title: 'Carpet & pad removal',
+    rows: [
+      ['Remove', 'Carpet, pad & tack strip'],
+      ['Disposal', 'Bag & haul away'],
+      ['Prepare', 'Exposed subfloor'],
+    ],
+  },
+  'removal-protection': {
+    amount: 1,
+    unit: 'room',
+    title: 'Protect before you begin',
+    rows: [
+      ['Cover', 'Stairs & adjoining floors'],
+      ['Move', 'Furniture out of the work area'],
+      ['Finish', 'Return furniture & clean up'],
+    ],
+  },
+};
 
 export function Transformation() {
   const [selected, setSelected] = useState('lvp-floor');
-  const requirements = exampleScope.requirements.filter((r) => r.packageId === selected);
+  const detail = packageDetail[selected];
   return (
     <section
       className="landing-block transformation-section"
@@ -60,11 +106,17 @@ export function Transformation() {
             <span>
               <Glyph name="file" /> Living room refresh
             </span>
-            <small>Example scope · r1</small>
+            <small>20 × 14 ft</small>
           </div>
-          <div className="scope-preview-packages" aria-label="Example work packages">
+          <div className="scope-preview-packages" aria-label="Work packages">
             {packages.map((p) => (
-              <button key={p.id} aria-pressed={selected === p.id} onClick={() => setSelected(p.id)}>
+              <button
+                key={p.id}
+                aria-label={titles[p.id]}
+                title={titles[p.id]}
+                aria-pressed={selected === p.id}
+                onClick={() => setSelected(p.id)}
+              >
                 <Glyph name={icons[p.id]} />
                 <span>{titles[p.id]}</span>
                 <Glyph name="right" />
@@ -72,32 +124,34 @@ export function Transformation() {
             ))}
           </div>
           <div className="scope-preview-items" aria-live="polite">
-            <strong>{titles[selected]}</strong>
-            {requirements.slice(0, 3).map((r) => (
-              <div key={r.id}>
-                <span>{r.purpose}</span>
-                <small>
-                  {r.quantity === null
-                    ? r.status === 'conditional'
-                      ? 'Site check'
-                      : r.status === 'needs-product-spec'
-                        ? 'Product selection'
-                        : r.status === 'needs-source'
-                          ? 'Allowance unset'
-                          : 'Measurement needed'
-                    : `${r.quantity} ${r.unit}`}
-                </small>
+            <div className="scope-quantity">
+              <b>{detail.amount}</b>
+              <span>
+                {detail.unit}
+                <small>{detail.title}</small>
+              </span>
+            </div>
+            {detail.rows.map(([label, value]) => (
+              <div key={label}>
+                <span>{label}</span>
+                <strong>{value}</strong>
               </div>
             ))}
           </div>
         </div>
       </div>
-      <p className="story-evidence">Example scope · Measurements unconfirmed.</p>
     </section>
   );
 }
 
 export function ContractorHandoff({ onExample, busy }: { onExample: () => void; busy: boolean }) {
+  const [view, setView] = useState<'room' | 'quote'>('room');
+  const roomCapture = new URL('../../../../../docs/previews/room-photo-home.png', import.meta.url)
+    .href;
+  const quoteCapture = new URL(
+    '../../../../../docs/previews/room-quote-itemized.png',
+    import.meta.url,
+  ).href;
   return (
     <section
       className="landing-block handoff-section"
@@ -106,50 +160,46 @@ export function ContractorHandoff({ onExample, busy }: { onExample: () => void; 
     >
       <div className="handoff-copy">
         <h2 id="handoff-title">
-          A scope
-          <br />
-          <em>worth sharing.</em>
+          The room. <br />
+          The work. <br />
+          <em>The price.</em>
         </h2>
+        <p>
+          Every job pinned where it happens. See what it takes to do it yourself—or what a pro
+          quoted.
+        </p>
+        <div className="handoff-view-switch" role="group" aria-label="Explore the room product">
+          <button aria-pressed={view === 'room'} onClick={() => setView('room')}>
+            <Glyph name="home" /> Your room
+          </button>
+          <button aria-pressed={view === 'quote'} onClick={() => setView('quote')}>
+            <Glyph name="file" /> Itemized quote
+          </button>
+        </div>
         <button className="prompt-example" onClick={onExample} disabled={busy}>
-          Open an example project <Glyph name="right" />
+          Open the example room <Glyph name="right" />
         </button>
       </div>
-      <div className="handoff-document" aria-label="Example contractor review packet">
-        <div className="handoff-document-top">
-          <span>
-            <Glyph name="people" /> Contractor review
-          </span>
-          <small>Example · revision 1</small>
+      <figure className="room-product-proof">
+        <div className={`room-product-crop is-${view}`}>
+          <img
+            src={view === 'room' ? roomCapture : quoteCapture}
+            alt={
+              view === 'room'
+                ? 'Renovagent room with work pinned in place, finish choices, DIY costs and example contractor quotes'
+                : 'Renovagent contractor quote broken down into materials and labor for each step; example contractor and review'
+            }
+            width={1440}
+            height={1000}
+            loading="lazy"
+          />
         </div>
-        <h3>Living room refresh</h3>
-        <div className="handoff-document-files">
-          {[
-            ['file', 'Scope of work'],
-            ['materials', 'Material requirements'],
-            ['chat', 'Open questions'],
-          ].map(([icon, label]) => (
-            <span key={label}>
-              <Glyph name={icon} />
-              {label}
-            </span>
-          ))}
-        </div>
-        <div className="handoff-open-question">
-          <Glyph name="activity" />
-          <div>
-            <strong>Confirm on site</strong>
-            <div className="handoff-checks">
-              <span>Subfloor</span>
-              <span>Dimensions</span>
-              <span>Transitions</span>
-            </div>
-          </div>
-        </div>
-        <div className="handoff-review-state">
-          <span className="review-dot" /> Ready for a contractor’s eyes <Glyph name="right" />
-        </div>
-        <p className="handoff-boundary">Example packet · Quote collection not connected.</p>
-      </div>
+        <figcaption>
+          {view === 'room'
+            ? 'Change a finish. The room and the price change with it.'
+            : 'Materials and labor, broken down by the work.'}
+        </figcaption>
+      </figure>
     </section>
   );
 }
@@ -159,7 +209,7 @@ export function MeasurementProof({ onExample, busy }: { onExample: () => void; b
     <div className="measurement-proof">
       <div className="scan-plan">
         <span className="scan-file">
-          <Glyph name="plan" /> roomplan.json <small>Example import</small>
+          <Glyph name="plan" /> roomplan.json
         </span>
         <svg
           viewBox="0 0 640 470"
@@ -197,7 +247,7 @@ export function MeasurementProof({ onExample, busy }: { onExample: () => void; b
             {exampleScan.floorAreaM2} m²
           </text>
           <text x="320" y="260" textAnchor="middle" fill="#64748b" fontSize="15">
-            Floor area · review before saving
+            Floor area
           </text>
           {[
             [100, 100],
@@ -238,9 +288,7 @@ export function MeasurementProof({ onExample, busy }: { onExample: () => void; b
             <dd>{exampleScan.ceilingHeightM} m</dd>
           </div>
         </dl>
-        <p className="story-evidence">
-          Example import · Separate capture app · Measurements unverified.
-        </p>
+
         <button className="prompt-example" onClick={onExample} disabled={busy}>
           Explore the workspace <Glyph name="right" />
         </button>
@@ -264,53 +312,83 @@ export function AgentConnection() {
       id="agent-connection"
       aria-labelledby="agent-title"
     >
-      <div className="story-heading">
+      <div className="agent-story-copy">
         <h2 id="agent-title">
-          Your project.
+          Your agent.
           <br />
-          <em>Your assistant. Your data.</em>
+          <em>On the same page.</em>
         </h2>
-      </div>
-      <div className="agent-visual">
-        <div className="agent-visual-source">
-          <img src={museIcon} alt="Muse" width={72} height={72} />
-          <span>Your assistant</span>
+        <p>
+          Bring your room, scope and materials into the conversation. Muse reads your project and
+          proposes changes. You decide what makes it into the plan.
+        </p>
+        <div className="agent-connection-links">
+          <span>
+            <img src={museIcon} alt="" width={20} height={20} /> Tested with Muse
+          </span>
+          <a
+            className="landing-source-link"
+            href="https://github.com/dabidoe/unpermitted-ai"
+            target="_blank"
+            rel="noreferrer"
+          >
+            Built on MCP <Glyph name="right" />
+          </a>
         </div>
-        <span className="agent-visual-link" aria-hidden="true">
+      </div>
+      <div
+        className="agent-project-visual"
+        role="img"
+        aria-label="Diagram: Muse connects to your room, scope and material quantities. You approve proposed changes."
+      >
+        <div className="agent-endpoint">
+          <img src={museIcon} alt="Muse" width={76} height={76} />
+          <span>Muse</span>
+        </div>
+        <div className="agent-context-link" aria-hidden="true">
           <i />
           <Glyph name="connection" />
           <i />
-        </span>
-        <div className="agent-visual-brand">
-          <BrandMark size={210} lockup />
-          <span>Your project</span>
         </div>
-        <span className="agent-visual-link" aria-hidden="true">
-          <i />
-          <Glyph name="right" />
-          <i />
-        </span>
-        <div className="agent-visual-result">
-          <Glyph name="code" />
-          <span>Your source code</span>
+        <div className="agent-context-sheet">
+          <div className="agent-context-heading">
+            <div>
+              <span>Project context</span>
+              <strong>Living room refresh</strong>
+            </div>
+            <BrandMark size={84} lockup />
+          </div>
+          <div className="agent-context-room">
+            <img
+              src="/example-room/done-warm-white-lvp.jpg"
+              alt=""
+              width={1600}
+              height={1000}
+              loading="lazy"
+            />
+            <span>Warm white + natural oak</span>
+          </div>
+          <dl>
+            {[
+              ['tile', 'Flooring', `${quantity('lvp-floor:planks')} sq ft`],
+              ['paint', 'Walls', `${quantity('wall-paint:walls')} sq ft`],
+              ['layers', 'Trim', `${quantity('lvp-floor:quarter-round')} linear ft`],
+            ].map(([icon, label, value]) => (
+              <div key={label}>
+                <dt>
+                  <Glyph name={icon} />
+                  {label}
+                </dt>
+                <dd>{value}</dd>
+              </div>
+            ))}
+          </dl>
+          <div className="agent-context-approval">
+            <Glyph name="people" />
+            <span>You approve every change.</span>
+          </div>
         </div>
       </div>
-      <div className="agent-story-bottom">
-        <p>
-          MCP tools · Local connection · Tested with Muse
-          <br />
-          <small>AI proposes. You decide.</small>
-        </p>
-        <a
-          className="landing-source-link"
-          href="https://github.com/dabidoe/unpermitted-ai"
-          target="_blank"
-          rel="noreferrer"
-        >
-          <Glyph name="code" /> View source on GitHub <Glyph name="right" />
-        </a>
-      </div>
-      <p className="story-evidence">Local setup in repository · License unspecified.</p>
     </section>
   );
 }

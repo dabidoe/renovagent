@@ -103,6 +103,7 @@ function evidenceMetadata(state: Workspace, propertyId: string, projectId: strin
       id: item.id,
       kind: item.source.kind,
       description: item.source.description,
+      reference: item.source.reference ?? null,
       recordedAt: item.recordedAt,
       attachment: item.source.attachment
         ? {

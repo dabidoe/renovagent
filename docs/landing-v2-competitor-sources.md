@@ -1,5 +1,7 @@
 # Landing comparison evidence — October 30, 2026
 
+Latest presentation: one full-width capability table replaces the chart, sidebar and carousel. A phone selector compares Renovagent with one platform at a time. Monthly prices remain a small secondary footer row. Muse precedes the comparison. Product capabilities are keyed records; published plan/source values are unchanged. No negative availability cells or equivalence claims are made.
+
 One selected plan per vendor: Handoff Scale, JobTread with one internal user, and Buildertrend starting rate. Local preview only; no publishing or deployment in this change. Reference poster's unverified brands/prices were not copied.
 
 | Product      | Published basis                                                                                                                                                                                                                                                                                             | Primary source                                                                                  |
@@ -11,8 +13,8 @@ One selected plan per vendor: Handoff Scale, JobTread with one internal user, an
 
 Additional Buildertrend feature evidence: https://buildertrend.com/help-article/estimate-overview/ and https://buildertrend.com/help-article/selections-and-allowances-overview/.
 
-Renovagent status is based on local code and PROGRESS.md: recipe scopes; plan import; versioned records; demo catalog; contractor accept/decline; local/authenticated MCP tested in Muse. Cost estimates are partial: demo material costs, labor unpriced. The $0 label applies to the local prototype, with model/hosting costs separate; it is not a published hosted plan. No LICENSE file is present in this checkout, so the page does not claim a licensed open-source release. Unknown competitor cells remain unknown, not negative claims.
+Renovagent status is based on local code and PROGRESS.md: recipe scopes; plan import; versioned records; demo catalog; contractor accept/decline; local/authenticated MCP tested in Muse. Cost estimates are partial: demo material costs, labor unpriced. The $0 label applies to the local prototype, with model/hosting costs separate; it is not a published hosted plan. No LICENSE file is present in this checkout, so the page does not claim a licensed open-source release. The previous unknown/partial matrix is removed in favor of descriptive offering cards.
 
 Logo provenance: `apps/web/src/assets/brands/README.md`. The owner's original Renovagent artwork remains unchanged.
 
-Homesage was checked for the earlier wider chart; the latest comparison focuses on the three contractor workflow platforms to reduce unconfirmed cells. Five rows cover scopes, measurements/takeoff, material planning, MCP and contractor review. No claim of feature parity is made.
+Homesage was checked for the earlier wider chart; the latest comparison focuses on the three contractor workflow platforms to reduce unconfirmed cells. The current cards describe relevant strengths of each offering; detailed verified capabilities remain documented above. No claim of feature parity is made.

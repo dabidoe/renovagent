@@ -131,6 +131,7 @@ export async function requestPhotoJob(repo: MongoWorkspaceRepository, raw: unkno
         attachment = evidence?.source.attachment;
       if (
         evidence?.projectId !== request.projectId ||
+        (evidence?.source.reference && evidence.source.reference.kind !== 'room') ||
         !attachment ||
         !/^image\/(jpeg|png|webp)$/.test(attachment.mediaType)
       )

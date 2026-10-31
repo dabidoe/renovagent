@@ -1,6 +1,8 @@
+import { PhotoPicker } from '../project-start/photo-picker.js';
 import { useRef, useState, type CSSProperties } from 'react';
 import { lineTotalMinor } from '@renovagent/core';
 import { Glyph } from '../../components/glyph.js';
+import { BrandMark } from '../../components/brand-mark.js';
 import './landing-v2.css';
 import { Comparison } from './comparison.js';
 import { ProjectPreview } from './project-preview.js';
@@ -14,6 +16,7 @@ import {
 import './hero-scene.css';
 import './product-experience.css';
 import './hero-ar.css';
+import './landing-polish.css';
 
 const image = (name: string) => new URL(`../../assets/examples/${name}`, import.meta.url).href;
 const starters = [
@@ -33,8 +36,8 @@ const starters = [
 const materials = [
   {
     id: 'vanity',
-    name: 'Oak-effect vanity cabinet',
-    title: 'ÄNGSJÖN · 36-inch cabinet',
+    name: 'IKEA ÄNGSJÖN vanity',
+    title: 'IKEA ÄNGSJÖN · 36″',
     finish: 'Oak effect',
     spec: '36 × 21 × 25⅛ in',
     quantity: '1 cabinet reference',
@@ -86,7 +89,7 @@ const materials = [
   {
     id: 'floor',
     name: 'Charcoal hex floor mosaic',
-    title: 'Hex mosaic · charcoal',
+    title: '2″ charcoal porcelain hex',
     finish: 'Matte charcoal concept',
     spec: '2 in hex concept tile',
     quantity: 'Area still to measure',
@@ -143,7 +146,7 @@ function RealityPlan() {
           aria-valuetext={`${split}% before, ${100 - split}% renovated`}
         />
       </div>
-      <figcaption>Drag to compare · Generated concepts, not measured designs.</figcaption>
+      <figcaption>Drag to reveal the transformation</figcaption>
     </figure>
   );
 }
@@ -221,60 +224,37 @@ function MaterialScene() {
               <div className="product-popover-heading">
                 <img src={image(`product-${item.id}.jpg`)} alt="" width={88} height={88} />
                 <div>
-                  <span>{item.kind}</span>
+                  <span>{item.finish.replace(' concept', '')}</span>
                   <h3>{item.title}</h3>
                   <strong>{money(item.price)}</strong>
-                  <small>
-                    {item.id === 'vanity'
-                      ? 'cabinet only · Oct 29 reference'
-                      : 'illustrative allowance'}
-                  </small>
+                  <small>{item.spec.replace(' concept', '')}</small>
                 </div>
               </div>
               <div className="product-additions">
                 <strong>Behind the price</strong>
-                {item.id === 'vanity' ? (
-                  <>
-                    <span className="addition-demo-label">Example additions · demo allowances</span>
-                    <dl>
-                      <div>
-                        <dt>2 supply lines</dt>
-                        <dd>$24</dd>
-                      </div>
-                      <div>
-                        <dt>Fittings & stops</dt>
-                        <dd>$38</dd>
-                      </div>
-                      <div>
-                        <dt>Screws & anchors</dt>
-                        <dd>$12</dd>
-                      </div>
-                    </dl>
-                  </>
-                ) : (
-                  <dl>
-                    <div>
-                      <dt>
-                        {item.id === 'mirror'
-                          ? 'Anchors & blocking'
-                          : item.id === 'shower'
-                            ? 'Backer & waterproofing'
-                            : 'Underlayment & setting materials'}
-                      </dt>
-                      <dd>To price</dd>
+                <dl>
+                  {(item.id === 'vanity'
+                    ? [
+                        ['2 supply lines', '$24'],
+                        ['Fittings & stops', '$38'],
+                        ['Screws & anchors', '$12'],
+                      ]
+                    : item.id === 'floor'
+                      ? [['Mortar + grout + trim', '$126']]
+                      : item.id === 'mirror'
+                        ? [['Anchors & blocking', '$18']]
+                        : [
+                            ['Backer & waterproofing', '$220'],
+                            ['Mortar + grout + trim', '$165'],
+                          ]
+                  ).map(([label, value]) => (
+                    <div key={label}>
+                      <dt>{label}</dt>
+                      <dd>{value}</dd>
                     </div>
-                    <div>
-                      <dt>
-                        {item.id === 'mirror' ? 'Installation' : 'Grout, trim & installation'}
-                      </dt>
-                      <dd>To price</dd>
-                    </div>
-                  </dl>
-                )}
+                  ))}
+                </dl>
               </div>
-              <p className="product-popover-note">
-                Style illustration. Fit unverified. Labor, tax and delivery not priced.
-              </p>
             </div>
           </div>
         ))}
@@ -308,7 +288,7 @@ function MaterialScene() {
         onToggle={(event) => setListOpen(event.currentTarget.open)}
       >
         <summary>
-          Material list & fit checks <span>{money(total)} example subtotal</span>
+          Product breakdown <span>{money(total)} subtotal</span>
         </summary>
         <div className="material-receipt">
           <div className="receipt-title">
@@ -496,12 +476,16 @@ function BathroomDemo({ onExample, busy }: { onExample: () => void; busy: boolea
 export function Landing({
   prompt,
   onPrompt,
+  photos,
+  onPhotos,
   onStart,
   onExample,
   busy,
 }: {
   prompt: string;
   onPrompt: (text: string) => void;
+  photos: File[];
+  onPhotos: (files: File[]) => void;
   onStart: () => void;
   onExample: () => void;
   busy: boolean;
@@ -550,7 +534,7 @@ export function Landing({
               placeholder="I want to redo my bathroom. Where do I start?"
             />
             <div>
-              <span>Start with an idea</span>
+              <PhotoPicker compact files={photos} onChange={onPhotos} disabled={busy} />
               <button className="send" disabled={busy}>
                 {busy ? 'Opening…' : 'Start a project'}
                 <Glyph name="right" />
@@ -588,18 +572,33 @@ export function Landing({
       <Transformation />
       <BathroomDemo onExample={onExample} busy={busy} />
       <ContractorHandoff onExample={onExample} busy={busy} />
-      <Comparison />
       <AgentConnection />
+      <Comparison />
 
       <footer className="landing-footer">
-        <div>
-          <strong>Your project starts with an idea.</strong>
-          <span>Bring the rough version.</span>
+        <div className="footer-invitation">
+          <h2>
+            Got a room in mind?
+            <br />
+            <em>Let’s make a plan.</em>
+          </h2>
+          <button className="landing-primary" onClick={focusIdea}>
+            Start your project <Glyph name="right" />
+          </button>
         </div>
-        <button className="landing-primary" onClick={focusIdea}>
-          Start your project
-          <Glyph name="right" />
-        </button>
+        <div className="footer-signature">
+          <a href="#" aria-label="Renovagent home">
+            <BrandMark size={150} lockup />
+          </a>
+          <span>Built for the home you’re imagining.</span>
+          <nav aria-label="Footer navigation">
+            <a href="#product-proof">Explore</a>
+            <a href="#compare-tools">Compare</a>
+            <a href="https://github.com/dabidoe/unpermitted-ai" target="_blank" rel="noreferrer">
+              GitHub ↗
+            </a>
+          </nav>
+        </div>
       </footer>
     </div>
   );

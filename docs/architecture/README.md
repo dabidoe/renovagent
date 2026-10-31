@@ -81,3 +81,7 @@ The earlier [Muse app integration assessment](muse-app-integration.md) records t
 [Agent procurement and checkout](agent-procurement-checkout.md) adds MCP catalog search, multi-retailer affiliate mapping, the customer checkout handoff, the corpus strategy, and the specified accounting and contractor slices.
 
 The [Renovagent reconciliation](renovagent-reconciliation.md) maps the product scope and technical plan onto implemented slices, records the rename, and adapts the catalog/backlog plan.
+
+[Inspiration and products](inspiration-and-products.md) adds original reference images, links, preference notes and dated user-saved prices, separated from site photos and exposed to project context. Automatic reference identification and retailer matching remain subsequent work.
+
+[Runtime, storage and Muse technical review](runtime-storage-technical-review.md) records the October 30 configuration/origin/runtime split, measured slow reads, and a proposed Atlas-first consolidation. It is a diagnosis and acceptance plan; no runtime or data changes are claimed.

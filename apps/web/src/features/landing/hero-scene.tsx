@@ -1,23 +1,25 @@
 import { useState } from 'react';
 const room = new URL('../../assets/examples/bath.jpg', import.meta.url).href;
+// Landing fixtures only: reference cabinet plus illustrative parts and labor.
+// No live pricing or project facts are created by these annotations.
 const products = {
   vanity: {
-    title: 'Vanity cabinet',
+    title: 'IKEA ÄNGSJÖN',
     image: 'product-vanity.jpg',
     price: '$339',
-    basis: 'Cabinet-only reference · Oct 29',
+    basis: '36″ oak-effect vanity cabinet',
     rows: [
-      ['Supply lines, fittings & fixings', '$74'],
+      ['2 supply lines + fittings + fixings', '$74'],
       ['Plumbing · 6h @ $75/hr', '$450'],
     ],
   },
   floor: {
-    title: 'Charcoal floor tile',
+    title: 'Charcoal hex mosaic',
     image: 'product-floor.jpg',
     price: '$240',
-    basis: 'Material allowance',
+    basis: '2″ porcelain · matte finish',
     rows: [
-      ['Mortar, grout & trim', 'To price'],
+      ['Mortar + grout + edge trim', '$126'],
       ['Tile work · 24h @ $60/hr', '$1,440'],
     ],
   },
@@ -111,7 +113,6 @@ export function HeroScene() {
             </div>
           ))}
         </dl>
-        <p>Example parts & labor</p>
       </div>
     </div>
   );
