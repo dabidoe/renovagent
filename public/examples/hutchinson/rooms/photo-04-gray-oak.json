@@ -1,0 +1,9 @@
+{
+  "model": "muse-image-1.0",
+  "input": "photo-04.jpg",
+  "inputSha256": "b380365cad80e2d8b154143b0a558777e9a14eb4ca2fa66063a4b19d245cb579",
+  "reference": "finishes/gray-oak.jpg",
+  "outputSha256": "eb0d1c9ddf70dd34513973dd1fa2466000871a432ba9bc985b4b3a3c9f3bb43e",
+  "prompt": "Edit the first image, a photo of a room. Replace only the floor covering of this room with the flooring shown in the second image, grey-washed oak planks, a cool greige tone with visible grain, matte: the same tone, board width and straight lay, in the room's perspective, meeting the existing baseboards. Remove the existing room carpet or floor covering only. Keep everything else exactly as it is: the same camera, framing and perspective, walls and wall color, ceiling, windows, doors, closets, radiators, stairs, furniture and lighting. Photorealistic.",
+  "status": "generated-concept"
+}

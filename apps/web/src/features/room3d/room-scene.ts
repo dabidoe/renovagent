@@ -7,6 +7,7 @@ import {
   dimensionLabel,
   floorFinishKind,
   floorOutline,
+  SWATCH_FEET,
   wallSwatch,
   type ModelWall,
   type RoomAnnotation,
@@ -19,7 +20,14 @@ import {
 // thickness or height the plan does not give) are drawn in a distinct
 // translucent style and recorded as such in the exported GLB.
 
-export type RoomLook = { wallColor: string; floorFinish: string; label: string };
+export type RoomLook = {
+  wallColor: string;
+  floorFinish: string;
+  label: string;
+  // A style swatch image covering SWATCH_FEET per side, used in place of the
+  // procedural finish once it loads.
+  floorTexture?: string;
+};
 export type RoomScene = {
   // Highlights these surfaces (a package's walls, or one clicked surface).
   select(surfaceIds: string[]): void;
@@ -35,6 +43,19 @@ export type RoomScene = {
 const DISPLAY_THICKNESS_M = 0.08;
 const DISPLAY_HEIGHT_M = 2.4;
 const UNKNOWN = new THREE.Color('#f97316');
+
+// A floor style's swatch as a tiled texture at its true scale; mirrored so
+// the tiles meet without a hard seam.
+const swatchLoader = new THREE.TextureLoader();
+function swatchTexture(url: string, onLoad: (tex: THREE.Texture) => void) {
+  swatchLoader.load(url, (tex) => {
+    tex.colorSpace = THREE.SRGBColorSpace;
+    tex.wrapS = tex.wrapT = THREE.MirroredRepeatWrapping;
+    const tile = SWATCH_FEET * 0.3048;
+    tex.repeat.set(1 / tile, 1 / tile);
+    onLoad(tex);
+  });
+}
 
 // Procedural finish textures (illustrative, not a product photo).
 function finishTexture(finish: string): THREE.CanvasTexture {
@@ -264,6 +285,18 @@ export function mountRoomScene(
   // Shape UVs are in metres; one texture tile covers 2.4 m.
   const floor = new THREE.Mesh(floorGeo, floorMat);
   floor.receiveShadow = true;
+  let wantTexture = look.floorTexture;
+  const useSwatch = (url: string | undefined) => {
+    wantTexture = url;
+    if (url)
+      swatchTexture(url, (tex) => {
+        if (wantTexture !== url) return tex.dispose();
+        floorMat.map?.dispose();
+        floorMat.map = tex;
+        floorMat.needsUpdate = true;
+      });
+  };
+  useSwatch(look.floorTexture);
   room.add(floor);
   tag(floor, 'floor', { outlineMeasured: outline !== null });
 
@@ -516,11 +549,15 @@ export function mountRoomScene(
       highlight([]);
       wallMat.color.set(wallSwatch(next.wallColor).hex);
       for (const c of cutaway) if (c.known) c.mat.color.copy(wallMat.color);
-      const tex = finishTexture(next.floorFinish);
-      tex.repeat.copy(floorTex.repeat);
-      floorMat.map?.dispose();
-      floorMat.map = tex;
-      floorMat.needsUpdate = true;
+      if (next.floorTexture) useSwatch(next.floorTexture);
+      else {
+        useSwatch(undefined);
+        const tex = finishTexture(next.floorFinish);
+        tex.repeat.copy(floorTex.repeat);
+        floorMat.map?.dispose();
+        floorMat.map = tex;
+        floorMat.needsUpdate = true;
+      }
       room.userData.renovagent.look = next;
       currentLook = next;
       highlight(reselect);

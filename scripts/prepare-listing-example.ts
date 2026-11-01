@@ -8,7 +8,7 @@ import { mkdir, readFile, readdir, writeFile, access } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { extname, join } from 'node:path';
 import { museEditImage, museJson, samSegmentText, imageMediaType } from './muse-provider.js';
-import { fitImage, normalizeImage } from '../apps/api/src/design-images.js';
+import { normalizeImage } from '../apps/api/src/design-images.js';
 import { parseSegmentation } from '../apps/api/src/segmentation.js';
 import {
   ceilingFrom,
@@ -16,10 +16,11 @@ import {
   ceilingPrompt,
   ceilingSchema,
   floorPrompt,
+  layFloor,
   readPrompt,
   readSchema,
-  type StudioFloor,
 } from '../apps/api/src/studio.js';
+import { FLOOR_STYLES } from '@renovagent/core';
 import {
   matchPlanRooms,
   type PlanRoom,
@@ -184,19 +185,24 @@ for (const [i, h] of heroes.entries()) {
   await writeFile(outPath(`${img.name}.jpg`), img.bytes);
   await walls(img.name, img.bytes);
   const floors: StudioRoom['floors'] = {};
-  for (const floor of ['lvp', 'hardwood'] as StudioFloor[]) {
+  for (const style of FLOOR_STYLES) {
+    const floor = style.id;
     const name = `${img.name}-${floor}`;
     if (!(await exists(outPath(`${name}.jpg`)))) {
-      const edit = await museEditImage({ image: asModel(img.bytes), prompt: floorPrompt(floor) });
       const { width, height } = await import('image-size').then((m) => m.imageSize(img.bytes));
-      const fitted = await fitImage(edit.bytes, width!, height!);
-      await writeFile(outPath(`${name}.jpg`), fitted.bytes);
+      const laid = await layFloor(
+        museEditImage,
+        { bytes: img.bytes, width: width!, height: height! },
+        style,
+      );
+      await writeFile(outPath(`${name}.jpg`), laid.bytes);
       receipts[name] = {
-        model: edit.model,
+        model: laid.model,
         input: `${img.name}.jpg`,
         inputSha256: hash(img.bytes),
-        outputSha256: hash(fitted.bytes),
-        prompt: floorPrompt(floor),
+        reference: `finishes/${floor}.jpg`,
+        outputSha256: hash(laid.bytes),
+        prompt: floorPrompt(style),
         status: 'generated-concept',
       };
       console.log(`  ${name}: Muse floor`);

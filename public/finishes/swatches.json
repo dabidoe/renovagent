@@ -1,0 +1,57 @@
+{
+  "gray-oak": {
+    "model": "muse-image-1.0",
+    "prompt": "Turn this flat diagram into a photorealistic straight-down photograph of a floor of grey-washed oak planks, a cool greige tone with visible grain, matte: real wood grain and natural colour variation within each board, subtle joints, even soft daylight with no shadows, glare, objects or walls. Keep exactly the same board layout, board widths, joints and overall colour. The floor fills the whole frame with no perspective.",
+    "layout": {
+      "tone": "#a9a296",
+      "boardWidthIn": 7,
+      "feet": 8
+    },
+    "sha256": "f4e96a88f47336b739f34bdf3c7a7811c75863500d4fbcd5febd1c311dac5db3",
+    "status": "generated illustration of a style, not a product photo"
+  },
+  "honey-oak": {
+    "model": "muse-image-1.0",
+    "prompt": "Turn this flat diagram into a photorealistic straight-down photograph of a floor of warm honey-toned oak strips with a satin finish: real wood grain and natural colour variation within each board, subtle joints, even soft daylight with no shadows, glare, objects or walls. Keep exactly the same board layout, board widths, joints and overall colour. The floor fills the whole frame with no perspective.",
+    "layout": {
+      "tone": "#c9965a",
+      "boardWidthIn": 5,
+      "feet": 8
+    },
+    "sha256": "02d3bed4f91be88d43a0542cc61a9775a54662bdbee72db259bbb681409a452f",
+    "status": "generated illustration of a style, not a product photo"
+  },
+  "white-oak": {
+    "model": "muse-image-1.0",
+    "prompt": "Turn this flat diagram into a photorealistic straight-down photograph of a floor of wide pale white oak planks with a matte, almost raw finish: real wood grain and natural colour variation within each board, subtle joints, even soft daylight with no shadows, glare, objects or walls. Keep exactly the same board layout, board widths, joints and overall colour. The floor fills the whole frame with no perspective.",
+    "layout": {
+      "tone": "#dcc9aa",
+      "boardWidthIn": 8,
+      "feet": 8
+    },
+    "sha256": "aee7abd4555c45ff55e18a673b4027e06dd38fc31a2869e4c6073b852033d936",
+    "status": "generated illustration of a style, not a product photo"
+  },
+  "light-oak": {
+    "model": "muse-image-1.0",
+    "prompt": "Turn this flat diagram into a photorealistic straight-down photograph of a floor of light natural oak planks with a matte finish: real wood grain and natural colour variation within each board, subtle joints, even soft daylight with no shadows, glare, objects or walls. Keep exactly the same board layout, board widths, joints and overall colour. The floor fills the whole frame with no perspective.",
+    "layout": {
+      "tone": "#d6b88e",
+      "boardWidthIn": 7,
+      "feet": 8
+    },
+    "sha256": "e84164a393c687290f2f22ecc4241cf4afa174456c6bb77c38f2bf26ce9ddb26",
+    "status": "generated illustration of a style, not a product photo"
+  },
+  "walnut": {
+    "model": "muse-image-1.0",
+    "prompt": "Turn this flat diagram into a photorealistic straight-down photograph of a floor of rich dark brown walnut planks with a satin finish: real wood grain and natural colour variation within each board, subtle joints, even soft daylight with no shadows, glare, objects or walls. Keep exactly the same board layout, board widths, joints and overall colour. The floor fills the whole frame with no perspective.",
+    "layout": {
+      "tone": "#6b4630",
+      "boardWidthIn": 6,
+      "feet": 8
+    },
+    "sha256": "3f8ba2723f7b7493d7cf456d6c7516260ef4c9f5ec586e68c0f0d7ebc7516b34",
+    "status": "generated illustration of a style, not a product photo"
+  }
+}

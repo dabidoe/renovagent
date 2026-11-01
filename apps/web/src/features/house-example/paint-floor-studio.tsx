@@ -8,18 +8,21 @@ import {
   DEFAULT_PICK,
   DEFAULT_SHEEN,
   FLOOR_CHOICES,
+  FLOOR_STYLES,
   PAINT_LINES,
   SHEENS,
   PRESET_COLORS,
   TIER_LABELS,
   feetInches,
   floorFinish,
+  floorImage,
+  styleOf,
+  swatchUrl,
   money,
   roomModel,
   roomTakeoff,
   type HouseProject,
   type Masks,
-  type NewFloor,
   type RoomImage,
   type RoomPick,
   type Sheen,
@@ -146,7 +149,8 @@ function BeforeAfter({
   const [ready, setReady] = useState(false);
   const [error, setError] = useState('');
   // The chosen floor's image once it exists; the photo until then.
-  const shown = pick.floor === 'keep' ? room.photo : (room.floors[pick.floor] ?? room.photo);
+  const style = styleOf(pick);
+  const shown = (style && floorImage(room, style)) || room.photo;
   const hex = pick.color?.hex ?? null;
   useEffect(() => {
     let live = true;
@@ -210,7 +214,8 @@ function Room3D({
   const [error, setError] = useState('');
   const look = {
     wallColor: pick.color?.hex ?? '#d9cfbf',
-    floorFinish: floorFinish(room, pick.floor),
+    floorFinish: floorFinish(room, pick),
+    ...(styleOf(pick) ? { floorTexture: swatchUrl(styleOf(pick)!) } : {}),
     label: pick.color ? pick.color.name : 'Existing',
   };
   const sizeKey = `${room.size?.xFt}x${room.size?.yFt}x${ceilingFt}`;
@@ -239,7 +244,7 @@ function Room3D({
   useEffect(() => {
     scene.current?.setLook(look);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [look.wallColor, look.floorFinish]);
+  }, [look.wallColor, look.floorFinish, look.floorTexture]);
   return (
     <div className="pf-3d">
       <div ref={host} className="pf-3d-host" />
@@ -371,7 +376,8 @@ type Idea = {
   color: WallColor | null;
   hex: string | null;
   sheen: Sheen | null;
-  floor: 'keep' | NewFloor;
+  floorStyle: string | null;
+  material: 'lvp' | 'hardwood' | null;
   extras: string[];
 };
 
@@ -499,8 +505,8 @@ export function PaintFloorStudio({
   kicker: string;
   sources?: ReactNode;
   actions?: ReactNode;
-  // Makes a missing floor variant for an owner's room (a Muse Image edit).
-  renderFloor?: (roomId: string, floor: NewFloor) => Promise<void>;
+  // Lays a floor style in an owner's room photo (a Muse Image edit).
+  renderFloor?: (roomId: string, style: string) => Promise<void>;
   onEditRoom?: (roomId: string, patch: Partial<StudioRoom>) => void;
   onCeiling?: (ft: number) => void;
   // Owner-only controls for the selected room (e.g. which plan room it is).
@@ -508,7 +514,11 @@ export function PaintFloorStudio({
   // Called once the project's own description has been applied.
   onIdeaUsed?: () => void;
 }) {
-  const [roomId, setRoomId] = useState(project.rooms[0]?.id ?? '');
+  const [roomId, setRoomIdState] = useState(project.rooms[0]?.id ?? '');
+  const setRoomId = (id: string) => {
+    setApplied(false);
+    setRoomIdState(id);
+  };
   const [view, setView] = useState<'photo' | '3d'>('photo');
   const [tier, setTier] = useState<TierKey>('mid');
   const [picks, setPicks] = useState<Record<string, RoomPick>>(() => loadPicks(project));
@@ -527,7 +537,40 @@ export function PaintFloorStudio({
       }
       return all;
     });
-  const update = (next: Partial<RoomPick>) => room && updateRoom(room.id, next);
+  const update = (next: Partial<RoomPick>) => {
+    setApplied(false);
+    if (room) updateRoom(room.id, next);
+  };
+  // The current room's paint and floor, in every room that can show them.
+  const [applied, setApplied] = useState(false);
+  const applyEverywhere = (from: StudioRoom) =>
+    setPicks((current) => {
+      const look = current[from.id] ?? DEFAULT_PICK;
+      const style = styleOf(look);
+      const all = Object.fromEntries(
+        project.rooms.map((r) => {
+          const own = current[r.id] ?? DEFAULT_PICK;
+          const canShow = !style || !!floorImage(r, style) || !!renderFloor;
+          return [
+            r.id,
+            {
+              ...own,
+              color: look.color,
+              paintLine: look.paintLine,
+              sheen: look.sheen,
+              ...(canShow ? { floor: look.floor, floorStyle: look.floorStyle } : {}),
+            } as RoomPick,
+          ];
+        }),
+      );
+      try {
+        localStorage.setItem(pickStore(project.id), JSON.stringify(all));
+      } catch {
+        // Picks still apply for this visit.
+      }
+      setApplied(true);
+      return all;
+    });
   const [imagining, setImagining] = useState<{ busy: boolean; error: string }>({
     busy: false,
     error: '',
@@ -540,13 +583,17 @@ export function PaintFloorStudio({
         room: target.title,
       })) as Idea;
       const color = idea.color ?? (idea.hex ? nearestPaint(idea.hex, PRESET_COLORS) : null);
-      // A floor this room cannot show stays as it is, so the price matches the picture.
-      const floor =
-        idea.floor !== 'keep' && (target.floors[idea.floor] || renderFloor) ? idea.floor : null;
+      // A style this room cannot show stays as it is, so the price matches the picture.
+      const style =
+        idea.floorStyle && (floorImage(target, idea.floorStyle) || renderFloor)
+          ? idea.floorStyle
+          : null;
+      const current = picks[target.id] ?? DEFAULT_PICK;
+      const material = idea.material ?? (current.floor === 'keep' ? 'lvp' : current.floor);
       updateRoom(target.id, {
         ...(color ? { color } : {}),
         ...(idea.sheen ? { sheen: idea.sheen } : {}),
-        ...(floor ? { floor } : {}),
+        ...(style ? { floorStyle: style, floor: material } : {}),
         ideas: idea.extras,
       });
       setImagining({ busy: false, error: '' });
@@ -566,11 +613,12 @@ export function PaintFloorStudio({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [project.idea]);
   // A floor that is picked but not made yet is rendered once, on demand.
-  const missing = room && pick.floor !== 'keep' && !room.floors[pick.floor] ? pick.floor : null;
+  const pickedStyle = styleOf(pick);
+  const missing = room && pickedStyle && !floorImage(room, pickedStyle) ? pickedStyle : null;
   const workKey = room && missing ? `${room.id}:${missing}` : '';
   useEffect(() => {
     if (!room || !missing || !renderFloor || working[workKey]) return;
-    const label = FLOOR_CHOICES.find((f) => f.key === missing)!.label.toLowerCase();
+    const label = (FLOOR_STYLES.find((f) => f.id === missing)?.label ?? 'the floor').toLowerCase();
     setWorking((w) => ({ ...w, [workKey]: `Laying ${label}…` }));
     renderFloor(room.id, missing)
       .then(() => setWorking((w) => ({ ...w, [workKey]: '' })))
@@ -598,7 +646,7 @@ export function PaintFloorStudio({
   const houseTotal = included.reduce((sum, r) => sum + takeoffs[r.id]!.totalMinor, 0);
   const has3d = !!roomModel(room, ceilingFt);
   const needsSize = !room.size || !ceilingFt;
-  const shownImage = pick.floor === 'keep' ? room.photo : room.floors[pick.floor];
+  const shownImage = pickedStyle ? floorImage(room, pickedStyle) : room.photo;
   const pending =
     (workKey && working[workKey]) ||
     (shownImage && !shownImage.walls && pick.color ? 'Finding the walls…' : null);
@@ -741,20 +789,52 @@ export function PaintFloorStudio({
           <div className="pf-group">
             <div className="pf-group-head">
               <h3>Floor</h3>
+              <span>
+                {pickedStyle
+                  ? FLOOR_STYLES.find((f) => f.id === pickedStyle)?.label
+                  : `Current ${room.existingFloor}`}
+              </span>
             </div>
-            <div className="pf-chips" role="group" aria-label="Floor">
-              {FLOOR_CHOICES.map((f) => (
+            <div className="pf-floor-styles" role="group" aria-label="Floor style">
+              <button
+                type="button"
+                className="pf-floor-style is-keep"
+                aria-pressed={pick.floor === 'keep'}
+                onClick={() => update({ floor: 'keep' })}
+              >
+                <img src={room.photo.src} alt="" />
+                <span>Keep</span>
+              </button>
+              {FLOOR_STYLES.map((f) => (
                 <button
-                  key={f.key}
+                  key={f.id}
                   type="button"
-                  aria-pressed={pick.floor === f.key}
-                  disabled={f.key !== 'keep' && !room.floors[f.key] && !renderFloor}
-                  onClick={() => update({ floor: f.key })}
+                  className="pf-floor-style"
+                  aria-pressed={pickedStyle === f.id}
+                  disabled={!floorImage(room, f.id) && !renderFloor}
+                  onClick={() =>
+                    update({ floorStyle: f.id, floor: pick.floor === 'keep' ? 'lvp' : pick.floor })
+                  }
                 >
-                  {f.key === 'keep' ? `Keep ${room.existingFloor}` : f.label}
+                  <img src={swatchUrl(f.id)} alt="" loading="lazy" />
+                  <span>{f.label}</span>
                 </button>
               ))}
             </div>
+            {pick.floor !== 'keep' && (
+              <div className="pf-chips" role="group" aria-label="Floor material">
+                {FLOOR_CHOICES.filter((f) => f.key !== 'keep').map((f) => (
+                  <button
+                    key={f.key}
+                    type="button"
+                    aria-pressed={pick.floor === f.key}
+                    onClick={() => update({ floor: f.key, floorStyle: pickedStyle! })}
+                  >
+                    {f.label}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="pf-group">
@@ -806,6 +886,16 @@ export function PaintFloorStudio({
             </div>
           </div>
 
+          {project.rooms.length > 1 && (pick.color || pick.floor !== 'keep') && (
+            <button
+              type="button"
+              className="pf-apply-all"
+              disabled={applied}
+              onClick={() => applyEverywhere(room)}
+            >
+              {applied ? 'Every room has this look' : 'Use this look in every room'}
+            </button>
+          )}
           <label className="pf-include">
             <input
               type="checkbox"

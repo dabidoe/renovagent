@@ -35,6 +35,7 @@ export * from './commerce/plans.js';
 export * from './commerce/best-value.js';
 export * from './commerce/looks.js';
 export * from './commerce/paint-colors.js';
+export * from './commerce/floor-styles.js';
 export * from './commerce/importer.js';
 export * from './commerce/affiliate.js';
 export * from './commerce/checkout.js';

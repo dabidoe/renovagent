@@ -1,0 +1,9 @@
+{
+  "model": "muse-image-1.0",
+  "input": "photo-11.jpg",
+  "inputSha256": "148f0b65b7db7002ed0cd908461675ef4440fbf2f538b7282caaf4ed5d689ef4",
+  "reference": "finishes/walnut.jpg",
+  "outputSha256": "a3c5392a8bc91d48e579b36520d1228286b8d8cdee9da96e31ab7abed5c41281",
+  "prompt": "Edit the first image, a photo of a room. Replace only the floor covering of this room with the flooring shown in the second image, rich dark brown walnut planks with a satin finish: the same tone, board width and straight lay, in the room's perspective, meeting the existing baseboards. Remove the existing room carpet or floor covering only. Keep everything else exactly as it is: the same camera, framing and perspective, walls and wall color, ceiling, windows, doors, closets, radiators, stairs, furniture and lighting. Photorealistic.",
+  "status": "generated-concept"
+}

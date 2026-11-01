@@ -34,14 +34,16 @@ test(
     });
     const calls = { segment: 0, repaint: 0, read: 0 };
     const prompts: string[] = [];
+    const swatches: number[] = [];
     const providers: StudioProviders = {
       async segment() {
         calls.segment++;
         return { text: samText, runId: 'sam-run', model: 'sam-3.1' };
       },
-      async repaint({ prompt }) {
+      async repaint({ prompt, references }) {
         calls.repaint++;
         prompts.push(prompt);
+        swatches.push(references?.length ?? 0);
         // Muse answers at its own size; the route must fit it back.
         const smaller = await normalizeImage(new Uint8Array(photo), 900);
         return { bytes: smaller.bytes, model: 'muse-image-1.0' };
@@ -56,7 +58,8 @@ test(
               colorName: 'Evergreen Mist',
               hex: '#2B4A36',
               sheen: 'satin',
-              floor: 'lvp',
+              floor: 'honey-oak',
+              material: 'vinyl',
               extras: ['built-in bookshelf', ' ', 'brass sconces'],
             },
             runId: 'spark-imagine',
@@ -146,7 +149,7 @@ test(
       assert.equal(calls.segment, 1, 'masks are cached by image');
 
       const floor = await (
-        await post('/studio/floor', { sha256: uploaded.sha256, floor: 'lvp' })
+        await post('/studio/floor', { sha256: uploaded.sha256, style: 'honey-oak' })
       ).json();
       assert.deepEqual([floor.width, floor.height], [uploaded.width, uploaded.height]);
       const laid = new Uint8Array(
@@ -155,9 +158,10 @@ test(
         ).arrayBuffer(),
       );
       assert.equal(imageSize(laid).width, uploaded.width);
-      assert.match(prompts[0]!, /oak wood-look luxury vinyl plank/);
+      assert.match(prompts[0]!, /flooring shown in the second image, warm honey-toned oak/);
+      assert.deepEqual(swatches, [1], 'the style swatch goes with the photo');
       assert.equal(
-        (await post('/studio/floor', { sha256: uploaded.sha256, floor: 'carpet' })).status,
+        (await post('/studio/floor', { sha256: uploaded.sha256, style: 'carpet' })).status,
         400,
         'only the fixed floors are offered',
       );
@@ -194,7 +198,7 @@ test(
         brand: 'Test Paints',
       });
       assert.equal(idea.hex, null, 'snapped to a loaded colour, not a made-up name');
-      assert.equal(idea.floor, 'lvp');
+      assert.deepEqual([idea.floorStyle, idea.material], ['honey-oak', 'lvp']);
       assert.equal(idea.sheen, 'satin');
       assert.deepEqual(idea.extras, ['built-in bookshelf', 'brass sconces']);
       assert.match(prompts.at(-1)!, /"dark green walls, light oak floors/);

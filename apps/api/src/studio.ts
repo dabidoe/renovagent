@@ -1,6 +1,14 @@
 import { z } from 'zod';
 import { DomainError } from '@renovagent/contracts';
-import { namedPaint, nearestPaint, type PaintColor } from '@renovagent/core';
+import { readFile } from 'node:fs/promises';
+import {
+  FLOOR_STYLES,
+  floorStyle,
+  namedPaint,
+  nearestPaint,
+  type FloorStyle,
+  type PaintColor,
+} from '@renovagent/core';
 import {
   imageMediaType,
   museEditImage,
@@ -16,13 +24,37 @@ import { parseSegmentation, type PhotoSegmentation } from './segmentation.js';
 // Muse Spark reads which room each photo shows and what a floor plan says.
 // Every model call counts against the caller's per-owner limits.
 
-export const STUDIO_FLOORS = {
-  lvp: 'light natural oak wood-look luxury vinyl plank flooring',
-  hardwood: 'wide-plank white oak engineered hardwood flooring with a matte finish',
-} as const;
-export type StudioFloor = keyof typeof STUDIO_FLOORS;
-export const floorPrompt = (floor: StudioFloor) =>
-  `Edit this photo of a room. Replace only the floor covering of this room with ${STUDIO_FLOORS[floor]}, laid straight, meeting the existing baseboards. Remove the existing room carpet or floor covering only. Keep everything else exactly as it is: the same camera, framing and perspective, walls and wall color, ceiling, windows, doors, closets, radiators, stairs, furniture and lighting. Photorealistic.`;
+// A floor style laid in a room photo: the style's swatch goes in as Muse
+// Image's second image, so the floor shown is the style chosen, not the
+// model's idea of the words. The server owns both the prompt and the swatch.
+export const floorPrompt = (style: FloorStyle) =>
+  `Edit the first image, a photo of a room. Replace only the floor covering of this room with the flooring shown in the second image, ${style.description}: the same tone, board width and straight lay, in the room's perspective, meeting the existing baseboards. Remove the existing room carpet or floor covering only. Keep everything else exactly as it is: the same camera, framing and perspective, walls and wall color, ceiling, windows, doors, closets, radiators, stairs, furniture and lighting. Photorealistic.`;
+const STYLE_IDS = FLOOR_STYLES.map((f) => f.id) as [string, ...string[]];
+const swatches = new Map<string, Promise<Uint8Array>>();
+export const floorSwatch = (id: string) => {
+  let found = swatches.get(id);
+  if (!found) {
+    found = readFile(new URL(`../../../public/finishes/${id}.jpg`, import.meta.url)).then(
+      (b) => new Uint8Array(b),
+    );
+    swatches.set(id, found);
+  }
+  return found;
+};
+// Lays the style in the photo and fits Muse's answer back to the photo's frame.
+export async function layFloor(
+  repaint: typeof museEditImage,
+  photo: { bytes: Uint8Array; width: number; height: number },
+  style: FloorStyle,
+) {
+  const swatch = await floorSwatch(style.id);
+  const edit = await repaint({
+    image: { bytes: photo.bytes, mediaType: imageMediaType(photo.bytes) },
+    references: [{ bytes: swatch, mediaType: imageMediaType(swatch) }],
+    prompt: floorPrompt(style),
+  });
+  return { ...(await fitImage(edit.bytes, photo.width, photo.height)), model: edit.model };
+}
 
 const ROOM_KINDS = [
   'living room',
@@ -130,25 +162,27 @@ ${plans ? 'From the floor plans, list every room whose dimensions are printed on
 export const imagineSchema = {
   type: 'object',
   additionalProperties: false,
-  required: ['walls', 'colorName', 'hex', 'sheen', 'floor', 'extras'],
+  required: ['walls', 'colorName', 'hex', 'sheen', 'floor', 'material', 'extras'],
   properties: {
     walls: { type: 'boolean' },
     colorName: { type: 'string' },
     hex: { type: 'string' },
     sheen: { type: 'string', enum: ['', 'matte', 'eggshell', 'satin'] },
-    floor: { type: 'string', enum: ['keep', 'lvp', 'hardwood', 'other'] },
+    floor: { type: 'string', enum: ['keep', 'other', ...FLOOR_STYLES.map((f) => f.id)] },
+    material: { type: 'string', enum: ['', 'vinyl', 'hardwood'] },
     extras: { type: 'array', items: { type: 'string' } },
   },
 } as const;
 export const imaginePrompt = (text: string, room: string, brands: string[]) =>
   `A homeowner describes how they imagine their ${room || 'room'}: ${JSON.stringify(text)}
-Turn it into choices. walls: true if they want the walls a new colour. colorName: the paint colour they named; if they only describe a colour, the name of a well-known ${brands.length ? brands.join(' or ') : 'paint brand'} colour that matches it (for example "Naval" for navy); "" if walls is false. hex: the wall colour as #rrggbb, the way a real paint chip of it looks (paint colours are muted; never a pure screen colour such as #000080 for navy); "" if walls is false. sheen: the paint finish only if they name one (matte, eggshell or satin), otherwise "". floor: "lvp" for vinyl plank, laminate or a wood look, "hardwood" for real or engineered wood, "keep" if they do not ask for a new floor, "other" for any other floor (tile, carpet, concrete). extras: everything else they ask for, each as a short noun phrase (for example "built-in bookshelf", "tile floor" when floor is "other"); at most four; [] if nothing else.`;
+Turn it into choices. walls: true if they want the walls a new colour. colorName: the paint colour they named; if they only describe a colour, the name of a well-known ${brands.length ? brands.join(' or ') : 'paint brand'} colour that matches it (for example "Naval" for navy); "" if walls is false. hex: the wall colour as #rrggbb, the way a real paint chip of it looks (paint colours are muted; never a pure screen colour such as #000080 for navy); "" if walls is false. sheen: the paint finish only if they name one (matte, eggshell or satin), otherwise "". floor: the wood floor style closest to what they describe, one of ${FLOOR_STYLES.map((f) => `"${f.id}" (${f.description})`).join(', ')}; "keep" if they do not ask for a new floor; "other" for any floor that is not wood-look planks (tile, carpet, concrete). material: "vinyl" if they say vinyl, LVP, laminate or wood-look, "hardwood" if they say real, solid or engineered wood, otherwise "". extras: everything else they ask for, each as a short noun phrase (for example "built-in bookshelf", "tile floor" when floor is "other"); at most four; [] if nothing else.`;
 const imagineResult = z.object({
   walls: z.boolean(),
   colorName: z.string().max(60),
   hex: z.string().max(9),
   sheen: z.enum(['', 'matte', 'eggshell', 'satin']),
-  floor: z.enum(['keep', 'lvp', 'hardwood', 'other']),
+  floor: z.enum(['keep', 'other', ...STYLE_IDS]),
+  material: z.enum(['', 'vinyl', 'hardwood']),
   extras: z.array(z.string().max(80)).max(8),
 });
 export type Imagined = {
@@ -156,7 +190,9 @@ export type Imagined = {
   // The described colour when no paint is loaded to snap it to.
   hex: string | null;
   sheen: 'matte' | 'eggshell' | 'satin' | null;
-  floor: 'keep' | StudioFloor;
+  // A floor style, and its material only when they said which.
+  floorStyle: string | null;
+  material: 'lvp' | 'hardwood' | null;
   extras: string[];
 };
 export function imagined(raw: unknown, paint: PaintColor[]): Imagined {
@@ -180,7 +216,8 @@ export function imagined(raw: unknown, paint: PaintColor[]): Imagined {
       : null,
     hex: found ? null : hex,
     sheen: r.walls && r.sheen ? r.sheen : null,
-    floor: r.floor === 'other' ? 'keep' : r.floor,
+    floorStyle: r.floor === 'keep' || r.floor === 'other' ? null : r.floor,
+    material: r.material === 'vinyl' ? 'lvp' : r.material === 'hardwood' ? 'hardwood' : null,
     extras,
   };
 }
@@ -198,7 +235,7 @@ const requests = {
     })
     .strict(),
   walls: z.object({ sha256: sha }).strict(),
-  floor: z.object({ sha256: sha, floor: z.enum(['lvp', 'hardwood']) }).strict(),
+  floor: z.object({ sha256: sha, style: z.enum(STYLE_IDS) }).strict(),
   imagine: z
     .object({ text: z.string().trim().min(3).max(300), room: z.string().max(60).default('') })
     .strict(),
@@ -281,16 +318,16 @@ export function studioRoutes(deps: {
       return result;
     }
     if (path === '/studio/floor') {
-      const { sha256, floor } = requests.floor.parse(raw);
+      const { sha256, style } = requests.floor.parse(raw);
       const { bytes, record } = await stored(ownerId, sha256);
       deps.spend(ownerId, 'repaint');
-      const edit = await deps.providers.repaint({
-        image: { bytes, mediaType: imageMediaType(bytes) },
-        prompt: floorPrompt(floor),
-      });
-      const fitted = await fitImage(edit.bytes, record.width, record.height);
-      const image = await deps.images.put(ownerId, fitted);
-      return { ...image, model: edit.model, floor, sourceSha256: sha256 };
+      const laid = await layFloor(
+        deps.providers.repaint,
+        { bytes, width: record.width, height: record.height },
+        floorStyle(style)!,
+      );
+      const image = await deps.images.put(ownerId, laid);
+      return { ...image, model: laid.model, style, sourceSha256: sha256 };
     }
     if (path === '/studio/imagine') {
       const { text, room } = requests.imagine.parse(raw);

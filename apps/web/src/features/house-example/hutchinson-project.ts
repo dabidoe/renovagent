@@ -163,6 +163,14 @@ export const HUTCHINSON: HouseProject = {
   rooms: ROOMS.map(({ photoId, ...room }) => ({
     ...room,
     photo: image(photoId),
-    floors: { lvp: variant(`${photoId}-lvp`), hardwood: variant(`${photoId}-hardwood`) },
+    // Light and white oak were made first, as "lvp" and "hardwood"; the
+    // other styles by scripts/fill-floor-styles.ts.
+    floors: {
+      lvp: variant(`${photoId}-lvp`),
+      hardwood: variant(`${photoId}-hardwood`),
+      ...Object.fromEntries(
+        ['honey-oak', 'walnut', 'gray-oak'].map((s) => [s, variant(`${photoId}-${s}`)]),
+      ),
+    },
   })),
 };

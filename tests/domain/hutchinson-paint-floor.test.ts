@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import { wallSwatch } from '@renovagent/core';
 import {
   PRESET_COLORS,
+  floorFinish,
+  floorImage,
   roomModel as model,
   roomPackages,
   roomTakeoff as takeoff,
@@ -191,4 +193,19 @@ test('the living room needs about five gallons of budget paint, rounded up', () 
   const paint = t.lines.find((l) => l.bomItemId === 'wall-paint:paint')!;
   assert.equal(paint.purchaseUnits, 5);
   assert.equal(paint.unitPriceMinor, 2598, 'budget eggshell, about $25 a gallon');
+});
+
+test('a floor style changes the look, never the price; the material changes the price', () => {
+  const lvp = { color: null, floor: 'lvp' as const, included: true };
+  const price = (pick: RoomPick) => roomTakeoff(room('living'), pick, 'mid').totalMinor;
+  assert.equal(price({ ...lvp, floorStyle: 'walnut' }), price({ ...lvp, floorStyle: 'light-oak' }));
+  assert.ok(price({ ...lvp, floor: 'hardwood', floorStyle: 'walnut' }) > price(lvp));
+  // The first two styles read the images made before styles existed.
+  assert.equal(floorImage(room('living'), 'light-oak'), room('living').floors.lvp);
+  assert.equal(floorImage(room('living'), 'white-oak'), room('living').floors.hardwood);
+  assert.match(floorImage(room('living'), 'walnut')!.src, /photo-04-walnut\.jpg$/);
+  assert.equal(
+    floorFinish(room('living'), { ...lvp, floorStyle: 'walnut' }),
+    'dark walnut vinyl plank',
+  );
 });

@@ -173,7 +173,7 @@ const ROWS: Row[] = [
   [
     'hw-b',
     'engineered-hardwood',
-    'Engineered oak plank 3/8 in, carton',
+    'Engineered hardwood plank 3/8 in, carton',
     'builder',
     22,
     'sq ft',
@@ -183,7 +183,7 @@ const ROWS: Row[] = [
   [
     'hw-m',
     'engineered-hardwood',
-    'Engineered white oak plank 1/2 in, carton',
+    'Engineered hardwood plank 1/2 in, carton',
     'mid',
     20,
     'sq ft',
@@ -193,7 +193,7 @@ const ROWS: Row[] = [
   [
     'hw-h',
     'engineered-hardwood',
-    'Wide engineered white oak plank 5/8 in, carton',
+    'Wide engineered hardwood plank 5/8 in, carton',
     'high',
     18.5,
     'sq ft',

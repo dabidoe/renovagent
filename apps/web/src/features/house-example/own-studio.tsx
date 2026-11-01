@@ -3,7 +3,7 @@ import { workspaceRequest } from '../../adapters/http/project-repository.js';
 import { Glyph } from '../../components/glyph.js';
 import { PaintFloorStudio, parseFeet } from './paint-floor-studio.js';
 import { imageUrl, ownProject, photoSha, type PlanRoom, type ReadPhoto } from './own-project.js';
-import type { HouseProject, Masks, NewFloor, StudioRoom } from './paint-floor.js';
+import type { HouseProject, Masks, StudioRoom } from './paint-floor.js';
 
 const STORE = 'renovagent.own-project.v1';
 type Saved = { project: HouseProject; plans: PlanRoom[] };
@@ -227,14 +227,14 @@ export function OwnStudio() {
       keep(next);
       return next;
     });
-  const renderFloor = async (roomId: string, floor: NewFloor) => {
+  const renderFloor = async (roomId: string, style: string) => {
     const room = project.rooms.find((r) => r.id === roomId)!;
     const laid = (await workspaceRequest('/studio/floor', {
       sha256: photoSha(room),
-      floor,
+      style,
     })) as { sha256: string };
     editRoom(roomId, {
-      floors: { ...room.floors, [floor]: { src: imageUrl(laid.sha256), walls: null } },
+      floors: { ...room.floors, [style]: { src: imageUrl(laid.sha256), walls: null } },
     });
     const walls = await outline(laid.sha256).catch(() => null);
     setSaved((current) => {
@@ -245,7 +245,7 @@ export function OwnStudio() {
           ...current.project,
           rooms: current.project.rooms.map((r) =>
             r.id === roomId
-              ? { ...r, floors: { ...r.floors, [floor]: { src: imageUrl(laid.sha256), walls } } }
+              ? { ...r, floors: { ...r.floors, [style]: { src: imageUrl(laid.sha256), walls } } }
               : r,
           ),
         },

@@ -106,6 +106,7 @@ test('an imagined room keeps only the choices the studio prices', async () => {
       hex: '#ffffff',
       sheen: 'satin',
       floor: 'other',
+      material: '',
       extras: ['tile floor'],
     },
     [],
@@ -114,12 +115,22 @@ test('an imagined room keeps only the choices the studio prices', async () => {
     color: null,
     hex: null,
     sheen: null,
-    floor: 'keep',
+    floorStyle: null,
+    material: null,
     extras: ['tile floor'],
   });
   const unloaded = imagined(
-    { walls: true, colorName: '', hex: '#2B4A36', sheen: '', floor: 'hardwood', extras: [] },
+    {
+      walls: true,
+      colorName: '',
+      hex: '#2B4A36',
+      sheen: '',
+      floor: 'walnut',
+      material: 'hardwood',
+      extras: [],
+    },
     [],
   );
   assert.deepEqual([unloaded.color, unloaded.hex], [null, '#2b4a36'], 'no paint loaded');
+  assert.deepEqual([unloaded.floorStyle, unloaded.material], ['walnut', 'hardwood']);
 });

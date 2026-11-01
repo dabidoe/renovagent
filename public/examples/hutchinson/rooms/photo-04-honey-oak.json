@@ -1,0 +1,9 @@
+{
+  "model": "muse-image-1.0",
+  "input": "photo-04.jpg",
+  "inputSha256": "b380365cad80e2d8b154143b0a558777e9a14eb4ca2fa66063a4b19d245cb579",
+  "reference": "finishes/honey-oak.jpg",
+  "outputSha256": "d7f17f4920d50597d14549d529b330b4b3ec8d49ac8cd3d2b4f81b0a3aeef838",
+  "prompt": "Edit the first image, a photo of a room. Replace only the floor covering of this room with the flooring shown in the second image, warm honey-toned oak strips with a satin finish: the same tone, board width and straight lay, in the room's perspective, meeting the existing baseboards. Remove the existing room carpet or floor covering only. Keep everything else exactly as it is: the same camera, framing and perspective, walls and wall color, ceiling, windows, doors, closets, radiators, stairs, furniture and lighting. Photorealistic.",
+  "status": "generated-concept"
+}

@@ -1,4 +1,5 @@
 import {
+  FLOOR_STYLES,
   bomFromRequirements,
   boxRoomModel,
   buildTierPlans,
@@ -17,6 +18,9 @@ import { livingRoomCatalog } from '../../../../../fixtures/catalog/living-room-p
 // tier-plan engine as a real project, priced against the labelled demo
 // catalog — never live offers.
 
+// The floor's material sets its price; its style (packages/core
+// floor-styles.ts) is what it looks like, and like a paint colour never
+// changes the price.
 export type FloorKey = 'keep' | 'lvp' | 'hardwood';
 export type NewFloor = Exclude<FloorKey, 'keep'>;
 export type TierKey = 'builder' | 'mid' | 'high';
@@ -48,7 +52,9 @@ export type StudioRoom = {
   title: string;
   existingFloor: string;
   photo: RoomImage;
-  floors: Partial<Record<NewFloor, RoomImage>>;
+  // Floor images by style id. The first examples were made before styles,
+  // as "lvp" (light oak) and "hardwood" (white oak); those are read too.
+  floors: Partial<Record<string, RoomImage>>;
   // Plan width (x) and depth (y) in feet, when known.
   size?: { xFt: number; yFt: number };
   plan?: TracedPlan;
@@ -86,14 +92,23 @@ export const FLOOR_CHOICES: {
   packageId: string | null;
 }[] = [
   { key: 'keep', label: 'Keep floor', finish: '', packageId: null },
-  { key: 'lvp', label: 'Oak vinyl plank', finish: 'oak vinyl plank', packageId: 'lvp-floor' },
+  { key: 'lvp', label: 'Vinyl plank', finish: 'vinyl plank', packageId: 'lvp-floor' },
   {
     key: 'hardwood',
-    label: 'White oak hardwood',
-    finish: 'white oak hardwood',
+    label: 'Hardwood',
+    finish: 'engineered hardwood',
     packageId: 'hardwood-floor',
   },
 ];
+const LEGACY_IMAGE: Record<string, NewFloor> = { 'light-oak': 'lvp', 'white-oak': 'hardwood' };
+const DEFAULT_STYLE: Record<NewFloor, string> = { lvp: 'light-oak', hardwood: 'white-oak' };
+export const styleOf = (pick: RoomPick) =>
+  pick.floor === 'keep' ? null : (pick.floorStyle ?? DEFAULT_STYLE[pick.floor]);
+// The room's photo with this style laid, once it exists.
+export const floorImage = (room: StudioRoom, style: string): RoomImage | undefined =>
+  room.floors[style] ?? (LEGACY_IMAGE[style] ? room.floors[LEGACY_IMAGE[style]] : undefined);
+export const swatchUrl = (style: string) => `./finishes/${style}.jpg`;
+export { FLOOR_STYLES };
 export const TIER_LABELS: Record<TierKey, string> = {
   builder: 'Budget',
   mid: 'Mid-range',
@@ -121,6 +136,8 @@ export type RoomPick = {
   color: WallColor | null;
   floor: FloorKey;
   included: boolean;
+  // The floor's look (a style id); the material's default until chosen.
+  floorStyle?: string;
   // The paint line (follows the price tier until chosen) and finish.
   paintLine?: TierKey;
   sheen?: Sheen;
@@ -170,11 +187,13 @@ export function roomModel(room: StudioRoom, ceilingFt: number | null) {
   });
 }
 
-// The finish shown in 3D for the floor choice.
-export const floorFinish = (room: StudioRoom, floor: FloorKey) =>
-  floor === 'keep'
+// The floor in words, for the materials list: "honey oak vinyl plank".
+export const floorFinish = (room: StudioRoom, pick: RoomPick) => {
+  const style = FLOOR_STYLES.find((f) => f.id === styleOf(pick));
+  return pick.floor === 'keep' || !style
     ? `existing ${room.existingFloor}`
-    : FLOOR_CHOICES.find((f) => f.key === floor)!.finish;
+    : `${style.label.toLowerCase()} ${FLOOR_CHOICES.find((f) => f.key === pick.floor)!.finish}`;
+};
 
 const priced: PricedOffer[] = livingRoomCatalog.offers.flatMap((offer) => {
   const product = livingRoomCatalog.products.find((p) => p.id === offer.productId);
@@ -220,7 +239,7 @@ export function roomTakeoff(
   };
   const requirements = recipeRequirements(livingRoomRefreshRecipe.id, packages, values, {
     wallColor: pick.color ? `${pick.color.name} (${pick.color.code})` : 'existing',
-    floorFinish: floorFinish(room, pick.floor),
+    floorFinish: floorFinish(room, pick),
     ...(pick.color ? { paintSheen: pick.sheen ?? DEFAULT_SHEEN } : {}),
   });
   const { bom } = bomFromRequirements(

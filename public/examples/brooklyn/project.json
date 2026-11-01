@@ -21,6 +21,18 @@
         "hardwood": {
           "src": "./examples/brooklyn/image-03-hardwood.jpg",
           "walls": "./examples/brooklyn/image-03-hardwood-walls.json"
+        },
+        "honey-oak": {
+          "src": "./examples/brooklyn/image-03-honey-oak.jpg",
+          "walls": "./examples/brooklyn/image-03-honey-oak-walls.json"
+        },
+        "walnut": {
+          "src": "./examples/brooklyn/image-03-walnut.jpg",
+          "walls": "./examples/brooklyn/image-03-walnut-walls.json"
+        },
+        "gray-oak": {
+          "src": "./examples/brooklyn/image-03-gray-oak.jpg",
+          "walls": "./examples/brooklyn/image-03-gray-oak-walls.json"
         }
       }
     },
@@ -40,6 +52,18 @@
         "hardwood": {
           "src": "./examples/brooklyn/image-04-hardwood.jpg",
           "walls": "./examples/brooklyn/image-04-hardwood-walls.json"
+        },
+        "honey-oak": {
+          "src": "./examples/brooklyn/image-04-honey-oak.jpg",
+          "walls": "./examples/brooklyn/image-04-honey-oak-walls.json"
+        },
+        "walnut": {
+          "src": "./examples/brooklyn/image-04-walnut.jpg",
+          "walls": "./examples/brooklyn/image-04-walnut-walls.json"
+        },
+        "gray-oak": {
+          "src": "./examples/brooklyn/image-04-gray-oak.jpg",
+          "walls": "./examples/brooklyn/image-04-gray-oak-walls.json"
         }
       }
     },
@@ -59,6 +83,18 @@
         "hardwood": {
           "src": "./examples/brooklyn/image-05-hardwood.jpg",
           "walls": "./examples/brooklyn/image-05-hardwood-walls.json"
+        },
+        "honey-oak": {
+          "src": "./examples/brooklyn/image-05-honey-oak.jpg",
+          "walls": "./examples/brooklyn/image-05-honey-oak-walls.json"
+        },
+        "walnut": {
+          "src": "./examples/brooklyn/image-05-walnut.jpg",
+          "walls": "./examples/brooklyn/image-05-walnut-walls.json"
+        },
+        "gray-oak": {
+          "src": "./examples/brooklyn/image-05-gray-oak.jpg",
+          "walls": "./examples/brooklyn/image-05-gray-oak-walls.json"
         }
       }
     },
@@ -78,6 +114,18 @@
         "hardwood": {
           "src": "./examples/brooklyn/image-06-hardwood.jpg",
           "walls": "./examples/brooklyn/image-06-hardwood-walls.json"
+        },
+        "honey-oak": {
+          "src": "./examples/brooklyn/image-06-honey-oak.jpg",
+          "walls": "./examples/brooklyn/image-06-honey-oak-walls.json"
+        },
+        "walnut": {
+          "src": "./examples/brooklyn/image-06-walnut.jpg",
+          "walls": "./examples/brooklyn/image-06-walnut-walls.json"
+        },
+        "gray-oak": {
+          "src": "./examples/brooklyn/image-06-gray-oak.jpg",
+          "walls": "./examples/brooklyn/image-06-gray-oak-walls.json"
         }
       }
     },
@@ -97,6 +145,18 @@
         "hardwood": {
           "src": "./examples/brooklyn/image-07-hardwood.jpg",
           "walls": "./examples/brooklyn/image-07-hardwood-walls.json"
+        },
+        "honey-oak": {
+          "src": "./examples/brooklyn/image-07-honey-oak.jpg",
+          "walls": "./examples/brooklyn/image-07-honey-oak-walls.json"
+        },
+        "walnut": {
+          "src": "./examples/brooklyn/image-07-walnut.jpg",
+          "walls": "./examples/brooklyn/image-07-walnut-walls.json"
+        },
+        "gray-oak": {
+          "src": "./examples/brooklyn/image-07-gray-oak.jpg",
+          "walls": "./examples/brooklyn/image-07-gray-oak-walls.json"
         }
       }
     }
@@ -304,6 +364,141 @@
         "inputSha256": "376513e29bf836673fac771b40483487a9fae8edd7691b8310d7a0779e6342ca",
         "outputSha256": "98943db1a28884a3406bd5a437124193a2323ed3ae027af6f85eb772326ada38",
         "prompt": "Edit this photo of a room. Replace only the floor covering of this room with wide-plank white oak engineered hardwood flooring with a matte finish, laid straight, meeting the existing baseboards. Remove the existing room carpet or floor covering only. Keep everything else exactly as it is: the same camera, framing and perspective, walls and wall color, ceiling, windows, doors, closets, radiators, stairs, furniture and lighting. Photorealistic.",
+        "status": "generated-concept"
+      },
+      "image-03-honey-oak": {
+        "model": "muse-image-1.0",
+        "input": "image-03.jpg",
+        "inputSha256": "725e909dca9afe66d976c1fd05a7bee14f2a5cc8b140dc72640ac7d0614052b5",
+        "reference": "finishes/honey-oak.jpg",
+        "outputSha256": "c904f57ec2a5a05492d273bd94f68013b8d913158ff08a3800f283ff73abb1d9",
+        "prompt": "Edit the first image, a photo of a room. Replace only the floor covering of this room with the flooring shown in the second image, warm honey-toned oak strips with a satin finish: the same tone, board width and straight lay, in the room's perspective, meeting the existing baseboards. Remove the existing room carpet or floor covering only. Keep everything else exactly as it is: the same camera, framing and perspective, walls and wall color, ceiling, windows, doors, closets, radiators, stairs, furniture and lighting. Photorealistic.",
+        "status": "generated-concept"
+      },
+      "image-03-walnut": {
+        "model": "muse-image-1.0",
+        "input": "image-03.jpg",
+        "inputSha256": "725e909dca9afe66d976c1fd05a7bee14f2a5cc8b140dc72640ac7d0614052b5",
+        "reference": "finishes/walnut.jpg",
+        "outputSha256": "7b5a679ae2ac0b2639b26f871d9fd908a0eabfaabc6f255b3ccbf424173d70cc",
+        "prompt": "Edit the first image, a photo of a room. Replace only the floor covering of this room with the flooring shown in the second image, rich dark brown walnut planks with a satin finish: the same tone, board width and straight lay, in the room's perspective, meeting the existing baseboards. Remove the existing room carpet or floor covering only. Keep everything else exactly as it is: the same camera, framing and perspective, walls and wall color, ceiling, windows, doors, closets, radiators, stairs, furniture and lighting. Photorealistic.",
+        "status": "generated-concept"
+      },
+      "image-03-gray-oak": {
+        "model": "muse-image-1.0",
+        "input": "image-03.jpg",
+        "inputSha256": "725e909dca9afe66d976c1fd05a7bee14f2a5cc8b140dc72640ac7d0614052b5",
+        "reference": "finishes/gray-oak.jpg",
+        "outputSha256": "d1b637e1b43e2b4f1a379663ef5fb6a9b25eaf1679ae0309cf4007193fc6aab2",
+        "prompt": "Edit the first image, a photo of a room. Replace only the floor covering of this room with the flooring shown in the second image, grey-washed oak planks, a cool greige tone with visible grain, matte: the same tone, board width and straight lay, in the room's perspective, meeting the existing baseboards. Remove the existing room carpet or floor covering only. Keep everything else exactly as it is: the same camera, framing and perspective, walls and wall color, ceiling, windows, doors, closets, radiators, stairs, furniture and lighting. Photorealistic.",
+        "status": "generated-concept"
+      },
+      "image-04-honey-oak": {
+        "model": "muse-image-1.0",
+        "input": "image-04.jpg",
+        "inputSha256": "0c6dcc77df2d61b02d95b6e047ed163ba3d31ee88a4f01d7911a5b50504f0c3b",
+        "reference": "finishes/honey-oak.jpg",
+        "outputSha256": "86fe4da0acfef632ba1ef21befb0976bcceb4db8461ab309fea407d95ee582bf",
+        "prompt": "Edit the first image, a photo of a room. Replace only the floor covering of this room with the flooring shown in the second image, warm honey-toned oak strips with a satin finish: the same tone, board width and straight lay, in the room's perspective, meeting the existing baseboards. Remove the existing room carpet or floor covering only. Keep everything else exactly as it is: the same camera, framing and perspective, walls and wall color, ceiling, windows, doors, closets, radiators, stairs, furniture and lighting. Photorealistic.",
+        "status": "generated-concept"
+      },
+      "image-04-walnut": {
+        "model": "muse-image-1.0",
+        "input": "image-04.jpg",
+        "inputSha256": "0c6dcc77df2d61b02d95b6e047ed163ba3d31ee88a4f01d7911a5b50504f0c3b",
+        "reference": "finishes/walnut.jpg",
+        "outputSha256": "8bf57d83be72301ac9b55bbbc9709b513d8d0101b54676c2f339a69111df5ba5",
+        "prompt": "Edit the first image, a photo of a room. Replace only the floor covering of this room with the flooring shown in the second image, rich dark brown walnut planks with a satin finish: the same tone, board width and straight lay, in the room's perspective, meeting the existing baseboards. Remove the existing room carpet or floor covering only. Keep everything else exactly as it is: the same camera, framing and perspective, walls and wall color, ceiling, windows, doors, closets, radiators, stairs, furniture and lighting. Photorealistic.",
+        "status": "generated-concept"
+      },
+      "image-04-gray-oak": {
+        "model": "muse-image-1.0",
+        "input": "image-04.jpg",
+        "inputSha256": "0c6dcc77df2d61b02d95b6e047ed163ba3d31ee88a4f01d7911a5b50504f0c3b",
+        "reference": "finishes/gray-oak.jpg",
+        "outputSha256": "eced77dfd091730d802888f4397bd365a0d0d28e52f80d28d183818f051f80bb",
+        "prompt": "Edit the first image, a photo of a room. Replace only the floor covering of this room with the flooring shown in the second image, grey-washed oak planks, a cool greige tone with visible grain, matte: the same tone, board width and straight lay, in the room's perspective, meeting the existing baseboards. Remove the existing room carpet or floor covering only. Keep everything else exactly as it is: the same camera, framing and perspective, walls and wall color, ceiling, windows, doors, closets, radiators, stairs, furniture and lighting. Photorealistic.",
+        "status": "generated-concept"
+      },
+      "image-05-honey-oak": {
+        "model": "muse-image-1.0",
+        "input": "image-05.jpg",
+        "inputSha256": "e9deb82469cd6ecb550128676797382901978c42df2889e2dd5153d2a3d0517f",
+        "reference": "finishes/honey-oak.jpg",
+        "outputSha256": "213941b941ad1ba6069933e9a14d4e879b3d3692ae85f818e3fe1f265511c515",
+        "prompt": "Edit the first image, a photo of a room. Replace only the floor covering of this room with the flooring shown in the second image, warm honey-toned oak strips with a satin finish: the same tone, board width and straight lay, in the room's perspective, meeting the existing baseboards. Remove the existing room carpet or floor covering only. Keep everything else exactly as it is: the same camera, framing and perspective, walls and wall color, ceiling, windows, doors, closets, radiators, stairs, furniture and lighting. Photorealistic.",
+        "status": "generated-concept"
+      },
+      "image-05-walnut": {
+        "model": "muse-image-1.0",
+        "input": "image-05.jpg",
+        "inputSha256": "e9deb82469cd6ecb550128676797382901978c42df2889e2dd5153d2a3d0517f",
+        "reference": "finishes/walnut.jpg",
+        "outputSha256": "cb8f057437f8eb02c98783e4a20297e284478dbf2a2089201b2e96a800b44b0c",
+        "prompt": "Edit the first image, a photo of a room. Replace only the floor covering of this room with the flooring shown in the second image, rich dark brown walnut planks with a satin finish: the same tone, board width and straight lay, in the room's perspective, meeting the existing baseboards. Remove the existing room carpet or floor covering only. Keep everything else exactly as it is: the same camera, framing and perspective, walls and wall color, ceiling, windows, doors, closets, radiators, stairs, furniture and lighting. Photorealistic.",
+        "status": "generated-concept"
+      },
+      "image-05-gray-oak": {
+        "model": "muse-image-1.0",
+        "input": "image-05.jpg",
+        "inputSha256": "e9deb82469cd6ecb550128676797382901978c42df2889e2dd5153d2a3d0517f",
+        "reference": "finishes/gray-oak.jpg",
+        "outputSha256": "8c362aafe060f7cf54453185bde6e7e34428c809b682b710116d0785d7b6b8bf",
+        "prompt": "Edit the first image, a photo of a room. Replace only the floor covering of this room with the flooring shown in the second image, grey-washed oak planks, a cool greige tone with visible grain, matte: the same tone, board width and straight lay, in the room's perspective, meeting the existing baseboards. Remove the existing room carpet or floor covering only. Keep everything else exactly as it is: the same camera, framing and perspective, walls and wall color, ceiling, windows, doors, closets, radiators, stairs, furniture and lighting. Photorealistic.",
+        "status": "generated-concept"
+      },
+      "image-06-honey-oak": {
+        "model": "muse-image-1.0",
+        "input": "image-06.jpg",
+        "inputSha256": "5cdb65191ffa807297c2515385c722b2b812a50af9ddb7528abe9ef355d333dd",
+        "reference": "finishes/honey-oak.jpg",
+        "outputSha256": "ef12ffec382411767d8106c156995446f3713f5b1b1b71b33c2f8d006bc7bd20",
+        "prompt": "Edit the first image, a photo of a room. Replace only the floor covering of this room with the flooring shown in the second image, warm honey-toned oak strips with a satin finish: the same tone, board width and straight lay, in the room's perspective, meeting the existing baseboards. Remove the existing room carpet or floor covering only. Keep everything else exactly as it is: the same camera, framing and perspective, walls and wall color, ceiling, windows, doors, closets, radiators, stairs, furniture and lighting. Photorealistic.",
+        "status": "generated-concept"
+      },
+      "image-06-walnut": {
+        "model": "muse-image-1.0",
+        "input": "image-06.jpg",
+        "inputSha256": "5cdb65191ffa807297c2515385c722b2b812a50af9ddb7528abe9ef355d333dd",
+        "reference": "finishes/walnut.jpg",
+        "outputSha256": "2e9d62d0a0b5c5aa04a1e039eb646bcca45e98b891d95217c04bbd46bd8de9cf",
+        "prompt": "Edit the first image, a photo of a room. Replace only the floor covering of this room with the flooring shown in the second image, rich dark brown walnut planks with a satin finish: the same tone, board width and straight lay, in the room's perspective, meeting the existing baseboards. Remove the existing room carpet or floor covering only. Keep everything else exactly as it is: the same camera, framing and perspective, walls and wall color, ceiling, windows, doors, closets, radiators, stairs, furniture and lighting. Photorealistic.",
+        "status": "generated-concept"
+      },
+      "image-06-gray-oak": {
+        "model": "muse-image-1.0",
+        "input": "image-06.jpg",
+        "inputSha256": "5cdb65191ffa807297c2515385c722b2b812a50af9ddb7528abe9ef355d333dd",
+        "reference": "finishes/gray-oak.jpg",
+        "outputSha256": "4ac616c8c22281ceb3bf92b8b64ee2895622724b5ffe49a538adc4ba35a51786",
+        "prompt": "Edit the first image, a photo of a room. Replace only the floor covering of this room with the flooring shown in the second image, grey-washed oak planks, a cool greige tone with visible grain, matte: the same tone, board width and straight lay, in the room's perspective, meeting the existing baseboards. Remove the existing room carpet or floor covering only. Keep everything else exactly as it is: the same camera, framing and perspective, walls and wall color, ceiling, windows, doors, closets, radiators, stairs, furniture and lighting. Photorealistic.",
+        "status": "generated-concept"
+      },
+      "image-07-honey-oak": {
+        "model": "muse-image-1.0",
+        "input": "image-07.jpg",
+        "inputSha256": "376513e29bf836673fac771b40483487a9fae8edd7691b8310d7a0779e6342ca",
+        "reference": "finishes/honey-oak.jpg",
+        "outputSha256": "1316617a262245b982b32d0dccb87c2ffed443be870512a542c19a652c739b44",
+        "prompt": "Edit the first image, a photo of a room. Replace only the floor covering of this room with the flooring shown in the second image, warm honey-toned oak strips with a satin finish: the same tone, board width and straight lay, in the room's perspective, meeting the existing baseboards. Remove the existing room carpet or floor covering only. Keep everything else exactly as it is: the same camera, framing and perspective, walls and wall color, ceiling, windows, doors, closets, radiators, stairs, furniture and lighting. Photorealistic.",
+        "status": "generated-concept"
+      },
+      "image-07-walnut": {
+        "model": "muse-image-1.0",
+        "input": "image-07.jpg",
+        "inputSha256": "376513e29bf836673fac771b40483487a9fae8edd7691b8310d7a0779e6342ca",
+        "reference": "finishes/walnut.jpg",
+        "outputSha256": "908d4ce8a6b8aead68094e631cacb707de4fc870a77528532a96d1092cba6581",
+        "prompt": "Edit the first image, a photo of a room. Replace only the floor covering of this room with the flooring shown in the second image, rich dark brown walnut planks with a satin finish: the same tone, board width and straight lay, in the room's perspective, meeting the existing baseboards. Remove the existing room carpet or floor covering only. Keep everything else exactly as it is: the same camera, framing and perspective, walls and wall color, ceiling, windows, doors, closets, radiators, stairs, furniture and lighting. Photorealistic.",
+        "status": "generated-concept"
+      },
+      "image-07-gray-oak": {
+        "model": "muse-image-1.0",
+        "input": "image-07.jpg",
+        "inputSha256": "376513e29bf836673fac771b40483487a9fae8edd7691b8310d7a0779e6342ca",
+        "reference": "finishes/gray-oak.jpg",
+        "outputSha256": "d6673d3a9a47d4da4a188a474adcda2c623825cbaddb9ac8db27b29f19364b07",
+        "prompt": "Edit the first image, a photo of a room. Replace only the floor covering of this room with the flooring shown in the second image, grey-washed oak planks, a cool greige tone with visible grain, matte: the same tone, board width and straight lay, in the room's perspective, meeting the existing baseboards. Remove the existing room carpet or floor covering only. Keep everything else exactly as it is: the same camera, framing and perspective, walls and wall color, ceiling, windows, doors, closets, radiators, stairs, furniture and lighting. Photorealistic.",
         "status": "generated-concept"
       }
     }
