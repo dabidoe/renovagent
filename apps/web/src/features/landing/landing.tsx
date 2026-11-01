@@ -481,6 +481,7 @@ export function Landing({
   onStart,
   onExample,
   onOwnProject,
+  onExamples,
   busy,
 }: {
   prompt: string;
@@ -490,6 +491,7 @@ export function Landing({
   onStart: () => void;
   onExample: () => void;
   onOwnProject: () => void;
+  onExamples: () => void;
   busy: boolean;
 }) {
   const input = useRef<HTMLTextAreaElement>(null);
@@ -548,8 +550,8 @@ export function Landing({
               Try paint &amp; floors on your photos <span aria-hidden="true">→</span>
             </button>
             <span aria-hidden="true">·</span>
-            <button type="button" onClick={onExample}>
-              See a listing plan: 2440 S Hutchinson <span aria-hidden="true">→</span>
+            <button type="button" onClick={onExamples}>
+              See listing examples <span aria-hidden="true">→</span>
             </button>
           </p>
           <p className="hero-agent-line">

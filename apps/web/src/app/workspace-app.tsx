@@ -12,6 +12,7 @@ import { RoomDimensionsCard } from '../features/scope/room-dimensions-card.js';
 import { RoomStudio } from '../features/room3d/room-studio.js';
 import { HutchinsonStudio } from '../features/house-example/hutchinson-studio.js';
 import { OwnStudio } from '../features/house-example/own-studio.js';
+import { ExamplesGallery, ListingStudio } from '../features/house-example/listing-studio.js';
 import { isHouseCase } from '../features/house-example/house-example-model.js';
 import '../features/house-example/house-example.css';
 import '../features/house-example/paint-floor.css';
@@ -62,17 +63,22 @@ export function App({ controller }: { controller: WorkspaceController }) {
   const [houseExampleOpen, setHouseExampleOpen] = useState(
     () => window.location.hash === '#example-house',
   );
-  const [ownOpen, setOwnOpen] = useState(() => window.location.hash === '#your-project');
+  // Paint & floor studio pages: your own project, the examples, one example.
+  const studioHash = () =>
+    /^#(your-project|examples|example\/[a-z0-9-]+)$/.test(window.location.hash)
+      ? window.location.hash
+      : null;
+  const [studioRoute, setStudioRoute] = useState(studioHash);
   useEffect(() => {
     const sync = () => {
       setHouseExampleOpen(window.location.hash === '#example-house');
-      setOwnOpen(window.location.hash === '#your-project');
+      setStudioRoute(studioHash());
     };
     window.addEventListener('hashchange', sync);
     return () => window.removeEventListener('hashchange', sync);
   }, []);
   const wholeHouseProject = Boolean(project && isHouseCase(state, active));
-  const showOwn = ownOpen && !landingVisible;
+  const showOwn = !!studioRoute && !landingVisible;
   const showHouse = (houseExampleOpen || wholeHouseProject) && !landingVisible && !showOwn;
   const isLanding = (!project || landingVisible) && !houseExampleOpen && !showOwn;
   const scope = state.artifacts[scopeDraftId(active)]?.at(-1)?.payload;
@@ -222,18 +228,18 @@ export function App({ controller }: { controller: WorkspaceController }) {
       window.history.replaceState(null, '', window.location.pathname + window.location.search);
     setModal(null);
   };
-  const openOwnProject = () => {
-    setOwnOpen(true);
+  const openStudio = (route: string) => {
+    setStudioRoute(route);
     setHouseExampleOpen(false);
     setLandingVisible(false);
     setModal(null);
-    window.history.replaceState(null, '', '#your-project');
+    window.history.replaceState(null, '', route);
     window.scrollTo({ top: 0 });
   };
   const openExample = async () => {
     const saved = Object.values(state.projects).find((p) => isHouseCase(state, p.id));
     if (saved) await controller.setView(saved.id);
-    setOwnOpen(false);
+    setStudioRoute(null);
     setHouseExampleOpen(true);
     setLandingVisible(false);
     setModal(null);
@@ -352,9 +358,8 @@ export function App({ controller }: { controller: WorkspaceController }) {
             setShowRecent(false);
             setLandingVisible(true);
             setHouseExampleOpen(false);
-            setOwnOpen(false);
-            if (window.location.hash === '#your-project')
-              window.history.replaceState(null, '', window.location.pathname);
+            setStudioRoute(null);
+            if (studioHash()) window.history.replaceState(null, '', window.location.pathname);
             if (window.location.hash === '#example-house')
               window.history.replaceState(
                 null,
@@ -402,7 +407,9 @@ export function App({ controller }: { controller: WorkspaceController }) {
           >
             <span>
               {showOwn
-                ? 'Your project'
+                ? studioRoute === '#your-project'
+                  ? 'Your project'
+                  : 'Examples'
                 : showHouse
                   ? 'Hutchinson · whole-house plan'
                   : exampleStudio
@@ -462,13 +469,28 @@ export function App({ controller }: { controller: WorkspaceController }) {
             onPhotos={setStartPhotos}
             onStart={() => setModal('new')}
             onExample={() => safe(openExample())}
-            onOwnProject={openOwnProject}
+            onOwnProject={() => openStudio('#your-project')}
+            onExamples={() => openStudio('#examples')}
             busy={busy}
           />
         </main>
       ) : showOwn ? (
         <main className="prompt-main has-room">
-          <OwnStudio />
+          {studioRoute === '#your-project' ? (
+            <OwnStudio />
+          ) : studioRoute === '#examples' ? (
+            <ExamplesGallery
+              onOpen={(route) =>
+                route === '#example-house' ? safe(openExample()) : openStudio(route)
+              }
+            />
+          ) : (
+            <ListingStudio
+              key={studioRoute}
+              id={studioRoute!.slice('#example/'.length)}
+              onBack={() => openStudio('#examples')}
+            />
+          )}
         </main>
       ) : showHouse ? (
         <main className="prompt-main has-room">
