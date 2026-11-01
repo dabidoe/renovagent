@@ -8,7 +8,7 @@ October 31, 2026. Implemented prepared walkthrough at `http://localhost:8741/#ex
 
 Concept planning starts with photos and intent. Dimensions are optional. Listing plans and public records can supplement the concept if available; neither is a prerequisite. No city-record search is implemented by this UI. A later measured takeoff supplies quantities and a defensible budget. The prepared scope deliberately contains no invented dimensions, quantities, labor hours or prices.
 
-The three chapters are The house, Project plan and Behind the vision. Evidence views keep originals, object regions, listing plans, the interactive ground-floor model and the generated look separate. The original stacked brand mark is preserved. Phone layouts use horizontally scrollable area/evidence controls and a stacked inspector. Chapter transitions return to their content instead of leaving the reader at the old page's scroll position.
+The workspace is now one photo-led view, replacing the three chapter tabs, six room tabs and five evidence tabs of the first iteration. A photographic room strip selects the area. A single image-view menu holds the photo, optional plan and ground-floor concept/3D views; highlighting is an in-image toggle. The inspector uses short icon-led changes with detailed work/materials folded underneath. Numbered work and pipeline lists are removed from the UI. Project plan and Sources & process open in accessible secondary dialogs with contained scrolling. The original stacked brand mark is preserved. Phones use the same room strip and a stacked inspector, with no extra navigation layer.
 
 ## Actual inputs and outputs
 
@@ -46,7 +46,7 @@ Vite now ignores nested Claude worktrees and generated output directories when w
 
 Twenty targeted integration tests passed across the whole-house case, project intake, references, room studio, example photo and review handoff. The five new house tests cover source hashes and uncertain assignments, actual SAM/Blender/Muse receipt chains, dimension-free scope and bath exclusions, persistence without historical-artifact rebinding, and invalid choices rejecting before writes. Persistence uses fake IndexedDB; no owner project was created for QA.
 
-Desktop and 390 × 844 browser checks covered source photos, pointer and keyboard mask selection, listing-plan levels, Blender model, generated look, area deferral/recovery and chapter navigation. The phone check caught and fixed a flex intrinsic-width overflow. Both layouts now fit the viewport; interactive 3D has a saved-render fallback and retry. These browser checks do not verify iPhone Safari/WebGL performance, new-upload generation or construction feasibility.
+Desktop and 390 × 844 browser checks covered source photos, keyboard mask selection, concept and floor-plan view selection, model drill-down, room switching, area deferral/recovery and half-bath scope changes. The new plan/source dialogs fit the phone viewport and scroll their own contents while keeping close/export actions available. The five whole-house integration tests passed again after the presentation refactor, and the production build passed. Both layouts fit the viewport; interactive 3D has a saved-render fallback and retry. These browser checks do not verify iPhone Safari/WebGL performance, new-upload generation or construction feasibility. The latest captures are `previews/hutchinson-clean-desktop.png` and `previews/hutchinson-clean-mobile.png`; earlier chapter/pipeline captures are historical.
 
 ## Optional 3D path
 
