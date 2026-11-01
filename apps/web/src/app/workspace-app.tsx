@@ -439,7 +439,8 @@ export function App({ controller }: { controller: WorkspaceController }) {
             <Glyph name="chevron" />
           </button>
         )}
-        {controller.connected && auth.email && (
+        {/* The landing has its own navigation; the account shows on the app pages. */}
+        {controller.connected && auth.email && !isLanding && (
           <span className="prompt-account">
             {auth.email}
             <button
