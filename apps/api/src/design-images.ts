@@ -29,16 +29,29 @@ export const sha256Of = (bytes: Uint8Array) => createHash('sha256').update(bytes
 // Normalize any supported photo (AVIF, HEIC, PNG, JPEG…) to a bounded JPEG for
 // display and as the model input. The original file's hash is kept separately
 // by the caller; this derivative is what previews are generated from.
-export async function normalizeImage(bytes: Uint8Array, maxEdge = 1600) {
+export const normalizeImage = (bytes: Uint8Array, maxEdge = 1600) => toJpeg(bytes, { maxEdge });
+
+// A generated image resized to exactly its source photo's frame, so masks
+// and the before/after comparison line up pixel for pixel.
+export const fitImage = (bytes: Uint8Array, width: number, height: number) =>
+  toJpeg(bytes, { width, height });
+
+async function toJpeg(
+  bytes: Uint8Array,
+  target: { maxEdge: number } | { width: number; height: number },
+) {
   if (bytes.byteLength > MAX_INPUT) throw new DomainError('VALIDATION', 'Image exceeds 25 MB');
   const dir = await mkdtemp(join(tmpdir(), 'renovagent-image-'));
   try {
     await writeFile(join(dir, 'in'), bytes);
     // macOS sips locally; libvips (the container's libvips-tools) elsewhere.
-    // Both rotate by EXIF, shrink to fit maxEdge and never enlarge.
+    // A bound shrinks to fit and never enlarges; an exact frame resamples.
     const input = join(dir, 'in'),
-      output = join(dir, 'out.jpg'),
-      edge = String(maxEdge);
+      output = join(dir, 'out.jpg');
+    const [w, h] =
+      'maxEdge' in target
+        ? [String(target.maxEdge), String(target.maxEdge)]
+        : [String(target.width), String(target.height)];
     const [tool, args] =
       process.platform === 'darwin'
         ? [
@@ -50,8 +63,7 @@ export async function normalizeImage(bytes: Uint8Array, maxEdge = 1600) {
               '-s',
               'formatOptions',
               '85',
-              '-Z',
-              edge,
+              ...('maxEdge' in target ? ['-Z', w] : ['-z', h, w]),
               input,
               '--out',
               output,
@@ -59,7 +71,16 @@ export async function normalizeImage(bytes: Uint8Array, maxEdge = 1600) {
           ]
         : [
             'vips',
-            ['thumbnail', input, `${output}[Q=85,strip]`, edge, '--height', edge, '--size', 'down'],
+            [
+              'thumbnail',
+              input,
+              `${output}[Q=85,strip]`,
+              w,
+              '--height',
+              h,
+              '--size',
+              'maxEdge' in target ? 'down' : 'force',
+            ],
           ];
     await run(tool, args, { timeout: 60000 });
     const out = new Uint8Array(await readFile(output));

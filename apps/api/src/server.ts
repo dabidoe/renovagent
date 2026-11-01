@@ -54,6 +54,7 @@ import {
   uploadDesignPhoto,
 } from './design-service.js';
 import { renderExample } from './example-render.js';
+import { studioProviders, studioRoutes, type StudioProviders } from './studio.js';
 import { configuredJevKey, judgeProducts, rankReviewFindings, readRoomPhoto } from './jev.js';
 import {
   bestValue,
@@ -76,6 +77,8 @@ const SEGMENT_CACHE_SIZE = 200;
 const REPAINT_LIMIT = { calls: 12, windowMs: 10 * 60 * 1000 };
 // Blender GPU renders per owner per window.
 const HQ_LIMIT = { calls: 6, windowMs: 10 * 60 * 1000 };
+// Muse Spark reads of an owner's room photos and floor plans.
+const READ_LIMIT = { calls: 10, windowMs: 10 * 60 * 1000 };
 const rankInput = z
   .object({
     work: z
@@ -135,6 +138,8 @@ export async function createWorkspaceServer(
   repaint: typeof museEditImage = museEditImage,
   // Blender on Modal for high-quality renders; absent when not configured.
   render: RenderService | undefined = renderServiceFromEnv(),
+  // The paint-and-floor studio's providers (SAM, Muse Image, Muse Spark); injectable for tests.
+  studio: StudioProviders = studioProviders,
 ) {
   const accountMode = Boolean(accounts);
   // A public origin with the shared local token would give every visitor one workspace.
@@ -187,6 +192,29 @@ export async function createWorkspaceServer(
     repaintCalls.set(ownerId, [...recent, now]);
   };
   // Recovered workers only: ticks and shutdown see a worker once its jobs are reloaded.
+  const readCalls = new Map<string, number[]>();
+  const spendReadCall = (ownerId: string) => {
+    const now = Date.now();
+    const recent = (readCalls.get(ownerId) ?? []).filter((t) => now - t < READ_LIMIT.windowMs);
+    if (recent.length >= READ_LIMIT.calls)
+      throw new DomainError(
+        'VALIDATION',
+        'Photo reading limit reached; try again in a few minutes',
+      );
+    readCalls.set(ownerId, [...recent, now]);
+  };
+  const studioRoute = design
+    ? studioRoutes({
+        images: design.images,
+        providers: studio,
+        spend: (ownerId, kind) =>
+          kind === 'segment'
+            ? spendSegmentCall(ownerId)
+            : kind === 'repaint'
+              ? spendRepaintCall(ownerId)
+              : spendReadCall(ownerId),
+      })
+    : undefined;
   const workers = new Map<string, PhotoWorker>();
   const starting = new Map<string, Promise<PhotoWorker>>();
   function workerFor(repo: MongoWorkspaceRepository) {
@@ -969,6 +997,15 @@ export async function createWorkspaceServer(
           'Content-Disposition': 'inline',
         });
         res.end(blob.bytes);
+        return;
+      }
+      if (path.startsWith('/studio/') && req.method === 'POST') {
+        if (!studioRoute) throw new DomainError('VALIDATION', 'Image storage is unavailable');
+        if (!providerConfigured)
+          throw new DomainError('VALIDATION', 'Configure MUSE_API_KEY on the server first');
+        const result = await studioRoute(path, activeRepo.ownerId, await body(req));
+        if (result === undefined) throw new DomainError('NOT_FOUND', 'Unknown studio request');
+        json(200, result);
         return;
       }
       if (path === '/photos/segment' && req.method === 'POST') {
