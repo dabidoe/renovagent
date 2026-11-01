@@ -100,7 +100,8 @@ export function HeroScene() {
     const observer = new ResizeObserver(place);
     observer.observe(el);
     return () => observer.disconnect();
-  }, []);
+    // The card's height follows the chosen finish; pins move with it.
+  }, [active]);
   const item = materials.find((m) => m.id === active)!;
   return (
     <div className="hero-scene hero-ar-scene" ref={scene}>

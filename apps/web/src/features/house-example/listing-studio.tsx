@@ -81,7 +81,7 @@ export function ListingStudio({ id, onBack }: { id: string; onBack: () => void }
   return (
     <PaintFloorStudio
       project={shown}
-      kicker="Example from a real listing · try any change; it isn’t saved"
+      kicker="Example from a real listing · your changes stay in this browser"
       onEditRoom={(roomId, patch) =>
         patch.size && save({ ...edits, sizes: { ...edits.sizes, [roomId]: patch.size } })
       }

@@ -697,3 +697,10 @@
   padding: 0 4px;
   font-size: 13px;
 }
+@media (pointer: coarse), (max-width: 760px) {
+  .handoff-view-switch button,
+  .handoff-section .prompt-example,
+  .landing-workspace-link {
+    min-height: 44px;
+  }
+}

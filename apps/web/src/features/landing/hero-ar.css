@@ -241,3 +241,9 @@
     padding: 5px 8px;
   }
 }
+
+@media (pointer: coarse), (max-width: 760px) {
+  .hero-ar-tabs button {
+    min-height: 44px;
+  }
+}
