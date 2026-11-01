@@ -56,6 +56,19 @@ The paint and floor studio (examples and `#your-project`) has an **Inspiration**
 | Shop             | `shop-links.ts`             | Amazon, Wayfair and Target **searches** for the item's description. Amazon carries `RENOVAGENT_AMAZON_TAG` only when set; the disclosure then shows                                                                                                                             |
 | Restyle          | `/studio/restyle`           | Muse Image edits the room photo with the inspiration photo as a reference; prompt from `restylePrompt(items, paint)`: change only the ticked items, keep the framing. The result is fitted back to the room size and stored; the **Inspired** tab compares it with the original |
 
-Not done: products are never identified as exact SKUs; colours are read from the photo, not measured; the restyle is a picture, not a plan, and Muse adds borrowed furniture to empty rooms. Agents adding to this panel (Slice B) is the next increment.
+Restyle mapping (`256f6c8`): Muse Spark first turns the borrowed items into changes to what the owner's photo shows (`restyleMapSchema`, `restyleMapPrompt`, `restyleChanges`; at most six, never adding or moving furniture), then Muse Image edits with that list. Without it, Muse Image replaced the owner's room with the inspiration room (checked on the bedroom example). Costs one more read; the restyle takes about 55 s locally.
+
+Not done: products are never identified as exact SKUs; colours are read from the photo, not measured; the restyle is a picture, not a plan.
+
+## November 1: the board, for the owner and their agent (Slice B)
+
+The studio keeps a per-owner inspiration board (`inspiration_finds`, via `StudioPlanStore`), separate from the workspace project board above because the studio is not a workspace project.
+
+- **Agent:** `save_inspiration {requestId, kind: inspiration|product, title, url?, note?, photoBase64?}` and `list_inspiration` on hosted `/mcp`, propose keys only. The finding agent is the key's name.
+- **Owner:** `GET /studio/finds`, `POST /studio/finds` (a link), `POST /studio/finds/remove`. Owner-scoped; signed-out visitors get 403.
+- **Rules:** link or photo required; links pass `projectReferenceSchema` (http/https, no embedded credentials) and are never fetched; no price field; photos are bytes the agent already has, normalised into the owner's image store with their provenance; 100 per owner; `requestId` makes retries safe.
+- **UI:** "Your board" in the Inspiration panel; "Found by Muse · not checked"; **Use this photo** feeds the analyse step.
+
+Verification: `tests/integration/inspiration-board.test.ts` (read key has no tool, idempotency, `javascript:` and empty finds rejected, photo stored, owner add/remove, cross-owner 404, signed-out 403), plus a local browser run with a real MCP client.
 
 Verification: unit tests for `nearestPaints`, `inspoItems` and `restylePrompt`; integration tests with stubbed models for analyse caching, listing-example upload, restyle owner scoping (404 for another owner's inspiration) and `/paint/nearest`. A local end-to-end with the real models on a local database: 6 items in 21 s, restyle in 28 s, Inspired tab survives reload.

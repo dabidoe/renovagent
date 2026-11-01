@@ -644,6 +644,49 @@ export async function createWorkspaceServer(
         });
         return;
       }
+      // The studio's inspiration board: the owner's links and their agents' finds.
+      if (path === '/studio/finds' && req.method === 'GET') {
+        json(200, {
+          finds: plans
+            ? (await plans.listFinds(activeRepo.ownerId)).map(({ _id, ...f }) => ({
+                id: _id,
+                ...f,
+              }))
+            : [],
+        });
+        return;
+      }
+      if (path === '/studio/finds' && req.method === 'POST') {
+        if (!plans) throw new DomainError('NOT_FOUND', 'The inspiration board is not available');
+        const input = z
+          .object({
+            requestId: z.string().trim().min(8).max(120),
+            kind: z.enum(['inspiration', 'product']),
+            title: z.string().trim().min(1).max(200),
+            url: z.string().trim().max(2000),
+            note: z.string().trim().max(1000).optional(),
+          })
+          .strict()
+          .parse(await body(req));
+        const { find } = await plans.saveFind({
+          ...input,
+          ownerId: activeRepo.ownerId,
+          agent: null,
+        });
+        const { _id, requestKey: _key, ownerId: _owner, ...shown } = find;
+        json(200, { id: _id, ...shown });
+        return;
+      }
+      if (path === '/studio/finds/remove' && req.method === 'POST') {
+        const { id: findId } = z
+          .object({ id: z.string().max(40) })
+          .strict()
+          .parse(await body(req));
+        if (!plans || !(await plans.removeFind(activeRepo.ownerId, findId)))
+          throw new DomainError('NOT_FOUND', 'No such find in this account');
+        json(200, { removed: findId });
+        return;
+      }
       const requireOperator = () => {
         if (!accountMode) return;
         const expected = process.env.RENOVAGENT_CATALOG_OPERATOR || '';

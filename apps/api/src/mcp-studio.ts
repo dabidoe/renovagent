@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { FLOOR_STYLES, namedPaint, nearestPaint, type PaintColor } from '@renovagent/core';
 import type { CatalogStore } from './catalog.js';
 import type { PlanRoom, StudioPlanStore } from './studio-plans.js';
+import { normalizeImage, sha256Of, type DesignImageStore } from './design-images.js';
 import {
   DEFAULT_SHEEN,
   PRESET_COLORS,
@@ -23,7 +24,7 @@ import {
 
 export const STUDIO_MCP_TOOLS = ['list_floor_styles', 'find_paint_color', 'plan_paint_and_floor'];
 // Registered only for a propose credential on the hosted endpoint.
-export const STUDIO_SAVE_TOOLS = ['save_plan'];
+export const STUDIO_SAVE_TOOLS = ['save_plan', 'save_inspiration', 'list_inspiration'];
 
 const PRICE_NOTE =
   'Example prices for this demo, not live offers; labour is quoted separately. Quantities: wall area × 2 coats plus 10% paint, rounded up to whole gallons; floors by the room area.';
@@ -175,7 +176,13 @@ function priced(project: HouseProject, tier: TierKey) {
 
 export type StudioToolOptions = {
   // Saving plans: a propose credential, its owner and the site's address.
-  plans?: { store: StudioPlanStore; ownerId: string; agent: string; origin: string };
+  plans?: {
+    store: StudioPlanStore;
+    ownerId: string;
+    agent: string;
+    origin: string;
+    images?: DesignImageStore;
+  };
 };
 
 export function registerStudioTools(
@@ -259,5 +266,86 @@ export function registerStudioTools(
           ...priced(project, plan.tier),
         });
       },
+    );
+
+  if (saving)
+    server.tool(
+      'save_inspiration',
+      'Add something to the owner’s Renovagent inspiration board: a room look they like (kind "inspiration") or a product you found (kind "product"), as a link, a photo, or both. The owner sees it in the Inspiration panel of any studio, marked as found by you and not checked, and can turn a photo into paint matches, shopping searches and a restyle of their own room. Pass a photo only when you already have its bytes (for example one the owner sent you), as base64 JPEG or PNG under about 600 KB; Renovagent never downloads links. No prices. Reuse requestId on retries.',
+      {
+        requestId: z.string().trim().min(8).max(120),
+        kind: z.enum(['inspiration', 'product']),
+        title: z.string().trim().min(1).max(200),
+        url: z
+          .string()
+          .trim()
+          .max(2000)
+          .optional()
+          .describe('http or https page where you found it'),
+        note: z
+          .string()
+          .trim()
+          .max(1000)
+          .optional()
+          .describe('Why it fits, in the owner’s words where possible'),
+        photoBase64: z
+          .string()
+          .max(900_000)
+          .regex(/^[A-Za-z0-9+/]*={0,2}$/)
+          .optional(),
+      },
+      { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+      async ({ requestId, kind, title, url, note, photoBase64 }) => {
+        let imageSha256: string | undefined;
+        if (photoBase64) {
+          if (!saving.images) throw new Error('Photos are not available on this connection');
+          const original = new Uint8Array(Buffer.from(photoBase64, 'base64'));
+          const stored = await saving.images.put(saving.ownerId, await normalizeImage(original), {
+            label: 'agent inspiration photo',
+            originalName: title.slice(0, 120),
+            originalSha256: sha256Of(original),
+            permission: `given to the owner's agent (${saving.agent})`,
+          });
+          imageSha256 = stored.sha256;
+        }
+        const { find, created } = await saving.store.saveFind({
+          ownerId: saving.ownerId,
+          requestId,
+          kind,
+          title,
+          ...(url ? { url } : {}),
+          ...(note ? { note } : {}),
+          ...(imageSha256 ? { imageSha256 } : {}),
+          agent: saving.agent,
+        });
+        return text({
+          saved: created ? 'new' : 'already saved for this requestId',
+          id: find._id,
+          title: find.title,
+          shownAt: `${saving.origin}/#your-project`,
+          note: 'Shown to the owner as found by this agent, not checked. Tell them where to find it.',
+        });
+      },
+    );
+
+  if (saving)
+    server.tool(
+      'list_inspiration',
+      'List the owner’s inspiration board, newest first: links and photos saved by the owner or their agents. Use it to avoid saving duplicates and to learn their taste.',
+      {},
+      { readOnlyHint: true, openWorldHint: false },
+      async () =>
+        text(
+          (await saving.store.listFinds(saving.ownerId)).map((f) => ({
+            id: f._id,
+            kind: f.kind,
+            title: f.title,
+            ...(f.url ? { url: f.url } : {}),
+            ...(f.note ? { note: f.note } : {}),
+            photo: !!f.imageSha256,
+            addedBy: f.agent ?? 'owner',
+            addedAt: f.createdAt,
+          })),
+        ),
     );
 }

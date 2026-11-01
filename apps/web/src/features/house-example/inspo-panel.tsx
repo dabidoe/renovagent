@@ -5,6 +5,7 @@ import { SignInChoices } from '../connect/sign-in.js';
 import { imageUrl } from './own-project.js';
 import type { StudioRoom, WallColor } from './paint-floor.js';
 import { AMAZON_DISCLOSURE, shopLinks } from './shop-links.js';
+import { InspoBoard } from './inspo-board.js';
 
 // "Use an inspiration photo": Muse Spark names what makes the look, SAM 3.1
 // outlines each item, the colours are read from those outlines here, the walls
@@ -122,13 +123,16 @@ export function InspoPanel({
       error: e instanceof Error ? e.message.slice(0, 160) : 'That did not work.',
     });
 
-  const analyse = async (picked: File) => {
+  const analyse = async (picked: File | string) => {
     setStatus({ busy: 'Reading the photo…', error: '' });
     setInspo(null);
     setPaints(null);
     setPaint(null);
+    setChanges([]);
     try {
-      const sha256 = await upload(picked, picked.name, 'owner');
+      // A photo from the board is already stored; a picked file is uploaded.
+      const sha256 =
+        typeof picked === 'string' ? picked : await upload(picked, picked.name, 'owner');
       setStatus({ busy: 'Finding what makes the look…', error: '' });
       const found = (await workspaceRequest('/studio/inspo', { sha256 })) as Inspo;
       setInspo(found);
@@ -203,6 +207,7 @@ export function InspoPanel({
           </span>
         </button>
       )}
+      <InspoBoard onUsePhoto={(sha256) => void analyse(sha256)} busy={!!status.busy} />
       {status.busy && (
         <p className="pf-inspo-status">
           <span className="pf-spinner" aria-hidden="true" /> {status.busy}

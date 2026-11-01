@@ -1441,3 +1441,88 @@
 .pf-inspo-example-paints small {
   color: var(--pf-muted);
 }
+
+.pf-board {
+  margin: 10px 0;
+  padding: 8px 12px;
+  border: 1px solid var(--pf-line);
+  border-radius: 12px;
+  background: var(--pf-card);
+}
+.pf-board summary {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-weight: 600;
+}
+.pf-board summary small {
+  color: var(--pf-muted);
+  font-weight: 400;
+}
+.pf-board ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+.pf-board li {
+  display: grid;
+  grid-template-columns: 56px 1fr;
+  gap: 10px;
+  align-items: start;
+}
+.pf-board li > img,
+.pf-board li > span {
+  width: 56px;
+  height: 56px;
+  border-radius: 8px;
+  object-fit: cover;
+  background: var(--pf-soft);
+}
+.pf-board li a,
+.pf-board li b {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.pf-board li small {
+  display: block;
+  color: var(--pf-muted);
+}
+.pf-board li p {
+  margin: 4px 0 0;
+  font-size: 13px;
+}
+.pf-board-actions,
+.pf-board-add {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 6px;
+}
+.pf-board-actions button,
+.pf-board-add button,
+.pf-board-new {
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--pf-line);
+  border-radius: 999px;
+  background: var(--pf-card);
+  font: inherit;
+  cursor: pointer;
+}
+.pf-board-add input,
+.pf-board-add select {
+  min-height: 44px;
+  flex: 1 1 180px;
+  min-width: 0;
+  padding: 0 10px;
+  border: 1px solid var(--pf-line);
+  border-radius: 8px;
+  font: inherit;
+}
+.pf-board-new {
+  margin-top: 10px;
+}

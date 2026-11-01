@@ -801,7 +801,15 @@ export function createWorkspaceMcpServer(
   registerStudioTools(
     server,
     catalog,
-    savesPlans ? { plans: { ...options.plans!, ownerId: repository.ownerId } } : {},
+    savesPlans
+      ? {
+          plans: {
+            ...options.plans!,
+            ownerId: repository.ownerId,
+            ...(options.images ? { images: options.images } : {}),
+          },
+        }
+      : {},
   );
   return server;
 }

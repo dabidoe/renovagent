@@ -10,7 +10,7 @@ Any agent or person picking this up should read this file first, then [AGENTS.md
 - **Judging weights:** Impact 30%, use of Meta AI tooling beyond a basic integration 25%, technical depth 20%, and a demo that holds up live (including the video) 25%.
 - **Live site:** https://renovagent-production.up.railway.app. Railway redeploys every push to `main` in about 2–3 minutes. Health check: `/healthz`.
 - **Priorities until the deadline:** a live demo that works and deeper use of the Meta models. Defer billing, Premium, Bunny and Stripe; they are in [launch-checklist.md](docs/launch-checklist.md) and not built.
-- **In progress:** Slice B of inspiration. The owner's own agent (Muse, or any MCP client) can add links, products and photos to the studio's inspiration panel. See [Next work](#next-work).
+- **Latest (1 Nov):** inspiration is complete for the demo: photo → items, paints, store searches and a restyle of your own room; your agent adds links and photos to Your board over MCP; `#example/bedroom-refresh` shows a worked run. See [Next work](#next-work).
 
 ## What a judge sees
 
@@ -33,7 +33,7 @@ Any agent or person picking this up should read this file first, then [AGENTS.md
 
 - Example studio edits stay in the browser (localStorage `renovagent.studio.<id>.*`, `renovagent.example.<id>.edits.v1`). The kicker says so. There is no "save to my account" for examples; the owner rates it low priority.
 - Own-project photos are stored on the server for each owner, keyed by SHA-256.
-- Agents save paint and floor plans with `save_plan`, which hands the owner a link.
+- Agents save paint and floor plans with `save_plan`, which hands the owner a link, and add links and photos to the owner's inspiration board with `save_inspiration` (collection `inspiration_finds`, shown as "Found by <agent> · not checked").
 
 ## Meta models: where each is used
 
@@ -113,7 +113,7 @@ These come from the owner across sessions. They are not visible in the code.
 | `npm run dev:local`      | The same against local Mongo on 27018                                                                    |
 | `npm run dev:accounts`   | Turns Google sign-in on locally                                                                          |
 | `npm test`               | 15 legacy JS plus about 280 TS tests (contract, domain, integration)                                     |
-| `npm run test:connected` | Integration suites against a real local Mongo on 27018 (about 57)                                        |
+| `npm run test:connected` | Integration suites against a real local Mongo on 27018 (58)                                              |
 | `npm run build`          | Types, boundaries, production builds                                                                     |
 | `npx tsc --noEmit -p .`  | Fast type check                                                                                          |
 
@@ -174,40 +174,31 @@ The endpoint is `https://<site>/mcp`, a stateless Streamable HTTP endpoint. Each
 | Read                            | `list_homes`, `list_projects`, `get_project_context` (includes inspiration and product references), `review_scope`, `export_contractor_handoff`, `list_project_files`, `get_artifact`, `get_design_options`, `search_catalog`, `get_offer_history`, `build_checkout_review` |
 | Studio                          | `list_floor_styles`, `find_paint_color`, `plan_paint_and_floor`                                                                                                                                                                                                             |
 | Propose (not on read-only keys) | `start_project`, `draft_scope`, `build_design_options`, `revise_design_option`, `propose_project_change` (allows only `ProposeArtifact`, `SaveDraft`, `AppendMessage`)                                                                                                      |
-| Hosted with a propose key       | `save_plan`, which saves a paint and floor plan and returns a link for the owner                                                                                                                                                                                            |
+| Hosted with a propose key       | `save_plan` (a paint and floor plan, returns a link), `save_inspiration` (a link and/or a photo under ~600 KB to the owner's board), `list_inspiration`                                                                                                                     |
 
 Consumer Muse on Mac connected and created and read projects on 29 Oct ([evidence](docs/architecture/remote-mcp-connector.md)). The hosted `/mcp` replaced the temporary tunnel.
 
-## Inspiration, as built (Slice A, `4e947d1`)
+## Inspiration, as built
 
-**The flow**
+**Slice A (`4e947d1`, restyle fixed in `256f6c8`)**
 
-1. In any studio, under Imagine, the owner chooses **Use an inspiration photo**.
-2. The photo is uploaded owner-scoped through `/studio/photo`.
-3. `/studio/inspo` runs: Muse Spark names up to 6 items, each with a phrase, name and kind (walls, floor, bedding, textile, furniture, lighting, decor). SAM 3.1 then outlines each phrase.
-   - The result is cached for each owner and photo.
-   - It costs 1 read plus 1 segment per item.
-4. In the browser:
-   - each item's colour is a trimmed mean of the pixels inside its mask;
-   - walls call `/paint/nearest`, which returns the 3 nearest paints;
-   - the other items get Amazon, Wayfair and Target search links (`shop-links.ts`).
-5. **Restyle** (`/studio/restyle`) sends the room photo plus the inspiration photo as a reference to Muse Image, with only the ticked items and the chosen paint.
-   - The result is stored and shown in an **Inspired** tab with a slider.
-   - It persists per room in localStorage.
+1. In any studio, under Imagine, the owner chooses **Use an inspiration photo** (or **Use this photo** on a board item).
+2. `/studio/inspo`: Muse Spark names up to 6 items (phrase, name, kind); SAM 3.1 outlines each. Cached per owner and photo; 1 read plus 1 segment per item.
+3. Browser: each item's colour is a trimmed mean inside its mask; walls call `/paint/nearest` (3 nearest paints); other items get Amazon, Wayfair and Target searches (`shop-links.ts`).
+4. **Restyle** (`/studio/restyle`): Muse Spark first maps the borrowed look onto what the owner's photo shows (`restyleMapPrompt` → `restyleChanges`, e.g. "plaid duvet → white bedding with a cream throw"; never adds or moves furniture), then Muse Image edits with that list and the inspiration photo as reference. Without the mapping step Muse Image replaced the owner's room with the inspiration room. The panel lists what changed; the **Inspired** tab persists per room.
 
-**Measured locally with the real models:** about 21 s to analyse, about 28 s to restyle.
+**Slice B (agent and owner board)**
 
-**Known behaviour:** Muse adds the furniture you borrow. An empty room gains a bed. Untick furniture to change finishes only.
+- `save_inspiration` / `list_inspiration` over hosted `/mcp` (propose keys only); `GET/POST /studio/finds`, `POST /studio/finds/remove` for the owner. Store: `StudioPlanStore.saveFind` in `apps/api/src/studio-plans.ts`, collection `inspiration_finds`, 100 per owner, idempotent by `requestId`.
+- Links validated with `projectReferenceSchema` (http/https, no credentials); never fetched. No prices. Agent photos are base64 under about 600 KB, normalised into the owner's image store labelled "given to the owner's agent".
+- UI: **Your board** inside the Inspiration panel (`inspo-board.tsx`): open links, add a link, remove, use a photo.
+
+**Example:** `#example/bedroom-refresh` (`inspo-example.tsx`, `public/examples/bedroom-refresh/`): a saved Pinterest pin applied to a bedroom photo, made by the panel with the real models on a local database. The pin is not shipped.
 
 ## Next work
 
-1. **Slice B: the agent adds to the inspiration panel.** A tool for the owner's own agent to save a link, product or photo to that owner's inspiration list. The studio's panel shows them with "Found by <agent> · not checked", and the owner can add their own links there too.
-   - Links are validated like `projectReferenceSchema`: http(s) only, no credentials.
-   - The server never fetches URLs.
-   - Photos come only as bytes the agent already holds, with a size cap.
-   - Read-only keys can't use it.
-   - Status: see [PROGRESS.md](PROGRESS.md).
-2. **Bedroom refresh example.** A worked inspiration example (a saved Pinterest pin applied to the owner's bedroom). Ship the before/after and extracted items, never the pin itself. Status: see PROGRESS.
+1. **Try the inspiration flow live** (not yet run on the live site; owner's call because it creates a guest and spends model calls). Local runs with the real models: analyse about 20 s, restyle about 55 s with the mapping step.
+2. **Agent-side check with consumer Muse:** make a propose key at `#connect`, ask Muse to find a product and "add it to my Renovagent board", and confirm it appears under Your board. Covered by `tests/integration/inspiration-board.test.ts` and a local MCP-client run, not yet by Muse itself.
 3. **Design-pass open items:** see [docs/design-pass-2026-11-01.md](docs/design-pass-2026-11-01.md). Medium: the `product-*.jpg` disclaimer on every Materials view.
 4. **Paint lines** (owner: "good enough for now"):
    - tiers are contractor, mid and designer, not real Sherwin-Williams lines;
