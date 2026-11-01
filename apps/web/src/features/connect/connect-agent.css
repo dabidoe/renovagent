@@ -1,24 +1,33 @@
-/* Connect your agent: the address, keys, and how to use them. */
+/* Guided connection setup; credentials and protocol details stay on this page. */
 .ca {
   --ca-ink: #142038;
   --ca-muted: #64748b;
   --ca-line: #e2e8f0;
   --ca-soft: #f1f5f9;
   --ca-accent: #0866ff;
-  max-width: 720px;
+  width: 100%;
+  max-width: 1120px;
+  min-width: 0;
   margin: 24px auto 48px;
   display: grid;
-  gap: 16px;
+  gap: 24px;
   color: var(--ca-ink);
+}
+.ca-heading {
+  max-width: 680px;
+  display: grid;
+  gap: 14px;
+  margin-bottom: 8px;
 }
 .ca h1 {
   margin: 0;
-  font-size: clamp(1.8rem, 4vw, 2.4rem);
-  letter-spacing: -0.02em;
+  font-size: clamp(1.8rem, 4vw, 2.8rem);
+  line-height: 1.1;
+  letter-spacing: -0.04em;
 }
 .ca-kicker {
   margin: 0;
-  font-size: 0.75rem;
+  font-size: 11px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--ca-muted);
@@ -26,55 +35,134 @@
 .ca-sub {
   margin: 0;
   color: var(--ca-muted);
-  line-height: 1.5;
+  font-size: 15px;
+  line-height: 1.65;
+}
+.ca-guide-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  align-items: start;
+  gap: 28px;
+}
+.ca-guide {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
 }
 .ca-card {
   display: grid;
-  gap: 10px;
-  padding: 18px;
+  gap: 14px;
+  min-width: 0;
+  padding: 22px;
   border: 1px solid var(--ca-line);
   border-radius: 16px;
   background: #fff;
 }
-.ca-card[hidden] {
-  display: none;
-}
 .ca-card h2 {
   margin: 0;
-  font-size: 1rem;
+  font-size: 16px;
+  line-height: 1.45;
+  letter-spacing: -0.01em;
+}
+.ca-step {
+  grid-template-columns: 28px minmax(0, 1fr);
+  gap: 16px;
+}
+.ca-step-number {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #edf3ff;
+  color: #0866ff;
+  font-size: 12px;
+  font-weight: 600;
+}
+.ca-step-body {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+.ca-note {
+  margin: 0;
+  font-size: 13px;
+  color: var(--ca-muted);
+  line-height: 1.6;
+}
+.ca-note a {
+  color: var(--ca-accent);
+}
+.ca-prompt {
+  display: grid;
+  justify-items: start;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid #e1e8f4;
+  border-radius: 12px;
+  background: #f7f9fd;
+}
+.ca-prompt p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+.ca-full-message {
+  width: 100%;
+  color: var(--ca-muted);
+}
+.ca-full-message summary {
+  min-height: 28px;
+  cursor: pointer;
+  font-size: 11px;
+}
+.ca-full-message p {
+  margin-top: 10px;
+  white-space: pre-wrap;
 }
 .ca-row {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   align-items: center;
   min-width: 0;
 }
-.ca-row code,
-.ca-row q {
-  flex: 1;
+.ca-row code {
+  flex: 1 1 200px;
   min-width: 0;
-  padding: 9px 12px;
+  padding: 12px;
   border-radius: 10px;
   background: var(--ca-soft);
-  font-size: 0.85rem;
+  font-size: 12px;
+  line-height: 1.6;
   overflow-wrap: anywhere;
-}
-.ca-row q {
-  quotes: none;
-  line-height: 1.45;
 }
 .ca-secret {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
 }
-.ca-copy,
-.ca-access button {
+.ca-copy {
   flex: none;
+  min-height: 44px;
   border: 1px solid var(--ca-line);
   border-radius: 999px;
-  padding: 7px 12px;
+  padding: 9px 14px;
   background: #fff;
   color: var(--ca-ink);
-  font-size: 0.82rem;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+.ca-copy:hover {
+  border-color: #abc5f3;
+  background: #f5f8ff;
+}
+.ca button:focus-visible,
+.ca a:focus-visible,
+.ca summary:focus-visible,
+.ca input:focus-visible {
+  outline: 2px solid #0866ff;
+  outline-offset: 3px;
 }
 .ca-make {
   display: flex;
@@ -82,68 +170,76 @@
   gap: 8px;
   align-items: center;
 }
-.ca-make input {
-  flex: 1 1 160px;
-  min-width: 0;
-  padding: 9px 12px;
-  border: 1px solid var(--ca-line);
-  border-radius: 10px;
-  font: inherit;
-}
-.ca-access {
-  display: flex;
-  gap: 6px;
-}
-.ca-access button[aria-pressed='true'] {
-  border-color: var(--ca-accent);
-  background: var(--ca-accent);
-  color: #fff;
-}
 .ca-primary {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 10px 18px;
   border: 0;
   border-radius: 999px;
-  padding: 9px 16px;
   background: var(--ca-accent);
   color: #fff;
+  font: inherit;
+  font-size: 13px;
   font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
 }
 .ca-primary:disabled {
   opacity: 0.5;
+  cursor: default;
 }
-.ca-note {
-  margin: 0;
-  font-size: 0.82rem;
-  color: var(--ca-muted);
-  line-height: 1.45;
+.ca-primary .glyph {
+  width: 16px;
+  height: 16px;
 }
 .ca-fresh {
   display: grid;
-  gap: 8px;
-  padding: 12px;
+  gap: 12px;
+  padding: 14px;
   border: 1px solid #b6d2ff;
   border-radius: 12px;
   background: #eef5ff;
+  min-width: 0;
 }
 .ca-fresh p {
   margin: 0;
-  font-size: 0.88rem;
+  font-size: 13px;
+  line-height: 1.6;
 }
 .ca-link {
   justify-self: start;
+  min-height: 44px;
+  padding: 8px 10px;
   border: 0;
-  padding: 0;
   background: none;
   color: var(--ca-accent);
-  font-size: 0.85rem;
+  font: inherit;
+  font-size: 12px;
   cursor: pointer;
 }
 .ca-error {
   margin: 0;
+  padding: 14px;
+  border: 1px solid #fecaca;
+  border-radius: 10px;
+  background: #fff7f7;
   color: #b42318;
-  font-size: 0.85rem;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.ca-example {
+  position: sticky;
+  top: 24px;
+  min-width: 0;
+}
+.ca-example-note {
+  margin: 16px 16px 0;
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--ca-muted);
 }
 .ca-keys {
   list-style: none;
@@ -155,43 +251,81 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 8px 0;
+  gap: 12px;
+  padding: 12px 0;
   border-top: 1px solid var(--ca-line);
+}
+.ca-keys li > span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.ca-keys b {
+  font-size: 13px;
 }
 .ca-keys small {
   display: block;
+  margin-top: 4px;
   color: var(--ca-muted);
-  font-size: 0.78rem;
+  font-size: 11px;
 }
-.ca-steps {
-  margin: 0;
-  padding-left: 20px;
-  display: grid;
-  gap: 10px;
-  font-size: 0.9rem;
-}
-.ca-steps li > span {
-  display: block;
-  margin-bottom: 6px;
-}
+.ca-manage summary,
 .ca-dev summary {
+  min-height: 28px;
   cursor: pointer;
+  font-size: 14px;
   font-weight: 600;
+}
+.ca-manage summary > span {
+  margin-left: 8px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: #edf3ff;
+  font-size: 11px;
+  color: #0866ff;
 }
 .ca-dev p {
   margin: 0;
-  font-size: 0.88rem;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--ca-muted);
+}
+.ca-dev[open] > summary,
+.ca-manage[open] > summary {
+  margin-bottom: 16px;
+}
+.ca-dev > p,
+.ca-dev > div,
+.ca-dev > label {
+  margin-top: 16px;
+}
+.ca-connection-name {
+  display: grid;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--ca-muted);
+  max-width: 300px;
+}
+.ca-connection-name input {
+  min-height: 44px;
+  min-width: 0;
+  padding: 9px 12px;
+  border: 1px solid var(--ca-line);
+  border-radius: 9px;
+  font: inherit;
+  color: var(--ca-ink);
 }
 .ca-code {
   position: relative;
+  min-width: 0;
 }
 .ca-code pre {
   margin: 0;
-  padding: 12px;
+  padding: 16px 90px 16px 16px;
   border-radius: 10px;
   background: #0f172a;
   color: #e2e8f0;
-  font-size: 0.78rem;
+  font-size: 12px;
+  line-height: 1.6;
   overflow-x: auto;
 }
 .ca-code .ca-copy {
@@ -199,10 +333,50 @@
   top: 8px;
   right: 8px;
 }
-
-/* Finger-sized controls. */
-.ca-primary,
-.ca-copy,
-.ca input {
-  min-height: 44px;
+@media (max-width: 860px) {
+  .ca-guide-layout {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+  .ca-example {
+    position: static;
+    max-width: 520px;
+    width: 100%;
+    justify-self: center;
+  }
+}
+@media (max-width: 560px) {
+  .ca {
+    margin-top: 12px;
+    gap: 20px;
+  }
+  .ca-card {
+    padding: 16px;
+  }
+  .ca-step {
+    grid-template-columns: 24px minmax(0, 1fr);
+    gap: 10px;
+  }
+  .ca-step-number {
+    width: 24px;
+    height: 24px;
+  }
+  .ca-card h2 {
+    font-size: 15px;
+  }
+  .ca-prompt {
+    padding: 12px;
+  }
+  .ca-prompt p {
+    font-size: 12px;
+  }
+  .ca-copy {
+    font-size: 11px;
+    padding-inline: 12px;
+  }
+  .ca-manage summary,
+  .ca-dev summary,
+  .ca-full-message summary {
+    min-height: 44px;
+  }
 }

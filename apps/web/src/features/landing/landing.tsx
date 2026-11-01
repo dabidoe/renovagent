@@ -7,13 +7,9 @@ import './landing-v2.css';
 import { Comparison } from './comparison.js';
 import { ProjectPreview } from './project-preview.js';
 import { HeroScene } from './hero-scene.js';
+import { StudioPreview } from './studio-preview.js';
 import { materials, money } from './bath-materials.js';
-import {
-  Transformation,
-  ContractorHandoff,
-  MeasurementProof,
-  AgentConnection,
-} from './landing-story.js';
+import { ContractorHandoff, MeasurementProof, AgentConnection } from './landing-story.js';
 import './hero-scene.css';
 import './product-experience.css';
 import './hero-ar.css';
@@ -507,7 +503,7 @@ export function Landing({
         </div>
       </section>
 
-      <Transformation />
+      <StudioPreview onOpen={onExample} busy={busy} />
       <BathroomDemo onExample={onExample} busy={busy} />
       <ContractorHandoff onExample={onExample} busy={busy} />
       <AgentConnection />

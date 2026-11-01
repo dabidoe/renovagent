@@ -548,14 +548,17 @@
   display: none;
 }
 @media (max-width: 640px) {
+  .prompt-workspace.is-landing .landing-nav > .landing-workspace-link {
+    display: none;
+  }
   .landing-mobile-menu {
     display: block;
   }
   .landing-mobile-menu summary {
     display: grid;
     place-items: center;
-    width: 36px;
-    height: 38px;
+    width: 44px;
+    height: 44px;
     cursor: pointer;
     list-style: none;
     color: #fff;
@@ -580,8 +583,15 @@
     border-radius: 8px;
     box-shadow: 0 10px 35px #07132126;
   }
-  .prompt-workspace.is-landing .landing-mobile-menu a {
-    display: block;
+  .prompt-workspace.is-landing .landing-mobile-menu a,
+  .prompt-workspace.is-landing .landing-mobile-menu button {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    text-align: left;
     font-size: 13px;
     padding: 12px 5px;
   }

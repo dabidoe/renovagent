@@ -395,28 +395,29 @@ export function App({ controller }: { controller: WorkspaceController }) {
           }}
           aria-label="Renovagent home"
         >
-          <BrandMark size={174} lockup />
+          <BrandMark size={174} lockup compact={isLanding} />
         </button>
         {isLanding ? (
           <nav className="landing-nav" aria-label="Main navigation">
             <a href="#how-it-works">The plan</a>
             <a href="#product-proof">See it work</a>
-            <a href="#compare-tools">Compare</a>
-            <a href="#agent-connection">Muse</a>
+            <a href="#connect">Connect your agent</a>
             <details className="landing-mobile-menu">
               <summary aria-label="Navigation menu">
                 <Glyph name="menu" />
               </summary>
               <div
                 onClick={(event) => {
-                  if ((event.target as HTMLElement).closest('a'))
+                  if ((event.target as HTMLElement).closest('a, button'))
                     event.currentTarget.closest('details')?.removeAttribute('open');
                 }}
               >
                 <a href="#how-it-works">The plan</a>
                 <a href="#product-proof">See it work</a>
-                <a href="#compare-tools">Compare</a>
-                <a href="#agent-connection">Works with Muse</a>
+                <a href="#connect">Connect your agent</a>
+                <button type="button" onClick={() => setModal('projects')}>
+                  Open workspace
+                </button>
               </div>
             </details>
             <button className="landing-workspace-link" onClick={() => setModal('projects')}>
@@ -445,31 +446,8 @@ export function App({ controller }: { controller: WorkspaceController }) {
             <Glyph name="chevron" />
           </button>
         )}
-        {/* The landing has its own navigation; the account shows on the app pages. */}
-        {controller.connected && auth.email && !isLanding && (
-          <span className="prompt-account">
-            {auth.email}
-            {/* A guest's work lives in one browser until it is kept with an account. */}
-            {auth.guest && auth.providers.includes('google') && (
-              <a className="link-button" href={signInUrlFor('google')} onClick={rememberReturn}>
-                Add Google
-              </a>
-            )}
-            <button className="link-button subtle" onClick={() => void signOut()}>
-              Sign out
-            </button>
-          </span>
-        )}
       </header>
-      {/* The landing's own links lead to pages that offer sign-in. */}
-      {auth.required && !isLanding && (
-        <div className="error-banner signin-banner" role="status">
-          <span>Sign in, or continue as a guest, to start your own workspace.</span>
-          <SignInChoices providers={auth.providers} />
-          <button onClick={() => controller.clearError()}>Dismiss</button>
-        </div>
-      )}
-      {/* Signing in is offered above; its error is not repeated. */}
+      {/* Account actions live in the workspace menu; actual errors stay visible. */}
       {(localError || (error && !auth.required)) && (
         <div className="error-banner" role="alert">
           <span>{error || localError}</span>
@@ -1227,13 +1205,17 @@ export function App({ controller }: { controller: WorkspaceController }) {
             Explore the example project
             <Glyph name="right" />
           </button>
-          {/* The header hides the account on phones; it is always here. */}
+          {auth.required && (
+            <div className="prompt-modal-account">
+              <SignInChoices providers={auth.providers} />
+            </div>
+          )}
           {controller.connected && auth.email && (
             <div className="prompt-modal-account">
-              <span>Signed in as {auth.email}</span>
+              {!auth.guest && <span>{auth.email}</span>}
               {auth.guest && auth.providers.includes('google') && (
                 <a href={signInUrlFor('google')} onClick={rememberReturn}>
-                  Add Google
+                  Sign in with Google
                 </a>
               )}
               <button className="link-button" onClick={() => void signOut()}>

@@ -169,6 +169,12 @@ export function HeroScene() {
         </div>
         <div aria-live="polite">
           <div className="hero-ar-card-heading">
+            <img
+              src={new URL(`../../assets/examples/product-${active}.jpg`, import.meta.url).href}
+              alt={`Generated style illustration for ${item.name}`}
+              width={48}
+              height={54}
+            />
             <div>
               <h3>{item.title}</h3>
               <small>
@@ -188,7 +194,6 @@ export function HeroScene() {
             </div>
           </dl>
         </div>
-        <p>Example prices for this demo, not live offers · Outlines by SAM 3.1</p>
       </div>
     </div>
   );

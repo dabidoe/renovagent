@@ -371,7 +371,7 @@
 }
 /* The owner's lockup is dark artwork; on the dark hero it sits on a light card. */
 .prompt-workspace.is-landing .prompt-header .brand-lockup {
-  padding: 4px 8px;
-  border-radius: 12px;
+  padding: 4px 5px;
+  border-radius: 8px;
   background: rgba(255, 255, 255, 0.9);
 }

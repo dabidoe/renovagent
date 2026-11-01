@@ -150,7 +150,7 @@ export function mountRoomScene(
   surfaces: RoomSurface[],
   look: RoomLook,
   onSelect: (surfaceId: string | null) => void,
-  meta: { sourceEvidenceId: string | null; title: string },
+  meta: { sourceEvidenceId: string | null; title: string; renderActions?: boolean },
   pins: RoomAnnotation[] = [],
   onPin: (annotationId: string) => void = () => {},
   formatCost: (pin: RoomAnnotation) => string = () => '',
@@ -504,7 +504,10 @@ export function mountRoomScene(
     }
   };
   let currentLook = look;
-  const photoreal = attachPhotoreal(host, captureEyeLevel, () => currentLook, model);
+  const photoreal =
+    meta.renderActions === false
+      ? null
+      : attachPhotoreal(host, captureEyeLevel, () => currentLook, model);
 
   const resize = () => {
     const { clientWidth: w, clientHeight: h } = host;
@@ -574,7 +577,7 @@ export function mountRoomScene(
       renderer.dispose();
       renderer.domElement.remove();
       labels.domElement.remove();
-      photoreal.dispose();
+      photoreal?.dispose();
     },
   };
 }

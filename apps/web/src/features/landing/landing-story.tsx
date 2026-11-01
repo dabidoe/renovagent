@@ -1,148 +1,9 @@
 import { useState } from 'react';
 import { Glyph } from '../../components/glyph.js';
-import { BrandMark } from '../../components/brand-mark.js';
-import { exampleScope, exampleScan } from './landing-example.js';
+import { MuseConversation } from '../connect/muse-conversation.js';
+import { exampleScan } from './landing-example.js';
 import './landing-story.css';
-const floorImage = new URL('../../assets/examples/floor.jpg', import.meta.url).href;
 const museIcon = new URL('../../assets/brand/muse-app-icon.png', import.meta.url).href;
-const icons: Record<string, string> = {
-  'removal-protection': 'home',
-  'wall-paint': 'paint',
-  'carpet-removal': 'layers',
-  'lvp-floor': 'tile',
-};
-const titles: Record<string, string> = {
-  'removal-protection': 'Protect the room',
-  'wall-paint': 'Prep & paint',
-  'carpet-removal': 'Remove the carpet',
-  'lvp-floor': 'Flooring, trim & transitions',
-};
-const packages = exampleScope.packages.filter((p) => p.included);
-const quantity = (id: string) => exampleScope.requirements.find((r) => r.id === id)!.quantity!;
-const packageDetail: Record<
-  string,
-  { amount: number; unit: string; title: string; rows: string[][] }
-> = {
-  'lvp-floor': {
-    amount: quantity('lvp-floor:planks'),
-    unit: 'sq ft',
-    title: 'Oak-look vinyl plank',
-    rows: [
-      ['Quarter-round trim', `${quantity('lvp-floor:quarter-round')} linear ft`],
-      ['Finish', 'Warm natural oak'],
-      ['Installation', 'Click-lock plank'],
-    ],
-  },
-  'wall-paint': {
-    amount: quantity('wall-paint:walls'),
-    unit: 'sq ft',
-    title: 'Warm white walls',
-    rows: [
-      ['Finish coats', '2 coats'],
-      ['Surface', 'Walls · 8 ft ceiling'],
-      ['Keep', 'Existing stairs & woodwork'],
-    ],
-  },
-  'carpet-removal': {
-    amount: quantity('carpet-removal:carpet'),
-    unit: 'sq ft',
-    title: 'Carpet & pad removal',
-    rows: [
-      ['Remove', 'Carpet, pad & tack strip'],
-      ['Disposal', 'Bag & haul away'],
-      ['Prepare', 'Exposed subfloor'],
-    ],
-  },
-  'removal-protection': {
-    amount: 1,
-    unit: 'room',
-    title: 'Protect before you begin',
-    rows: [
-      ['Cover', 'Stairs & adjoining floors'],
-      ['Move', 'Furniture out of the work area'],
-      ['Finish', 'Return furniture & clean up'],
-    ],
-  },
-};
-
-export function Transformation() {
-  const [selected, setSelected] = useState('lvp-floor');
-  const detail = packageDetail[selected];
-  return (
-    <section
-      className="landing-block transformation-section"
-      id="how-it-works"
-      aria-labelledby="transformation-title"
-    >
-      <div className="story-heading">
-        <h2 id="transformation-title">
-          Your idea. <em>Organized.</em>
-        </h2>
-      </div>
-      <div className="transformation-visual">
-        <div className="homeowner-idea">
-          <img
-            src={floorImage}
-            alt="Wood flooring inspiration"
-            width={1024}
-            height={768}
-            loading="lazy"
-          />
-          <blockquote>“{exampleScope.request}”</blockquote>
-          <div className="idea-attachments">
-            <span>
-              <Glyph name="photo" /> Room photos
-            </span>
-            <span>
-              <Glyph name="plan" /> Rough measurements
-            </span>
-          </div>
-        </div>
-        <span className="transformation-arrow" aria-hidden="true">
-          <Glyph name="right" />
-        </span>
-        <div className="scope-preview">
-          <div className="scope-preview-top">
-            <span>
-              <Glyph name="file" /> Living room refresh
-            </span>
-            <small>20 × 14 ft</small>
-          </div>
-          <div className="scope-preview-packages" aria-label="Work packages">
-            {packages.map((p) => (
-              <button
-                key={p.id}
-                aria-label={titles[p.id]}
-                title={titles[p.id]}
-                aria-pressed={selected === p.id}
-                onClick={() => setSelected(p.id)}
-              >
-                <Glyph name={icons[p.id]} />
-                <span>{titles[p.id]}</span>
-                <Glyph name="right" />
-              </button>
-            ))}
-          </div>
-          <div className="scope-preview-items" aria-live="polite">
-            <div className="scope-quantity">
-              <b>{detail.amount}</b>
-              <span>
-                {detail.unit}
-                <small>{detail.title}</small>
-              </span>
-            </div>
-            {detail.rows.map(([label, value]) => (
-              <div key={label}>
-                <span>{label}</span>
-                <strong>{value}</strong>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
 
 export function ContractorHandoff({ onExample, busy }: { onExample: () => void; busy: boolean }) {
   const [view, setView] = useState<'room' | 'quote'>('room');
@@ -312,84 +173,24 @@ export function AgentConnection() {
     >
       <div className="agent-story-copy">
         <h2 id="agent-title">
-          Your agent.
+          Plan it with
           <br />
-          <em>On the same page.</em>
+          <em>Muse.</em>
         </h2>
         <p>
-          Bring your room, scope and materials into the conversation. Muse reads your project and
-          proposes changes. You decide what makes it into the plan.
+          Ask for a paint-and-floor plan. Save the things you find. Pick up in the studio with your
+          choices ready to review.
         </p>
         <div className="agent-connection-links">
           <a className="landing-source-link" href="#connect">
-            Connect your agent <Glyph name="right" />
+            Connect Muse <Glyph name="right" />
           </a>
           <span>
             <img src={museIcon} alt="" width={20} height={20} /> Tested with Muse
           </span>
-          <a
-            className="landing-source-link"
-            href="https://github.com/dabidoe/renovagent"
-            target="_blank"
-            rel="noreferrer"
-          >
-            Built on MCP <Glyph name="right" />
-          </a>
         </div>
       </div>
-      <div
-        className="agent-project-visual"
-        role="img"
-        aria-label="Diagram: Muse connects to your room, scope and material quantities. You approve proposed changes."
-      >
-        <div className="agent-endpoint">
-          <img src={museIcon} alt="Muse" width={76} height={76} />
-          <span>Muse</span>
-        </div>
-        <div className="agent-context-link" aria-hidden="true">
-          <i />
-          <Glyph name="connection" />
-          <i />
-        </div>
-        <div className="agent-context-sheet">
-          <div className="agent-context-heading">
-            <div>
-              <span>Project context</span>
-              <strong>Living room refresh</strong>
-            </div>
-            <BrandMark size={84} lockup />
-          </div>
-          <div className="agent-context-room">
-            <img
-              src="/example-room/done-warm-white-lvp.jpg"
-              alt=""
-              width={1600}
-              height={1000}
-              loading="lazy"
-            />
-            <span>Warm white + natural oak</span>
-          </div>
-          <dl>
-            {[
-              ['tile', 'Flooring', `${quantity('lvp-floor:planks')} sq ft`],
-              ['paint', 'Walls', `${quantity('wall-paint:walls')} sq ft`],
-              ['layers', 'Trim', `${quantity('lvp-floor:quarter-round')} linear ft`],
-            ].map(([icon, label, value]) => (
-              <div key={label}>
-                <dt>
-                  <Glyph name={icon} />
-                  {label}
-                </dt>
-                <dd>{value}</dd>
-              </div>
-            ))}
-          </dl>
-          <div className="agent-context-approval">
-            <Glyph name="people" />
-            <span>You approve every change.</span>
-          </div>
-        </div>
-      </div>
+      <MuseConversation initialExample="plan" />
     </section>
   );
 }

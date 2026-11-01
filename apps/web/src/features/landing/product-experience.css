@@ -12,8 +12,8 @@
   background: transparent;
 }
 .prompt-workspace.is-landing .prompt-header .brand-lockup {
-  width: 150px;
-  height: 100px;
+  width: 128px;
+  height: 84px;
 }
 .prompt-workspace.is-landing .landing-nav a,
 .prompt-workspace.is-landing .landing-nav button {
@@ -353,8 +353,8 @@
     gap: 8px;
   }
   .prompt-workspace.is-landing .prompt-header .brand-lockup {
-    width: 132px;
-    height: 88px;
+    width: 112px;
+    height: 74px;
   }
   .landing.landing-v2.landing-refined.landing-cinematic .landing-hero {
     padding-top: 150px;

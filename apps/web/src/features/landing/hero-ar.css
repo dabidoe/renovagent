@@ -132,6 +132,13 @@
   align-items: center;
   gap: 9px;
 }
+.hero-ar-card-heading > img {
+  width: 48px;
+  height: 54px;
+  flex: none;
+  object-fit: contain;
+  border-radius: 5px;
+}
 .hero-ar-card-heading > div {
   flex: 1;
   min-width: 0;
@@ -175,18 +182,13 @@
   font-weight: 600;
   text-align: right;
 }
-.hero-ar-card > p {
-  font-size: 10px;
-  color: #64748b;
-  margin: 8px 0 0;
-}
 @media (max-width: 760px) {
   .prompt-workspace.is-landing .prompt-header {
     min-height: 88px;
   }
   .prompt-workspace.is-landing .prompt-header .brand-lockup {
-    width: 120px;
-    height: 80px;
+    width: 104px;
+    height: 68px;
   }
   .landing.landing-v2.landing-refined.landing-cinematic .landing-hero {
     min-height: 640px;
@@ -231,10 +233,6 @@
   .hero-ar-card dl > div {
     padding: 2px 0;
     font-size: 11px;
-  }
-  .hero-ar-card > p {
-    margin-top: 5px;
-    font-size: 9px;
   }
   .hero-ar-target > b {
     font-size: 12px;

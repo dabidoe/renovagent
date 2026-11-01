@@ -137,7 +137,7 @@ function paintWalls(
   ctx.putImageData(frame, 0, 0);
 }
 
-function BeforeAfter({
+export function BeforeAfter({
   room,
   pick,
   pending,
@@ -218,14 +218,16 @@ function LookThumb({ pick }: { pick: RoomPick }) {
   );
 }
 
-function Room3D({
+export function Room3D({
   room,
   ceilingFt,
   pick,
+  renderActions = true,
 }: {
   room: StudioRoom;
   ceilingFt: number | null;
   pick: RoomPick;
+  renderActions?: boolean;
 }) {
   const host = useRef<HTMLDivElement>(null);
   const scene = useRef<RoomScene | null>(null);
@@ -247,7 +249,7 @@ function Room3D({
         roomSurfaces(model, null),
         look,
         () => {},
-        { sourceEvidenceId: null, title: room.title },
+        { sourceEvidenceId: null, title: room.title, renderActions },
       );
       setError('');
     } catch (e) {
@@ -258,7 +260,7 @@ function Room3D({
       scene.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [room.id, sizeKey]);
+  }, [room.id, sizeKey, renderActions]);
   useEffect(() => {
     scene.current?.setLook(look);
     // eslint-disable-next-line react-hooks/exhaustive-deps
