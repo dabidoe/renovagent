@@ -198,6 +198,11 @@ test(
       assert.equal(idea.sheen, 'satin');
       assert.deepEqual(idea.extras, ['built-in bookshelf', 'brass sconces']);
       assert.match(prompts.at(-1)!, /"dark green walls, light oak floors/);
+      assert.match(
+        prompts.at(-1)!,
+        /well-known Test Paints colour/,
+        'names come from the loaded brand',
+      );
       assert.equal(
         (await post('/studio/imagine', { text: 'x'.repeat(301) })).status,
         400,

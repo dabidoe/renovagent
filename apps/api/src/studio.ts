@@ -140,9 +140,9 @@ export const imagineSchema = {
     extras: { type: 'array', items: { type: 'string' } },
   },
 } as const;
-export const imaginePrompt = (text: string, room: string) =>
+export const imaginePrompt = (text: string, room: string, brands: string[]) =>
   `A homeowner describes how they imagine their ${room || 'room'}: ${JSON.stringify(text)}
-Turn it into choices. walls: true if they want the walls a new colour. colorName: the exact paint colour name only if they named one (for example "Naval"), otherwise "". hex: the wall colour they describe as #rrggbb ("" if walls is false). sheen: the paint finish only if they name one (matte, eggshell or satin), otherwise "". floor: "lvp" for vinyl plank, laminate or a wood look, "hardwood" for real or engineered wood, "keep" if they do not ask for a new floor, "other" for any other floor (tile, carpet, concrete). extras: everything else they ask for, each as a short noun phrase (for example "built-in bookshelf", "tile floor" when floor is "other"); at most four; [] if nothing else.`;
+Turn it into choices. walls: true if they want the walls a new colour. colorName: the paint colour they named; if they only describe a colour, the name of a well-known ${brands.length ? brands.join(' or ') : 'paint brand'} colour that matches it (for example "Naval" for navy); "" if walls is false. hex: the wall colour as #rrggbb, the way a real paint chip of it looks (paint colours are muted; never a pure screen colour such as #000080 for navy); "" if walls is false. sheen: the paint finish only if they name one (matte, eggshell or satin), otherwise "". floor: "lvp" for vinyl plank, laminate or a wood look, "hardwood" for real or engineered wood, "keep" if they do not ask for a new floor, "other" for any other floor (tile, carpet, concrete). extras: everything else they ask for, each as a short noun phrase (for example "built-in bookshelf", "tile floor" when floor is "other"); at most four; [] if nothing else.`;
 const imagineResult = z.object({
   walls: z.boolean(),
   colorName: z.string().max(60),
@@ -295,12 +295,13 @@ export function studioRoutes(deps: {
     if (path === '/studio/imagine') {
       const { text, room } = requests.imagine.parse(raw);
       deps.spend(ownerId, 'read');
+      const colors = await paint();
       const result = await deps.providers.read({
         schema: imagineSchema,
-        prompt: imaginePrompt(text, room),
+        prompt: imaginePrompt(text, room, [...new Set(colors.map((c) => c.brand))]),
       });
       return {
-        ...imagined(result.result, await paint()),
+        ...imagined(result.result, colors),
         model: result.model,
         runId: result.runId,
       };
