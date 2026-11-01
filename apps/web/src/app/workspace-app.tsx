@@ -14,7 +14,8 @@ import { HutchinsonStudio } from '../features/house-example/hutchinson-studio.js
 import { OwnStudio, type OwnStart } from '../features/house-example/own-studio.js';
 import { ConnectAgent } from '../features/connect/connect-agent.js';
 import { ExamplesGallery, ListingStudio } from '../features/house-example/listing-studio.js';
-import { SavedPlan, rememberReturn, takeReturn } from '../features/house-example/saved-plan.js';
+import { SignInChoices, takeReturn } from '../features/connect/sign-in.js';
+import { SavedPlan } from '../features/house-example/saved-plan.js';
 import { isHouseCase } from '../features/house-example/house-example-model.js';
 import '../features/house-example/house-example.css';
 import '../features/house-example/paint-floor.css';
@@ -45,7 +46,7 @@ import {
 } from './workspace-controller.js';
 import { artifactTitle } from '../features/work/artifact-view.js';
 import { PurchasePlans } from '../features/commerce/purchase-plans.js';
-import { signInUrlFor, signOutAccount } from '../adapters/http/project-repository.js';
+import { signOutAccount } from '../adapters/http/project-repository.js';
 import {
   previewLegacyImport,
   LEGACY_STORAGE_KEY,
@@ -454,23 +455,16 @@ export function App({ controller }: { controller: WorkspaceController }) {
           </span>
         )}
       </header>
-      {auth.required && (
-        <div className="error-banner" role="alert">
-          <span>{error || 'Sign in to reconnect your shared workspace.'}</span>
-          {(auth.providers.length ? auth.providers : ['google']).map((provider) => (
-            <a
-              key={provider}
-              className="link-button"
-              href={signInUrlFor(provider)}
-              onClick={rememberReturn}
-            >
-              Sign in with {provider === 'meta' ? 'Meta' : 'Google'}
-            </a>
-          ))}
+      {/* The landing's own links lead to pages that offer sign-in. */}
+      {auth.required && !isLanding && (
+        <div className="error-banner signin-banner" role="status">
+          <span>Sign in, or continue as a guest, to start your own workspace.</span>
+          <SignInChoices providers={auth.providers} />
           <button onClick={() => controller.clearError()}>Dismiss</button>
         </div>
       )}
-      {(error || localError) && (
+      {/* Signing in is offered above; its error is not repeated. */}
+      {(localError || (error && !auth.required)) && (
         <div className="error-banner" role="alert">
           <span>{error || localError}</span>
           <button

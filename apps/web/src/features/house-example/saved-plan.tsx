@@ -1,33 +1,13 @@
 import { useEffect, useState } from 'react';
-import { signInUrlFor, workspaceRequest } from '../../adapters/http/project-repository.js';
+import { workspaceRequest } from '../../adapters/http/project-repository.js';
 import { PaintFloorStudio } from './paint-floor-studio.js';
 import type { HouseProject } from './paint-floor.js';
+import { SignInChoices } from '../connect/sign-in.js';
 import '../connect/connect-agent.css';
 
 // A paint-and-floor plan an owner's agent saved (MCP save_plan), opened from
 // the link the agent gave: the rooms in 3D with the agent's picks, ready to
 // change. Changes stay in this browser; the saved plan is the agent's proposal.
-
-const RETURN = 'renovagent.return-to';
-
-// Sign-in leaves the page, and the address fragment never reaches the server,
-// so the plan link is kept for the return.
-export function rememberReturn() {
-  try {
-    if (window.location.hash) sessionStorage.setItem(RETURN, window.location.hash);
-  } catch {
-    // Without storage the owner opens the link again after signing in.
-  }
-}
-export function takeReturn() {
-  try {
-    const to = sessionStorage.getItem(RETURN);
-    sessionStorage.removeItem(RETURN);
-    return to && /^#[a-z0-9/_-]+$/i.test(to) ? to : null;
-  } catch {
-    return null;
-  }
-}
 
 type Loaded = { title: string; agent: string; createdAt: string; project: HouseProject };
 
@@ -60,19 +40,10 @@ export function SavedPlan({ id }: { id: string }) {
             <h1>Sign in to open this plan.</h1>
             <p className="ca-sub">
               Your agent saved it to your Renovagent account. Sign in with the account you connected
-              it to.
+              it to (a guest plan opens in the browser where the guest started).
             </p>
             <div className="ca-make">
-              {problem.signIn.map((provider) => (
-                <a
-                  key={provider}
-                  className="ca-primary"
-                  href={signInUrlFor(provider)}
-                  onClick={rememberReturn}
-                >
-                  Sign in with {provider === 'meta' ? 'Meta' : 'Google'}
-                </a>
-              ))}
+              <SignInChoices providers={problem.signIn} className="ca-primary" />
             </div>
           </>
         ) : (

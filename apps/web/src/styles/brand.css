@@ -186,6 +186,11 @@ a {
   color: #991b1b;
   border-bottom-color: #fecaca;
 }
+.error-banner.signin-banner {
+  background: #eef5ff;
+  color: #142038;
+  border-bottom-color: #b6d2ff;
+}
 .inline-error {
   color: #b91c1c;
 }

@@ -61,6 +61,8 @@ Agent calls over MCP run on the user's own model, so they cost us only storage. 
   | `RENOVAGENT_RENDER_URL`, `RENOVAGENT_RENDER_TOKEN` | Blender HD on Modal; same values as local `.env`                                                                         |
   | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`       | once I've built billing                                                                                                  |
 
+  Guests are on by default: "Continue as guest" gives each visitor (judges) a private workspace in one click, 20 per hour per address. Set `RENOVAGENT_GUESTS=off` to require Google.
+
   Railway provides `PORT`. Don't set `GOOGLE_REDIRECT_URI`; it is derived from the public URL.
 
 ### Google sign-in

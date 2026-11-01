@@ -18,6 +18,8 @@ export type AccountUser = {
   email: string;
   googleSub?: string;
   metaSub?: string;
+  // One-click guest: a private workspace with no provider identity.
+  guest?: boolean;
   createdAt: string;
 };
 
@@ -239,13 +241,30 @@ export class AccountService {
       };
       await this.users.insertOne(user);
     }
+    return { token: await this.startSession(user._id), user };
+  }
+
+  // A guest gets their own private workspace for as long as the session lasts;
+  // signing out (or clearing cookies) leaves it unreachable.
+  async guestLogin(): Promise<{ token: string; user: AccountUser }> {
+    const user: AccountUser = {
+      _id: `user:${randomBytes(16).toString('hex')}`,
+      email: 'Guest',
+      guest: true,
+      createdAt: new Date().toISOString(),
+    };
+    await this.users.insertOne(user);
+    return { token: await this.startSession(user._id), user };
+  }
+
+  private async startSession(userId: string) {
     const token = randomBytes(32).toString('hex');
     await this.sessions.insertOne({
       _id: createHash('sha256').update(token).digest('hex'),
-      userId: user._id,
+      userId,
       expiresAt: new Date(Date.now() + SESSION_DAYS * 24 * 3600 * 1000),
     });
-    return { token, user };
+    return token;
   }
 
   async getSession(token: string): Promise<AccountUser | null> {

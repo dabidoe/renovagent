@@ -196,6 +196,42 @@ test(
     }),
 );
 
+test(
+  'a guest gets their own private workspace in one click, limited per address',
+  { skip: !uri },
+  () =>
+    withAccountServer(async (base) => {
+      const session = await (await fetch(`${base}/session`, { headers })).json();
+      assert.equal(session.guests, true);
+      const guest = async (from: string) =>
+        fetch(`${base}/auth/guest`, {
+          method: 'POST',
+          headers: { ...headers, 'X-Forwarded-For': from },
+        });
+      // A guest start is a same-origin POST with the workspace header, never a link.
+      assert.equal(
+        (await fetch(`${base}/auth/guest`, { method: 'POST' })).status,
+        403,
+        'the workspace header is required',
+      );
+      const first = await guest('203.0.113.7');
+      assert.equal(first.status, 200);
+      const a = first.headers.getSetCookie()[0]!.split(';')[0]!;
+      const b = (await guest('203.0.113.7')).headers.getSetCookie()[0]!.split(';')[0]!;
+      const me = await (
+        await fetch(`${base}/session`, { headers: { ...headers, Cookie: a } })
+      ).json();
+      assert.equal(me.signedIn, true);
+      assert.deepEqual(me.user, { email: 'Guest', guest: true });
+      const homeA = await (await fetch(base, { headers: { ...headers, Cookie: a } })).json();
+      const homeB = await (await fetch(base, { headers: { ...headers, Cookie: b } })).json();
+      assert.notEqual(homeA.ownerId, homeB.ownerId, 'each guest has their own workspace');
+      for (let i = 2; i < 20; i++) assert.equal((await guest('203.0.113.7')).status, 200);
+      assert.equal((await guest('203.0.113.7')).status, 400, 'twenty an hour per address');
+      assert.equal((await guest('198.51.100.4')).status, 200, 'other addresses are unaffected');
+    }),
+);
+
 test('local mode is unchanged when Google is not configured', { skip: !uri }, async () => {
   const client = new MongoClient(uri!);
   await client.connect();

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { workspaceRequest } from '../../adapters/http/project-repository.js';
 import { Glyph } from '../../components/glyph.js';
+import { SignInChoices } from './sign-in.js';
 import './connect-agent.css';
 
 // Connect Muse or any MCP agent to the owner's own workspace: the site's /mcp
@@ -33,16 +34,18 @@ export function ConnectAgent() {
   const [keys, setKeys] = useState<Key[]>([]);
   const [error, setError] = useState('');
   const [name, setName] = useState('Muse');
-  const [access, setAccess] = useState<Key['access']>('propose');
   const [fresh, setFresh] = useState<{ key: string; name: string } | null>(null);
   const [busy, setBusy] = useState(false);
+  const [signedOut, setSignedOut] = useState(false);
   const load = () =>
     (workspaceRequest('/agent-keys') as Promise<{ endpoint: string; keys: Key[] }>)
       .then((r) => {
         setEndpoint(r.endpoint);
         setKeys(r.keys);
       })
-      .catch((e) => setError(e instanceof Error ? e.message : String(e)));
+      .catch((e: { code?: string; message?: string }) =>
+        e.code === 'FORBIDDEN' ? setSignedOut(true) : setError(e.message ?? String(e)),
+      );
   useEffect(() => {
     void load();
   }, []);
@@ -50,7 +53,10 @@ export function ConnectAgent() {
     setBusy(true);
     setError('');
     try {
-      const made = (await workspaceRequest('/agent-keys', { name: name.trim(), access })) as {
+      const made = (await workspaceRequest('/agent-keys', {
+        name: name.trim(),
+        access: 'propose',
+      })) as {
         key: string;
       };
       setFresh({ key: made.key, name: name.trim() });
@@ -97,7 +103,7 @@ export function ConnectAgent() {
         model; nothing here is charged for it.
       </p>
 
-      <div className="ca-card">
+      <div className="ca-card" hidden={signedOut}>
         <h2>Your address</h2>
         <div className="ca-row">
           <code>{endpoint || '…'}</code>
@@ -111,7 +117,20 @@ export function ConnectAgent() {
         )}
       </div>
 
-      <div className="ca-card">
+      {signedOut && (
+        <div className="ca-card">
+          <h2>Sign in first</h2>
+          <p className="ca-note">
+            Your agent works in your own workspace. Continue as a guest to try it in one click, or
+            sign in to keep your projects.
+          </p>
+          <div className="ca-make">
+            <SignInChoices className="ca-primary" />
+          </div>
+        </div>
+      )}
+
+      <div className="ca-card" hidden={signedOut}>
         <h2>Make a key</h2>
         <form
           className="ca-make"
@@ -126,29 +145,13 @@ export function ConnectAgent() {
             maxLength={60}
             onChange={(e) => setName(e.target.value)}
           />
-          <div className="ca-access" role="group" aria-label="What the agent may do">
-            <button
-              type="button"
-              aria-pressed={access === 'propose'}
-              onClick={() => setAccess('propose')}
-            >
-              Read and propose
-            </button>
-            <button
-              type="button"
-              aria-pressed={access === 'read'}
-              onClick={() => setAccess('read')}
-            >
-              Read only
-            </button>
-          </div>
           <button type="submit" className="ca-primary" disabled={busy || !name.trim()}>
             Make key <Glyph name="right" />
           </button>
         </form>
         <p className="ca-note">
-          Proposals stay proposals: an agent can start projects and suggest changes, never approve
-          them or buy anything. Keys last seven days; you can revoke one at any time.
+          Your agent can start projects, save plans and suggest changes — never approve them or buy
+          anything. Keys last seven days; you can revoke one at any time.
         </p>
         {fresh && (
           <div className="ca-fresh" role="status">
@@ -173,7 +176,7 @@ export function ConnectAgent() {
                 <span>
                   <b>{k.name}</b>
                   <small>
-                    {k.access === 'read' ? 'Read only' : 'Read and propose'} · until{' '}
+                    Until{' '}
                     {new Date(k.expiresAt).toLocaleDateString(undefined, {
                       month: 'short',
                       day: 'numeric',

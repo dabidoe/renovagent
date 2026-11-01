@@ -151,6 +151,10 @@ export async function createWorkspaceServer(
   plans?: StudioPlanStore,
 ) {
   const accountMode = Boolean(accounts);
+  // One-click guests (account mode only); RENOVAGENT_GUESTS=off turns them off.
+  const guestsAllowed = process.env.RENOVAGENT_GUESTS !== 'off';
+  const GUESTS_PER_HOUR = 20;
+  const guestStarts = new Map<string, { start: number; count: number }>();
   // A public origin with the shared local token would give every visitor one workspace.
   if (isPublic(hosting) && !accountMode)
     throw new Error('A public deployment needs Google or Meta sign-in configured');
@@ -442,6 +446,32 @@ export async function createWorkspaceServer(
         res.end();
         return;
       }
+      // Judges and visitors try it in one click: a guest account with its own
+      // private workspace. Limited per address so a script cannot mint many.
+      if (path === '/auth/guest' && req.method === 'POST') {
+        if (!accounts || !guestsAllowed)
+          throw new DomainError('NOT_FOUND', 'Guest access is not enabled here');
+        const from =
+          String(req.headers['x-forwarded-for'] ?? '')
+            .split(',')[0]
+            ?.trim() ||
+          req.socket.remoteAddress ||
+          'unknown';
+        const now = Date.now();
+        for (const [k, v] of guestStarts) if (now - v.start >= 3600_000) guestStarts.delete(k);
+        const seen = guestStarts.get(from) ?? { start: now, count: 0 };
+        if (++seen.count > GUESTS_PER_HOUR)
+          throw new DomainError('VALIDATION', 'Too many guest sign-ins from here; try again later');
+        guestStarts.set(from, seen);
+        const login = await accounts.guestLogin();
+        await repository.forUser(login.user._id).ensure();
+        res.writeHead(200, {
+          'Content-Type': 'application/json',
+          'Set-Cookie': accountCookie(login.token, secure),
+        });
+        res.end(JSON.stringify({ ok: true }));
+        return;
+      }
       if (path === '/auth/me' && req.method === 'GET') {
         if (!accounts) {
           json(200, { mode: 'local-single-owner', signedIn: false });
@@ -481,8 +511,9 @@ export async function createWorkspaceServer(
               ? {
                   mode: 'account',
                   signedIn: true,
-                  user: { email: user.email },
+                  user: { email: user.email, guest: Boolean(user.guest) },
                   providers: accounts!.providers(),
+                  guests: guestsAllowed,
                   mongo: true,
                   muse: providerConfigured,
                   render: Boolean(render),
@@ -492,6 +523,7 @@ export async function createWorkspaceServer(
                   mode: 'account',
                   signedIn: false,
                   providers: accounts!.providers(),
+                  guests: guestsAllowed,
                   mongo: true,
                   muse: providerConfigured,
                   render: Boolean(render),
