@@ -13,6 +13,7 @@ import {
   ceilingSchema,
   imagineSchema,
   inspoSchema,
+  restyleMapSchema,
   type StudioProviders,
 } from '../../apps/api/src/studio.js';
 
@@ -80,6 +81,12 @@ test(
               ],
             },
             runId: 'spark-inspo',
+            model: 'muse-spark-1.3',
+          };
+        if (schema === restyleMapSchema)
+          return {
+            result: { changes: [{ target: 'blue pillow', becomes: 'rust velvet pillow' }] },
+            runId: 'spark-map',
             model: 'muse-spark-1.3',
           };
         if (schema === ceilingSchema)
@@ -293,8 +300,11 @@ test(
       assert.equal(swatches.at(-1), 1, 'the inspiration photo goes with the room');
       assert.match(
         prompts.at(-1)!,
-        /exactly as framed[\s\S]*"rust velvet pillow"[\s\S]*"Alabaster SW 7008" \(#edeae0\)/,
+        /exactly as framed[\s\S]*the blue pillow becomes rust velvet pillow[\s\S]*"Alabaster SW 7008" \(#edeae0\)/,
       );
+      assert.deepEqual(restyled.changes, [
+        { target: 'blue pillow', becomes: 'rust velvet pillow' },
+      ]);
       assert.equal(
         (
           await post('/studio/restyle', {

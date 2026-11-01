@@ -18,6 +18,7 @@ type Segment = {
 };
 type Item = { phrase: string; name: string; kind: string; segments: Segment[] };
 type Inspo = { sha256: string; width: number; height: number; items: Item[] };
+type Change = { target: string; becomes: string };
 type Match = WallColor & { deltaE: number };
 type Nearest = { hex: string; close: boolean; matches: Match[] };
 
@@ -108,6 +109,7 @@ export function InspoPanel({
   const [hover, setHover] = useState<string | null>(null);
   const [status, setStatus] = useState<{ busy: string; error: string }>({ busy: '', error: '' });
   const [amazonTag, setAmazonTag] = useState<string | undefined>();
+  const [changes, setChanges] = useState<Change[]>([]);
   const file = useRef<HTMLInputElement>(null);
   useEffect(() => {
     void (workspaceRequest('/session') as Promise<{ amazonTag?: string }>)
@@ -151,7 +153,8 @@ export function InspoPanel({
       .filter((i) => borrow.has(i.phrase) && i.kind !== 'walls')
       .map((i) => i.name);
     if (!items.length && !paint) return;
-    setStatus({ busy: 'Restyling your room… about 20 seconds', error: '' });
+    setStatus({ busy: 'Restyling your room… about 30 seconds', error: '' });
+    setChanges([]);
     try {
       const sha256 = await roomSha(room.photo.src);
       const done = (await workspaceRequest('/studio/restyle', {
@@ -159,7 +162,8 @@ export function InspoPanel({
         inspo: inspo.sha256,
         items: items.length ? items : ['wall paint'],
         ...(paint ? { paint: { name: paint.name, code: paint.code, hex: paint.hex } } : {}),
-      })) as { sha256: string };
+      })) as { sha256: string; changes?: Change[] };
+      setChanges(done.changes ?? []);
       onRestyled(imageUrl(done.sha256));
       setStatus({ busy: '', error: '' });
     } catch (e) {
@@ -313,6 +317,18 @@ export function InspoPanel({
               This room has no photo to restyle; the paint applies in 3D.
             </p>
           )}
+          {changes.length > 0 && (
+            <div className="pf-inspo-changes">
+              <h4>What Muse changed in your room</h4>
+              <ul>
+                {changes.map((c) => (
+                  <li key={c.target}>
+                    <s>{c.target}</s> → {c.becomes}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
           <p className="pf-inspo-note">
             Colours are read from the photo, so its lighting shows in them. Store links are
             searches, not picked products.
@@ -325,7 +341,15 @@ export function InspoPanel({
 }
 
 // The restyled room against the photo it came from.
-export function InspiredView({ before, after }: { before: string; after: string }) {
+export function InspiredView({
+  before,
+  after,
+  caption = 'Muse Image restyle from your inspiration photo; a picture, not a plan.',
+}: {
+  before: string;
+  after: string;
+  caption?: string;
+}) {
   const [split, setSplit] = useState(50);
   return (
     <figure className="pf-inspired">
@@ -344,9 +368,7 @@ export function InspiredView({ before, after }: { before: string; after: string 
           onChange={(e) => setSplit(Number(e.target.value))}
         />
       </div>
-      <figcaption>
-        Muse Image restyle from your inspiration photo; a picture, not a plan.
-      </figcaption>
+      <figcaption>{caption}</figcaption>
     </figure>
   );
 }

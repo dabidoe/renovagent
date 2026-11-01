@@ -120,7 +120,9 @@ test('a colour read from a photo offers the three closest loaded paints, nearest
 });
 
 test('an inspiration read keeps six plain segmenter phrases, never repeats', async () => {
-  const { inspoItems, restylePrompt } = await import('../../apps/api/src/studio.js');
+  const { inspoItems, restylePrompt, restyleChanges, restyleMapPrompt } = await import(
+    '../../apps/api/src/studio.js'
+  );
   const items = inspoItems({
     items: [
       { phrase: 'Wall', name: 'warm greige walls', kind: 'walls' },
@@ -139,14 +141,28 @@ test('an inspiration read keeps six plain segmenter phrases, never repeats', asy
     ['wall', 'rug', 'bed', 'ottoman', 'curtains', 'chandelier'],
     'lower-cased, punctuation dropped, first of a repeat kept, at most six',
   );
-  const prompt = restylePrompt(['cream wool rug'], {
-    name: 'Agreeable Gray',
-    code: 'SW 7029',
-    hex: '#D1CBC1',
-  });
+  const prompt = restylePrompt(
+    [{ target: 'jute rug', becomes: 'cream wool rug, thin black stripes' }],
+    {
+      name: 'Agreeable Gray',
+      code: 'SW 7029',
+      hex: '#D1CBC1',
+    },
+  );
   assert.match(prompt, /exactly as framed/);
-  assert.match(prompt, /"cream wool rug"/);
+  assert.match(prompt, /the jute rug becomes cream wool rug, thin black stripes/);
   assert.match(prompt, /"Agreeable Gray SW 7029" \(#d1cbc1\)/);
+  assert.deepEqual(
+    restyleChanges({
+      changes: [
+        { target: ' plaid duvet ', becomes: 'white sheets with a cream knit throw' },
+        { target: 'x', becomes: 'too short a target' },
+        { target: 'blue pillow', becomes: '' },
+      ],
+    }),
+    [{ target: 'plaid duvet', becomes: 'white sheets with a cream knit throw' }],
+  );
+  assert.match(restyleMapPrompt(['rust velvet ottoman']), /never add, remove or move furniture/);
 });
 
 test('an imagined room keeps only the choices the studio prices', async () => {

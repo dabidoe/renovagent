@@ -5,7 +5,13 @@ import type { HouseProject, StudioRoom } from './paint-floor.js';
 
 // Curated listing examples, prepared once by scripts/prepare-listing-example.ts
 // from images the owner saved from a listing they chose to feature.
-type ExampleCard = { route: string; address: string; place: string; cover: string; rooms: number };
+type ExampleCard = {
+  route: string;
+  address: string;
+  place: string;
+  cover: string;
+  rooms?: number;
+};
 export const EXAMPLES: ExampleCard[] = [
   {
     route: '#example-house',
@@ -27,6 +33,12 @@ export const EXAMPLES: ExampleCard[] = [
     place: 'Brooklyn, NY',
     cover: './examples/brooklyn/image-03-lvp.jpg',
     rooms: 5,
+  },
+  {
+    route: '#example/bedroom-refresh',
+    address: 'Bedroom refresh',
+    place: 'From a saved Pinterest pin',
+    cover: './examples/bedroom-refresh/after.jpg',
   },
 ];
 
@@ -128,7 +140,8 @@ export function ExamplesGallery({ onOpen }: { onOpen: (route: string) => void })
       <p className="pf-kicker">Examples</p>
       <h1>From a listing to a plan.</h1>
       <p className="pf-sub">
-        Real listings, read room by room: before and after, paint and floors, and what it costs.
+        Real listings, read room by room: before and after, paint and floors, and what it costs. And
+        a room restyled from a photo someone loved.
       </p>
       <div className="pf-cards">
         {EXAMPLES.map((e) => (
@@ -137,7 +150,8 @@ export function ExamplesGallery({ onOpen }: { onOpen: (route: string) => void })
             <span>
               <b>{e.address}</b>
               <small>
-                {e.place} · {e.rooms} rooms
+                {e.place}
+                {e.rooms ? ` · ${e.rooms} rooms` : ''}
               </small>
             </span>
           </button>

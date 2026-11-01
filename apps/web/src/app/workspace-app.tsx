@@ -14,6 +14,7 @@ import { HutchinsonStudio } from '../features/house-example/hutchinson-studio.js
 import { OwnStudio, type OwnStart } from '../features/house-example/own-studio.js';
 import { ConnectAgent } from '../features/connect/connect-agent.js';
 import { ExamplesGallery, ListingStudio } from '../features/house-example/listing-studio.js';
+import { InspoExample } from '../features/house-example/inspo-example.js';
 import { rememberReturn, SignInChoices, takeReturn } from '../features/connect/sign-in.js';
 import { SavedPlan } from '../features/house-example/saved-plan.js';
 import { isHouseCase } from '../features/house-example/house-example-model.js';
@@ -514,6 +515,11 @@ export function App({ controller }: { controller: WorkspaceController }) {
               onOpen={(route) =>
                 route === '#example-house' ? safe(openExample()) : openStudio(route)
               }
+            />
+          ) : studioRoute === '#example/bedroom-refresh' ? (
+            <InspoExample
+              onBack={() => openStudio('#examples')}
+              onTry={() => openStudio('#your-project')}
             />
           ) : (
             <ListingStudio

@@ -1363,3 +1363,81 @@
     min-height: 44px;
   }
 }
+
+.pf-inspo-changes {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--pf-soft, rgba(0, 0, 0, 0.04));
+}
+.pf-inspo-changes h4 {
+  margin: 0 0 6px;
+  font-size: 13px;
+}
+.pf-inspo-changes ul {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 13px;
+  line-height: 1.45;
+}
+.pf-inspo-changes s {
+  opacity: 0.65;
+}
+
+.pf-inspo-example {
+  --pf-ink: #142038;
+  --pf-muted: #64748b;
+  --pf-line: #e2e8f0;
+  --pf-card: #ffffff;
+  --pf-soft: #f1f5f9;
+  --pf-accent: #0866ff;
+  max-width: 1080px;
+  color: var(--pf-ink);
+  margin: 0 auto;
+  padding: 24px 16px 48px;
+}
+.pf-inspo-example .pf-kicker {
+  margin-top: 16px;
+}
+.pf-inspo-example .pf-inspo-go {
+  margin-top: 12px;
+  padding: 0 22px;
+}
+.pf-inspo-example .pf-inspired {
+  max-width: 760px;
+  margin: 16px 0 24px;
+}
+.pf-inspo-example-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 24px;
+}
+.pf-inspo-example-grid h3 {
+  margin: 0 0 4px;
+}
+.pf-inspo-example-paints {
+  list-style: none;
+  margin: 8px 0 12px;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+.pf-inspo-example-paints li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+}
+.pf-inspo-example-paints i {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid var(--pf-line);
+  flex: none;
+}
+.pf-inspo-example-paints span {
+  flex: 1;
+}
+.pf-inspo-example-paints small {
+  color: var(--pf-muted);
+}

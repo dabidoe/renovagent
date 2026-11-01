@@ -292,18 +292,54 @@ export function inspoItems(raw: unknown) {
     .filter((i) => !seen.has(i.phrase) && seen.add(i.phrase))
     .slice(0, 6);
 }
-// The owner's room keeps its frame and objects; only the borrowed finishes change.
-export const restylePrompt = (
-  items: string[],
-  paint?: { name: string; code: string; hex: string },
-) =>
-  `Restyle the room in the first photo with the look of the second photo. Keep the first photo exactly as framed: the same camera, room shape, windows, doors, furniture positions and objects. Change only these finishes, taking their look from the second photo: ${items
+// Item names from someone else's room ("rust velvet ottoman pair") rarely exist in
+// the owner's room, and Muse Image then changes nothing. Muse Spark first maps the
+// borrowed look onto what the owner's photo actually shows.
+export const restyleMapSchema = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['changes'],
+  properties: {
+    changes: {
+      type: 'array',
+      items: {
+        type: 'object',
+        additionalProperties: false,
+        required: ['target', 'becomes'],
+        properties: { target: { type: 'string' }, becomes: { type: 'string' } },
+      },
+    },
+  },
+} as const;
+type Paint = { name: string; code: string; hex: string };
+const paintName = (paint: Paint) =>
+  `${JSON.stringify(`${paint.name} ${paint.code}`.trim())} (${paint.hex.toLowerCase()})`;
+export const restyleMapPrompt = (items: string[], paint?: Paint) =>
+  `The first photo is someone's own room. The second photo is a room they like. They want to borrow these from the second photo: ${items
     .map((i) => JSON.stringify(i))
-    .join(', ')}.${
-    paint
-      ? ` Paint the walls ${JSON.stringify(`${paint.name} ${paint.code}`.trim())} (${paint.hex.toLowerCase()}), matte to eggshell.`
-      : ''
-  } Natural daylight. Photorealistic.`;
+    .join(', ')}.${paint ? ` They chose the wall paint ${paintName(paint)}.` : ''}
+List the changes to make to the FIRST photo, at most six, the largest first. Only change surfaces and objects clearly visible in the first photo, and map the borrowed look onto them: bedding, pillows, throws, rugs, curtains, lampshades, upholstery, wall paint. A rug, throw or pillows may be added; never add, remove or move furniture. Skip a borrowed item when the first photo has nothing it can apply to.${paint ? ' Include the walls, becoming the chosen paint.' : ''}
+target: the thing as it appears in the first photo, at most six words (for example "plaid duvet", "light blue pillow", "white walls", "jute rug"). becomes: what it turns into, in the second photo's colours and materials, at most twelve words.`;
+const restyleMapResult = z.object({
+  changes: z.array(z.object({ target: z.string(), becomes: z.string() })).max(12),
+});
+export function restyleChanges(raw: unknown) {
+  return restyleMapResult
+    .parse(raw)
+    .changes.map((c) => ({
+      target: c.target.trim().slice(0, 60),
+      becomes: c.becomes.trim().slice(0, 120),
+    }))
+    .filter((c) => c.target.length >= 2 && c.becomes.length >= 2)
+    .slice(0, 6);
+}
+// The owner's room keeps its frame and objects; only the mapped finishes change.
+export const restylePrompt = (changes: { target: string; becomes: string }[], paint?: Paint) =>
+  `Edit the first photo. Keep it exactly as framed: the same camera, room shape, windows, doors, furniture, plants and every object in its place. Make only these changes, taking colour and texture from the second photo: ${changes
+    .map((c) => `the ${c.target} becomes ${c.becomes}`)
+    .join(
+      '; ',
+    )}.${paint ? ` Paint the walls ${paintName(paint)}, matte to eggshell.` : ''} Leave everything else exactly as it is. Natural daylight. Photorealistic.`;
 
 const sha = z.string().regex(/^[a-f0-9]{64}$/);
 const requests = {
@@ -494,15 +530,37 @@ export function studioRoutes(deps: {
       const input = requests.restyle.parse(raw);
       const room = await stored(ownerId, input.sha256);
       const inspo = await stored(ownerId, input.inspo);
+      deps.spend(ownerId, 'read');
       deps.spend(ownerId, 'repaint');
+      const photos = [
+        { bytes: room.bytes, mediaType: imageMediaType(room.bytes) },
+        { bytes: inspo.bytes, mediaType: imageMediaType(inspo.bytes) },
+      ];
+      const mapped = await deps.providers.read({
+        schema: restyleMapSchema,
+        images: photos,
+        prompt: restyleMapPrompt(input.items, input.paint),
+      });
+      const changes = restyleChanges(mapped.result);
+      if (!changes.length && !input.paint)
+        throw new DomainError(
+          'VALIDATION',
+          'Nothing in this room matches what you chose to borrow. Pick a paint or other items.',
+        );
       const edit = await deps.providers.repaint({
-        image: { bytes: room.bytes, mediaType: imageMediaType(room.bytes) },
-        references: [{ bytes: inspo.bytes, mediaType: imageMediaType(inspo.bytes) }],
-        prompt: restylePrompt(input.items, input.paint),
+        image: photos[0]!,
+        references: [photos[1]!],
+        prompt: restylePrompt(changes, input.paint),
       });
       const fitted = await fitImage(edit.bytes, room.record.width, room.record.height);
       const image = await deps.images.put(ownerId, fitted);
-      return { ...image, model: edit.model, sourceSha256: input.sha256, inspoSha256: input.inspo };
+      return {
+        ...image,
+        model: edit.model,
+        changes,
+        sourceSha256: input.sha256,
+        inspoSha256: input.inspo,
+      };
     }
     if (path === '/studio/read') {
       const input = requests.read.parse(raw);
