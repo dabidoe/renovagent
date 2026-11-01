@@ -11,6 +11,10 @@ atlas-credentials.env
 
 # Owner photos, floor plans and design mockups (private; not for the public repo)
 docs/pics/
+# Listing photos saved by hand for the examples; only the processed images in
+# public/examples/ are published (scripts/prepare-listing-example.ts).
+/2244e 20th oakland/
+/621 e 41st brooklyn/
 
 # macOS and local agent worktrees
 .DS_Store
