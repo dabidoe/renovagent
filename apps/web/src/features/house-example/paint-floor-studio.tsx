@@ -1,67 +1,38 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { roomSurfaces } from '@renovagent/core';
 import { Glyph } from '../../components/glyph.js';
 import { mountRoomScene, type RoomScene } from '../room3d/room-scene.js';
 import { PaintPicker, brandColorLink } from '../room3d/photo-outlines.js';
 import {
-  CEILING_FT,
   DEFAULT_PICK,
   FLOOR_CHOICES,
-  HOUSE_ROOMS,
   PRESET_COLORS,
   TIER_LABELS,
+  feetInches,
   floorFinish,
   money,
   roomModel,
   roomTakeoff,
-  type FloorKey,
-  type HouseRoom,
+  type HouseProject,
+  type Masks,
+  type NewFloor,
+  type RoomImage,
   type RoomPick,
+  type StudioRoom,
   type TierKey,
   type WallColor,
 } from './paint-floor.js';
 
-const asset = (name: string) => `./examples/hutchinson/${name}`;
-const LISTING =
-  'https://www.southphillyrealestateteam.com/post/solid-bones-serious-upside-2440-s-hutchinson-st-philadelphia-pa-19148';
-const STORE = 'renovagent.hutchinson.picks.v1';
-
-type Segment = {
-  confidence?: number;
-  box: { left: number; top: number };
-  path: string;
-  scaleX: number;
-  scaleY: number;
-};
-type Masks = { width: number; height: number; segments: Segment[]; runId?: string };
-
-// The listing's photo with the chosen floor (a Muse Image edit) as the base.
-const baseImage = (room: HouseRoom, floor: FloorKey) =>
-  floor === 'keep' ? asset(`${room.photoId}.jpg`) : asset(`rooms/${room.photoId}-${floor}.jpg`);
-const maskFile = (room: HouseRoom, floor: FloorKey) =>
-  asset(`rooms/${floor === 'keep' ? room.photoId : `${room.photoId}-${floor}`}-walls.json`);
-
-const feetInches = (feet: number) => {
-  const whole = Math.floor(feet);
-  return `${whole}′${Math.round((feet - whole) * 12)}″`;
-};
-
-// Starting picks so the first view already shows an "after".
-const STARTING: Record<string, RoomPick> = {
-  living: { color: PRESET_COLORS[0], floor: 'lvp', included: true },
-  kitchen: { color: PRESET_COLORS[2], floor: 'keep', included: true },
-  primary: { color: PRESET_COLORS[2], floor: 'hardwood', included: true },
-  middle: { color: PRESET_COLORS[3], floor: 'lvp', included: true },
-  rear: { color: PRESET_COLORS[0], floor: 'lvp', included: true },
-};
-function loadPicks(): Record<string, RoomPick> {
+const pickStore = (projectId: string) => `renovagent.studio.${projectId}.picks.v1`;
+function loadPicks(project: HouseProject): Record<string, RoomPick> {
+  const starting = project.starting ?? {};
   try {
-    const saved = JSON.parse(localStorage.getItem(STORE) || 'null');
-    if (saved && typeof saved === 'object') return { ...STARTING, ...saved };
+    const saved = JSON.parse(localStorage.getItem(pickStore(project.id)) || 'null');
+    if (saved && typeof saved === 'object') return { ...starting, ...saved };
   } catch {
     // Storage may be unavailable; the starting picks still work.
   }
-  return STARTING;
+  return starting;
 }
 
 const loaded = new Map<string, Promise<HTMLImageElement>>();
@@ -71,7 +42,10 @@ function loadImage(src: string) {
     found = new Promise((resolve, reject) => {
       const img = new Image();
       img.onload = () => resolve(img);
-      img.onerror = () => reject(new Error(`Could not load ${src}`));
+      img.onerror = () => {
+        loaded.delete(src);
+        reject(new Error('The photo could not be loaded.'));
+      };
       img.src = src;
     });
     loaded.set(src, found);
@@ -79,13 +53,15 @@ function loadImage(src: string) {
   return found;
 }
 const masksLoaded = new Map<string, Promise<Masks | null>>();
-function loadMasks(src: string) {
-  let found = masksLoaded.get(src);
+function loadMasks(walls: RoomImage['walls']): Promise<Masks | null> {
+  if (!walls) return Promise.resolve(null);
+  if (typeof walls !== 'string') return Promise.resolve(walls);
+  let found = masksLoaded.get(walls);
   if (!found) {
-    found = fetch(src)
+    found = fetch(walls)
       .then((r) => (r.ok ? (r.json() as Promise<Masks>) : null))
       .catch(() => null);
-    masksLoaded.set(src, found);
+    masksLoaded.set(walls, found);
   }
   return found;
 }
@@ -150,19 +126,30 @@ function paintWalls(
   ctx.putImageData(frame, 0, 0);
 }
 
-function BeforeAfter({ room, pick }: { room: HouseRoom; pick: RoomPick }) {
+function BeforeAfter({
+  room,
+  pick,
+  pending,
+}: {
+  room: StudioRoom;
+  pick: RoomPick;
+  pending: string | null;
+}) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const [split, setSplit] = useState(50);
+  const [ratio, setRatio] = useState<string>('3 / 2');
   const [ready, setReady] = useState(false);
   const [error, setError] = useState('');
-  const base = baseImage(room, pick.floor);
+  // The chosen floor's image once it exists; the photo until then.
+  const shown = pick.floor === 'keep' ? room.photo : (room.floors[pick.floor] ?? room.photo);
   const hex = pick.color?.hex ?? null;
   useEffect(() => {
     let live = true;
     setReady(false);
-    Promise.all([loadImage(base), loadMasks(maskFile(room, pick.floor))])
+    Promise.all([loadImage(shown.src), loadMasks(shown.walls)])
       .then(([img, masks]) => {
         if (!live || !canvas.current) return;
+        setRatio(`${img.naturalWidth} / ${img.naturalHeight}`);
         paintWalls(canvas.current, img, masks, hex);
         setReady(true);
         setError('');
@@ -171,14 +158,10 @@ function BeforeAfter({ room, pick }: { room: HouseRoom; pick: RoomPick }) {
     return () => {
       live = false;
     };
-  }, [base, hex, room, pick.floor]);
+  }, [shown.src, shown.walls, hex]);
   return (
-    <div className="pf-compare" style={{ ['--split' as string]: `${split}%` }}>
-      <img
-        className="pf-before"
-        src={asset(`${room.photoId}.jpg`)}
-        alt={`${room.title} as listed`}
-      />
+    <div className="pf-compare" style={{ ['--split' as string]: `${split}%`, aspectRatio: ratio }}>
+      <img className="pf-before" src={room.photo.src} alt={`${room.title} as it is`} />
       <canvas
         ref={canvas}
         className={`pf-after${ready ? ' is-ready' : ''}`}
@@ -197,12 +180,26 @@ function BeforeAfter({ room, pick }: { room: HouseRoom; pick: RoomPick }) {
         aria-label="Drag to compare before and after"
         onChange={(e) => setSplit(Number(e.target.value))}
       />
+      {pending && (
+        <p className="pf-working" role="status">
+          <span className="pf-spinner" aria-hidden="true" />
+          {pending}
+        </p>
+      )}
       {error && <p className="pf-error">{error}</p>}
     </div>
   );
 }
 
-function Room3D({ room, pick }: { room: HouseRoom; pick: RoomPick }) {
+function Room3D({
+  room,
+  ceilingFt,
+  pick,
+}: {
+  room: StudioRoom;
+  ceilingFt: number | null;
+  pick: RoomPick;
+}) {
   const host = useRef<HTMLDivElement>(null);
   const scene = useRef<RoomScene | null>(null);
   const [error, setError] = useState('');
@@ -211,9 +208,10 @@ function Room3D({ room, pick }: { room: HouseRoom; pick: RoomPick }) {
     floorFinish: floorFinish(room, pick.floor),
     label: pick.color ? pick.color.name : 'Existing',
   };
+  const sizeKey = `${room.size?.xFt}x${room.size?.yFt}x${ceilingFt}`;
   useEffect(() => {
-    if (!host.current) return;
-    const model = roomModel(room);
+    const model = roomModel(room, ceilingFt);
+    if (!host.current || !model) return;
     try {
       scene.current = mountRoomScene(
         host.current,
@@ -232,7 +230,7 @@ function Room3D({ room, pick }: { room: HouseRoom; pick: RoomPick }) {
       scene.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [room]);
+  }, [room.id, sizeKey]);
   useEffect(() => {
     scene.current?.setLook(look);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -243,6 +241,20 @@ function Room3D({ room, pick }: { room: HouseRoom; pick: RoomPick }) {
       {error && <p className="pf-error">{error}</p>}
     </div>
   );
+}
+
+// The brand page path needs the colour's family; a coarse hue check is
+// enough to build the link.
+function familyOf(hex: string) {
+  const r = parseInt(hex.slice(1, 3), 16),
+    g = parseInt(hex.slice(3, 5), 16),
+    b = parseInt(hex.slice(5, 7), 16);
+  const max = Math.max(r, g, b),
+    min = Math.min(r, g, b);
+  if (max - min < 26) return max > 225 ? 'white' : 'neutral';
+  if (b >= r && b >= g) return 'blue';
+  if (g >= r) return 'green';
+  return r > 200 && g > 160 ? 'yellow' : 'red';
 }
 
 function ColorChoice({
@@ -314,80 +326,191 @@ function ColorChoice({
   );
 }
 
-// The brand page path needs the colour's family; the presets are all neutral
-// or green/blue, so a coarse hue check is enough for the link.
-function familyOf(hex: string) {
-  const r = parseInt(hex.slice(1, 3), 16),
-    g = parseInt(hex.slice(3, 5), 16),
-    b = parseInt(hex.slice(5, 7), 16);
-  const max = Math.max(r, g, b),
-    min = Math.min(r, g, b);
-  if (max - min < 26) return max > 225 ? 'white' : 'neutral';
-  if (b >= r && b >= g) return 'blue';
-  if (g >= r) return 'green';
-  return 'neutral';
+// Feet from a "12.5" or "12' 6"" style entry; null when unreadable.
+export function parseFeet(text: string) {
+  const m = /^\s*(\d+(?:\.\d+)?)\s*(?:'|′|ft)?\s*(?:(\d+(?:\.\d+)?)\s*(?:"|″|in)?)?\s*$/.exec(text);
+  if (!m) return null;
+  const feet = Number(m[1]) + (m[2] ? Number(m[2]) / 12 : 0);
+  return feet > 0 && feet < 200 ? Math.round(feet * 1000) / 1000 : null;
 }
 
-export function PaintFloorStudio({ onRoomExample }: { onRoomExample?: () => void }) {
-  const [roomId, setRoomId] = useState(HOUSE_ROOMS[0]!.id);
+function SizeEntry({
+  room,
+  ceilingFt,
+  onSize,
+  onCeiling,
+}: {
+  room: StudioRoom;
+  ceilingFt: number | null;
+  onSize: (size: { xFt: number; yFt: number }) => void;
+  onCeiling?: (ft: number) => void;
+}) {
+  const [x, setX] = useState('');
+  const [y, setY] = useState('');
+  const [c, setC] = useState('');
+  return (
+    <form
+      className="pf-size"
+      onSubmit={(e) => {
+        e.preventDefault();
+        const xFt = parseFeet(x),
+          yFt = parseFeet(y),
+          cFt = parseFeet(c);
+        if (xFt && yFt) onSize({ xFt, yFt });
+        if (cFt && onCeiling) onCeiling(cFt);
+      }}
+    >
+      <h3>Room size</h3>
+      <div>
+        {!room.size && (
+          <>
+            <input
+              aria-label="Width in feet"
+              placeholder="12′"
+              inputMode="decimal"
+              value={x}
+              onChange={(e) => setX(e.target.value)}
+            />
+            <span aria-hidden="true">×</span>
+            <input
+              aria-label="Length in feet"
+              placeholder="14′"
+              inputMode="decimal"
+              value={y}
+              onChange={(e) => setY(e.target.value)}
+            />
+          </>
+        )}
+        {!ceilingFt && onCeiling && (
+          <input
+            aria-label="Ceiling height in feet"
+            placeholder="Ceiling 8′"
+            inputMode="decimal"
+            value={c}
+            onChange={(e) => setC(e.target.value)}
+          />
+        )}
+        <button type="submit">Set</button>
+      </div>
+    </form>
+  );
+}
+
+export function PaintFloorStudio({
+  project,
+  kicker,
+  sources,
+  actions,
+  renderFloor,
+  onEditRoom,
+  onCeiling,
+}: {
+  project: HouseProject;
+  kicker: string;
+  sources?: ReactNode;
+  actions?: ReactNode;
+  // Makes a missing floor variant for an owner's room (a Muse Image edit).
+  renderFloor?: (roomId: string, floor: NewFloor) => Promise<void>;
+  onEditRoom?: (roomId: string, patch: Partial<StudioRoom>) => void;
+  onCeiling?: (ft: number) => void;
+}) {
+  const [roomId, setRoomId] = useState(project.rooms[0]?.id ?? '');
   const [view, setView] = useState<'photo' | '3d'>('photo');
   const [tier, setTier] = useState<TierKey>('mid');
-  const [picks, setPicks] = useState<Record<string, RoomPick>>(loadPicks);
-  const room = HOUSE_ROOMS.find((r) => r.id === roomId)!;
-  const pick = picks[roomId] ?? DEFAULT_PICK;
+  const [picks, setPicks] = useState<Record<string, RoomPick>>(() => loadPicks(project));
+  const [working, setWorking] = useState<Record<string, string>>({});
+  const room = project.rooms.find((r) => r.id === roomId) ?? project.rooms[0];
+  const pick = (room && picks[room.id]) ?? DEFAULT_PICK;
+  const ceilingFt = project.ceilingFt;
   const update = (next: Partial<RoomPick>) => {
-    const all = { ...picks, [roomId]: { ...pick, ...next } };
+    if (!room) return;
+    const all = { ...picks, [room.id]: { ...pick, ...next } };
     setPicks(all);
     try {
-      localStorage.setItem(STORE, JSON.stringify(all));
+      localStorage.setItem(pickStore(project.id), JSON.stringify(all));
     } catch {
       // Picks still apply for this visit.
     }
   };
+  // A floor that is picked but not made yet is rendered once, on demand.
+  const missing = room && pick.floor !== 'keep' && !room.floors[pick.floor] ? pick.floor : null;
+  const workKey = room && missing ? `${room.id}:${missing}` : '';
+  useEffect(() => {
+    if (!room || !missing || !renderFloor || working[workKey]) return;
+    const label = FLOOR_CHOICES.find((f) => f.key === missing)!.label.toLowerCase();
+    setWorking((w) => ({ ...w, [workKey]: `Laying ${label}…` }));
+    renderFloor(room.id, missing)
+      .then(() => setWorking((w) => ({ ...w, [workKey]: '' })))
+      .catch((e) =>
+        setWorking((w) => ({
+          ...w,
+          [workKey]: e instanceof Error ? e.message.slice(0, 120) : 'The floor could not be made.',
+        })),
+      );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [workKey]);
   const takeoffs = useMemo(
     () =>
       Object.fromEntries(
-        HOUSE_ROOMS.map((r) => [r.id, roomTakeoff(r, picks[r.id] ?? DEFAULT_PICK, tier)]),
+        project.rooms.map((r) => [
+          r.id,
+          roomTakeoff(r, ceilingFt, picks[r.id] ?? DEFAULT_PICK, tier),
+        ]),
       ),
-    [picks, tier],
+    [project.rooms, ceilingFt, picks, tier],
   );
-  const takeoff = takeoffs[roomId]!;
-  const included = HOUSE_ROOMS.filter((r) => (picks[r.id] ?? DEFAULT_PICK).included);
+  if (!room) return null;
+  const takeoff = takeoffs[room.id]!;
+  const included = project.rooms.filter((r) => (picks[r.id] ?? DEFAULT_PICK).included);
   const houseTotal = included.reduce((sum, r) => sum + takeoffs[r.id]!.totalMinor, 0);
+  const has3d = !!roomModel(room, ceilingFt);
+  const needsSize = !room.size || !ceilingFt;
+  const shownImage = pick.floor === 'keep' ? room.photo : room.floors[pick.floor];
+  const pending =
+    (workKey && working[workKey]) ||
+    (shownImage && !shownImage.walls && pick.color ? 'Finding the walls…' : null);
   return (
-    <section className="pf-studio" aria-label="Hutchinson paint and floor plan">
+    <section className="pf-studio" aria-label={`${project.address} paint and floor plan`}>
       <header className="pf-head">
         <div>
-          <p className="pf-kicker">Example · from a real listing</p>
-          <h1>2440 S Hutchinson St</h1>
-          <p className="pf-sub">
-            Paint and floors, room by room. Philadelphia rowhouse ·{' '}
-            <a href={LISTING} target="_blank" rel="noreferrer">
-              Listing
-            </a>
-          </p>
+          <p className="pf-kicker">{kicker}</p>
+          <h1>{project.address}</h1>
+          {(project.place || project.listing) && (
+            <p className="pf-sub">
+              {project.place}
+              {project.place && project.listing ? ' · ' : ''}
+              {project.listing && (
+                <a href={project.listing} target="_blank" rel="noreferrer">
+                  Listing
+                </a>
+              )}
+            </p>
+          )}
         </div>
-        <div className="pf-total" aria-live="polite">
-          <span>
-            Whole house · {included.length} room{included.length === 1 ? '' : 's'}
-          </span>
-          <strong>{money(houseTotal)}</strong>
-          <span>materials, {TIER_LABELS[tier].toLowerCase()}</span>
+        <div className="pf-head-side">
+          {actions}
+          <div className="pf-total" aria-live="polite">
+            <span>
+              Whole house · {included.length} room{included.length === 1 ? '' : 's'}
+            </span>
+            <strong>{money(houseTotal)}</strong>
+            <span>materials, {TIER_LABELS[tier].toLowerCase()}</span>
+          </div>
         </div>
       </header>
 
       <nav className="pf-rooms" aria-label="Rooms">
-        {HOUSE_ROOMS.map((r) => {
+        {project.rooms.map((r) => {
           const p = picks[r.id] ?? DEFAULT_PICK;
           return (
             <button
               key={r.id}
               type="button"
-              aria-current={r.id === roomId}
+              aria-current={r.id === room.id}
               className={p.included ? '' : 'is-deferred'}
               onClick={() => setRoomId(r.id)}
             >
-              <img src={asset(`${r.photoId}.jpg`)} alt="" loading="lazy" />
+              <img src={r.photo.src} alt="" loading="lazy" />
               <span className="pf-room-name">{r.title}</span>
               <span className="pf-room-meta">
                 <i style={{ background: p.color?.hex ?? 'transparent' }} />
@@ -403,37 +526,51 @@ export function PaintFloorStudio({ onRoomExample }: { onRoomExample?: () => void
           <div className="pf-stage-bar">
             <div>
               <strong>{room.title}</strong>
-              <span>
-                {feetInches(room.plan.xFt)} × {feetInches(room.plan.yFt)} · {CEILING_FT}′ ceilings
-              </span>
+              {room.size && (
+                <span>
+                  {feetInches(room.size.xFt)} × {feetInches(room.size.yFt)}
+                  {ceilingFt ? ` · ${feetInches(ceilingFt)} ceilings` : ''}
+                </span>
+              )}
             </div>
-            <div className="pf-views" role="tablist" aria-label="View">
-              <button
-                type="button"
-                role="tab"
-                aria-selected={view === 'photo'}
-                onClick={() => setView('photo')}
-              >
-                <Glyph name="photo" /> Before / after
-              </button>
-              <button
-                type="button"
-                role="tab"
-                aria-selected={view === '3d'}
-                onClick={() => setView('3d')}
-              >
-                <Glyph name="layers" /> 3D room
-              </button>
-            </div>
+            {has3d && (
+              <div className="pf-views" role="tablist" aria-label="View">
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={view === 'photo'}
+                  onClick={() => setView('photo')}
+                >
+                  <Glyph name="photo" /> Before / after
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={view === '3d'}
+                  onClick={() => setView('3d')}
+                >
+                  <Glyph name="layers" /> 3D room
+                </button>
+              </div>
+            )}
           </div>
-          {view === 'photo' ? (
-            <BeforeAfter room={room} pick={pick} />
+          {view === '3d' && has3d ? (
+            <Room3D room={room} ceilingFt={ceilingFt} pick={pick} />
           ) : (
-            <Room3D room={room} pick={pick} />
+            <BeforeAfter room={room} pick={pick} pending={pending || null} />
           )}
         </div>
 
         <aside className="pf-panel" aria-label="Choices and materials">
+          {needsSize && onEditRoom && (
+            <SizeEntry
+              key={room.id}
+              room={room}
+              ceilingFt={ceilingFt}
+              onSize={(size) => onEditRoom(room.id, { size })}
+              {...(onCeiling ? { onCeiling } : {})}
+            />
+          )}
           <ColorChoice pick={pick} onColor={(color) => update({ color })} />
           <div className="pf-group">
             <div className="pf-group-head">
@@ -445,6 +582,7 @@ export function PaintFloorStudio({ onRoomExample }: { onRoomExample?: () => void
                   key={f.key}
                   type="button"
                   aria-pressed={pick.floor === f.key}
+                  disabled={f.key !== 'keep' && !room.floors[f.key] && !renderFloor}
                   onClick={() => update({ floor: f.key })}
                 >
                   {f.key === 'keep' ? `Keep ${room.existingFloor}` : f.label}
@@ -486,7 +624,9 @@ export function PaintFloorStudio({ onRoomExample }: { onRoomExample?: () => void
                 ))}
               </ul>
             ) : (
-              <p className="pf-empty">Pick a colour or a floor.</p>
+              <p className="pf-empty">
+                {needsSize ? 'Add the room size to price it.' : 'Pick a colour or a floor.'}
+              </p>
             )}
             <div className="pf-subtotal">
               <span>Room materials</span>
@@ -505,46 +645,12 @@ export function PaintFloorStudio({ onRoomExample }: { onRoomExample?: () => void
         </aside>
       </div>
 
-      <details className="pf-sources">
-        <summary>Sources</summary>
-        <ul>
-          <li>
-            Photos and floor plans:{' '}
-            <a href={LISTING} target="_blank" rel="noreferrer">
-              the public listing
-            </a>{' '}
-            (Bright MLS photos; CubiCasa plans, “deemed highly reliable but not guaranteed”).
-          </li>
-          <li>Ceiling height 9′: reported by the owner.</li>
-          <li>
-            3D rooms: traced from the listing floor plans; door and window heights are for display.
-            The rear bedroom photo is matched to that room by us.
-          </li>
-          <li>
-            New floors: Muse Image edits of each listing photo;{' '}
-            <a href={asset(`rooms/${room.photoId}-lvp.json`)} target="_blank" rel="noreferrer">
-              prompt and hashes
-            </a>
-            .
-          </li>
-          <li>
-            Wall outlines: SAM 3.1 masks of each image;{' '}
-            <a href={maskFile(room, pick.floor)} target="_blank" rel="noreferrer">
-              this view’s masks
-            </a>
-            .
-          </li>
-          <li>
-            Quantities: the living-room recipe (2 coats; openings not deducted). Prices: an example
-            catalog for this demo, not live offers. Labour is quoted separately.
-          </li>
-        </ul>
-        {onRoomExample && (
-          <button type="button" className="link-button" onClick={onRoomExample}>
-            The measured-room example: work steps, quotes and Blender stages
-          </button>
-        )}
-      </details>
+      {sources && (
+        <details className="pf-sources">
+          <summary>Sources</summary>
+          {sources}
+        </details>
+      )}
     </section>
   );
 }

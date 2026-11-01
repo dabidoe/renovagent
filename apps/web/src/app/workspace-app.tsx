@@ -10,7 +10,7 @@ import { scopePlanningCoverage } from '@renovagent/core';
 import { CandidateMeasurementsPanel } from '../features/work/candidate-measurements.js';
 import { RoomDimensionsCard } from '../features/scope/room-dimensions-card.js';
 import { RoomStudio } from '../features/room3d/room-studio.js';
-import { PaintFloorStudio } from '../features/house-example/paint-floor-studio.js';
+import { HutchinsonStudio } from '../features/house-example/hutchinson-studio.js';
 import { isHouseCase } from '../features/house-example/house-example-model.js';
 import '../features/house-example/house-example.css';
 import '../features/house-example/paint-floor.css';
@@ -447,7 +447,7 @@ export function App({ controller }: { controller: WorkspaceController }) {
         </main>
       ) : showHouse ? (
         <main className="prompt-main has-room">
-          <PaintFloorStudio onRoomExample={() => safe(openRoomExample())} />
+          <HutchinsonStudio onRoomExample={() => safe(openRoomExample())} />
         </main>
       ) : (
         <main className={`prompt-main has-room ${showRecent ? 'has-conversation' : ''}`}>

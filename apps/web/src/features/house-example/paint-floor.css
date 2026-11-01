@@ -472,3 +472,73 @@
 .pf-3d-host .room3d-dim {
   display: none;
 }
+
+.pf-head-side {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.pf-working {
+  position: absolute;
+  left: 50%;
+  bottom: 16px;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: rgba(20, 28, 24, 0.82);
+  color: #fff;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+.pf-spinner {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #fff;
+  animation: pf-spin 0.8s linear infinite;
+}
+@keyframes pf-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.pf-size {
+  display: grid;
+  gap: 8px;
+}
+.pf-size h3 {
+  margin: 0;
+  font-size: 0.95rem;
+}
+.pf-size > div {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.pf-size input {
+  width: 84px;
+  padding: 7px 10px;
+  border: 1px solid var(--pf-line);
+  border-radius: 10px;
+  font: inherit;
+  font-size: 0.88rem;
+}
+.pf-size button {
+  border: 0;
+  border-radius: 999px;
+  padding: 7px 14px;
+  background: var(--pf-accent);
+  color: #fff;
+  font-size: 0.85rem;
+}
+.pf-chips button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}

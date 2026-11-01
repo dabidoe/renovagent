@@ -2,13 +2,21 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { wallSwatch } from '@renovagent/core';
 import {
-  CEILING_FT,
-  HOUSE_ROOMS,
   PRESET_COLORS,
-  roomModel,
+  roomModel as model,
   roomPackages,
-  roomTakeoff,
+  roomTakeoff as takeoff,
+  type RoomPick,
+  type StudioRoom,
+  type TierKey,
 } from '../../apps/web/src/features/house-example/paint-floor.js';
+import { HUTCHINSON } from '../../apps/web/src/features/house-example/hutchinson-project.js';
+
+const CEILING_FT = HUTCHINSON.ceilingFt!;
+const HOUSE_ROOMS = HUTCHINSON.rooms;
+const roomModel = (r: StudioRoom) => model(r, CEILING_FT)!;
+const roomTakeoff = (r: StudioRoom, pick: RoomPick, tier: TierKey) =>
+  takeoff(r, CEILING_FT, pick, tier);
 
 const room = (id: string) => HOUSE_ROOMS.find((r) => r.id === id)!;
 const gray = PRESET_COLORS[0]!;
@@ -26,8 +34,8 @@ test('3D rooms are traced from the listing plans at the stated size', () => {
     const xs = model.walls.map((w) => w.a[0]),
       ys = model.walls.map((w) => w.a[1]);
     // The traced outline spans exactly the listing's stated dimensions.
-    assert.ok(Math.abs(Math.max(...xs) - Math.min(...xs) - r.plan.xFt * 0.3048) < 0.01, r.id);
-    assert.ok(Math.abs(Math.max(...ys) - Math.min(...ys) - r.plan.yFt * 0.3048) < 0.01, r.id);
+    assert.ok(Math.abs(Math.max(...xs) - Math.min(...xs) - r.size!.xFt * 0.3048) < 0.01, r.id);
+    assert.ok(Math.abs(Math.max(...ys) - Math.min(...ys) - r.size!.yFt * 0.3048) < 0.01, r.id);
     assert.ok(model.walls.every((w) => Math.abs(w.heightM! - 9 * 0.3048) < 0.001));
     // Every opening fits inside its wall.
     for (const w of model.walls)
@@ -45,7 +53,10 @@ test('3D rooms are traced from the listing plans at the stated size', () => {
 
 test('the living room takeoff runs through the core recipe and demo catalog', () => {
   const t = roomTakeoff(room('living'), { color: gray, floor: 'lvp', included: true }, 'mid');
-  assert.equal(t.wallSqFt, Math.round(2 * (room('living').lengthFt + room('living').widthFt) * 9));
+  assert.equal(
+    t.wallSqFt,
+    Math.round(2 * (room('living').size!.xFt + room('living').size!.yFt) * 9),
+  );
   const lines = new Map(t.plan!.lines.map((l) => [l.bomItemId, l]));
   // Two coats over the gross wall area, at the mid paint's 400 sq ft per gallon.
   assert.equal(lines.get('wall-paint:paint')!.purchaseUnits, Math.ceil((t.wallSqFt * 2) / 400));
@@ -78,4 +89,25 @@ test('a higher tier never prices the same room below a lower one', () => {
     (tier) => roomTakeoff(room('living'), pick, tier).totalMinor,
   );
   assert.ok(b! <= m! && m! <= h!);
+});
+
+test('a room without a size has no 3D and no price until the owner adds one', () => {
+  const bare: StudioRoom = {
+    id: 'r',
+    title: 'Room',
+    existingFloor: 'carpet',
+    photo: { src: 'x', walls: null },
+    floors: {},
+  };
+  const pick = { color: gray, floor: 'lvp' as const, included: true };
+  assert.equal(model(bare, 8), null);
+  assert.equal(takeoff(bare, 8, pick, 'mid').totalMinor, 0);
+  const sized = { ...bare, size: { xFt: 12, yFt: 14 } };
+  assert.ok(model(sized, 8));
+  assert.equal(model(sized, null), null);
+  // Without a ceiling the floor still prices; paint waits for the height.
+  const noCeiling = takeoff(sized, null, pick, 'mid');
+  assert.equal(noCeiling.wallSqFt, null);
+  assert.ok(noCeiling.plan!.lines.some((l) => l.bomItemId.startsWith('lvp-floor:')));
+  assert.ok(!noCeiling.plan!.lines.some((l) => l.bomItemId === 'wall-paint:paint'));
 });
