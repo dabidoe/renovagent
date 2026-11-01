@@ -792,8 +792,13 @@ export function PaintFloorStudio({
               {project.place}
               {project.place && project.listing ? ' · ' : ''}
               {project.listing && (
-                <a href={project.listing} target="_blank" rel="noreferrer">
-                  Listing
+                <a
+                  className="pf-listing-link"
+                  href={project.listing}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  View listing ↗
                 </a>
               )}
             </p>

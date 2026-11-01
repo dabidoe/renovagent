@@ -199,3 +199,10 @@
   top: 8px;
   right: 8px;
 }
+
+/* Finger-sized controls. */
+.ca-primary,
+.ca-copy,
+.ca input {
+  min-height: 44px;
+}

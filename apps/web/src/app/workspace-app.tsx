@@ -204,6 +204,11 @@ export function App({ controller }: { controller: WorkspaceController }) {
     window.addEventListener('focus', refresh);
     return () => window.removeEventListener('focus', refresh);
   }, [controller]);
+  const signOut = async () => {
+    await signOutAccount().catch(() => {});
+    clearStoredMode();
+    window.location.reload();
+  };
   const safe = (promise: Promise<unknown>) =>
     void promise.catch((e) => setLocalError(e instanceof Error ? e.message : String(e)));
   const openFacts = (fact?: Fact) => {
@@ -449,14 +454,7 @@ export function App({ controller }: { controller: WorkspaceController }) {
                 Keep with Google
               </a>
             )}
-            <button
-              className="link-button subtle"
-              onClick={async () => {
-                await signOutAccount().catch(() => {});
-                clearStoredMode();
-                window.location.reload();
-              }}
-            >
+            <button className="link-button subtle" onClick={() => void signOut()}>
               Sign out
             </button>
           </span>
@@ -1223,6 +1221,20 @@ export function App({ controller }: { controller: WorkspaceController }) {
             Explore the example project
             <Glyph name="right" />
           </button>
+          {/* The header hides the account on phones; it is always here. */}
+          {controller.connected && auth.email && (
+            <div className="prompt-modal-account">
+              <span>Signed in as {auth.email}</span>
+              {auth.guest && auth.providers.includes('google') && (
+                <a href={signInUrlFor('google')} onClick={rememberReturn}>
+                  Keep with Google
+                </a>
+              )}
+              <button className="link-button" onClick={() => void signOut()}>
+                Sign out
+              </button>
+            </div>
+          )}
         </Modal>
       )}
       {modal === 'import' && importPreview && (

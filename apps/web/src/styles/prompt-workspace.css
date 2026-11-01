@@ -28,7 +28,58 @@
   margin-left: auto;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 6px;
+}
+.prompt-account > a,
+.prompt-account > button {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 0 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  text-decoration: none;
+}
+.prompt-account > a {
+  border: 1px solid #0866ff;
+  color: #0866ff;
+}
+.prompt-account > a:hover {
+  background: #0866ff;
+  color: #fff;
+}
+.prompt-modal-account {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid #e2e8f0;
+  font-size: 14px;
+  color: #475569;
+}
+.prompt-modal-account > span {
+  flex: 1 1 100%;
+}
+.prompt-modal-account > a,
+.prompt-modal-account > button {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: 999px;
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  color: #0f172a;
+  font: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+.prompt-modal-account > a {
+  border-color: #0866ff;
+  background: #0866ff;
+  color: #fff;
 }
 .prompt-brand {
   display: flex;

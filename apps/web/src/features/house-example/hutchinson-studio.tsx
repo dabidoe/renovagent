@@ -5,7 +5,7 @@ export function HutchinsonStudio({ onRoomExample }: { onRoomExample?: () => void
   return (
     <PaintFloorStudio
       project={HUTCHINSON}
-      kicker="Example · from a real listing"
+      kicker="Example from a real listing · try any change; it isn’t saved"
       sources={
         <>
           <ul>

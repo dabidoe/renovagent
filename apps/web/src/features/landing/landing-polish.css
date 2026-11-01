@@ -661,3 +661,39 @@
     font-size: 9px;
   }
 }
+
+/* Design pass, Nov 1: actions read as buttons and are easy to hit. */
+.landing.landing-v2 .bathroom-demo .reality-figure figcaption {
+  color: #e8f1ff;
+}
+.agent-connection-links {
+  flex-wrap: wrap;
+  gap: 12px 16px;
+}
+.agent-connection-links .landing-source-link {
+  min-height: 44px;
+  padding: 0 18px;
+  border: 1px solid #0866ff;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 500;
+}
+.agent-connection-links .landing-source-link:first-child {
+  background: #0866ff;
+  color: #fff;
+}
+.agent-connection-links .landing-source-link:hover {
+  background: #0757d9;
+  border-color: #0757d9;
+  color: #fff;
+}
+.agent-connection-links > span {
+  font-size: 13px;
+}
+.footer-signature nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 4px;
+  font-size: 13px;
+}

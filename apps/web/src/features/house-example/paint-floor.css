@@ -1048,3 +1048,56 @@
   color: var(--pf-muted);
   font-size: 0.75rem;
 }
+
+/* Every control is easy to hit: compact chips with a mouse, finger-sized
+   on touch screens and narrow windows. Text links get a padded hit area. */
+.pf-chips button,
+.pf-tiers button {
+  min-height: 34px;
+}
+.pf-listing-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--pf-line);
+  border-radius: 999px;
+  background: var(--pf-card);
+  color: var(--pf-ink);
+  text-decoration: none;
+}
+.pf-listing-link:hover {
+  border-color: var(--pf-accent);
+}
+.pf-group-head a {
+  display: inline-block;
+  padding: 10px 6px;
+  margin: -10px -6px;
+}
+@media (pointer: coarse), (max-width: 760px) {
+  .pf-chips button,
+  .pf-tiers button,
+  .pf-views button,
+  .pf-reset,
+  .pf-more,
+  .pf-apply-all,
+  .pf-listing-link {
+    min-height: 44px;
+  }
+  .pf-swatch {
+    width: 44px;
+    height: 44px;
+  }
+  .pf-studio input:not([type='checkbox'], [type='radio']),
+  .pf-studio textarea,
+  .pf-studio form button[type='submit'] {
+    min-height: 44px;
+  }
+  .pf-studio form button[type='submit'] {
+    min-width: 44px;
+  }
+  .pf-studio .link-button {
+    min-height: 44px;
+    text-align: left;
+  }
+}
