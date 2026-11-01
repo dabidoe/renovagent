@@ -210,9 +210,12 @@ export class AccountService {
     return pending !== undefined && pending.provider === provider && pending.expires > Date.now();
   }
 
+  // `guestId` is the signed-in guest, if any: a new identity takes over that
+  // guest's account, so their workspace, keys and plans stay theirs.
   async completeLogin(
     provider: OAuthProvider,
     code: string,
+    guestId?: string,
   ): Promise<{ token: string; user: AccountUser }> {
     let identity: OAuthIdentity;
     if (provider === 'google') {
@@ -232,6 +235,12 @@ export class AccountService {
     // existing Google account by email. Explicit account linking is future work.
     const key = provider === 'google' ? 'googleSub' : 'metaSub';
     let user = await this.users.findOne({ [key]: identity.sub });
+    if (!user && guestId)
+      user = await this.users.findOneAndUpdate(
+        { _id: guestId, guest: true },
+        { $set: { email: identity.email, [key]: identity.sub }, $unset: { guest: '' } },
+        { returnDocument: 'after' },
+      );
     if (!user) {
       user = {
         _id: `user:${randomBytes(16).toString('hex')}`,

@@ -434,7 +434,16 @@ export async function createWorkspaceServer(
           return;
         }
         try {
-          const login = await accounts.completeLogin(provider, code);
+          // A guest who signs in keeps their work. An identity that already has
+          // an account signs into it instead; the guest's work stays behind.
+          const token = cookies[ACCOUNT_COOKIE] || '';
+          const current = token ? await accounts.getSession(token) : null;
+          const login = await accounts.completeLogin(
+            provider,
+            code,
+            current?.guest ? current._id : undefined,
+          );
+          if (current) await accounts.destroySession(token);
           await repository.forUser(login.user._id).ensure();
           res.writeHead(302, {
             Location: '/',

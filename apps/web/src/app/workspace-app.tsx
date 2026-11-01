@@ -14,7 +14,7 @@ import { HutchinsonStudio } from '../features/house-example/hutchinson-studio.js
 import { OwnStudio, type OwnStart } from '../features/house-example/own-studio.js';
 import { ConnectAgent } from '../features/connect/connect-agent.js';
 import { ExamplesGallery, ListingStudio } from '../features/house-example/listing-studio.js';
-import { SignInChoices, takeReturn } from '../features/connect/sign-in.js';
+import { rememberReturn, SignInChoices, takeReturn } from '../features/connect/sign-in.js';
 import { SavedPlan } from '../features/house-example/saved-plan.js';
 import { isHouseCase } from '../features/house-example/house-example-model.js';
 import '../features/house-example/house-example.css';
@@ -46,7 +46,7 @@ import {
 } from './workspace-controller.js';
 import { artifactTitle } from '../features/work/artifact-view.js';
 import { PurchasePlans } from '../features/commerce/purchase-plans.js';
-import { signOutAccount } from '../adapters/http/project-repository.js';
+import { signInUrlFor, signOutAccount } from '../adapters/http/project-repository.js';
 import {
   previewLegacyImport,
   LEGACY_STORAGE_KEY,
@@ -443,6 +443,12 @@ export function App({ controller }: { controller: WorkspaceController }) {
         {controller.connected && auth.email && !isLanding && (
           <span className="prompt-account">
             {auth.email}
+            {/* A guest's work lives in one browser until it is kept with an account. */}
+            {auth.guest && auth.providers.includes('google') && (
+              <a className="link-button" href={signInUrlFor('google')} onClick={rememberReturn}>
+                Keep with Google
+              </a>
+            )}
             <button
               className="link-button subtle"
               onClick={async () => {

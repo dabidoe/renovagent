@@ -49,7 +49,7 @@ function stubAccounts(db: Db) {
 async function withAccountServer(
   fn: (
     base: string,
-    login: (provider: 'google' | 'meta', code: string) => Promise<string>,
+    login: (provider: 'google' | 'meta', code: string, signedInAs?: string) => Promise<string>,
   ) => Promise<void>,
   hosting?: HostingConfig,
 ) {
@@ -71,7 +71,7 @@ async function withAccountServer(
   );
   await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
   const base = `http://127.0.0.1:${(server.address() as AddressInfo).port}/api/workspace`;
-  const login = async (provider: 'google' | 'meta', code: string) => {
+  const login = async (provider: 'google' | 'meta', code: string, signedInAs?: string) => {
     const start = await fetch(`${base}/auth/${provider}`, { headers, redirect: 'manual' });
     assert.equal(start.status, 302);
     const target = new URL(start.headers.get('location')!);
@@ -86,7 +86,14 @@ async function withAccountServer(
     // A browser arrives here from the provider's site, so the request is cross-site.
     const done = await fetch(
       `${base}/auth/${provider}/callback?code=${code}&state=${target.searchParams.get('state')}`,
-      { headers: { ...headers, 'Sec-Fetch-Site': 'cross-site' }, redirect: 'manual' },
+      {
+        headers: {
+          ...headers,
+          'Sec-Fetch-Site': 'cross-site',
+          ...(signedInAs ? { Cookie: signedInAs } : {}),
+        },
+        redirect: 'manual',
+      },
     );
     assert.equal(done.status, 302);
     assert.equal(done.headers.get('location'), '/');
@@ -229,6 +236,38 @@ test(
       for (let i = 2; i < 20; i++) assert.equal((await guest('203.0.113.7')).status, 200);
       assert.equal((await guest('203.0.113.7')).status, 400, 'twenty an hour per address');
       assert.equal((await guest('198.51.100.4')).status, 200, 'other addresses are unaffected');
+    }),
+);
+
+test(
+  'a guest who signs in with Google keeps their workspace; an existing account is not merged',
+  { skip: !uri },
+  () =>
+    withAccountServer(async (base, login) => {
+      const asGuest = async () =>
+        (await fetch(`${base}/auth/guest`, { method: 'POST', headers })).headers
+          .getSetCookie()[0]!
+          .split(';')[0]!;
+      const owner = async (cookie: string) =>
+        (await (await fetch(base, { headers: { ...headers, Cookie: cookie } })).json()).ownerId;
+      const session = async (cookie: string) =>
+        (await fetch(`${base}/session`, { headers: { ...headers, Cookie: cookie } })).json();
+
+      const guest = await asGuest();
+      const guestOwner = await owner(guest);
+      const kept = await login('google', 'judge', guest);
+      assert.equal(await owner(kept), guestOwner, 'the guest workspace is now the Google account');
+      assert.deepEqual((await session(kept)).user, { email: 'judge@example.com', guest: false });
+      assert.equal((await session(guest)).signedIn, false, 'the guest session is ended');
+      const again = await login('google', 'judge');
+      assert.equal(await owner(again), guestOwner, 'later sign-ins return to the same workspace');
+
+      // Someone who already has an account signs into it; the guest stays separate.
+      const ann = await owner(await login('google', 'ann'));
+      const other = await asGuest();
+      const otherOwner = await owner(other);
+      assert.equal(await owner(await login('google', 'ann', other)), ann);
+      assert.notEqual(ann, otherOwner);
     }),
 );
 

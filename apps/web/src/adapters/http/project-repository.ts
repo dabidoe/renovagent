@@ -62,7 +62,7 @@ function decodeBlobs(blobs: { id: string; mediaType: string; data: string }[]): 
 export type SessionInfo = {
   mode: string;
   signedIn?: boolean;
-  user?: { email: string };
+  user?: { email: string; guest?: boolean };
   providers?: string[];
   muse?: boolean;
   jev?: boolean;

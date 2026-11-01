@@ -153,7 +153,7 @@ export type Snapshot = {
   workspace: Workspace;
   busy: boolean;
   error: string | null;
-  auth: { required: boolean; email: string | null; providers: string[] };
+  auth: { required: boolean; email: string | null; guest?: boolean; providers: string[] };
 };
 const noAuth = () => ({ required: false, email: null as string | null, providers: [] as string[] });
 const needsSignIn = (error: unknown) =>
@@ -200,6 +200,7 @@ export class WorkspaceController {
           auth: {
             required: false,
             email: remote.session.user?.email ?? null,
+            guest: Boolean(remote.session.user?.guest),
             providers: remote.session.providers ?? [],
           },
         });
@@ -240,6 +241,7 @@ export class WorkspaceController {
           auth: {
             required: false,
             email: repository.session.user?.email ?? null,
+            guest: Boolean(repository.session.user?.guest),
             providers: repository.session.providers ?? [],
           },
         });
