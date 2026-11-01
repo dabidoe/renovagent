@@ -9,6 +9,7 @@ import { MongoWorkspaceRepository, OWNER } from '../../apps/api/src/repository.j
 import { createWorkspaceServer } from '../../apps/api/src/server.js';
 import { CatalogStore } from '../../apps/api/src/catalog.js';
 import { McpAccessStore } from '../../apps/api/src/mcp-access.js';
+import { StudioPlanStore } from '../../apps/api/src/studio-plans.js';
 
 const uri = process.env.TEST_WORKSPACE_MONGO_URI;
 
@@ -29,6 +30,8 @@ test(
     });
     const access = new McpAccessStore(db);
     await access.ensureIndexes();
+    const plans = new StudioPlanStore(db);
+    await plans.ensureIndexes();
     const { server } = await createWorkspaceServer(
       repo,
       'synthetic-agent-key-token',
@@ -44,6 +47,7 @@ test(
       undefined,
       undefined,
       access,
+      plans,
     );
     await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
     const address = server.address();
@@ -88,6 +92,7 @@ test(
       const tools = (await agent.listTools()).tools.map((t) => t.name);
       assert.ok(tools.includes('plan_paint_and_floor'));
       assert.ok(!tools.includes('start_project'), 'a read-only key cannot propose');
+      assert.ok(!tools.includes('save_plan'), 'a read-only key cannot save plans');
 
       const mcp = (init: RequestInit) => fetch(`${origin}/mcp`, { method: 'POST', ...init });
       const ping = JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'ping' });
@@ -132,8 +137,74 @@ test(
         401,
         'a revoked key stops working at once',
       );
-      for (let i = 0; i < 5; i++)
+      const proposer = await (
+        await post('/agent-keys', { name: 'Muse', access: 'propose' })
+      ).json();
+      for (let i = 1; i < 5; i++)
         assert.equal((await post('/agent-keys', { name: `k${i}`, access: 'propose' })).status, 200);
+
+      // A propose key saves a plan and gets a link only its owner can open.
+      const muse = new Client({ name: 'agent-key-plan', version: '1.0' });
+      clients.push(muse);
+      await muse.connect(
+        new StreamableHTTPClientTransport(new URL(proposer.endpoint), {
+          requestInit: { headers: { Authorization: `Bearer ${proposer.key}` } },
+        }),
+      );
+      assert.ok((await muse.listTools()).tools.some((t) => t.name === 'save_plan'));
+      const save = async () => {
+        const result = await muse.callTool({
+          name: 'save_plan',
+          arguments: {
+            requestId: 'muse-living-room-0001',
+            title: 'Living room refresh',
+            ceilingFt: 8,
+            rooms: [
+              {
+                name: 'Living room',
+                widthFt: 13,
+                lengthFt: 24,
+                paint: { hex: '#b3ae95' },
+                floorStyle: 'walnut',
+              },
+            ],
+          },
+        });
+        const [content] = result.content as { type: string; text: string }[];
+        return JSON.parse(content!.text);
+      };
+      const saved = await save();
+      assert.match(saved.url, new RegExp(`^${origin}/#plan/[A-Za-z0-9_-]{22}$`));
+      assert.equal(saved.saved, 'new');
+      assert.match(saved.total, /^\$/);
+      const again = await save();
+      assert.equal(again.url, saved.url, 'a retried requestId returns the same plan');
+      const planId = saved.url.split('#plan/')[1];
+      const opened = await (await fetch(`${api}/studio-plans/${planId}`, { headers: auth })).json();
+      assert.equal(opened.agent, 'Muse');
+      assert.equal(opened.project.tier, 'mid');
+      assert.equal(opened.project.rooms[0].photo.src, '', 'shown in 3D, no photo');
+      assert.deepEqual(opened.project.rooms[0].size, { xFt: 13, yFt: 24 });
+      assert.equal(opened.project.starting['room-1'].floorStyle, 'walnut');
+      assert.equal(
+        (await fetch(`${api}/studio-plans/${planId}`, { headers })).status,
+        403,
+        'a signed-out visitor cannot open it',
+      );
+      const theirs = await plans.save({
+        requestId: 'someone-elses-plan',
+        ownerId: 'someone-else',
+        agent: 'Theirs',
+        title: 'Theirs',
+        ceilingFt: 8,
+        tier: 'mid',
+        rooms: [],
+      });
+      assert.equal(
+        (await fetch(`${api}/studio-plans/${theirs.plan._id}`, { headers: auth })).status,
+        404,
+        'another owner’s plan does not open here',
+      );
       assert.equal(
         (await post('/agent-keys', { name: 'sixth', access: 'read' })).status,
         400,

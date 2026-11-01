@@ -35,7 +35,8 @@ import {
 } from './design-service.js';
 import type { McpAccess } from './mcp-access.js';
 import { workspaceMongoConfig } from './database-config.js';
-import { STUDIO_MCP_TOOLS, registerStudioTools } from './mcp-studio.js';
+import { STUDIO_MCP_TOOLS, STUDIO_SAVE_TOOLS, registerStudioTools } from './mcp-studio.js';
+import type { StudioPlanStore } from './studio-plans.js';
 
 export const MCP_SERVER_NAME = 'renovagent-workspace';
 export const MCP_SERVER_VERSION = '0.2.0';
@@ -243,14 +244,17 @@ export function createWorkspaceMcpServer(
     access?: McpAccess;
     transport?: 'stdio' | 'streamable-http';
     images?: DesignImageStore;
+    // Saved studio plans (hosted endpoint): the credential's name and the site's address.
+    plans?: { store: StudioPlanStore; agent: string; origin: string };
   } = {},
 ) {
   const canPropose = options.access !== 'read';
+  const savesPlans = canPropose && !!options.plans;
   const capabilities = {
     ...CAPABILITIES,
     transports: [options.transport ?? 'stdio'],
     access: canPropose ? 'propose' : 'read',
-    tools: CAPABILITIES.tools.filter(
+    tools: [...CAPABILITIES.tools, ...(savesPlans ? STUDIO_SAVE_TOOLS : [])].filter(
       (name) =>
         canPropose ||
         ![
@@ -794,7 +798,11 @@ export function createWorkspaceMcpServer(
     },
   );
 
-  registerStudioTools(server, catalog);
+  registerStudioTools(
+    server,
+    catalog,
+    savesPlans ? { plans: { ...options.plans!, ownerId: repository.ownerId } } : {},
+  );
   return server;
 }
 

@@ -201,7 +201,11 @@ export function ConnectAgent() {
           </li>
           <li>When Muse asks for the key, paste it into its secure field.</li>
           <li>
-            Try: <q>Price dark walnut floors and sage walls for my 13 by 23 foot living room.</q>
+            Try:{' '}
+            <q>
+              Plan dark walnut floors and sage walls for my 13 by 23 foot living room, and save it
+              so I can open it.
+            </q>
           </li>
         </ol>
       </div>
@@ -220,7 +224,8 @@ export function ConnectAgent() {
         </div>
         <p className="ca-note">
           Tools include list_projects, start_project, list_floor_styles, find_paint_color and
-          plan_paint_and_floor. Prices are this demo’s example prices, not live offers.
+          plan_paint_and_floor; with a read-and-propose key, save_plan returns a link to the plan in
+          your studio. Prices are this demo’s example prices, not live offers.
         </p>
       </details>
     </section>

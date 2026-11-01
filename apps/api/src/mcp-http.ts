@@ -3,6 +3,7 @@ import { pathToFileURL } from 'node:url';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { MongoWorkspaceRepository } from './repository.js';
 import { CatalogStore } from './catalog.js';
+import type { StudioPlanStore } from './studio-plans.js';
 import { McpAccessStore } from './mcp-access.js';
 import { createWorkspaceMcpServer } from './mcp.js';
 import { DesignImageStore } from './design-images.js';
@@ -118,7 +119,12 @@ export function mcpEndpoint(
   repository: MongoWorkspaceRepository,
   access: McpAccessStore,
   catalog?: CatalogStore,
-  options: { requestsPerMinute?: number; images?: DesignImageStore } = {},
+  options: {
+    requestsPerMinute?: number;
+    images?: DesignImageStore;
+    // Saved studio plans and the public site address their links use.
+    plans?: { store: StudioPlanStore; origin: () => string };
+  } = {},
 ) {
   const windows = new Map<string, { start: number; count: number }>();
   const active = new Set<ReturnType<typeof createWorkspaceMcpServer>>();
@@ -161,6 +167,15 @@ export function mcpEndpoint(
         access: grant.access,
         transport: 'streamable-http',
         ...(options.images ? { images: options.images } : {}),
+        ...(options.plans
+          ? {
+              plans: {
+                store: options.plans.store,
+                origin: options.plans.origin(),
+                agent: grant.name,
+              },
+            }
+          : {}),
       });
       const transport = new StreamableHTTPServerTransport({
         sessionIdGenerator: undefined,

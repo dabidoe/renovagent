@@ -72,6 +72,8 @@ export type HouseProject = {
   ceilingNote?: string;
   rooms: StudioRoom[];
   starting?: Record<string, RoomPick>;
+  // The price tier the project opens at (mid when not given).
+  tier?: TierKey;
   // The owner's own description, applied to the first room when it opens.
   idea?: string;
 };

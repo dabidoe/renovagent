@@ -14,6 +14,7 @@ import { HutchinsonStudio } from '../features/house-example/hutchinson-studio.js
 import { OwnStudio, type OwnStart } from '../features/house-example/own-studio.js';
 import { ConnectAgent } from '../features/connect/connect-agent.js';
 import { ExamplesGallery, ListingStudio } from '../features/house-example/listing-studio.js';
+import { SavedPlan, rememberReturn, takeReturn } from '../features/house-example/saved-plan.js';
 import { isHouseCase } from '../features/house-example/house-example-model.js';
 import '../features/house-example/house-example.css';
 import '../features/house-example/paint-floor.css';
@@ -50,6 +51,12 @@ import {
   LEGACY_STORAGE_KEY,
   type LegacyImportPreview,
 } from '../adapters/fixtures/import-legacy.js';
+// Back from sign-in (which lands on "/"): reopen the page that asked for it.
+if (!window.location.hash) {
+  const to = takeReturn();
+  if (to) window.history.replaceState(null, '', to);
+}
+
 export function App({ controller }: { controller: WorkspaceController }) {
   const {
     workspace: state,
@@ -66,7 +73,9 @@ export function App({ controller }: { controller: WorkspaceController }) {
   );
   // Paint & floor studio pages: your own project, the examples, one example.
   const studioHash = () =>
-    /^#(your-project|examples|connect|example\/[a-z0-9-]+)$/.test(window.location.hash)
+    /^#(your-project|examples|connect|example\/[a-z0-9-]+|plan\/[A-Za-z0-9_-]{22})$/.test(
+      window.location.hash,
+    )
       ? window.location.hash
       : null;
   const [studioRoute, setStudioRoute] = useState(studioHash);
@@ -449,7 +458,12 @@ export function App({ controller }: { controller: WorkspaceController }) {
         <div className="error-banner" role="alert">
           <span>{error || 'Sign in to reconnect your shared workspace.'}</span>
           {(auth.providers.length ? auth.providers : ['google']).map((provider) => (
-            <a key={provider} className="link-button" href={signInUrlFor(provider)}>
+            <a
+              key={provider}
+              className="link-button"
+              href={signInUrlFor(provider)}
+              onClick={rememberReturn}
+            >
               Sign in with {provider === 'meta' ? 'Meta' : 'Google'}
             </a>
           ))}
@@ -494,6 +508,8 @@ export function App({ controller }: { controller: WorkspaceController }) {
             <ConnectAgent />
           ) : studioRoute === '#your-project' ? (
             <OwnStudio key={ownStart ? 'start' : 'own'} start={ownStart} />
+          ) : studioRoute!.startsWith('#plan/') ? (
+            <SavedPlan key={studioRoute} id={studioRoute!.slice('#plan/'.length)} />
           ) : studioRoute === '#examples' ? (
             <ExamplesGallery
               onOpen={(route) =>

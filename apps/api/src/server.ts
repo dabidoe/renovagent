@@ -55,6 +55,8 @@ import {
 } from './design-service.js';
 import { renderExample } from './example-render.js';
 import { studioProviders, studioRoutes, type StudioProviders } from './studio.js';
+import { StudioPlanStore } from './studio-plans.js';
+import { studioProject } from './mcp-studio.js';
 import { McpAccessStore } from './mcp-access.js';
 import { mcpEndpoint } from './mcp-http.js';
 import { configuredJevKey, judgeProducts, rankReviewFindings, readRoomPhoto } from './jev.js';
@@ -145,6 +147,8 @@ export async function createWorkspaceServer(
   // Remote agents (Muse and other MCP clients) at /mcp, with keys owners
   // create in the website; absent, both stay off.
   mcpAccess?: McpAccessStore,
+  // Paint-and-floor plans owners' agents save, opened at /#plan/<id>.
+  plans?: StudioPlanStore,
 ) {
   const accountMode = Boolean(accounts);
   // A public origin with the shared local token would give every visitor one workspace.
@@ -305,8 +309,19 @@ export async function createWorkspaceServer(
     }
     return parsed;
   }
+  // Links the site gives out: the public address, or this listener's.
+  const siteOrigin = () => {
+    const bound = server.address();
+    return (
+      hosting.publicUrl?.origin ??
+      `http://127.0.0.1:${bound && typeof bound !== 'string' ? bound.port : hosting.listenPort}`
+    );
+  };
   const mcp = mcpAccess
-    ? mcpEndpoint(repository, mcpAccess, catalog, design ? { images: design.images } : {})
+    ? mcpEndpoint(repository, mcpAccess, catalog, {
+        ...(design ? { images: design.images } : {}),
+        ...(plans ? { plans: { store: plans, origin: siteOrigin } } : {}),
+      })
     : undefined;
   const server = createServer(async (req, res) => {
     res.setHeader('Cache-Control', 'no-store');
@@ -559,6 +574,26 @@ export async function createWorkspaceServer(
           return;
         }
         throw new DomainError('NOT_FOUND', 'Unknown agent key request');
+      }
+      // A plan an owner's agent saved; only that owner can open it.
+      const savedPlan = path.match(/^\/studio-plans\/([^/]+)$/);
+      if (savedPlan && req.method === 'GET') {
+        const plan = plans ? await plans.get(activeRepo.ownerId, savedPlan[1]!) : null;
+        if (!plan) throw new DomainError('NOT_FOUND', 'No such plan in this account');
+        json(200, {
+          id: plan._id,
+          title: plan.title,
+          agent: plan.agent,
+          createdAt: plan.createdAt,
+          project: studioProject(
+            `plan-${plan._id}`,
+            plan.title,
+            plan.ceilingFt,
+            plan.tier,
+            plan.rooms,
+          ),
+        });
+        return;
       }
       const requireOperator = () => {
         if (!accountMode) return;
@@ -1329,6 +1364,8 @@ if (process.argv[1]?.endsWith('/apps/api/src/server.ts')) {
   await catalog.ensureIndexes();
   const mcpAccess = new McpAccessStore(client.db());
   await mcpAccess.ensureIndexes();
+  const plans = new StudioPlanStore(client.db());
+  await plans.ensureIndexes();
   const { server, workers } = await createWorkspaceServer(
     repository,
     token,
@@ -1347,6 +1384,7 @@ if (process.argv[1]?.endsWith('/apps/api/src/server.ts')) {
     undefined,
     undefined,
     mcpAccess,
+    plans,
   );
   server.listen(hosting.listenPort, hosting.listenHost, () =>
     console.log(
