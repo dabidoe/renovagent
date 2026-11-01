@@ -767,3 +767,13 @@
   height: 28px;
   color: var(--pf-accent);
 }
+.pf-ceiling {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}

@@ -85,6 +85,39 @@ const readResult = z.object({
 });
 export type StudioRead = z.infer<typeof readResult>;
 
+// Ceiling height by eye: a standard interior door (about 80 in, 6'8") is the
+// ruler. Close enough to size paint, never a measurement; shown as an
+// estimate and the owner can type the real height over it.
+export const ceilingSchema = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['estimateFt', 'basis'],
+  properties: {
+    estimateFt: { type: 'number' },
+    basis: { type: 'string', enum: ['door', 'other cue', 'none'] },
+  },
+} as const;
+export const ceilingPrompt = (photos: number) =>
+  `These ${photos} photo(s) show rooms in one home. Estimate the typical ceiling height in feet. Use a standard interior door as the scale: its opening is about 80 inches (6 ft 8 in) tall, so compare the door's height with the wall from floor to ceiling. Round to the nearest half foot. Give basis "door" if you used a door, "other cue" if you used something else of known size, and "none" if nothing in the photos gives a scale.`;
+export type CeilingEstimate = { ft: number; basis: 'door' | 'other cue' | 'none' };
+const ceilingResult = z.object({
+  estimateFt: z.number(),
+  basis: z.enum(['door', 'other cue', 'none']),
+});
+// Without a usable cue, the owner's rule of thumb: about 8 ft.
+export function ceilingFrom(raw: unknown): CeilingEstimate {
+  const parsed = ceilingResult.safeParse(raw);
+  if (!parsed.success || parsed.data.basis === 'none') return { ft: 8, basis: 'none' };
+  const ft = Math.round(parsed.data.estimateFt * 2) / 2;
+  return ft >= 7 && ft <= 14 ? { ft, basis: parsed.data.basis } : { ft: 8, basis: 'none' };
+}
+export const ceilingNote = (c: CeilingEstimate) =>
+  c.basis === 'door'
+    ? 'Ceiling estimated from the door height in the photos'
+    : c.basis === 'other cue'
+      ? 'Ceiling estimated from the photos'
+      : 'Ceiling assumed at about 8 ft; nothing in the photos gives a scale';
+
 export const readPrompt = (photos: number, plans: number) =>
   `You are helping a homeowner plan paint and flooring. The first ${photos} image(s) are photos of rooms, numbered 0 to ${photos - 1} in order.${plans ? ` The last ${plans} image(s) are floor plans.` : ''}
 For each room photo, give its index, the kind of room, a short title a homeowner would use (for example "Living room", "Front bedroom", "Kitchen"), and what the floor is now covered with. If two photos show the same kind of room, make the titles distinct.
@@ -188,11 +221,17 @@ export function studioRoutes(deps: {
       );
       deps.spend(ownerId, 'read');
       const n = input.photos.length;
-      const result = await deps.providers.read({
-        schema: readSchema,
-        images,
-        prompt: readPrompt(n, input.plans.length),
-      });
+      const [result, ceiling] = await Promise.all([
+        deps.providers.read({
+          schema: readSchema,
+          images,
+          prompt: readPrompt(n, input.plans.length),
+        }),
+        deps.providers
+          .read({ schema: ceilingSchema, images: images.slice(0, n), prompt: ceilingPrompt(n) })
+          .then((r) => ceilingFrom(r.result))
+          .catch(() => ceilingFrom(null)),
+      ]);
       const parsed = readResult.parse(result.result);
       return {
         photos: parsed.photos
@@ -201,6 +240,7 @@ export function studioRoutes(deps: {
         plans: parsed.plans.filter(
           (p) => p.widthFt > 0 && p.widthFt < 100 && p.lengthFt > 0 && p.lengthFt < 100,
         ),
+        ceiling: { ...ceiling, note: ceilingNote(ceiling) },
         model: result.model,
         runId: result.runId,
       };

@@ -3,7 +3,7 @@
   "address": "2244 E 20th St",
   "place": "Oakland, CA",
   "listing": "https://www.redfin.com/CA/Oakland/2244-E-20th-St-94606/home/1727158",
-  "ceilingFt": null,
+  "ceilingFt": 9,
   "rooms": [
     {
       "id": "image-01",
@@ -543,5 +543,6 @@
         "status": "generated-concept"
       }
     }
-  }
+  },
+  "ceilingNote": "Ceiling estimated from the door height in the photos"
 }

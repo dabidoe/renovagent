@@ -422,6 +422,7 @@ export function PaintFloorStudio({
   const [tier, setTier] = useState<TierKey>('mid');
   const [picks, setPicks] = useState<Record<string, RoomPick>>(() => loadPicks(project));
   const [working, setWorking] = useState<Record<string, string>>({});
+  const [editCeiling, setEditCeiling] = useState(false);
   const room = project.rooms.find((r) => r.id === roomId) ?? project.rooms[0];
   const pick = (room && picks[room.id]) ?? DEFAULT_PICK;
   const ceilingFt = project.ceilingFt;
@@ -532,7 +533,20 @@ export function PaintFloorStudio({
               {room.size && (
                 <span>
                   {feetInches(room.size.xFt)} × {feetInches(room.size.yFt)}
-                  {ceilingFt ? ` · ${feetInches(ceilingFt)} ceilings` : ''}
+                  {ceilingFt && ' · '}
+                  {ceilingFt && onCeiling ? (
+                    <button
+                      type="button"
+                      className="pf-ceiling"
+                      title={project.ceilingNote ?? 'Change the ceiling height'}
+                      onClick={() => setEditCeiling(true)}
+                    >
+                      {project.ceilingNote ? '≈' : ''}
+                      {feetInches(ceilingFt)} ceilings
+                    </button>
+                  ) : ceilingFt ? (
+                    `${feetInches(ceilingFt)} ceilings`
+                  ) : null}
                 </span>
               )}
             </div>
@@ -566,13 +580,20 @@ export function PaintFloorStudio({
 
         <aside className="pf-panel" aria-label="Choices and materials">
           {roomTools?.(room)}
-          {needsSize && onEditRoom && (
+          {((needsSize && onEditRoom) || editCeiling) && (
             <SizeEntry
               key={room.id}
               room={room}
-              ceilingFt={ceilingFt}
-              onSize={(size) => onEditRoom(room.id, { size })}
-              {...(onCeiling ? { onCeiling } : {})}
+              ceilingFt={editCeiling ? null : ceilingFt}
+              onSize={(size) => onEditRoom?.(room.id, { size })}
+              {...(onCeiling
+                ? {
+                    onCeiling: (ft: number) => {
+                      onCeiling(ft);
+                      setEditCeiling(false);
+                    },
+                  }
+                : {})}
             />
           )}
           <ColorChoice pick={pick} onColor={(color) => update({ color })} />

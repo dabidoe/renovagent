@@ -3,7 +3,7 @@
   "address": "621 E 43rd St",
   "place": "Brooklyn, NY",
   "listing": "https://www.redfin.com/NY/Brooklyn/621-E-43rd-St-11203/home/40782904",
-  "ceilingFt": null,
+  "ceilingFt": 8,
   "rooms": [
     {
       "id": "image-03",
@@ -307,5 +307,6 @@
         "status": "generated-concept"
       }
     }
-  }
+  },
+  "ceilingNote": "Ceiling estimated from the door height in the photos"
 }

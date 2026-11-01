@@ -8,7 +8,7 @@ import { emptyWorkspace } from '@renovagent/contracts';
 import { MongoWorkspaceRepository, OWNER } from '../../apps/api/src/repository.js';
 import { createWorkspaceServer } from '../../apps/api/src/server.js';
 import { DesignImageStore, normalizeImage } from '../../apps/api/src/design-images.js';
-import type { StudioProviders } from '../../apps/api/src/studio.js';
+import { ceilingSchema, type StudioProviders } from '../../apps/api/src/studio.js';
 
 const uri = process.env.TEST_WORKSPACE_MONGO_URI;
 const photo = readFileSync(
@@ -45,8 +45,14 @@ test(
         const smaller = await normalizeImage(new Uint8Array(photo), 900);
         return { bytes: smaller.bytes, model: 'muse-image-1.0' };
       },
-      async read() {
+      async read({ schema }) {
         calls.read++;
+        if (schema === ceilingSchema)
+          return {
+            result: { estimateFt: 8.6, basis: 'door' },
+            runId: 'spark-ceiling',
+            model: 'muse-spark-1.3',
+          };
         return {
           result: {
             photos: [
@@ -135,7 +141,11 @@ test(
         [['Living room', uploaded.sha256]],
       );
       assert.deepEqual(read.plans, [{ name: 'LIVING ROOM', widthFt: 13.083, lengthFt: 23.167 }]);
-      assert.equal(calls.read, 1);
+      assert.deepEqual(
+        [read.ceiling.ft, read.ceiling.note],
+        [8.5, 'Ceiling estimated from the door height in the photos'],
+      );
+      assert.equal(calls.read, 2, 'rooms and ceiling are read side by side');
     } finally {
       await new Promise<void>((resolve) => server.close(() => resolve()));
       await db.dropDatabase();

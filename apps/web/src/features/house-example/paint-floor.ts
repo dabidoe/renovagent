@@ -60,6 +60,8 @@ export type HouseProject = {
   place?: string;
   listing?: string;
   ceilingFt: number | null;
+  // Set when the height is an estimate rather than reported or measured.
+  ceilingNote?: string;
   rooms: StudioRoom[];
   starting?: Record<string, RoomPick>;
 };

@@ -147,3 +147,11 @@ test('photos take the printed plan room that names them, each room once', async 
   assert.deepEqual(project.rooms[1]!.size, { xFt: 13.083, yFt: 23.167 });
   assert.equal(project.rooms[3]!.size, undefined);
 });
+
+test('a ceiling estimate is rounded, bounded, and falls back to about 8 ft', async () => {
+  const { ceilingFrom } = await import('../../apps/api/src/studio.js');
+  assert.deepEqual(ceilingFrom({ estimateFt: 9.2, basis: 'door' }), { ft: 9, basis: 'door' });
+  assert.deepEqual(ceilingFrom({ estimateFt: 22, basis: 'door' }), { ft: 8, basis: 'none' });
+  assert.deepEqual(ceilingFrom({ estimateFt: 10, basis: 'none' }), { ft: 8, basis: 'none' });
+  assert.deepEqual(ceilingFrom('nonsense'), { ft: 8, basis: 'none' });
+});

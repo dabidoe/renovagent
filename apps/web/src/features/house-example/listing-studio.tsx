@@ -67,7 +67,12 @@ export function ListingStudio({ id, onBack }: { id: string; onBack: () => void }
   // The viewer may fill in what the listing does not say.
   const shown: HouseProject = {
     ...project,
-    ceilingFt: project.ceilingFt ?? edits.ceilingFt ?? null,
+    ceilingFt: edits.ceilingFt ?? project.ceilingFt ?? null,
+    ...(edits.ceilingFt
+      ? { ceilingNote: undefined }
+      : project.ceilingNote
+        ? { ceilingNote: project.ceilingNote }
+        : {}),
     rooms: project.rooms.map((r): StudioRoom => {
       const size = r.size ?? edits.sizes?.[r.id];
       return size ? { ...r, size } : r;

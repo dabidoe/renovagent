@@ -70,7 +70,11 @@ function Intake({ onBuilt }: { onBuilt: (saved: Saved) => void }) {
       const read = (await workspaceRequest('/studio/read', {
         photos: photoShas,
         plans: planShas,
-      })) as { photos: ReadPhoto[]; plans: PlanRoom[] };
+      })) as {
+        photos: ReadPhoto[];
+        plans: PlanRoom[];
+        ceiling: { ft: number; note: string };
+      };
       advance(2);
       const walls: Record<string, Masks | null> = {};
       await Promise.all(
@@ -81,15 +85,19 @@ function Intake({ onBuilt }: { onBuilt: (saved: Saved) => void }) {
       const listing = /^https?:\/\//i.test(where.trim()) ? where.trim() : undefined;
       onBuilt({
         plans: read.plans,
-        project: ownProject({
-          id: `own-${photoShas[0]!.slice(0, 10)}`,
-          address: listing ? 'Your listing' : where.trim() || 'Your project',
-          ...(listing ? { listing } : {}),
-          ceilingFt: parseFeet(ceiling),
-          photos: read.photos,
-          plans: read.plans,
-          walls,
-        }),
+        project: {
+          ...ownProject({
+            id: `own-${photoShas[0]!.slice(0, 10)}`,
+            address: listing ? 'Your listing' : where.trim() || 'Your project',
+            ...(listing ? { listing } : {}),
+            ceilingFt: parseFeet(ceiling) ?? read.ceiling.ft,
+            photos: read.photos,
+            plans: read.plans,
+            walls,
+          }),
+          // Typed heights are the owner's; otherwise Spark's estimate, labelled.
+          ...(parseFeet(ceiling) ? {} : { ceilingNote: read.ceiling.note }),
+        },
       });
     } catch (e) {
       setSteps(null);
@@ -156,7 +164,7 @@ function Intake({ onBuilt }: { onBuilt: (saved: Saved) => void }) {
         />
         <input
           aria-label="Ceiling height"
-          placeholder="Ceiling, e.g. 8′"
+          placeholder="Ceiling (optional)"
           value={ceiling}
           disabled={busy}
           inputMode="decimal"
@@ -242,7 +250,10 @@ export function OwnStudio() {
       kicker="Your project"
       renderFloor={renderFloor}
       onEditRoom={editRoom}
-      onCeiling={(ceilingFt) => commit({ ...saved, project: { ...project, ceilingFt } })}
+      onCeiling={(ceilingFt) => {
+        const { ceilingNote: _estimate, ...reported } = project;
+        commit({ ...saved, project: { ...reported, ceilingFt } });
+      }}
       roomTools={(room) =>
         plans.length ? (
           <label className="pf-plan-pick">

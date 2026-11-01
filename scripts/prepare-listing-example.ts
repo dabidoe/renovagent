@@ -10,7 +10,16 @@ import { extname, join } from 'node:path';
 import { museEditImage, museJson, samSegmentText, imageMediaType } from './muse-provider.js';
 import { fitImage, normalizeImage } from '../apps/api/src/design-images.js';
 import { parseSegmentation } from '../apps/api/src/segmentation.js';
-import { floorPrompt, readPrompt, readSchema, type StudioFloor } from '../apps/api/src/studio.js';
+import {
+  ceilingFrom,
+  ceilingNote,
+  ceilingPrompt,
+  ceilingSchema,
+  floorPrompt,
+  readPrompt,
+  readSchema,
+  type StudioFloor,
+} from '../apps/api/src/studio.js';
 import {
   matchPlanRooms,
   type PlanRoom,
@@ -27,11 +36,34 @@ const arg = (flag: string) => {
   const i = process.argv.indexOf(flag);
   return i > 0 ? process.argv[i + 1] : undefined;
 };
-const folder = arg('--folder')!.replace(/^~/, process.env.HOME!);
 const id = arg('--id')!;
-if (!folder || !/^[a-z0-9-]+$/.test(id ?? ''))
-  throw Error('--folder and a lowercase --id are required');
+if (!/^[a-z0-9-]+$/.test(id ?? '')) throw Error('A lowercase --id is required');
 const out = new URL(`../public/examples/${id}/`, import.meta.url);
+const asModel = (bytes: Uint8Array) => ({ bytes, mediaType: imageMediaType(bytes) });
+// Ceiling height by eye from the room photos (doors as the ruler).
+async function estimateCeiling(photos: Uint8Array[]) {
+  const r = await museJson({
+    schema: ceilingSchema,
+    images: photos.map(asModel),
+    prompt: ceilingPrompt(photos.length),
+  });
+  const c = ceilingFrom(r.result);
+  console.log(`Spark ceiling: ${c.ft} ft (${c.basis}, ${r.runId})`);
+  return { ceilingFt: c.ft, ceilingNote: ceilingNote(c) };
+}
+// --ceiling-only: estimate the height for an example already prepared.
+if (process.argv.includes('--ceiling-only')) {
+  const file = new URL('project.json', out);
+  const project = JSON.parse(await readFile(file, 'utf8')) as HouseProject;
+  const photos = await Promise.all(
+    project.rooms.map(async (r) => new Uint8Array(await readFile(new URL(`${r.id}.jpg`, out)))),
+  );
+  Object.assign(project, await estimateCeiling(photos));
+  await writeFile(file, JSON.stringify(project, null, 2));
+  process.exit(0);
+}
+const folder = arg('--folder')?.replace(/^~/, process.env.HOME!);
+if (!folder) throw Error('--folder is required');
 const outPath = (name: string) => new URL(name, out);
 const web = (name: string) => `./examples/${id}/${name}`;
 const hash = (bytes: Uint8Array) => createHash('sha256').update(bytes).digest('hex');
@@ -59,7 +91,6 @@ for (const file of files) {
   images.push({ name, bytes: normalized.bytes, original: file, originalSha256: hash(raw) });
 }
 console.log(`${images.length} images normalized`);
-const asModel = (bytes: Uint8Array) => ({ bytes, mediaType: imageMediaType(bytes) });
 
 // 2. Which images are room photos, which are floor plans.
 const sortSchema = {
@@ -191,13 +222,15 @@ const looks: RoomPick[] = [
   { color: PRESET_COLORS[3]!, floor: 'lvp', included: true },
   { color: PRESET_COLORS[1]!, floor: 'hardwood', included: true },
 ];
-const ceiling = arg('--ceiling') ? Number(arg('--ceiling')) : null;
+const ceiling = arg('--ceiling')
+  ? { ceilingFt: Number(arg('--ceiling')) }
+  : await estimateCeiling(heroes.map((h) => rooms[h.index]!.bytes));
 const project: HouseProject & { receipts: unknown } = {
   id,
   address: arg('--address') ?? id,
   ...(arg('--place') ? { place: arg('--place')! } : {}),
   ...(arg('--listing') ? { listing: arg('--listing')! } : {}),
-  ceilingFt: ceiling,
+  ...ceiling,
   rooms: studioRooms,
   starting: Object.fromEntries(studioRooms.map((r, i) => [r.id, looks[i % looks.length]!])),
   receipts: {
