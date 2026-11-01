@@ -45,6 +45,7 @@ const MAX_PHOTOS = 8;
 function Intake({ onBuilt }: { onBuilt: (saved: Saved) => void }) {
   const [where, setWhere] = useState('');
   const [ceiling, setCeiling] = useState('');
+  const [idea, setIdea] = useState('');
   const [photos, setPhotos] = useState<File[]>([]);
   const [plans, setPlans] = useState<File[]>([]);
   const [steps, setSteps] = useState<Step[] | null>(null);
@@ -97,6 +98,7 @@ function Intake({ onBuilt }: { onBuilt: (saved: Saved) => void }) {
           }),
           // Typed heights are the owner's; otherwise Spark's estimate, labelled.
           ...(parseFeet(ceiling) ? {} : { ceilingNote: read.ceiling.note }),
+          ...(idea.trim().length >= 3 ? { idea: idea.trim() } : {}),
         },
       });
     } catch (e) {
@@ -153,6 +155,15 @@ function Intake({ onBuilt }: { onBuilt: (saved: Saved) => void }) {
           onChange={(e) => setPlans([...(e.target.files ?? [])].slice(0, 2))}
         />
       </div>
+      <input
+        className="pf-intake-idea"
+        aria-label="What do you imagine?"
+        placeholder="What do you imagine? Dark green walls, light oak floors…"
+        value={idea}
+        disabled={busy}
+        maxLength={300}
+        onChange={(e) => setIdea(e.target.value)}
+      />
       <div className="pf-intake-row">
         <input
           aria-label="Address or listing link"
@@ -254,6 +265,15 @@ export function OwnStudio() {
         const { ceilingNote: _estimate, ...reported } = project;
         commit({ ...saved, project: { ...reported, ceilingFt } });
       }}
+      onIdeaUsed={() =>
+        setSaved((current) => {
+          if (!current?.project.idea) return current;
+          const { idea: _used, ...rest } = current.project;
+          const next = { ...current, project: rest };
+          keep(next);
+          return next;
+        })
+      }
       roomTools={(room) =>
         plans.length ? (
           <label className="pf-plan-pick">

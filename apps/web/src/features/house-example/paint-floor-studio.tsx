@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { roomSurfaces } from '@renovagent/core';
+import { nearestPaint, roomSurfaces } from '@renovagent/core';
+import { workspaceRequest } from '../../adapters/http/project-repository.js';
 import { Glyph } from '../../components/glyph.js';
 import { mountRoomScene, type RoomScene } from '../room3d/room-scene.js';
 import { PaintPicker, brandColorLink } from '../room3d/photo-outlines.js';
@@ -326,6 +327,55 @@ function ColorChoice({
   );
 }
 
+// Muse Spark's reading of the owner's words: a real loaded paint (or, with
+// none loaded, the described hex, snapped here to a starting colour), one of
+// the studio's floors, and the rest as ideas that are not priced.
+type Idea = {
+  color: WallColor | null;
+  hex: string | null;
+  floor: 'keep' | NewFloor;
+  extras: string[];
+};
+
+function Imagine({
+  room,
+  busy,
+  error,
+  onImagine,
+}: {
+  room: StudioRoom;
+  busy: boolean;
+  error: string;
+  onImagine: (text: string) => void;
+}) {
+  const [text, setText] = useState('');
+  return (
+    <form
+      className="pf-imagine"
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (text.trim().length >= 3) onImagine(text.trim());
+      }}
+    >
+      <label htmlFor="pf-imagine-text">Imagine the {room.title.toLowerCase()}</label>
+      <div>
+        <input
+          id="pf-imagine-text"
+          value={text}
+          maxLength={300}
+          disabled={busy}
+          placeholder="Dark green walls, light oak floors…"
+          onChange={(e) => setText(e.target.value)}
+        />
+        <button type="submit" disabled={busy || text.trim().length < 3} aria-label="Apply">
+          {busy ? <span className="pf-spinner" aria-hidden="true" /> : <Glyph name="right" />}
+        </button>
+      </div>
+      {error && <p className="pf-intake-error">{error}</p>}
+    </form>
+  );
+}
+
 // Feet from a "12.5" or "12' 6"" style entry; null when unreadable.
 export function parseFeet(text: string) {
   const m = /^\s*(\d+(?:\.\d+)?)\s*(?:'|′|ft)?\s*(?:(\d+(?:\.\d+)?)\s*(?:"|″|in)?)?\s*$/.exec(text);
@@ -405,6 +455,7 @@ export function PaintFloorStudio({
   onEditRoom,
   onCeiling,
   roomTools,
+  onIdeaUsed,
 }: {
   project: HouseProject;
   kicker: string;
@@ -416,6 +467,8 @@ export function PaintFloorStudio({
   onCeiling?: (ft: number) => void;
   // Owner-only controls for the selected room (e.g. which plan room it is).
   roomTools?: (room: StudioRoom) => ReactNode;
+  // Called once the project's own description has been applied.
+  onIdeaUsed?: () => void;
 }) {
   const [roomId, setRoomId] = useState(project.rooms[0]?.id ?? '');
   const [view, setView] = useState<'photo' | '3d'>('photo');
@@ -426,16 +479,53 @@ export function PaintFloorStudio({
   const room = project.rooms.find((r) => r.id === roomId) ?? project.rooms[0];
   const pick = (room && picks[room.id]) ?? DEFAULT_PICK;
   const ceilingFt = project.ceilingFt;
-  const update = (next: Partial<RoomPick>) => {
-    if (!room) return;
-    const all = { ...picks, [room.id]: { ...pick, ...next } };
-    setPicks(all);
+  const updateRoom = (id: string, next: Partial<RoomPick>) =>
+    setPicks((current) => {
+      const all = { ...current, [id]: { ...(current[id] ?? DEFAULT_PICK), ...next } };
+      try {
+        localStorage.setItem(pickStore(project.id), JSON.stringify(all));
+      } catch {
+        // Picks still apply for this visit.
+      }
+      return all;
+    });
+  const update = (next: Partial<RoomPick>) => room && updateRoom(room.id, next);
+  const [imagining, setImagining] = useState<{ busy: boolean; error: string }>({
+    busy: false,
+    error: '',
+  });
+  const imagine = async (text: string, target: StudioRoom) => {
+    setImagining({ busy: true, error: '' });
     try {
-      localStorage.setItem(pickStore(project.id), JSON.stringify(all));
-    } catch {
-      // Picks still apply for this visit.
+      const idea = (await workspaceRequest('/studio/imagine', {
+        text,
+        room: target.title,
+      })) as Idea;
+      const color = idea.color ?? (idea.hex ? nearestPaint(idea.hex, PRESET_COLORS) : null);
+      // A floor this room cannot show stays as it is, so the price matches the picture.
+      const floor =
+        idea.floor !== 'keep' && (target.floors[idea.floor] || renderFloor) ? idea.floor : null;
+      updateRoom(target.id, {
+        ...(color ? { color } : {}),
+        ...(floor ? { floor } : {}),
+        ideas: idea.extras,
+      });
+      setImagining({ busy: false, error: '' });
+    } catch (e) {
+      setImagining({
+        busy: false,
+        error: e instanceof Error ? e.message.slice(0, 160) : 'That could not be read.',
+      });
     }
   };
+  const ideaUsed = useRef(false);
+  useEffect(() => {
+    const first = project.rooms[0];
+    if (!project.idea || !first || ideaUsed.current) return;
+    ideaUsed.current = true;
+    void imagine(project.idea, first).finally(() => onIdeaUsed?.());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [project.idea]);
   // A floor that is picked but not made yet is rendered once, on demand.
   const missing = room && pick.floor !== 'keep' && !room.floors[pick.floor] ? pick.floor : null;
   const workKey = room && missing ? `${room.id}:${missing}` : '';
@@ -579,6 +669,13 @@ export function PaintFloorStudio({
         </div>
 
         <aside className="pf-panel" aria-label="Choices and materials">
+          <Imagine
+            key={room.id}
+            room={room}
+            busy={imagining.busy}
+            error={imagining.error}
+            onImagine={(text) => void imagine(text, room)}
+          />
           {roomTools?.(room)}
           {((needsSize && onEditRoom) || editCeiling) && (
             <SizeEntry
@@ -653,6 +750,12 @@ export function PaintFloorStudio({
                 {needsSize ? 'Add the room size to price it.' : 'Pick a colour or a floor.'}
               </p>
             )}
+            {pick.ideas?.length ? (
+              <p className="pf-ideas">
+                <span>Not priced</span>
+                {pick.ideas.join(' · ')}
+              </p>
+            ) : null}
             <div className="pf-subtotal">
               <span>Room materials</span>
               <b>{money(takeoff.totalMinor)}</b>

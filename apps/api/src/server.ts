@@ -207,6 +207,7 @@ export async function createWorkspaceServer(
     ? studioRoutes({
         images: design.images,
         providers: studio,
+        ...(catalog ? { paint: () => catalog.allPaint() } : {}),
         spend: (ownerId, kind) =>
           kind === 'segment'
             ? spendSegmentCall(ownerId)

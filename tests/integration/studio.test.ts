@@ -8,7 +8,8 @@ import { emptyWorkspace } from '@renovagent/contracts';
 import { MongoWorkspaceRepository, OWNER } from '../../apps/api/src/repository.js';
 import { createWorkspaceServer } from '../../apps/api/src/server.js';
 import { DesignImageStore, normalizeImage } from '../../apps/api/src/design-images.js';
-import { ceilingSchema, type StudioProviders } from '../../apps/api/src/studio.js';
+import { CatalogStore } from '../../apps/api/src/catalog.js';
+import { ceilingSchema, imagineSchema, type StudioProviders } from '../../apps/api/src/studio.js';
 
 const uri = process.env.TEST_WORKSPACE_MONGO_URI;
 const photo = readFileSync(
@@ -45,8 +46,22 @@ test(
         const smaller = await normalizeImage(new Uint8Array(photo), 900);
         return { bytes: smaller.bytes, model: 'muse-image-1.0' };
       },
-      async read({ schema }) {
+      async read({ schema, prompt }) {
         calls.read++;
+        if (schema === imagineSchema) {
+          prompts.push(prompt);
+          return {
+            result: {
+              walls: true,
+              colorName: 'Evergreen Mist',
+              hex: '#2B4A36',
+              floor: 'lvp',
+              extras: ['built-in bookshelf', ' ', 'brass sconces'],
+            },
+            runId: 'spark-imagine',
+            model: 'muse-spark-1.3',
+          };
+        }
         if (schema === ceilingSchema)
           return {
             result: { estimateFt: 8.6, basis: 'door' },
@@ -69,12 +84,30 @@ test(
         };
       },
     };
+    // A few colours standing in for a loaded brand palette.
+    const catalog = new CatalogStore(db);
+    await catalog.importPaint(
+      [
+        ['Alabaster', 'SW 7008', '#EDEAE0', 'white'],
+        ['Rainforest', 'SW 9999', '#2F4B3C', 'green'],
+        ['Naval', 'SW 6244', '#2F3D4C', 'blue'],
+      ].map(([name, code, hex, family]) => ({
+        id: `test:${code}`,
+        brand: 'Test Paints',
+        collection: 'Test',
+        code: code!,
+        name: name!,
+        hex: hex!,
+        family: family as 'green',
+        lightness: 0.5,
+      })),
+    );
     const { server } = await createWorkspaceServer(
       repo,
       'synthetic-studio-token',
       true,
       undefined,
-      undefined,
+      catalog,
       undefined,
       { images: new DesignImageStore(db) },
       undefined,
@@ -146,6 +179,28 @@ test(
         [8.5, 'Ceiling estimated from the door height in the photos'],
       );
       assert.equal(calls.read, 2, 'rooms and ceiling are read side by side');
+
+      const idea = await (
+        await post('/studio/imagine', {
+          text: 'dark green walls, light oak floors and a built-in bookshelf',
+          room: 'Living room',
+        })
+      ).json();
+      assert.deepEqual(idea.color, {
+        name: 'Rainforest',
+        code: 'SW 9999',
+        hex: '#2f4b3c',
+        brand: 'Test Paints',
+      });
+      assert.equal(idea.hex, null, 'snapped to a loaded colour, not a made-up name');
+      assert.equal(idea.floor, 'lvp');
+      assert.deepEqual(idea.extras, ['built-in bookshelf', 'brass sconces']);
+      assert.match(prompts.at(-1)!, /"dark green walls, light oak floors/);
+      assert.equal(
+        (await post('/studio/imagine', { text: 'x'.repeat(301) })).status,
+        400,
+        'the owner’s words are bounded',
+      );
     } finally {
       await new Promise<void>((resolve) => server.close(() => resolve()));
       await db.dropDatabase();

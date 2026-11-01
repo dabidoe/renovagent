@@ -102,6 +102,12 @@ export class CatalogStore {
     };
   }
 
+  // Every loaded colour's name, code and hex, for matching a described colour.
+  async allPaint(): Promise<PaintColor[]> {
+    const rows = await this.paint.find({}, { projection: { codeKey: 0 } }).toArray();
+    return rows.map(({ _id, codeKey: _key, ...color }) => color);
+  }
+
   async importBatch(raw: unknown): Promise<{
     products: number;
     offers: number;

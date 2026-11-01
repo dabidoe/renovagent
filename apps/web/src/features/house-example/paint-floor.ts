@@ -64,6 +64,8 @@ export type HouseProject = {
   ceilingNote?: string;
   rooms: StudioRoom[];
   starting?: Record<string, RoomPick>;
+  // The owner's own description, applied to the first room when it opens.
+  idea?: string;
 };
 
 export type WallColor = { name: string; code: string; hex: string; brand: string };
@@ -98,7 +100,13 @@ export const TIER_LABELS: Record<TierKey, string> = {
   high: 'Premium',
 };
 
-export type RoomPick = { color: WallColor | null; floor: FloorKey; included: boolean };
+export type RoomPick = {
+  color: WallColor | null;
+  floor: FloorKey;
+  included: boolean;
+  // What the owner described that the studio does not price.
+  ideas?: string[];
+};
 export const DEFAULT_PICK: RoomPick = { color: null, floor: 'keep', included: true };
 
 // Plans give no door or window heights; these are display heights for the

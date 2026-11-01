@@ -141,3 +141,41 @@ export function paintColorsFrom(
   }
   return colors;
 }
+
+// CIE L*a*b* (D65) from a #rrggbb hex, so "closest" means closest to the eye.
+function lab(hex: string): [number, number, number] {
+  const lin = [1, 3, 5].map((i) => {
+    const c = parseInt(hex.slice(i, i + 2), 16) / 255;
+    return c > 0.04045 ? ((c + 0.055) / 1.055) ** 2.4 : c / 12.92;
+  }) as [number, number, number];
+  const [r, g, b] = lin;
+  const xyz = [
+    (0.4124 * r + 0.3576 * g + 0.1805 * b) / 0.95047,
+    0.2126 * r + 0.7152 * g + 0.0722 * b,
+    (0.0193 * r + 0.1192 * g + 0.9505 * b) / 1.08883,
+  ].map((t) => (t > 216 / 24389 ? Math.cbrt(t) : (t * 24389) / 27 / 116 + 16 / 116));
+  const [x, y, z] = xyz as [number, number, number];
+  return [116 * y - 16, 500 * (x - y), 200 * (y - z)];
+}
+
+// The loaded colour closest to a described one: a description becomes a real
+// colour with a name and code, never a code made up to fit.
+export function nearestPaint<C extends { hex: string }>(hex: string, colors: C[]): C | null {
+  if (!/^#[0-9a-f]{6}$/i.test(hex)) return null;
+  const [l, a, b] = lab(hex);
+  let best: C | null = null,
+    bestDistance = Infinity;
+  for (const color of colors) {
+    if (!/^#[0-9a-f]{6}$/i.test(color.hex)) continue;
+    const [l2, a2, b2] = lab(color.hex);
+    const distance = (l - l2) ** 2 + (a - a2) ** 2 + (b - b2) ** 2;
+    if (distance < bestDistance) [best, bestDistance] = [color, distance];
+  }
+  return best;
+}
+
+// A colour the owner named, only when a loaded colour has that exact name.
+export function namedPaint<C extends { name: string }>(name: string, colors: C[]): C | null {
+  const key = name.trim().toLowerCase();
+  return (key && colors.find((c) => c.name.toLowerCase() === key)) || null;
+}

@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { DomainError } from '@renovagent/contracts';
+import { namedPaint, nearestPaint, type PaintColor } from '@renovagent/core';
 import {
   imageMediaType,
   museEditImage,
@@ -123,6 +124,63 @@ export const readPrompt = (photos: number, plans: number) =>
 For each room photo, give its index, the kind of room, a short title a homeowner would use (for example "Living room", "Front bedroom", "Kitchen"), and what the floor is now covered with. If two photos show the same kind of room, make the titles distinct.
 ${plans ? 'From the floor plans, list every room whose dimensions are printed on the plan, with its printed name, and its two dimensions converted to decimal feet (13\' 1" is 13.083) as widthFt (the first printed number) and lengthFt (the second). Only use numbers printed on the plan; never estimate one.' : 'There are no floor plans; return an empty plans list.'}`;
 
+// "Imagine your room": the owner's own words become the studio's choices —
+// a wall colour snapped to a real loaded paint, one of the fixed floors —
+// and whatever else they asked for, kept as ideas that are not priced.
+export const imagineSchema = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['walls', 'colorName', 'hex', 'floor', 'extras'],
+  properties: {
+    walls: { type: 'boolean' },
+    colorName: { type: 'string' },
+    hex: { type: 'string' },
+    floor: { type: 'string', enum: ['keep', 'lvp', 'hardwood', 'other'] },
+    extras: { type: 'array', items: { type: 'string' } },
+  },
+} as const;
+export const imaginePrompt = (text: string, room: string) =>
+  `A homeowner describes how they imagine their ${room || 'room'}: ${JSON.stringify(text)}
+Turn it into choices. walls: true if they want the walls a new colour. colorName: the exact paint colour name only if they named one (for example "Naval"), otherwise "". hex: the wall colour they describe as #rrggbb ("" if walls is false). floor: "lvp" for vinyl plank, laminate or a wood look, "hardwood" for real or engineered wood, "keep" if they do not ask for a new floor, "other" for any other floor (tile, carpet, concrete). extras: everything else they ask for, each as a short noun phrase (for example "built-in bookshelf", "tile floor" when floor is "other"); at most four; [] if nothing else.`;
+const imagineResult = z.object({
+  walls: z.boolean(),
+  colorName: z.string().max(60),
+  hex: z.string().max(9),
+  floor: z.enum(['keep', 'lvp', 'hardwood', 'other']),
+  extras: z.array(z.string().max(80)).max(8),
+});
+export type Imagined = {
+  color: { name: string; code: string; hex: string; brand: string } | null;
+  // The described colour when no paint is loaded to snap it to.
+  hex: string | null;
+  floor: 'keep' | StudioFloor;
+  extras: string[];
+};
+export function imagined(raw: unknown, paint: PaintColor[]): Imagined {
+  const r = imagineResult.parse(raw);
+  const hex = r.walls && /^#[0-9a-f]{6}$/i.test(r.hex) ? r.hex.toLowerCase() : null;
+  const found = r.walls
+    ? (namedPaint(r.colorName, paint) ?? (hex ? nearestPaint(hex, paint) : null))
+    : null;
+  const extras = r.extras
+    .map((e) => e.trim())
+    .filter(Boolean)
+    .slice(0, 4);
+  return {
+    color: found
+      ? {
+          name: found.name,
+          code: found.code ?? '',
+          hex: found.hex.toLowerCase(),
+          brand: found.brand,
+        }
+      : null,
+    hex: found ? null : hex,
+    floor: r.floor === 'other' ? 'keep' : r.floor,
+    extras,
+  };
+}
+
 const sha = z.string().regex(/^[a-f0-9]{64}$/);
 const requests = {
   photo: z
@@ -137,6 +195,9 @@ const requests = {
     .strict(),
   walls: z.object({ sha256: sha }).strict(),
   floor: z.object({ sha256: sha, floor: z.enum(['lvp', 'hardwood']) }).strict(),
+  imagine: z
+    .object({ text: z.string().trim().min(3).max(300), room: z.string().max(60).default('') })
+    .strict(),
   read: z
     .object({ photos: z.array(sha).min(1).max(12), plans: z.array(sha).max(2).default([]) })
     .strict(),
@@ -158,7 +219,24 @@ export function studioRoutes(deps: {
   providers: StudioProviders;
   // Throw when the owner is over the limit for that kind of model call.
   spend: (ownerId: string, kind: 'segment' | 'repaint' | 'read') => void;
+  // The loaded brand paint colours, when the catalog is available.
+  paint?: () => Promise<PaintColor[]>;
 }) {
+  let paintList: Promise<PaintColor[]> | null = null;
+  const paint = () => {
+    // Kept once loaded; an empty or failed load is retried (seed:paint may run later).
+    paintList ??= (deps.paint?.() ?? Promise.resolve([])).then(
+      (list) => {
+        if (!list.length) paintList = null;
+        return list;
+      },
+      () => {
+        paintList = null;
+        return [];
+      },
+    );
+    return paintList;
+  };
   const wallCache = new Map<string, PhotoSegmentation & { model: string; runId: string }>();
   const stored = async (ownerId: string, sha256: string) => {
     const found = await deps.images.get(ownerId, sha256);
@@ -209,6 +287,19 @@ export function studioRoutes(deps: {
       const fitted = await fitImage(edit.bytes, record.width, record.height);
       const image = await deps.images.put(ownerId, fitted);
       return { ...image, model: edit.model, floor, sourceSha256: sha256 };
+    }
+    if (path === '/studio/imagine') {
+      const { text, room } = requests.imagine.parse(raw);
+      deps.spend(ownerId, 'read');
+      const result = await deps.providers.read({
+        schema: imagineSchema,
+        prompt: imaginePrompt(text, room),
+      });
+      return {
+        ...imagined(result.result, await paint()),
+        model: result.model,
+        runId: result.runId,
+      };
     }
     if (path === '/studio/read') {
       const input = requests.read.parse(raw);

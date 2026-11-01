@@ -80,3 +80,33 @@ test('families come from chroma first, then hue', () => {
   assert.equal(paintFamily([60, 90, 150]), 'blue');
   assert.equal(paintFamily([120, 80, 150]), 'purple');
 });
+
+test('a described colour becomes the closest loaded colour, a named one only on an exact name', async () => {
+  const { nearestPaint, namedPaint } = await import('@renovagent/core');
+  const colors = [
+    { name: 'Alabaster', hex: '#EDEAE0' },
+    { name: 'Evergreen Fog', hex: '#95978A' },
+    { name: 'Rainforest', hex: '#2F4B3C' },
+    { name: 'Naval', hex: '#2F3D4C' },
+  ];
+  assert.equal(nearestPaint('#2b4a36', colors)?.name, 'Rainforest', 'dark green, not navy');
+  assert.equal(nearestPaint('#f4f1e8', colors)?.name, 'Alabaster');
+  assert.equal(nearestPaint('green', colors), null);
+  assert.equal(nearestPaint('#2b4a36', []), null);
+  assert.equal(namedPaint(' naval ', colors)?.hex, '#2F3D4C');
+  assert.equal(namedPaint('Evergreen Mist', colors), null, 'no made-up names');
+});
+
+test('an imagined room keeps only the choices the studio prices', async () => {
+  const { imagined } = await import('../../apps/api/src/studio.js');
+  const tile = imagined(
+    { walls: false, colorName: '', hex: '#ffffff', floor: 'other', extras: ['tile floor'] },
+    [],
+  );
+  assert.deepEqual(tile, { color: null, hex: null, floor: 'keep', extras: ['tile floor'] });
+  const unloaded = imagined(
+    { walls: true, colorName: '', hex: '#2B4A36', floor: 'hardwood', extras: [] },
+    [],
+  );
+  assert.deepEqual([unloaded.color, unloaded.hex], [null, '#2b4a36'], 'no paint loaded');
+});
