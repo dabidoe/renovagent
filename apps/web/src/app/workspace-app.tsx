@@ -451,7 +451,7 @@ export function App({ controller }: { controller: WorkspaceController }) {
             {/* A guest's work lives in one browser until it is kept with an account. */}
             {auth.guest && auth.providers.includes('google') && (
               <a className="link-button" href={signInUrlFor('google')} onClick={rememberReturn}>
-                Keep with Google
+                Add Google
               </a>
             )}
             <button className="link-button subtle" onClick={() => void signOut()}>
@@ -1227,7 +1227,7 @@ export function App({ controller }: { controller: WorkspaceController }) {
               <span>Signed in as {auth.email}</span>
               {auth.guest && auth.providers.includes('google') && (
                 <a href={signInUrlFor('google')} onClick={rememberReturn}>
-                  Keep with Google
+                  Add Google
                 </a>
               )}
               <button className="link-button" onClick={() => void signOut()}>
