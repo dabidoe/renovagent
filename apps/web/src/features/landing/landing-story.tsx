@@ -146,12 +146,10 @@ export function Transformation() {
 
 export function ContractorHandoff({ onExample, busy }: { onExample: () => void; busy: boolean }) {
   const [view, setView] = useState<'room' | 'quote'>('room');
-  const roomCapture = new URL('../../../../../docs/previews/room-photo-home.png', import.meta.url)
+  // Bundled with the app: docs/ is not part of the deployed build.
+  const roomCapture = new URL('../../assets/previews/room-photo-home.jpg', import.meta.url).href;
+  const quoteCapture = new URL('../../assets/previews/room-quote-itemized.jpg', import.meta.url)
     .href;
-  const quoteCapture = new URL(
-    '../../../../../docs/previews/room-quote-itemized.png',
-    import.meta.url,
-  ).href;
   return (
     <section
       className="landing-block handoff-section"
@@ -331,7 +329,7 @@ export function AgentConnection() {
           </span>
           <a
             className="landing-source-link"
-            href="https://github.com/dabidoe/unpermitted-ai"
+            href="https://github.com/dabidoe/renovagent"
             target="_blank"
             rel="noreferrer"
           >

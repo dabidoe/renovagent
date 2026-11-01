@@ -610,7 +610,7 @@ export function Landing({
           <nav aria-label="Footer navigation">
             <a href="#product-proof">Explore</a>
             <a href="#compare-tools">Compare</a>
-            <a href="https://github.com/dabidoe/unpermitted-ai" target="_blank" rel="noreferrer">
+            <a href="https://github.com/dabidoe/renovagent" target="_blank" rel="noreferrer">
               GitHub ↗
             </a>
           </nav>
