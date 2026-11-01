@@ -326,3 +326,31 @@
   text-decoration: underline;
   text-underline-offset: 4px;
 }
+
+/* The hero's links sit on the photo and its drawn outlines: give them a
+   frosted backing above the annotations so both stay readable. */
+.hero-paint-line,
+.hero-agent-line {
+  position: relative;
+  z-index: 2;
+  width: fit-content;
+  max-width: 100%;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: rgba(7, 19, 33, 0.55);
+  backdrop-filter: blur(8px);
+}
+.hero-paint-line button:first-child {
+  font-weight: 600;
+}
+/* The owner's lockup is dark artwork; on the dark hero it sits on a light card. */
+.prompt-workspace.is-landing .prompt-header .brand-lockup {
+  padding: 4px 8px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.9);
+}
+@media (max-width: 760px) {
+  .hero-paint-line > span {
+    display: none;
+  }
+}

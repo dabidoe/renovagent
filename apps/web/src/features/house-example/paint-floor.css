@@ -1,12 +1,12 @@
 /* Hutchinson paint-and-floor studio: one room at a time, the photo first,
    choices and what they take beside it, the whole-house total always shown. */
 .pf-studio {
-  --pf-ink: #26332c;
-  --pf-muted: #6a746c;
-  --pf-line: #dde2da;
+  --pf-ink: #142038;
+  --pf-muted: #64748b;
+  --pf-line: #e2e8f0;
   --pf-card: #ffffff;
-  --pf-soft: #f3f4ef;
-  --pf-accent: #2f4a3a;
+  --pf-soft: #f1f5f9;
+  --pf-accent: #0866ff;
   width: 100%;
   min-width: 0;
   color: var(--pf-ink);
@@ -59,7 +59,7 @@
   justify-items: end;
   padding: 10px 16px;
   border-radius: 14px;
-  background: var(--pf-accent);
+  background: #142038;
   color: #fff;
   line-height: 1.2;
 }
@@ -241,7 +241,7 @@
   top: 12px;
   padding: 4px 10px;
   border-radius: 999px;
-  background: rgba(20, 28, 24, 0.72);
+  background: rgba(20, 32, 56, 0.72);
   color: #fff;
   font-size: 0.75rem;
   pointer-events: none;
@@ -490,7 +490,7 @@
   margin: 0;
   padding: 8px 14px;
   border-radius: 999px;
-  background: rgba(20, 28, 24, 0.82);
+  background: rgba(20, 32, 56, 0.82);
   color: #fff;
   font-size: 0.85rem;
   white-space: nowrap;
@@ -545,10 +545,10 @@
 
 /* Show your project: the intake before the studio. */
 .pf-intake {
-  --pf-ink: #26332c;
-  --pf-muted: #6a746c;
-  --pf-line: #dde2da;
-  --pf-accent: #2f4a3a;
+  --pf-ink: #142038;
+  --pf-muted: #64748b;
+  --pf-line: #e2e8f0;
+  --pf-accent: #0866ff;
   max-width: 640px;
   margin: 24px auto;
   display: grid;
@@ -574,7 +574,7 @@
   align-items: center;
   gap: 12px;
   padding: 18px;
-  border: 1.5px dashed #b9c2b6;
+  border: 1.5px dashed #cbd5e1;
   border-radius: 16px;
   background: #fff;
   color: inherit;
@@ -705,10 +705,10 @@
 
 /* Examples gallery. */
 .pf-gallery {
-  --pf-ink: #26332c;
-  --pf-muted: #6a746c;
-  --pf-line: #dde2da;
-  --pf-accent: #2f4a3a;
+  --pf-ink: #142038;
+  --pf-muted: #64748b;
+  --pf-line: #e2e8f0;
+  --pf-accent: #0866ff;
   display: grid;
   gap: 14px;
   color: var(--pf-ink);
@@ -901,7 +901,7 @@
   place-items: start center;
   padding: 48px 16px;
   overflow: auto;
-  background: rgba(20, 28, 24, 0.45);
+  background: rgba(20, 32, 56, 0.45);
 }
 .pf-list {
   width: min(680px, 100%);
@@ -1001,4 +1001,15 @@
   .pf-list-actions {
     display: none;
   }
+}
+
+.pf-studio > .pf-head {
+  padding-top: 14px;
+}
+.pf-paint .pf-chips::before {
+  content: attr(aria-label);
+  align-self: center;
+  margin-right: 2px;
+  color: var(--pf-muted);
+  font-size: 0.75rem;
 }

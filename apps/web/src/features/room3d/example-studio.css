@@ -1,10 +1,10 @@
 /* The example is one connected workspace. Keep the room in view as the
    inspector moves from finishes to work to the contractor's brief. */
 .prompt-workspace.is-example-project {
-  --ink: #202722;
-  --muted: #747b75;
-  --line: #e3e6df;
-  --paper: #f6f7f3;
+  --ink: #142038;
+  --muted: #64748b;
+  --line: #e2e8f0;
+  --paper: #f8fafc;
   background: var(--paper);
   color: var(--ink);
 }
