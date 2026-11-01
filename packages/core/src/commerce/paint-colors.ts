@@ -174,6 +174,28 @@ export function nearestPaint<C extends { hex: string }>(hex: string, colors: C[]
   return best;
 }
 
+// The k loaded colours closest to a described one, nearest first, with their
+// distance: straight-line distance in CIELAB (CIE76 ΔE). Around 2 is hard to
+// tell apart, 10 a clearly different chip; past FAR_MATCH_DE nothing loaded
+// is a close match and the caller should say so.
+export const FAR_MATCH_DE = 12;
+export function nearestPaints<C extends { hex: string }>(
+  hex: string,
+  colors: C[],
+  k = 3,
+): { color: C; deltaE: number }[] {
+  if (!/^#[0-9a-f]{6}$/i.test(hex)) return [];
+  const [l, a, b] = lab(hex);
+  return colors
+    .filter((c) => /^#[0-9a-f]{6}$/i.test(c.hex))
+    .map((color) => {
+      const [l2, a2, b2] = lab(color.hex);
+      return { color, deltaE: Math.hypot(l - l2, a - a2, b - b2) };
+    })
+    .sort((x, y) => x.deltaE - y.deltaE)
+    .slice(0, Math.max(0, k));
+}
+
 // A colour the owner named, only when a loaded colour has that exact name.
 export function namedPaint<C extends { name: string }>(name: string, colors: C[]): C | null {
   const key = name.trim().toLowerCase();

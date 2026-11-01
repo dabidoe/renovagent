@@ -9,7 +9,12 @@ import { MongoWorkspaceRepository, OWNER } from '../../apps/api/src/repository.j
 import { createWorkspaceServer } from '../../apps/api/src/server.js';
 import { DesignImageStore, normalizeImage } from '../../apps/api/src/design-images.js';
 import { CatalogStore } from '../../apps/api/src/catalog.js';
-import { ceilingSchema, imagineSchema, type StudioProviders } from '../../apps/api/src/studio.js';
+import {
+  ceilingSchema,
+  imagineSchema,
+  inspoSchema,
+  type StudioProviders,
+} from '../../apps/api/src/studio.js';
 
 const uri = process.env.TEST_WORKSPACE_MONGO_URI;
 const photo = readFileSync(
@@ -66,6 +71,17 @@ test(
             model: 'muse-spark-1.3',
           };
         }
+        if (schema === inspoSchema)
+          return {
+            result: {
+              items: [
+                { phrase: 'wall', name: 'warm greige walls', kind: 'walls' },
+                { phrase: 'pillow', name: 'rust velvet pillow', kind: 'textile' },
+              ],
+            },
+            runId: 'spark-inspo',
+            model: 'muse-spark-1.3',
+          };
         if (schema === ceilingSchema)
           return {
             result: { estimateFt: 8.6, basis: 'door' },
@@ -236,6 +252,71 @@ test(
         400,
         'the owner’s words are bounded',
       );
+
+      // An inspiration photo: named by Muse, each item outlined by SAM, once.
+      const example = await (
+        await post('/studio/photo', {
+          data: photo.toString('base64'),
+          name: 'photo-04.jpg',
+          origin: 'listing-example',
+        })
+      ).json();
+      assert.equal(example.sha256, uploaded.sha256, 'the same bytes are the same image');
+      const before = { ...calls };
+      const inspo = await (await post('/studio/inspo', { sha256: uploaded.sha256 })).json();
+      assert.deepEqual(
+        inspo.items.map((i: { phrase: string; name: string }) => [i.phrase, i.name]),
+        [
+          ['wall', 'warm greige walls'],
+          ['pillow', 'rust velvet pillow'],
+        ],
+      );
+      assert.ok(inspo.items.every((i: { segments: unknown[] }) => i.segments.length > 0));
+      assert.deepEqual([inspo.width, inspo.height], [uploaded.width, uploaded.height]);
+      assert.deepEqual(
+        [calls.read - before.read, calls.segment - before.segment],
+        [1, 2],
+        'one read, one outline per item',
+      );
+      await post('/studio/inspo', { sha256: uploaded.sha256 });
+      assert.equal(calls.read - before.read, 1, 'an analysed photo is cached');
+
+      const restyled = await (
+        await post('/studio/restyle', {
+          sha256: uploaded.sha256,
+          inspo: uploaded.sha256,
+          items: ['rust velvet pillow'],
+          paint: { name: 'Alabaster', code: 'SW 7008', hex: '#EDEAE0' },
+        })
+      ).json();
+      assert.deepEqual([restyled.width, restyled.height], [uploaded.width, uploaded.height]);
+      assert.equal(swatches.at(-1), 1, 'the inspiration photo goes with the room');
+      assert.match(
+        prompts.at(-1)!,
+        /exactly as framed[\s\S]*"rust velvet pillow"[\s\S]*"Alabaster SW 7008" \(#edeae0\)/,
+      );
+      assert.equal(
+        (
+          await post('/studio/restyle', {
+            sha256: uploaded.sha256,
+            inspo: 'f'.repeat(64),
+            items: ['rug'],
+          })
+        ).status,
+        404,
+        'only this workspace’s inspiration',
+      );
+
+      const near = await (
+        await fetch(`${base}/paint/nearest?hex=%23e9e6dc`, { headers: auth })
+      ).json();
+      assert.equal(near.close, true);
+      assert.equal(near.matches[0].name, 'Alabaster');
+      assert.equal(near.matches.length, 3, 'three options, nearest first');
+      const far = await (
+        await fetch(`${base}/paint/nearest?hex=%23e8590c`, { headers: auth })
+      ).json();
+      assert.equal(far.close, false, 'nothing loaded is close to orange');
     } finally {
       await new Promise<void>((resolve) => server.close(() => resolve()));
       await db.dropDatabase();

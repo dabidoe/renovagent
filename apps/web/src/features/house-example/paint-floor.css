@@ -1101,3 +1101,265 @@
     text-align: left;
   }
 }
+
+/* Inspiration: a photo someone loves, read into finishes for this room. */
+.pf-inspo {
+  display: grid;
+  gap: 10px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--pf-line);
+}
+.pf-inspo-add {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 56px;
+  padding: 10px 14px;
+  border: 1px dashed var(--pf-accent);
+  border-radius: 12px;
+  background: var(--pf-soft);
+  color: var(--pf-ink);
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+.pf-inspo-add .glyph {
+  width: 22px;
+  height: 22px;
+  color: var(--pf-accent);
+  flex: none;
+}
+.pf-inspo-add span {
+  display: grid;
+  gap: 2px;
+}
+.pf-inspo-add small,
+.pf-inspo-items small,
+.pf-inspo-note {
+  color: #64748b;
+  font-size: 0.78rem;
+}
+.pf-inspo-again {
+  min-height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--pf-line);
+  border-radius: 999px;
+  background: var(--pf-card);
+  font-size: 0.8rem;
+}
+.pf-inspo-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 0.88rem;
+}
+.pf-inspo-photo {
+  position: relative;
+  margin: 0;
+}
+.pf-inspo-photo img {
+  display: block;
+  width: 100%;
+  border-radius: 10px;
+}
+.pf-inspo-photo svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: calc(100% - 22px);
+  pointer-events: none;
+}
+.pf-inspo-photo path {
+  fill: #ffffff10;
+  stroke: #ffffffb0;
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+  fill-rule: evenodd;
+}
+.pf-inspo-photo path.is-hover {
+  fill: #0866ff40;
+  stroke: #8cc1ff;
+  stroke-width: 2.5;
+}
+.pf-inspo-photo figcaption {
+  margin-top: 4px;
+  font-size: 0.72rem;
+  color: #64748b;
+}
+.pf-inspo-items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.pf-inspo-items li {
+  display: grid;
+  gap: 6px;
+  padding: 8px 10px;
+  border: 1px solid var(--pf-line);
+  border-radius: 10px;
+  background: var(--pf-card);
+}
+.pf-inspo-items label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 36px;
+  cursor: pointer;
+}
+.pf-inspo-items label > i,
+.pf-inspo-paints button > i {
+  width: 26px;
+  height: 26px;
+  flex: none;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+}
+.pf-inspo-items label > span {
+  display: grid;
+  font-size: 0.88rem;
+  line-height: 1.3;
+}
+.pf-inspo-paints {
+  display: grid;
+  gap: 6px;
+}
+.pf-inspo-paints > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.pf-inspo-paints button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 4px 12px 4px 6px;
+  border: 1px solid var(--pf-line);
+  border-radius: 999px;
+  background: var(--pf-card);
+  color: var(--pf-ink);
+  font-size: 0.82rem;
+}
+.pf-inspo-paints button small {
+  color: #64748b;
+}
+.pf-inspo-paints button[aria-pressed='true'] {
+  border-color: var(--pf-accent);
+  box-shadow: 0 0 0 1px var(--pf-accent);
+}
+.pf-inspo-shop {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-size: 0.8rem;
+  color: #64748b;
+}
+.pf-inspo-shop a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--pf-line);
+  border-radius: 999px;
+  color: var(--pf-ink);
+  text-decoration: none;
+}
+.pf-inspo-shop a:hover {
+  border-color: var(--pf-accent);
+}
+.pf-inspo-go {
+  min-height: 44px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--pf-accent);
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.pf-inspo-go:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.pf-inspo-signin {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+.pf-inspo-note {
+  margin: 0;
+}
+.pf-inspired {
+  margin: 0;
+}
+.pf-inspired-stage {
+  position: relative;
+  overflow: hidden;
+  border-radius: 14px;
+}
+.pf-inspired-stage img {
+  display: block;
+  width: 100%;
+}
+.pf-inspired-stage .pf-inspired-before {
+  position: absolute;
+  inset: 0;
+  height: 100%;
+  object-fit: cover;
+  clip-path: inset(0 calc(100% - var(--split)) 0 0);
+}
+.pf-inspired-divider {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--split);
+  width: 2px;
+  margin-left: -1px;
+  background: #fff;
+  box-shadow: 0 0 6px #0006;
+  pointer-events: none;
+}
+.pf-inspired-label {
+  position: absolute;
+  top: 12px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #0f172acc;
+  color: #fff;
+  font-size: 0.78rem;
+}
+.pf-inspired-label.is-before {
+  left: 12px;
+}
+.pf-inspired-label.is-after {
+  right: 12px;
+}
+.pf-inspired-stage input[type='range'] {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: ew-resize;
+}
+.pf-inspired figcaption {
+  padding-top: 6px;
+  font-size: 0.75rem;
+  color: #64748b;
+}
+@media (pointer: coarse), (max-width: 760px) {
+  .pf-inspo-shop a,
+  .pf-inspo-again {
+    min-height: 44px;
+  }
+  .pf-inspo-paints button {
+    min-height: 44px;
+  }
+}

@@ -4,6 +4,7 @@ import { workspaceRequest } from '../../adapters/http/project-repository.js';
 import { Glyph } from '../../components/glyph.js';
 import { mountRoomScene, type RoomScene } from '../room3d/room-scene.js';
 import { PaintPicker, brandColorLink } from '../room3d/photo-outlines.js';
+import { InspiredView, InspoPanel } from './inspo-panel.js';
 import {
   DEFAULT_PICK,
   DEFAULT_SHEEN,
@@ -641,7 +642,28 @@ export function PaintFloorStudio({
     setRoomIdState(id);
   };
   // A room with no photo (a plan an agent saved) is shown in 3D.
-  const [view, setView] = useState<'photo' | '3d'>(project.rooms[0]?.photo.src ? 'photo' : '3d');
+  const [view, setView] = useState<'photo' | '3d' | 'inspired'>(
+    project.rooms[0]?.photo.src ? 'photo' : '3d',
+  );
+  // A room restyled from an inspiration photo, kept in this browser.
+  const inspiredStore = `renovagent.studio.${project.id}.inspired.v1`;
+  const [inspired, setInspired] = useState<Record<string, string>>(() => {
+    try {
+      return JSON.parse(localStorage.getItem(inspiredStore) || '{}') as Record<string, string>;
+    } catch {
+      return {};
+    }
+  });
+  const keepInspired = (id: string, src: string) =>
+    setInspired((current) => {
+      const next = { ...current, [id]: src };
+      try {
+        localStorage.setItem(inspiredStore, JSON.stringify(next));
+      } catch {
+        // Shown for this visit.
+      }
+      return next;
+    });
   const [tier, setTier] = useState<TierKey>(project.tier ?? 'mid');
   // Any style shows on a photo-less room (as the 3D floor); a photo needs its image.
   const canShow = (r: StudioRoom, style: string) =>
@@ -881,7 +903,7 @@ export function PaintFloorStudio({
                 </span>
               )}
             </div>
-            {has3d && !photoless && (
+            {((has3d && !photoless) || inspired[room.id]) && (
               <div className="pf-views" role="tablist" aria-label="View">
                 <button
                   type="button"
@@ -891,18 +913,32 @@ export function PaintFloorStudio({
                 >
                   <Glyph name="photo" /> Before / after
                 </button>
-                <button
-                  type="button"
-                  role="tab"
-                  aria-selected={view === '3d'}
-                  onClick={() => setView('3d')}
-                >
-                  <Glyph name="layers" /> 3D room
-                </button>
+                {has3d && (
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={view === '3d'}
+                    onClick={() => setView('3d')}
+                  >
+                    <Glyph name="layers" /> 3D room
+                  </button>
+                )}
+                {inspired[room.id] && (
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={view === 'inspired'}
+                    onClick={() => setView('inspired')}
+                  >
+                    <Glyph name="paint" /> Inspired
+                  </button>
+                )}
               </div>
             )}
           </div>
-          {(view === '3d' || photoless) && has3d ? (
+          {view === 'inspired' && inspired[room.id] && room.photo.src ? (
+            <InspiredView before={room.photo.src} after={inspired[room.id]!} />
+          ) : (view === '3d' || photoless) && has3d ? (
             <Room3D room={room} ceilingFt={ceilingFt} pick={pick} />
           ) : (
             <BeforeAfter room={room} pick={pick} pending={pending || null} />
@@ -916,6 +952,14 @@ export function PaintFloorStudio({
             busy={imagining.busy}
             error={imagining.error}
             onImagine={(text) => void imagine(text, room)}
+          />
+          <InspoPanel
+            room={room}
+            onPaint={(color) => update({ color })}
+            onRestyled={(src) => {
+              keepInspired(room.id, src);
+              setView('inspired');
+            }}
           />
           {roomTools?.(room)}
           {((needsSize && onEditRoom) || editCeiling || editSize) && (

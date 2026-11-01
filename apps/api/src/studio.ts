@@ -234,6 +234,77 @@ export function imagined(raw: unknown, paint: PaintColor[]): Imagined {
   };
 }
 
+// An inspiration photo: Muse Spark names the finishes and furnishings that
+// make its look, and SAM 3.1 outlines each one. The colour of each is read
+// from those outlines in the browser; nothing here is a product or a price.
+const INSPO_KINDS = [
+  'walls',
+  'floor',
+  'bedding',
+  'textile',
+  'furniture',
+  'lighting',
+  'decor',
+] as const;
+export const inspoSchema = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['items'],
+  properties: {
+    items: {
+      type: 'array',
+      items: {
+        type: 'object',
+        additionalProperties: false,
+        required: ['phrase', 'name', 'kind'],
+        properties: {
+          phrase: { type: 'string' },
+          name: { type: 'string' },
+          kind: { type: 'string', enum: [...INSPO_KINDS] },
+        },
+      },
+    },
+  },
+} as const;
+export const inspoPrompt = `This is an inspiration photo of a room someone likes. List the finishes and furnishings that most define its look, at most six, the largest first, and include the walls whenever they show.
+For each item: phrase: one or two plain words naming the object as it appears, for an image segmenter (for example "wall", "bed", "rug", "curtains", "pillow", "ottoman", "chandelier", "sofa"); never a colour or material in the phrase. name: a short shopping description of that item, its colour, material and style, at most eight words (for example "cream wool rug with thin black stripes", "rust velvet square pillow"). kind: one of ${INSPO_KINDS.join(', ')}.`;
+const inspoResult = z.object({
+  items: z
+    .array(
+      z.object({
+        phrase: z.string(),
+        name: z.string(),
+        kind: z.enum(INSPO_KINDS),
+      }),
+    )
+    .max(12),
+});
+export function inspoItems(raw: unknown) {
+  const seen = new Set<string>();
+  return inspoResult
+    .parse(raw)
+    .items.map((i) => ({
+      phrase: i.phrase.trim().toLowerCase().slice(0, 30),
+      name: i.name.trim().slice(0, 80),
+      kind: i.kind,
+    }))
+    .filter((i) => /^[a-z][a-z -]{1,29}$/.test(i.phrase) && i.name.length >= 2)
+    .filter((i) => !seen.has(i.phrase) && seen.add(i.phrase))
+    .slice(0, 6);
+}
+// The owner's room keeps its frame and objects; only the borrowed finishes change.
+export const restylePrompt = (
+  items: string[],
+  paint?: { name: string; code: string; hex: string },
+) =>
+  `Restyle the room in the first photo with the look of the second photo. Keep the first photo exactly as framed: the same camera, room shape, windows, doors, furniture positions and objects. Change only these finishes, taking their look from the second photo: ${items
+    .map((i) => JSON.stringify(i))
+    .join(', ')}.${
+    paint
+      ? ` Paint the walls ${JSON.stringify(`${paint.name} ${paint.code}`.trim())} (${paint.hex.toLowerCase()}), matte to eggshell.`
+      : ''
+  } Natural daylight. Photorealistic.`;
+
 const sha = z.string().regex(/^[a-f0-9]{64}$/);
 const requests = {
   photo: z
@@ -244,6 +315,8 @@ const requests = {
         .max(30 * 1024 * 1024)
         .regex(/^[A-Za-z0-9+/]*={0,2}$/),
       name: z.string().max(200).default('photo'),
+      // A listing example's photo, sent so it can be restyled, is not the owner's.
+      origin: z.enum(['owner', 'listing-example']).default('owner'),
     })
     .strict(),
   walls: z.object({ sha256: sha }).strict(),
@@ -253,6 +326,22 @@ const requests = {
     .strict(),
   read: z
     .object({ photos: z.array(sha).min(1).max(12), plans: z.array(sha).max(2).default([]) })
+    .strict(),
+  inspo: z.object({ sha256: sha }).strict(),
+  restyle: z
+    .object({
+      sha256: sha,
+      inspo: sha,
+      items: z.array(z.string().trim().min(2).max(80)).min(1).max(6),
+      paint: z
+        .object({
+          name: z.string().trim().max(60),
+          code: z.string().trim().max(20),
+          hex: z.string().regex(/^#[0-9a-fA-F]{6}$/),
+        })
+        .strict()
+        .optional(),
+    })
     .strict(),
 };
 
@@ -291,6 +380,7 @@ export function studioRoutes(deps: {
     return paintList;
   };
   const wallCache = new Map<string, PhotoSegmentation & { model: string; runId: string }>();
+  const inspoCache = new Map<string, unknown>();
   const stored = async (ownerId: string, sha256: string) => {
     const found = await deps.images.get(ownerId, sha256);
     if (!found) throw new DomainError('NOT_FOUND', 'Photo not found in this workspace');
@@ -301,12 +391,23 @@ export function studioRoutes(deps: {
       const input = requests.photo.parse(raw);
       const original = new Uint8Array(Buffer.from(input.data, 'base64'));
       const image = await normalizeImage(original);
-      return deps.images.put(ownerId, image, {
-        label: 'studio photo',
-        originalName: input.name,
-        originalSha256: sha256Of(original),
-        permission: 'uploaded by the owner',
-      });
+      return deps.images.put(
+        ownerId,
+        image,
+        input.origin === 'listing-example'
+          ? {
+              label: 'listing example photo',
+              originalName: input.name,
+              originalSha256: sha256Of(original),
+              permission: 'public listing photo shown as a Renovagent example',
+            }
+          : {
+              label: 'studio photo',
+              originalName: input.name,
+              originalSha256: sha256Of(original),
+              permission: 'uploaded by the owner',
+            },
+      );
     }
     if (path === '/studio/walls') {
       const { sha256 } = requests.walls.parse(raw);
@@ -354,6 +455,54 @@ export function studioRoutes(deps: {
         model: result.model,
         runId: result.runId,
       };
+    }
+    if (path === '/studio/inspo') {
+      const { sha256 } = requests.inspo.parse(raw);
+      const key = `${ownerId}\n${sha256}`;
+      const cached = inspoCache.get(key);
+      if (cached) return cached;
+      const { bytes, record } = await stored(ownerId, sha256);
+      const image = { bytes, mediaType: imageMediaType(bytes) };
+      deps.spend(ownerId, 'read');
+      const named = await deps.providers.read({
+        schema: inspoSchema,
+        images: [image],
+        prompt: inspoPrompt,
+      });
+      const items = inspoItems(named.result);
+      for (const _ of items) deps.spend(ownerId, 'segment');
+      const outlined = await Promise.all(
+        items.map(async (item) => {
+          const sam = await deps.providers.segment({ image, phrase: item.phrase });
+          const seg = await parseSegmentation(item.phrase, sam.text);
+          return { ...item, segments: seg.segments, runId: sam.runId };
+        }),
+      );
+      const result = {
+        sha256,
+        width: record.width,
+        height: record.height,
+        items: outlined,
+        model: named.model,
+        runId: named.runId,
+      };
+      inspoCache.set(key, result);
+      if (inspoCache.size > 200) inspoCache.delete(inspoCache.keys().next().value!);
+      return result;
+    }
+    if (path === '/studio/restyle') {
+      const input = requests.restyle.parse(raw);
+      const room = await stored(ownerId, input.sha256);
+      const inspo = await stored(ownerId, input.inspo);
+      deps.spend(ownerId, 'repaint');
+      const edit = await deps.providers.repaint({
+        image: { bytes: room.bytes, mediaType: imageMediaType(room.bytes) },
+        references: [{ bytes: inspo.bytes, mediaType: imageMediaType(inspo.bytes) }],
+        prompt: restylePrompt(input.items, input.paint),
+      });
+      const fitted = await fitImage(edit.bytes, room.record.width, room.record.height);
+      const image = await deps.images.put(ownerId, fitted);
+      return { ...image, model: edit.model, sourceSha256: input.sha256, inspoSha256: input.inspo };
     }
     if (path === '/studio/read') {
       const input = requests.read.parse(raw);

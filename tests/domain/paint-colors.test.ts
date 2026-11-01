@@ -97,6 +97,58 @@ test('a described colour becomes the closest loaded colour, a named one only on 
   assert.equal(namedPaint('Evergreen Mist', colors), null, 'no made-up names');
 });
 
+test('a colour read from a photo offers the three closest loaded paints, nearest first', async () => {
+  const { nearestPaints, FAR_MATCH_DE } = await import('@renovagent/core');
+  const colors = [
+    { name: 'Alabaster', hex: '#EDEAE0' },
+    { name: 'Agreeable Gray', hex: '#D1CBC1' },
+    { name: 'Evergreen Fog', hex: '#95978A' },
+    { name: 'Urbane Bronze', hex: '#54504A' },
+    { name: 'Naval', hex: '#2F3D4C' },
+  ];
+  const greige = nearestPaints('#cfc8bd', colors);
+  assert.deepEqual(
+    greige.map((m) => m.color.name),
+    ['Agreeable Gray', 'Alabaster', 'Evergreen Fog'],
+  );
+  assert.ok(greige[0]!.deltaE < 3, 'a near-identical chip is a close match');
+  assert.ok(greige.every((m, i) => i === 0 || m.deltaE >= greige[i - 1]!.deltaE));
+  // A saturated orange has nothing close among neutrals: the caller says so.
+  assert.ok(nearestPaints('#e8590c', colors)[0]!.deltaE > FAR_MATCH_DE);
+  assert.deepEqual(nearestPaints('orange', colors), []);
+  assert.equal(nearestPaints('#cfc8bd', colors, 1).length, 1);
+});
+
+test('an inspiration read keeps six plain segmenter phrases, never repeats', async () => {
+  const { inspoItems, restylePrompt } = await import('../../apps/api/src/studio.js');
+  const items = inspoItems({
+    items: [
+      { phrase: 'Wall', name: 'warm greige walls', kind: 'walls' },
+      { phrase: 'wall', name: 'repeat', kind: 'walls' },
+      { phrase: 'rust velvet pillow!', name: 'rust velvet pillow', kind: 'textile' },
+      { phrase: 'rug', name: 'cream wool rug with thin black stripes', kind: 'floor' },
+      { phrase: 'bed', name: 'cream boucle bed', kind: 'furniture' },
+      { phrase: 'ottoman', name: 'rust velvet ottoman', kind: 'furniture' },
+      { phrase: 'curtains', name: 'taupe linen curtains', kind: 'textile' },
+      { phrase: 'chandelier', name: 'smoked glass globe chandelier', kind: 'lighting' },
+      { phrase: 'lamp', name: 'stone table lamp', kind: 'lighting' },
+    ],
+  });
+  assert.deepEqual(
+    items.map((i) => i.phrase),
+    ['wall', 'rug', 'bed', 'ottoman', 'curtains', 'chandelier'],
+    'lower-cased, punctuation dropped, first of a repeat kept, at most six',
+  );
+  const prompt = restylePrompt(['cream wool rug'], {
+    name: 'Agreeable Gray',
+    code: 'SW 7029',
+    hex: '#D1CBC1',
+  });
+  assert.match(prompt, /exactly as framed/);
+  assert.match(prompt, /"cream wool rug"/);
+  assert.match(prompt, /"Agreeable Gray SW 7029" \(#d1cbc1\)/);
+});
+
 test('an imagined room keeps only the choices the studio prices', async () => {
   const { imagined } = await import('../../apps/api/src/studio.js');
   const tile = imagined(

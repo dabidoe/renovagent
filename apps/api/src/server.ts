@@ -62,6 +62,8 @@ import { mcpEndpoint } from './mcp-http.js';
 import { configuredJevKey, judgeProducts, rankReviewFindings, readRoomPhoto } from './jev.js';
 import {
   bestValue,
+  FAR_MATCH_DE,
+  nearestPaints,
   paintFamilies,
   priceLook,
   scopeDraftId,
@@ -153,6 +155,9 @@ export async function createWorkspaceServer(
   const accountMode = Boolean(accounts);
   // One-click guests (account mode only); RENOVAGENT_GUESTS=off turns them off.
   const guestsAllowed = process.env.RENOVAGENT_GUESTS !== 'off';
+  // An Amazon Associates tag for shopping searches, only when one is set.
+  const amazonTag = process.env.RENOVAGENT_AMAZON_TAG?.trim();
+  const shopping = amazonTag && /^[A-Za-z0-9-]{1,40}$/.test(amazonTag) ? { amazonTag } : {};
   const GUESTS_PER_HOUR = 20;
   const guestStarts = new Map<string, { start: number; count: number }>();
   // A public origin with the shared local token would give every visitor one workspace.
@@ -527,6 +532,7 @@ export async function createWorkspaceServer(
                   muse: providerConfigured,
                   render: Boolean(render),
                   jev: await jev.configured(),
+                  ...shopping,
                 }
               : {
                   mode: 'account',
@@ -537,6 +543,7 @@ export async function createWorkspaceServer(
                   muse: providerConfigured,
                   render: Boolean(render),
                   jev: await jev.configured(),
+                  ...shopping,
                 },
           );
           return;
@@ -552,6 +559,7 @@ export async function createWorkspaceServer(
           muse: providerConfigured,
           render: Boolean(render),
           jev: await jev.configured(),
+          ...shopping,
         });
         return;
       }
@@ -679,6 +687,27 @@ export async function createWorkspaceServer(
           })
           .parse(Object.fromEntries(url.searchParams));
         json(200, await catalog.searchPaint(query));
+        return;
+      }
+      if (path === '/paint/nearest' && req.method === 'GET') {
+        // The loaded colours closest to one read from a photo: a match to how
+        // it looks there, not a claim about the paint on that wall.
+        if (!catalog) throw new DomainError('VALIDATION', 'Catalog is unavailable');
+        const { hex } = z
+          .object({ hex: z.string().regex(/^#[0-9a-fA-F]{6}$/) })
+          .parse(Object.fromEntries(url.searchParams));
+        const matches = nearestPaints(hex, await catalog.allPaint(), 3);
+        json(200, {
+          hex: hex.toLowerCase(),
+          close: (matches[0]?.deltaE ?? Infinity) <= FAR_MATCH_DE,
+          matches: matches.map(({ color, deltaE }) => ({
+            name: color.name,
+            code: color.code ?? '',
+            hex: color.hex.toLowerCase(),
+            brand: color.brand,
+            deltaE: Math.round(deltaE * 10) / 10,
+          })),
+        });
         return;
       }
       if (path === '/looks/price' && req.method === 'POST') {
