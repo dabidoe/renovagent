@@ -1,0 +1,118 @@
+{
+  "address": "2440 S Hutchinson St, Philadelphia, PA 19148",
+  "sourceReview": "docs/evidence/muse-hutchinson/photo-results-live.json",
+  "suppliedListing": "https://www.southphillyrealestateteam.com/post/solid-bones-serious-upside-2440-s-hutchinson-st-philadelphia-pa-19148",
+  "originalReviewedAt": "2026-10-28T12:53:02.915Z",
+  "images": [
+    {
+      "id": "photo-01",
+      "sourceUrl": "https://www.compass.com/m/5fcbe3e594c432b2549dd537f718c9b62504f823350c12688faa535fe516af12/1500x1000.jpg",
+      "sha256": "7dd7a3864051ae739b846addbd83adce4daf73be19678164b6d33208a972a45e"
+    },
+    {
+      "id": "photo-02",
+      "sourceUrl": "https://www.compass.com/m/3ec91ab559f5b7b02df92204dd651f887d291cceefbbb1de4ae49f228f913301/1500x1000.jpg",
+      "sha256": "4fde1917379c976935ddfebcf0a9d2069905bf4457fe5ca5b0fd5b20192faa27"
+    },
+    {
+      "id": "photo-03",
+      "sourceUrl": "https://www.compass.com/m/c3e9034884154fc4414c08ca2f838e5ea970bdc61e40ea8b971a5fec30473bdc/1500x1000.jpg",
+      "sha256": "fe11e23278bed397efedd74d3f06c93c54a67ee67fe42acb4b093751060e20d1"
+    },
+    {
+      "id": "photo-04",
+      "sourceUrl": "https://www.compass.com/m/72b4a2b5b2665b27a0612a4d9231d54c26458ca01ca18e293c3e0476a8c878be/1500x1000.jpg",
+      "sha256": "b380365cad80e2d8b154143b0a558777e9a14eb4ca2fa66063a4b19d245cb579"
+    },
+    {
+      "id": "photo-05",
+      "sourceUrl": "https://www.compass.com/m/e9b807ee1a548fc82f51a7162c2386994f9fbacb481a2104670a1046ff8ebebd/1500x1000.jpg",
+      "sha256": "d028d07957c8f6ebbcfd779d06ee98b187ff5d2a277232167f0b6b5038694bce"
+    },
+    {
+      "id": "photo-06",
+      "sourceUrl": "https://www.compass.com/m/b7b7421ca79a1f9a441e8e851af7c8a397535ce6d79753cc1802b3d90f2bc013/1500x1000.jpg",
+      "sha256": "fab197b80af600c0786e82a555eff5ba0db6bc6dd54366d73e601b046d540fb8"
+    },
+    {
+      "id": "photo-07",
+      "sourceUrl": "https://www.compass.com/m/f35e4deecc95bc11ff300b017f125ff71355dcc0f1ebcd66be93643d06c1e08a/1500x1000.jpg",
+      "sha256": "e357b8b908f5caa8f79a024aabc994a19320bfe5881a80358ba4e76920a1ffef"
+    },
+    {
+      "id": "photo-08",
+      "sourceUrl": "https://www.compass.com/m/2151f9d1f7051b2456d9bf752e68f2aa8fc6af21c51ef22e11f31f364569af86/1500x1000.jpg",
+      "sha256": "478155f27aead719f004ba7f2ed3230e3e676c0fee050e7904a843d8c27b0a74"
+    },
+    {
+      "id": "photo-09",
+      "sourceUrl": "https://www.compass.com/m/d1acc1fef90763072e39b333097d5131d8cc1bc4f7d23b265957b68f7cef417f/1500x1000.jpg",
+      "sha256": "aa28647b7de9517a7a4bd434cdeef6ea47969bcf8e753c397a69d375547c887a"
+    },
+    {
+      "id": "photo-10",
+      "sourceUrl": "https://www.compass.com/m/825bce6a2905d8cf50847970307260b094e82ae24ae992a3802bae69c5c95b10/1500x1000.jpg",
+      "sha256": "5833d19d9ca5912951103cd7e20a55e0338d43089fc64113bdb1cea26307c155"
+    },
+    {
+      "id": "photo-11",
+      "sourceUrl": "https://www.compass.com/m/be66a376ba3e1563925c5a5b71775c84825c081f7c9e5cec53873a5fc38c9575/1500x1000.jpg",
+      "sha256": "148f0b65b7db7002ed0cd908461675ef4440fbf2f538b7282caaf4ed5d689ef4"
+    },
+    {
+      "id": "photo-12",
+      "sourceUrl": "https://www.compass.com/m/570789e4dd4d117b0d0219df17fa75e5be2ebfa13c5ea576e3429c523ff649e4/1500x1000.jpg",
+      "sha256": "2322eaee9da86462a29a7354dc0737099dd41896e9bf48d1efec04d2ef30ddf2"
+    },
+    {
+      "id": "photo-13",
+      "sourceUrl": "https://www.compass.com/m/de84222da58dbef6d0dae59b0a368d71291f6cd2d0c6482c46039204e6b6a208/1500x1000.jpg",
+      "sha256": "23110f78c830559e48f1bddbd9ae63a584d4b28a89e93aa651b7ca00fa9fedba"
+    },
+    {
+      "id": "photo-14",
+      "sourceUrl": "https://www.compass.com/m/cf5c921d3229db69019396bf31c910015b6a27e04503f2cad764da3f98595b0e/1500x1000.jpg",
+      "sha256": "7700b7d46674398f3cc68ca490a4ad68d62ce94316ac1e5969c2211e183d6d77"
+    },
+    {
+      "id": "photo-15",
+      "sourceUrl": "https://www.compass.com/m/29495447c363cade512829daf5f75191bcdae4b4ccee7249cbca203c7861af13/1500x1000.jpg",
+      "sha256": "bbb89ee3fb834d9c14aa62ac871b799eb2a3631be5bab9b5055e6ad33f959f74"
+    },
+    {
+      "id": "photo-16",
+      "sourceUrl": "https://www.compass.com/m/9709d5c82ac86ce5507ace365102c5856c6bc386413c4f46d9cb59d8bdf39e2f/1500x1000.jpg",
+      "sha256": "ad94ac979cfbd6b3e2762d67d64f1611fd43de57f04eab806e54224ad12a6722"
+    },
+    {
+      "id": "photo-17",
+      "sourceUrl": "https://www.compass.com/m/143389382c89c0b3d2353f6b83dd77eb3aad8ba856c7f5eee509769a23bf0cca/1500x1000.jpg",
+      "sha256": "99fa6e25fa724795417ef0365493cfceb27bba8d7be316c847fe231f5f382ef7"
+    },
+    {
+      "id": "photo-18",
+      "sourceUrl": "https://www.compass.com/m/a8d355e4b46b5399e29d94e1ca957ed6d686334a2b5f9ab4f6a9fa0f689d3bcc/1500x1000.jpg",
+      "sha256": "0e0e1c69af168e11338d5bee2cceb992cf307729fece26f29566380202d9994f"
+    },
+    {
+      "id": "photo-19",
+      "sourceUrl": "https://www.compass.com/m/698097f605e112f6132a61387b04ed3ae158b3ba2258f9eb0c3ac01d2ac580f0/1500x1000.jpg",
+      "sha256": "0ec314cb4b6ca405cea305f9d99efb46dadc0dfdb3b4904cdeaa0303f58ac898"
+    },
+    {
+      "id": "photo-20",
+      "sourceUrl": "https://www.compass.com/m/d88fb8cc49edefb9e8530add98959565f33cd5360fc948d622af1ab210480658/1500x1000.jpg",
+      "sha256": "4ad7c9ca8ea752947269aa5da2ea574956ad1f7620c0437350fde024676c26d4"
+    },
+    {
+      "id": "photo-21",
+      "sourceUrl": "https://www.compass.com/m/85d6fd30cff6e8e92efbb7adf3b29d6305c54ed797b57d8f82129857f98ef8ca/1500x1000.jpg",
+      "sha256": "9934d558595438c653267413c9f0da3f31bc3eb9cbc0be4e06d3222991e9a47a"
+    },
+    {
+      "id": "photo-22",
+      "sourceUrl": "https://www.compass.com/m/46914b4a231b8b97547c0bbfca00e4a181f09a56312dfe37dd84d5cfc0d19d34/1500x1000.jpg",
+      "sha256": "fef12b46ce6faedf59bf62942f2eebf75b680fdb82be1037c79461ae9f1cee90"
+    }
+  ]
+}

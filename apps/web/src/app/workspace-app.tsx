@@ -10,7 +10,11 @@ import { scopePlanningCoverage } from '@renovagent/core';
 import { CandidateMeasurementsPanel } from '../features/work/candidate-measurements.js';
 import { RoomDimensionsCard } from '../features/scope/room-dimensions-card.js';
 import { RoomStudio } from '../features/room3d/room-studio.js';
+import { HouseExample } from '../features/house-example/house-example.js';
+import { isHouseCase } from '../features/house-example/house-example-model.js';
+import '../features/house-example/house-example.css';
 import '../features/room3d/room-studio.css';
+import '../features/room3d/example-studio.css';
 import { ScopePlannerEntry } from '../features/work/scope-planner.js';
 import { PropertyIntake } from '../features/intake/property-intake.js';
 import { PlanningPanel } from '../features/technical/planning-panel.js';
@@ -26,7 +30,7 @@ import { RunCard } from '../features/activity/run-card.js';
 import { Composer } from '../features/conversation/composer.js';
 import { useState, useEffect, useRef, useSyncExternalStore } from 'react';
 import { type Artifact, type Fact, type WorkKind } from '@renovagent/contracts';
-import { latest, workLabels, photoQuestions } from '@renovagent/core';
+import { latest, workLabels, photoQuestions, EXAMPLE_TAG, scopeDraftId } from '@renovagent/core';
 import {
   WorkspaceController,
   defaultView,
@@ -52,6 +56,25 @@ export function App({ controller }: { controller: WorkspaceController }) {
   const active = state.activeProjectId || Object.keys(state.projects)[0] || '';
   const project = state.projects[active];
   const view = state.views[active] || defaultView;
+  const [landingVisible, setLandingVisible] = useState(false);
+  const [houseExampleOpen, setHouseExampleOpen] = useState(
+    () => window.location.hash === '#example-house',
+  );
+  useEffect(() => {
+    const sync = () => setHouseExampleOpen(window.location.hash === '#example-house');
+    window.addEventListener('hashchange', sync);
+    return () => window.removeEventListener('hashchange', sync);
+  }, []);
+  const wholeHouseProject = Boolean(project && isHouseCase(state, active));
+  const showHouse = (houseExampleOpen || wholeHouseProject) && !landingVisible;
+  const isLanding = (!project || landingVisible) && !houseExampleOpen;
+  const scope = state.artifacts[scopeDraftId(active)]?.at(-1)?.payload;
+  const exampleStudio =
+    !isLanding &&
+    !showHouse &&
+    scope?.kind === 'scope-draft' &&
+    scope.recipe.id === 'living-room-refresh' &&
+    scope.request.startsWith(EXAMPLE_TAG);
   const [modal, setModal] = useState<
     | 'new'
     | 'import'
@@ -133,6 +156,7 @@ export function App({ controller }: { controller: WorkspaceController }) {
   ]);
   const logEnd = useRef<HTMLDivElement>(null);
   useEffect(() => {
+    setLandingVisible(false);
     setWorkOpen(false);
     setShowRecent(false);
     setShowQuestions(false);
@@ -174,6 +198,32 @@ export function App({ controller }: { controller: WorkspaceController }) {
       setLocalError(e instanceof Error ? e.message : String(e));
     }
   };
+  const openRoomExample = async () => {
+    const example = Object.values(state.projects).find((p) => {
+      const draft = state.artifacts[scopeDraftId(p.id)]?.at(-1)?.payload;
+      return (
+        draft?.kind === 'scope-draft' &&
+        draft.recipe.id === 'living-room-refresh' &&
+        draft.request.startsWith(EXAMPLE_TAG)
+      );
+    });
+    if (example) await controller.setView(example.id);
+    else await controller.sampleProject();
+    setLandingVisible(false);
+    setHouseExampleOpen(false);
+    if (window.location.hash === '#example-house')
+      window.history.replaceState(null, '', window.location.pathname + window.location.search);
+    setModal(null);
+  };
+  const openExample = async () => {
+    const saved = Object.values(state.projects).find((p) => isHouseCase(state, p.id));
+    if (saved) await controller.setView(saved.id);
+    setHouseExampleOpen(true);
+    setLandingVisible(false);
+    setModal(null);
+    window.history.replaceState(null, '', '#example-house');
+    window.scrollTo({ top: 0 });
+  };
   function projectButtons() {
     return (
       <div className="project-buttons">
@@ -184,6 +234,14 @@ export function App({ controller }: { controller: WorkspaceController }) {
             aria-current={active === p.id ? 'page' : undefined}
             onClick={() => {
               safe(controller.setView(p.id));
+              setLandingVisible(false);
+              setHouseExampleOpen(false);
+              if (window.location.hash === '#example-house')
+                window.history.replaceState(
+                  null,
+                  '',
+                  window.location.pathname + window.location.search,
+                );
               setModal(null);
             }}
           >
@@ -267,19 +325,31 @@ export function App({ controller }: { controller: WorkspaceController }) {
             ? 'Your house'
             : stageCopy[view.stage].label;
   return (
-    <div className={`prompt-workspace ${!project ? 'is-landing' : ''}`}>
+    <div
+      className={`prompt-workspace ${isLanding ? 'is-landing' : showHouse ? 'is-example-project is-house-example' : exampleStudio ? 'is-example-project' : ''}`}
+    >
       <header className="prompt-header">
         <button
           className="prompt-brand"
           onClick={() => {
             setWorkOpen(false);
             setShowRecent(false);
+            setLandingVisible(true);
+            setHouseExampleOpen(false);
+            if (window.location.hash === '#example-house')
+              window.history.replaceState(
+                null,
+                '',
+                window.location.pathname + window.location.search,
+              );
+            setModal(null);
+            window.scrollTo({ top: 0 });
           }}
           aria-label="Renovagent home"
         >
           <BrandMark size={174} lockup />
         </button>
-        {!project ? (
+        {isLanding ? (
           <nav className="landing-nav" aria-label="Main navigation">
             <a href="#how-it-works">The plan</a>
             <a href="#product-proof">See it work</a>
@@ -308,10 +378,16 @@ export function App({ controller }: { controller: WorkspaceController }) {
         ) : (
           <button
             className="prompt-project-picker"
-            aria-label={`Switch project: ${project.name}`}
+            aria-label={`Switch project: ${showHouse ? 'Hutchinson whole-house plan' : (project?.name ?? 'Projects')}`}
             onClick={() => setModal('projects')}
           >
-            <span>{state.properties[project.propertyId].name.split(',')[0]}</span>
+            <span>
+              {showHouse
+                ? 'Hutchinson · whole-house plan'
+                : exampleStudio
+                  ? 'Living room refresh'
+                  : project && state.properties[project.propertyId].name.split(',')[0]}
+            </span>
             <Glyph name="chevron" />
           </button>
         )}
@@ -356,7 +432,7 @@ export function App({ controller }: { controller: WorkspaceController }) {
           <button onClick={() => safe(controller.refresh())}>Reload records</button>
         </div>
       )}
-      {!project ? (
+      {isLanding ? (
         <main className="prompt-main landing-main">
           <Landing
             prompt={startPrompt}
@@ -364,8 +440,18 @@ export function App({ controller }: { controller: WorkspaceController }) {
             photos={startPhotos}
             onPhotos={setStartPhotos}
             onStart={() => setModal('new')}
-            onExample={() => safe(controller.sampleProject())}
+            onExample={() => safe(openExample())}
             busy={busy}
+          />
+        </main>
+      ) : showHouse ? (
+        <main className="prompt-main has-room">
+          <HouseExample
+            state={state}
+            controller={controller}
+            projectId={wholeHouseProject ? active : undefined}
+            onFinishStudio={() => safe(openRoomExample())}
+            onTools={() => setModal('tools')}
           />
         </main>
       ) : (
@@ -379,47 +465,62 @@ export function App({ controller }: { controller: WorkspaceController }) {
               controller={controller}
               heading={project.name}
             />
-            <RoomDimensionsCard
-              key={`${active}:room-home-dimensions`}
-              state={state}
-              projectId={active}
-              controller={controller}
-              busy={busy}
-            />
-            <ReferenceBoard
-              state={state}
-              projectId={active}
-              controller={controller}
-              onAdd={() => setModal('reference')}
-            />
+            <details className="studio-project-details" open={exampleStudio ? undefined : true}>
+              <summary>
+                <Glyph name="plan" />
+                <span>Room details & inspiration</span>
+                <Glyph name="plus" />
+              </summary>
+              <RoomDimensionsCard
+                key={`${active}:room-home-dimensions`}
+                state={state}
+                projectId={active}
+                controller={controller}
+                busy={busy}
+              />
+              <ReferenceBoard
+                state={state}
+                projectId={active}
+                controller={controller}
+                onAdd={() => setModal('reference')}
+              />
+            </details>
           </section>
-          <div className="prompt-intro">
-            <h1>What else would you like to improve?</h1>
-          </div>
-          {showRecent && (
-            <section className="prompt-recent" aria-label="Recent conversation" aria-live="polite">
-              <div className="prompt-section-label">
-                <span>Saved to this project</span>
-                <button onClick={() => setModal('history')}>
-                  View history <Glyph name="history" />
-                </button>
+          {!exampleStudio && (
+            <>
+              <div className="prompt-intro">
+                <h1>What else would you like to improve?</h1>
               </div>
-              {renderMessages(messages.slice(-3))}
-              <div ref={logEnd} />
-            </section>
+              {showRecent && (
+                <section
+                  className="prompt-recent"
+                  aria-label="Recent conversation"
+                  aria-live="polite"
+                >
+                  <div className="prompt-section-label">
+                    <span>Saved to this project</span>
+                    <button onClick={() => setModal('history')}>
+                      View history <Glyph name="history" />
+                    </button>
+                  </div>
+                  {renderMessages(messages.slice(-3))}
+                  <div ref={logEnd} />
+                </section>
+              )}
+              <Composer
+                key={active}
+                controller={controller}
+                state={state}
+                projectId={active}
+                busy={busy}
+                compact
+                showQuestions={showQuestions}
+                onOpenTools={() => setModal('tools')}
+                onSent={() => setShowRecent(true)}
+              />
+              <p className="prompt-disclosure">Saved project notes · Live chat not connected</p>
+            </>
           )}
-          <Composer
-            key={active}
-            controller={controller}
-            state={state}
-            projectId={active}
-            busy={busy}
-            compact
-            showQuestions={showQuestions}
-            onOpenTools={() => setModal('tools')}
-            onSent={() => setShowRecent(true)}
-          />
-          <p className="prompt-disclosure">Saved project notes · Live chat not connected</p>
         </main>
       )}
       {workOpen && project && (
@@ -1037,6 +1138,15 @@ export function App({ controller }: { controller: WorkspaceController }) {
           <button className="primary prompt-new-project" onClick={() => setModal('new')}>
             <Glyph name="plus" />
             New project
+          </button>
+          <button
+            className="secondary prompt-example-project"
+            disabled={busy}
+            onClick={() => safe(openExample())}
+          >
+            <Glyph name="paint" />
+            Explore the example project
+            <Glyph name="right" />
           </button>
         </Modal>
       )}

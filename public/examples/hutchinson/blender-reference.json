@@ -1,0 +1,20 @@
+{
+  "tool": "Blender",
+  "sourcePhoto": "photo-20",
+  "sourceSha256": "4ad7c9ca8ea752947269aa5da2ea574956ad1f7620c0437350fde024676c26d4",
+  "basis": "Listing-plan concept; printed room extents, not site measurements",
+  "listedRoomExtents": {
+    "openLivingDining": "13 ft 1 in \u00d7 23 ft 2 in",
+    "kitchen": "9 ft 6 in \u00d7 15 ft 3 in"
+  },
+  "displayOnly": [
+    "wall height and thickness",
+    "stair geometry",
+    "openings",
+    "furniture"
+  ],
+  "outputs": [
+    "blender-reference.png",
+    "hutchinson-concept.glb"
+  ]
+}

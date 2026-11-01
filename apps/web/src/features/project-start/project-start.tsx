@@ -7,6 +7,7 @@ import { PhotoPicker } from './photo-picker.js';
 import './project-start.css';
 import { ReferenceFields, referenceFromForm } from '../references/reference-fields.js';
 const rooms = [
+  ['Whole home', 'layers'],
   ['Bathroom', 'pipe'],
   ['Kitchen', 'materials'],
   ['Living room', 'home'],
@@ -88,7 +89,7 @@ export function ProjectStart({
       }}
     >
       <p className="project-start-intro">
-        A room, a few photos, an idea. Start with what you have.
+        A room or a whole house. Start with the photos and ideas you have.
       </p>
       <div className="project-start-grid">
         <div className="project-start-main">
@@ -98,6 +99,7 @@ export function ProjectStart({
               {rooms.map(([label, icon]) => (
                 <button
                   type="button"
+                  className={label === 'Whole home' ? 'project-whole-home-option' : undefined}
                   key={label}
                   aria-pressed={room === label}
                   onClick={() => setRoom(room === label ? '' : label)}

@@ -1,0 +1,9 @@
+{
+  "model": "muse-image-1.0",
+  "generatedAt": "2026-10-31T15:02:40.887Z",
+  "input": "blender-reference.png",
+  "inputSha256": "080ac8dd57cdd1e7c475a02e9f4d107673c96035e35f50b6f3d5a41f2daa71d9",
+  "outputSha256": "1ebc87c2d571c30e94a32c94d8a9df8e47bcec9fefa361f0d42f73e241267b6a",
+  "prompt": "Create a polished architectural concept rendering from this Blender room-layout reference. Preserve the L-shaped exterior footprint, front open living/dining room, rear galley kitchen and the existing stair position. Keep the isometric cutaway camera and all exterior openings. Whole-house refresh: warm white walls, light oak flooring, simple black lighting details, restrained contemporary furnishings. Keep the kitchen layout as a starting option. Do not add a new enclosed bathroom; its position is still an investigation. Improve realism and materials, but retain the reference layout. This is an unverified concept based on a listing floor plan, not a construction drawing. No text or dimension labels.",
+  "status": "generated-concept"
+}

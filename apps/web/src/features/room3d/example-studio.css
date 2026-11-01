@@ -1,0 +1,1485 @@
+/* The example is one connected workspace. Keep the room in view as the
+   inspector moves from finishes to work to the contractor's brief. */
+.prompt-workspace.is-example-project {
+  --ink: #202722;
+  --muted: #747b75;
+  --line: #e3e6df;
+  --paper: #f6f7f3;
+  background: var(--paper);
+  color: var(--ink);
+}
+.prompt-workspace.is-example-project::before,
+.prompt-workspace.is-example-project::after {
+  display: none;
+}
+.prompt-workspace.is-example-project .prompt-header {
+  min-height: 84px;
+  padding: 12px max(28px, calc((100vw - 1440px) / 2));
+  border-bottom: 1px solid var(--line);
+  background: #fff;
+}
+.is-example-project .prompt-brand .brand-lockup {
+  width: 104px !important;
+  height: auto !important;
+}
+.is-example-project .prompt-project-picker {
+  font-size: 13px;
+  color: #49564c;
+  padding: 12px 0 12px 20px;
+}
+.prompt-workspace.is-example-project .prompt-main.has-room {
+  width: min(1440px, calc(100% - 64px));
+  padding: 0 0 32px;
+  margin: 0 auto;
+}
+.example-studio.room3d {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  border-radius: 0;
+}
+.example-studio button,
+.example-studio summary {
+  cursor: pointer;
+  font: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+.example-studio button:focus-visible,
+.example-studio a:focus-visible,
+.example-studio summary:focus-visible {
+  outline: 2px solid #1767ed;
+  outline-offset: 4px;
+}
+.example-studio button:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
+.example-studio .glyph {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+.studio-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 33px 0 27px;
+}
+.studio-kicker {
+  display: block;
+  margin: 0 0 10px;
+  font-size: 10px;
+  line-height: 1.2;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: #7b8379;
+}
+.studio-heading h1 {
+  margin: 0;
+  font-size: clamp(27px, 2.8vw, 40px);
+  line-height: 1.1;
+  letter-spacing: -1.5px;
+  font-weight: 650;
+  color: #202722;
+}
+.studio-mobile-break {
+  display: none;
+}
+.studio-project-meta {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin: 0 0 2px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #49564c;
+}
+.studio-project-meta > .glyph {
+  width: 36px;
+  height: 36px;
+  padding: 9px;
+  background: #eaede5;
+  border-radius: 50%;
+}
+.studio-project-meta small {
+  display: block;
+  margin-top: 3px;
+  font-size: 11px;
+  font-weight: 400;
+  color: #7b8379;
+}
+.studio-chapters {
+  display: flex;
+  gap: 36px;
+  border-bottom: 1px solid #dce1d8;
+  margin-bottom: 24px;
+}
+.studio-chapters > button {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  background: transparent;
+  padding: 16px 1px;
+  color: #80887d;
+  font-weight: 550;
+  font-size: 14px;
+}
+.studio-chapters > button small {
+  font-size: 10px;
+  font-weight: 500;
+  margin-left: 7px;
+  opacity: 0.65;
+}
+.studio-chapters > button[aria-current] {
+  border-color: #1767ed;
+  color: #165fdb;
+}
+.studio-chapters > button:hover {
+  color: #1767ed;
+}
+.studio-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 342px;
+  gap: 24px;
+  align-items: start;
+}
+.studio-scene-column {
+  min-width: 0;
+}
+.studio-scene-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 0 0 12px;
+}
+.studio-scene-toolbar > span {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11px;
+  color: #7c8379;
+}
+.studio-scene-toolbar > span i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #92a58b;
+}
+.example-studio .room3d-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 3px;
+}
+.example-studio .room3d-actions button,
+.example-studio .room3d-menu > summary {
+  min-height: 32px;
+  padding: 7px 12px;
+  color: #657060;
+  background: transparent;
+  border: 0;
+  border-radius: 7px;
+  font-size: 11px;
+  line-height: 1.3;
+  outline: none;
+}
+.example-studio .room3d-actions button[aria-pressed='true'] {
+  color: #253c2a;
+  background: #e5e9df;
+  outline: none;
+}
+.example-studio .room3d-actions button:hover {
+  background: #e9ece4;
+}
+.example-studio .room3d-menu > summary {
+  display: grid;
+  place-content: center;
+  font-size: 18px;
+  padding: 0 8px;
+}
+.example-studio .room3d-menu > div {
+  z-index: 20;
+  min-width: 230px;
+  padding: 6px;
+  border-radius: 12px;
+  border-color: #e3e6df;
+  box-shadow: 0 16px 48px #20272220;
+}
+.example-studio .room3d-menu button {
+  width: 100%;
+  text-align: left;
+  min-height: 40px;
+}
+.example-studio .room3d-stage {
+  position: relative;
+  min-width: 0;
+}
+.example-studio .room3d-photo {
+  border-radius: 12px;
+  aspect-ratio: 16 / 10;
+}
+.example-studio .room3d-photo img {
+  object-fit: cover;
+}
+.example-studio .room3d-photo-label {
+  display: none;
+}
+.example-studio .room3d-canvas {
+  height: auto;
+  aspect-ratio: 16 / 10;
+  border-radius: 12px;
+}
+.example-studio .room3d-plan {
+  aspect-ratio: 16 / 10;
+  max-height: none;
+  display: grid;
+  align-items: center;
+  border: 1px solid #e3e6df;
+  border-radius: 12px;
+}
+.example-studio .room3d-plan svg {
+  width: 100%;
+  max-height: 100%;
+}
+.example-studio .room3d-photo-pin {
+  padding: 5px;
+  min-height: 36px;
+  border: 1px solid #ffffffb0;
+  background: #fffffff0;
+  box-shadow: 0 3px 24px #22302520;
+  backdrop-filter: blur(14px);
+  transform: translate(-16px, -50%);
+  transition:
+    background 0.18s,
+    box-shadow 0.18s;
+}
+.example-studio .room3d-photo-pin b {
+  height: 25px;
+  width: 25px;
+  font-size: 10px;
+  background: #fff;
+  color: #37654b;
+  box-shadow: 0 0 0 1px #d7e0d3;
+}
+.example-studio .room3d-photo-pin span {
+  font-size: 11px;
+  padding: 0 7px 0 4px;
+  gap: 3px;
+}
+.example-studio .room3d-photo-pin small {
+  font-size: 10px;
+  color: #7b8379;
+}
+.example-studio .room3d-photo-pin[aria-current='true'] {
+  outline: none;
+  background: #20392d;
+  color: white;
+  border-color: #20392d;
+}
+.example-studio .room3d-photo-pin[aria-current='true'] small {
+  color: #bdcfc0;
+}
+.studio-scene-caption {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 17px 1px 20px;
+}
+.studio-scene-caption strong {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+}
+.studio-scene-caption div > span {
+  display: block;
+  font-size: 11px;
+  line-height: 1.5;
+  color: #81877e;
+  margin-top: 4px;
+}
+.studio-example-label {
+  flex-shrink: 0;
+  font-size: 9px;
+  color: #838a7f;
+}
+.studio-work-strip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border-top: 1px solid #dce1d8;
+}
+.studio-work-strip > button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 19px 12px 18px 0;
+  border: 0;
+  border-top: 2px solid transparent;
+  background: transparent;
+  text-align: left;
+  min-width: 0;
+  color: #7b8379;
+}
+.studio-work-strip > button + button {
+  padding-left: 12px;
+}
+.studio-work-strip > button[aria-pressed='true'] {
+  border-top-color: #426d50;
+  color: #2d503a;
+}
+.studio-work-strip > button span:not(.studio-step-number) {
+  font-size: 11px;
+  line-height: 1.35;
+  font-weight: 550;
+}
+.studio-work-strip small,
+.studio-cost-steps small {
+  display: block;
+  font-size: 10px;
+  color: #838a7f;
+  margin-top: 4px;
+  font-weight: 400;
+}
+.studio-step-number {
+  display: inline-grid;
+  place-content: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid #d8dfd3;
+  border-radius: 50%;
+  color: #778873;
+  font-size: 10px;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+.studio-inspector {
+  min-width: 0;
+  padding: 24px;
+  border: 1px solid #e4e7e0;
+  border-radius: 14px;
+  background: #fff;
+}
+.studio-inspector-title {
+  margin-bottom: 23px;
+}
+.studio-inspector-title .studio-kicker {
+  font-size: 9px;
+  margin-bottom: 8px;
+}
+.studio-inspector-title h2 {
+  margin: 0;
+  font-size: 23px;
+  line-height: 1.15;
+  letter-spacing: -0.7px;
+  color: #253129;
+  font-weight: 650;
+}
+.studio-inspector-title p {
+  margin: 8px 0 0;
+  font-size: 11px;
+  line-height: 1.6;
+  color: #838a7f;
+}
+.studio-finishes {
+  border: 0;
+  padding: 0;
+  margin: 0 0 22px;
+  min-width: 0;
+}
+.studio-finishes legend {
+  padding: 0;
+  margin: 0 0 11px;
+  width: 100%;
+  font-size: 11px;
+  font-weight: 650;
+  color: #4c594f;
+}
+.studio-finishes legend span {
+  float: right;
+  font-size: 10px;
+  font-weight: 400;
+  color: #8d9389;
+}
+.studio-wall-options {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 9px;
+}
+.studio-wall-options button {
+  display: grid;
+  gap: 8px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #8a9085;
+  text-align: center;
+  font-size: 10px;
+}
+.studio-wall-options i {
+  display: grid;
+  place-content: center;
+  width: 100%;
+  height: 42px;
+  border-radius: 7px;
+  border: 1px solid #00000007;
+}
+.studio-wall-options .glyph {
+  width: 16px;
+  height: 16px;
+  color: #394337;
+}
+.studio-wall-options button[aria-pressed='true'] i {
+  outline: 1px solid #586e50;
+  outline-offset: 3px;
+}
+.studio-wall-options button[aria-pressed='true'] span {
+  color: #364a38;
+}
+.studio-floor-options {
+  display: grid;
+  gap: 7px;
+}
+.studio-floor-options button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px;
+  border: 1px solid #e8ebe3;
+  border-radius: 9px;
+  background: white;
+  text-align: left;
+  color: #4c594f;
+}
+.studio-floor-options button[aria-pressed='true'] {
+  border-color: #a1b09a;
+  background: #f5f7f1;
+}
+.studio-floor-options button > span {
+  flex: 1;
+  font-size: 11px;
+  font-weight: 550;
+}
+.studio-floor-options small {
+  display: block;
+  color: #91978b;
+  font-size: 9px;
+  font-weight: 400;
+  margin-top: 3px;
+}
+.studio-floor-options .glyph {
+  width: 14px;
+  height: 14px;
+  color: #647e5e;
+  margin-right: 4px;
+}
+.studio-floor-swatch {
+  width: 43px;
+  height: 35px;
+  border-radius: 5px;
+  background: #ceb28d;
+  box-shadow: inset 0 0 0 1px #00000006;
+}
+.studio-floor-swatch.lvp {
+  background: repeating-linear-gradient(
+    92deg,
+    #c9ab80 0,
+    #d7bd95 8px,
+    #d4b58b 14px,
+    #bc9a71 15px,
+    #cfb18b 16px
+  );
+}
+.studio-floor-swatch.hardwood {
+  background: repeating-linear-gradient(
+    92deg,
+    #735440 0,
+    #8b674a 8px,
+    #7b5841 14px,
+    #513d30 15px,
+    #8f6d50 16px
+  );
+}
+.studio-floor-swatch.carpet {
+  background: repeating-radial-gradient(
+    ellipse at 30% 50%,
+    #c3bba8 0,
+    #d6cebc 1px,
+    #c9c1af 2px,
+    #d1cab9 3px
+  );
+}
+.studio-budget {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  padding: 18px 0 0;
+  border-top: 1px solid #eceee8;
+}
+.studio-budget > div {
+  display: grid;
+  gap: 6px;
+}
+.studio-budget > div + div {
+  padding-left: 14px;
+  border-left: 1px solid #e8ebe3;
+}
+.studio-budget span {
+  font-size: 9px;
+  color: #858c80;
+}
+.studio-budget strong {
+  font-size: 21px;
+  font-weight: 600;
+  line-height: 1.1;
+  color: #334a38;
+  letter-spacing: -0.5px;
+  font-variant-numeric: tabular-nums;
+}
+.studio-budget p {
+  grid-column: 1 / -1;
+  margin: 2px 0 0;
+  font-size: 9px;
+  color: #979c92;
+}
+.studio-next {
+  display: grid;
+  gap: 10px;
+  margin-top: 22px;
+}
+.example-studio button.studio-primary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  width: 100%;
+  min-height: 44px;
+  border: 0;
+  border-radius: 8px;
+  padding: 12px 14px;
+  background: #254334;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 550;
+  transition: background 0.15s;
+}
+.example-studio button.studio-primary:hover {
+  background: #365d46;
+}
+.example-studio button.studio-primary .glyph {
+  width: 14px;
+  height: 14px;
+}
+.example-studio button.studio-secondary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 42px;
+  border: 1px solid #dfe5d9;
+  background: white;
+  color: #586c54;
+  border-radius: 8px;
+  font-size: 11px;
+}
+.example-studio button.studio-text-button {
+  min-height: 38px;
+  padding: 8px 0;
+  background: transparent;
+  border: 0;
+  font-size: 10px;
+  color: #7d8878;
+  text-align: center;
+}
+.studio-save-status {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  margin-top: 14px;
+  font-size: 9px;
+  color: #8e9788;
+}
+.studio-save-status .glyph {
+  width: 12px;
+  height: 12px;
+}
+.studio-segment {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding: 4px;
+  background: #f0f3ec;
+  border-radius: 8px;
+}
+.studio-segment button {
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: #8a9383;
+  padding: 10px 4px;
+  font-size: 11px;
+}
+.studio-segment button[aria-pressed='true'] {
+  background: white;
+  color: #3f5943;
+  box-shadow: 0 1px 4px #26362010;
+}
+.studio-cost-total {
+  display: grid;
+  gap: 5px;
+  padding: 23px 0 19px;
+}
+.studio-cost-total > span {
+  font-size: 11px;
+  color: #84907d;
+}
+.studio-cost-total strong {
+  font-size: 38px;
+  font-weight: 550;
+  line-height: 1.1;
+  letter-spacing: -1.5px;
+  color: #304c38;
+  font-variant-numeric: tabular-nums;
+}
+.studio-cost-total small {
+  font-size: 9px;
+  color: #939d8c;
+}
+.studio-cost-split {
+  margin: 0 0 19px;
+  padding: 0 0 18px;
+  border-bottom: 1px solid #e5eade;
+  display: grid;
+  gap: 9px;
+}
+.studio-cost-split > div {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: #77856f;
+}
+.studio-cost-split dd {
+  margin: 0;
+  color: #394d35;
+  font-weight: 550;
+  font-variant-numeric: tabular-nums;
+}
+.studio-cost-steps {
+  display: grid;
+}
+.studio-cost-steps button {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 13px 0;
+  border: 0;
+  border-bottom: 1px solid #eef1e9;
+  background: transparent;
+  text-align: left;
+  font-size: 11px;
+  color: #53624c;
+}
+.studio-cost-steps button > span:not(.studio-step-number) {
+  flex: 1;
+}
+.studio-cost-steps strong {
+  font-size: 11px;
+  font-weight: 600;
+}
+.studio-cost-steps .glyph {
+  width: 12px;
+  height: 12px;
+  color: #a2ae9b;
+}
+.studio-cost-steps button[aria-current] {
+  color: #1767ed;
+}
+.studio-material-links {
+  margin: 18px 0 0;
+  font-size: 11px;
+}
+.studio-material-links summary {
+  list-style: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #627759;
+}
+.studio-material-links summary::-webkit-details-marker {
+  display: none;
+}
+.studio-material-links summary .glyph {
+  width: 14px;
+  height: 14px;
+}
+.studio-material-links p {
+  font-size: 10px;
+  line-height: 1.6;
+  color: #919b89;
+}
+.studio-material-links > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-top: 12px;
+}
+.studio-material-links > div strong {
+  width: 100%;
+  font-size: 11px;
+  font-weight: 550;
+  color: #617059;
+}
+.studio-material-links a {
+  font-size: 10px;
+  color: #1767ed;
+  text-decoration: none;
+}
+.studio-document {
+  padding: 23px 20px 0;
+  border: 1px solid #e1e5db;
+  border-radius: 4px 12px 12px 12px;
+  background: linear-gradient(135deg, #f5f7ef, #fff 70%);
+  box-shadow: 0 5px 18px #273b2010;
+}
+.studio-document-icon {
+  width: 37px;
+  height: 42px;
+  display: grid;
+  place-content: center;
+  color: #768b65;
+  margin-bottom: 23px;
+}
+.studio-document-icon .glyph {
+  width: 35px;
+  height: 35px;
+  stroke-width: 1;
+}
+.studio-document > span {
+  font-size: 8px;
+  letter-spacing: 0.13em;
+  color: #88967b;
+}
+.studio-document h3 {
+  margin: 8px 0 11px;
+  font-size: 20px;
+  letter-spacing: -0.5px;
+  color: #3a5033;
+}
+.studio-document p {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.7;
+  color: #88937e;
+}
+.studio-document ul {
+  padding: 18px 0;
+  margin: 0;
+  list-style: none;
+  display: grid;
+  gap: 11px;
+}
+.studio-document li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 10px;
+  color: #6d7f5f;
+}
+.studio-document li .glyph {
+  width: 12px;
+  height: 12px;
+}
+.studio-document > div:last-child {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 14px 0;
+  border-top: 1px solid #e6eadf;
+  font-size: 8px;
+  color: #96a08c;
+}
+.studio-document > div:last-child .glyph {
+  width: 12px;
+  height: 12px;
+}
+.studio-footnote,
+.studio-handoff-note {
+  margin: 15px 0 0;
+  font-size: 10px;
+  line-height: 1.6;
+  color: #8a9680;
+}
+.studio-handoff-note {
+  padding: 10px;
+  border-radius: 6px;
+  background: #f6f3e7;
+  color: #8d7857;
+}
+.studio-stale {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+  padding: 12px 16px;
+  background: #fff7df;
+  border-radius: 8px;
+  color: #846c37;
+  font-size: 12px;
+}
+.studio-stale button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 0;
+  background: transparent;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.studio-stale .glyph {
+  width: 13px;
+  height: 13px;
+}
+.studio-project-details {
+  margin-top: 24px;
+  border-top: 1px solid #dce1d8;
+  padding: 18px 0 0;
+}
+.studio-project-details > summary {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  list-style: none;
+  cursor: pointer;
+  color: #7d8877;
+  font-size: 12px;
+}
+.studio-project-details > summary::-webkit-details-marker {
+  display: none;
+}
+.studio-project-details > summary .glyph {
+  width: 16px;
+  height: 16px;
+}
+.studio-project-details > summary .glyph:last-child {
+  margin-left: auto;
+}
+.studio-project-details[open] > summary {
+  padding-bottom: 18px;
+}
+.prompt-workspace:not(.is-example-project) .studio-project-details {
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+.prompt-workspace:not(.is-example-project) .studio-project-details > summary {
+  display: none;
+}
+.example-studio .room3d-popup {
+  top: 16px;
+  right: 16px;
+  left: auto;
+  width: min(380px, calc(100% - 32px));
+  max-height: calc(100% - 32px);
+  padding: 23px;
+  border: 1px solid #e3e8dc;
+  border-radius: 12px;
+  box-shadow: 0 12px 48px #17281530;
+  font-size: 12px;
+}
+.example-studio .room3d-popup h4 {
+  font-size: 21px;
+  color: #30472e;
+  letter-spacing: -0.5px;
+}
+.example-studio .room3d-popup .room3d-close {
+  min-height: 32px;
+  min-width: 32px;
+  background: #f0f3eb;
+  border-radius: 50%;
+}
+.example-studio .room3d-popup .room3d-tiers {
+  padding: 4px;
+  background: #f0f3eb;
+  border-radius: 7px;
+  margin: 16px 0;
+}
+.example-studio .room3d-popup .room3d-tiers > button {
+  flex: 1;
+  border: 0;
+  min-height: 36px;
+  background: transparent;
+  color: #76866b;
+  border-radius: 5px;
+  font-size: 11px;
+  outline: none;
+}
+.example-studio .room3d-popup .room3d-tiers > button[aria-pressed='true'] {
+  background: #fff;
+  color: #354f2b;
+  box-shadow: 0 1px 4px #26362010;
+}
+.example-studio .room3d-more summary {
+  padding: 12px 0;
+  font-size: 11px;
+  color: #7d8d71;
+}
+.example-studio .room3d-confirm {
+  margin-top: 20px;
+  padding: 16px 12px;
+  background: #f4f7ed;
+  border-color: #dce4d2;
+}
+.example-studio .room3d-confirm td,
+.example-studio .room3d-confirm th {
+  font-size: 10px;
+}
+.example-studio .room3d-confirm button {
+  min-height: 42px;
+  border-radius: 7px;
+}
+.example-studio .room3d-summary {
+  background: #f4f6ee;
+  padding: 16px;
+}
+.example-studio .room3d-planner .room3d-tiers button {
+  padding: 10px;
+  border: 1px solid #dbe2d1;
+  border-radius: 6px;
+  background: white;
+}
+.example-studio .room3d-checks li {
+  padding: 6px 0;
+}
+.example-studio .room3d-planner .primary {
+  min-height: 42px;
+  border-radius: 7px;
+  padding: 10px 12px;
+}
+.example-studio .room3d-tag {
+  background: #edf2e8;
+  color: #789367;
+  border-radius: 3px;
+  font-size: 8px;
+}
+@media (min-width: 1600px) {
+  .studio-layout {
+    grid-template-columns: minmax(0, 1fr) 370px;
+    gap: 32px;
+  }
+  .studio-inspector {
+    padding: 28px;
+  }
+}
+@media (max-width: 1100px) {
+  .studio-layout {
+    grid-template-columns: minmax(0, 1fr) 304px;
+    gap: 20px;
+  }
+  .studio-inspector {
+    padding: 20px;
+  }
+  .studio-scene-toolbar > span {
+    display: none;
+  }
+  .studio-scene-toolbar {
+    justify-content: flex-end;
+  }
+  .studio-work-strip {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .studio-work-strip > button + button {
+    padding-left: 0;
+  }
+  .studio-scene-caption {
+    align-items: flex-start;
+  }
+  .studio-example-label {
+    margin-top: 2px;
+    font-size: 8px;
+  }
+}
+@media (max-width: 800px) {
+  .prompt-workspace.is-example-project .prompt-header {
+    min-height: 72px;
+    padding: 10px 22px;
+  }
+  .prompt-workspace.is-example-project .prompt-main.has-room {
+    width: calc(100% - 40px);
+  }
+  .studio-heading {
+    padding: 26px 0 21px;
+  }
+  .studio-heading h1 {
+    font-size: 30px;
+  }
+  .studio-project-meta {
+    display: none;
+  }
+  .studio-layout {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+  .studio-inspector {
+    padding: 24px;
+  }
+  .studio-chapters {
+    gap: 30px;
+    margin-bottom: 14px;
+  }
+  .studio-chapters > button {
+    font-size: 12px;
+    padding: 14px 0;
+    gap: 7px;
+  }
+  .studio-chapters > button small {
+    display: none;
+  }
+  .studio-chapters .glyph {
+    width: 16px;
+    height: 16px;
+  }
+  .studio-scene-toolbar > span {
+    display: flex;
+    font-size: 10px;
+  }
+  .studio-scene-toolbar {
+    justify-content: space-between;
+    padding-bottom: 9px;
+  }
+  .example-studio .room3d-actions button {
+    min-height: 38px;
+    padding: 9px;
+  }
+  .example-studio .room3d-photo,
+  .example-studio .room3d-canvas,
+  .example-studio .room3d-plan {
+    aspect-ratio: 16 / 10;
+  }
+  .studio-scene-caption {
+    padding: 13px 0;
+  }
+  .studio-scene-caption strong {
+    font-size: 12px;
+  }
+  .studio-scene-caption div > span {
+    display: none;
+  }
+  .studio-work-strip {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .studio-work-strip > button {
+    padding: 12px 0;
+    gap: 7px;
+  }
+  .studio-work-strip > button + button {
+    padding-left: 7px;
+  }
+  .studio-work-strip .studio-step-number {
+    width: 22px;
+    height: 22px;
+    font-size: 8px;
+  }
+  .studio-work-strip > button span:not(.studio-step-number) {
+    font-size: 10px;
+  }
+  .studio-work-strip small {
+    font-size: 9px;
+  }
+  .studio-budget span {
+    font-size: 11px;
+  }
+  .studio-budget strong {
+    font-size: 25px;
+  }
+  .studio-wall-options i {
+    height: 48px;
+  }
+  .studio-floor-options button {
+    padding: 9px;
+    min-height: 56px;
+  }
+  .studio-floor-options button > span {
+    font-size: 12px;
+  }
+  .studio-floor-options small {
+    font-size: 10px;
+  }
+  .example-studio .room3d-popup {
+    position: relative;
+    width: auto;
+    max-height: none;
+    inset: auto;
+    margin-top: 12px;
+    padding: 20px;
+  }
+  .studio-stale {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+@media (max-width: 480px) {
+  .prompt-workspace.is-example-project .prompt-header {
+    min-height: 66px;
+    padding: 9px 18px;
+    gap: 12px;
+  }
+  .is-example-project .prompt-brand .brand-lockup {
+    width: 85px !important;
+  }
+  .is-example-project .prompt-project-picker {
+    padding: 12px 0;
+    max-width: 180px;
+    font-size: 11px;
+  }
+  .is-example-project .prompt-account {
+    display: none;
+  }
+  .prompt-workspace.is-example-project .prompt-main.has-room {
+    width: calc(100% - 32px);
+  }
+  .studio-heading {
+    padding: 23px 0 16px;
+  }
+  .studio-heading h1 {
+    font-size: 29px;
+    line-height: 1.08;
+    letter-spacing: -1px;
+  }
+  .studio-mobile-break {
+    display: block;
+  }
+  .studio-kicker {
+    font-size: 8px;
+    letter-spacing: 0.15em;
+  }
+  .studio-chapters {
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .studio-chapters > button {
+    min-height: 48px;
+  }
+  .studio-scene-toolbar > span {
+    display: none;
+  }
+  .studio-scene-toolbar {
+    justify-content: flex-end;
+  }
+  .example-studio .room3d-actions button,
+  .example-studio .room3d-menu > summary {
+    min-height: 44px;
+    padding: 11px 12px;
+  }
+  .example-studio .room3d-photo,
+  .example-studio .room3d-canvas,
+  .example-studio .room3d-plan {
+    border-radius: 9px;
+  }
+  .example-studio .room3d-photo-pin {
+    min-height: 32px;
+    padding: 4px;
+  }
+  .example-studio .room3d-photo-pin b {
+    width: 22px;
+    height: 22px;
+  }
+  .example-studio .room3d-photo-pin span {
+    display: none;
+  }
+  .studio-work-strip {
+    gap: 4px;
+  }
+  .studio-work-strip > button {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    min-height: 74px;
+    padding: 12px 4px 0 !important;
+  }
+  .studio-work-strip > button .glyph {
+    height: 22px;
+    width: 22px;
+    padding: 2px;
+  }
+  .studio-work-strip > button span:not(.studio-step-number) {
+    font-size: 9px;
+  }
+  .studio-work-strip small {
+    display: none;
+  }
+  .studio-inspector {
+    padding: 22px;
+    border-radius: 12px;
+  }
+  .studio-inspector-title h2 {
+    font-size: 25px;
+  }
+  .studio-inspector-title p {
+    font-size: 12px;
+  }
+  .studio-finishes legend {
+    font-size: 12px;
+  }
+  .studio-floor-options button {
+    min-height: 58px;
+  }
+  .studio-wall-options button {
+    font-size: 11px;
+  }
+  .example-studio button.studio-primary,
+  .example-studio button.studio-secondary {
+    min-height: 48px;
+    font-size: 12px;
+  }
+  .studio-next {
+    margin-top: 20px;
+  }
+  .studio-segment button {
+    min-height: 44px;
+  }
+  .studio-cost-steps button {
+    min-height: 60px;
+    font-size: 12px;
+  }
+  .studio-material-links summary {
+    min-height: 44px;
+  }
+  .studio-material-links a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+  .studio-document p {
+    font-size: 12px;
+  }
+  .studio-project-details > summary {
+    min-height: 44px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .example-studio *,
+  .example-studio *::before {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+.room3d-handoff-document {
+  color: #5b6d51;
+  font-size: 12px;
+  line-height: 1.65;
+}
+.room3d-handoff-document section + section {
+  border-top: 1px solid #e7ecdf;
+  padding-top: 16px;
+  margin-top: 20px;
+}
+.room3d-handoff-document h5 {
+  font-size: 15px;
+  color: #314b27;
+  line-height: 1.3;
+  margin: 0 0 12px;
+}
+.room3d-handoff-document h6 {
+  font-size: 12px;
+  color: #405a35;
+  margin: 18px 0 8px;
+}
+.room3d-handoff-document p {
+  font-size: 11px;
+  margin: 8px 0;
+}
+.room3d-handoff-document ul {
+  padding-left: 18px;
+  font-size: 11px;
+}
+.room3d-handoff-document li {
+  margin: 6px 0;
+}
+.room3d-handoff-document details {
+  padding: 14px 0;
+  border-top: 1px solid #e7ecdf;
+}
+.room3d-handoff-document details summary {
+  color: #657e55;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 550;
+}
+.room3d-handoff-document .handoff-document-note {
+  background: #f3f6ed;
+  padding: 10px 12px;
+  border-radius: 6px;
+  font-size: 10px;
+  color: #8a977e;
+}
+.room3d-handoff-document .handoff-table-scroll {
+  overflow: auto;
+}
+.room3d-handoff-document table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 10px;
+}
+.room3d-handoff-document th,
+.room3d-handoff-document td {
+  text-align: left;
+  padding: 9px 6px;
+  border-bottom: 1px solid #e5ebdc;
+  vertical-align: top;
+}
+.room3d-handoff-document a {
+  color: #1767ed;
+}
+.example-studio .room3d-review-card:has(.room3d-handoff-document) {
+  width: min(560px, calc(100% - 32px));
+}
+/* Keep navigation available when the phone inspector moves into view. */
+.example-studio .studio-chapters {
+  position: sticky;
+  top: 0;
+  z-index: 8;
+  background: #f6f7f3;
+}
+.example-studio .studio-inspector,
+.example-studio .room3d-popup {
+  scroll-margin-top: 76px;
+}
+@media (min-width: 801px) {
+  .prompt-workspace.is-example-project .prompt-header {
+    min-height: 72px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+  }
+  .is-example-project .prompt-brand .brand-lockup {
+    width: 84px !important;
+  }
+  .studio-heading {
+    padding: 26px 0 20px;
+  }
+  .studio-heading h1 {
+    font-size: clamp(27px, 2.5vw, 36px);
+  }
+  .studio-chapters > button {
+    padding-top: 14px;
+    padding-bottom: 14px;
+  }
+  .studio-inspector-title p,
+  .studio-floor-options button > span {
+    font-size: 12px;
+  }
+  .studio-finishes legend {
+    font-size: 12px;
+  }
+  .example-studio button.studio-primary {
+    font-size: 12px;
+  }
+}
+@media (max-width: 800px) {
+  .example-studio .room3d-review-card:has(.room3d-handoff-document) {
+    width: auto;
+  }
+}
+.prompt-workspace .prompt-example-project {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 48px;
+  border-radius: 8px;
+  margin-top: 12px;
+}
+.example-studio .studio-chapters {
+  box-shadow: 0 14px 0 #f6f7f3;
+}
+.studio-inspector-title p,
+.studio-floor-options small,
+.studio-finishes legend span,
+.studio-budget span,
+.studio-budget p,
+.studio-save-status,
+.studio-cost-total small,
+.studio-cost-split dt,
+.studio-footnote,
+.studio-scene-caption div > span,
+.studio-work-strip small,
+.studio-cost-steps small {
+  color: #687260;
+}
+@media (max-width: 480px) {
+  .example-studio .room3d-photo-pin {
+    min-height: 44px;
+    min-width: 44px;
+    justify-content: center;
+    transform: translate(-50%, -50%);
+  }
+}
+.studio-before-after {
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid #dfe4d8;
+  border-radius: 8px;
+  margin-left: 8px;
+}
+.example-studio .studio-before-after > button {
+  padding: 5px 8px;
+  min-height: 26px;
+}
+@media (max-width: 480px) {
+  .studio-before-after {
+    margin-left: 2px;
+    padding: 0;
+  }
+  .example-studio .studio-before-after > button {
+    min-height: 42px;
+    padding: 9px;
+  }
+}
+.studio-agent-tools {
+  margin-top: 20px;
+  border-top: 1px solid #e4e9dc;
+  padding-top: 14px;
+}
+.studio-agent-tools > summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  list-style: none;
+  color: #687260;
+  font-size: 11px;
+  min-height: 40px;
+}
+.studio-agent-tools > summary::-webkit-details-marker {
+  display: none;
+}
+.studio-agent-tools > summary .glyph {
+  width: 14px;
+  height: 14px;
+}
+.studio-agent-tools > summary .glyph:last-child {
+  margin-left: auto;
+}
+.studio-agent-tools > div {
+  display: grid;
+  gap: 8px;
+  padding-top: 10px;
+}
+.studio-agent-tools button {
+  min-height: 44px;
+  border: 1px solid #dfe5d8;
+  border-radius: 7px;
+  padding: 10px;
+  background: #f6f8f1;
+  color: #4e6343;
+  font-size: 12px;
+  text-align: left;
+}

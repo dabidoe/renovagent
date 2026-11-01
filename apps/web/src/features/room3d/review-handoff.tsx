@@ -239,7 +239,7 @@ export function HandoffPopup({
     <div className="room3d-popup room3d-review-card" role="dialog" aria-label="Contractor handoff">
       <header>
         <div>
-          <span className="room3d-step-phase">Handoff</span>
+          <span className="room3d-step-phase">Handoff · Proposed scope</span>
           <h4>Contractor handoff</h4>
           <span className="small-note">
             The work in order, measurements, sources, what to verify and reply fields.
@@ -263,9 +263,132 @@ export function HandoffPopup({
           {copied ? 'Copied ✓' : 'Copy'}
         </button>
       </div>
-      <pre className="room3d-handoff">{markdown}</pre>
+      <div className="room3d-handoff-document">
+        {markdown.split(/\n(?=## )/).map((section, index) => {
+          const title = section.match(/^## (.+)/)?.[1];
+          const body = title ? section.slice(section.indexOf('\n') + 1) : section;
+          if (index === 0) {
+            const [heading, ...metadata] = body.split('\n');
+            return (
+              <section key={index}>
+                <HandoffText text={heading!} />
+                <details>
+                  <summary>Scope status & planning basis</summary>
+                  <HandoffText text={metadata.join('\n')} />
+                </details>
+              </section>
+            );
+          }
+          if (title === 'Overview') {
+            const technical = (line: string) => /^- (Jurisdiction|Code text|Recipe):/.test(line);
+            const lines = body.split('\n');
+            return (
+              <section key={index}>
+                <h5>{title}</h5>
+                <HandoffText text={lines.filter((line) => !technical(line)).join('\n')} />
+                <details>
+                  <summary>Location & technical context</summary>
+                  <HandoffText text={lines.filter(technical).join('\n')} />
+                </details>
+              </section>
+            );
+          }
+          return title &&
+            [
+              'Requirements register',
+              'Contractor must verify',
+              'Open questions',
+              'Not included',
+            ].includes(title) ? (
+            <details key={index}>
+              <summary>{title}</summary>
+              <HandoffText text={body} />
+            </details>
+          ) : (
+            <section key={index}>
+              {title && <h5>{title}</h5>}
+              <HandoffText text={body} />
+            </section>
+          );
+        })}
+      </div>
     </div>
   );
+}
+
+// Render our generated Markdown as a readable document, without accepting HTML.
+// The exported file retains the complete scope and source register.
+function HandoffText({ text }: { text: string }) {
+  const lines = text.trim().split('\n');
+  const blocks = [];
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]!;
+    if (!line.trim()) continue;
+    if (line.startsWith('|')) {
+      const rows = [line];
+      while (lines[i + 1]?.startsWith('|')) rows.push(lines[++i]!);
+      const cells = (row: string) =>
+        row
+          .replace(/^\||\|$/g, '')
+          .split(/(?<!\\)\|/)
+          .map((s) => s.trim().replace(/\\\|/g, '|'));
+      blocks.push(
+        <div className="handoff-table-scroll" key={i}>
+          <table>
+            <thead>
+              <tr>
+                {cells(rows[0]!).map((cell, n) => (
+                  <th key={n}>{inlineHandoff(cell)}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {rows.slice(2).map((row, n) => (
+                <tr key={n}>
+                  {cells(row).map((cell, m) => (
+                    <td key={m}>{inlineHandoff(cell)}</td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>,
+      );
+    } else if (line.startsWith('- ')) {
+      const items = [line];
+      while (lines[i + 1]?.startsWith('- ')) items.push(lines[++i]!);
+      blocks.push(
+        <ul key={i}>
+          {items.map((item, n) => (
+            <li key={n}>{inlineHandoff(item.slice(2))}</li>
+          ))}
+        </ul>,
+      );
+    } else if (/^### /.test(line)) blocks.push(<h6 key={i}>{line.slice(4)}</h6>);
+    else if (/^# /.test(line)) blocks.push(<h5 key={i}>{line.slice(2)}</h5>);
+    else if (line.startsWith('> '))
+      blocks.push(
+        <p key={i} className="handoff-document-note">
+          {inlineHandoff(line.slice(2))}
+        </p>,
+      );
+    else blocks.push(<p key={i}>{inlineHandoff(line)}</p>);
+  }
+  return <>{blocks}</>;
+}
+
+function inlineHandoff(text: string) {
+  return text.split(/(\*\*[^*]+\*\*|\[[^\]]+\]\(https?:\/\/[^)]+\))/g).map((part, i) => {
+    if (part.startsWith('**')) return <strong key={i}>{part.slice(2, -2)}</strong>;
+    const link = part.match(/^\[([^\]]+)\]\((https?:\/\/[^)]+)\)$/);
+    return link ? (
+      <a key={i} href={link[2]} target="_blank" rel="noopener noreferrer">
+        {link[1]}
+      </a>
+    ) : (
+      part
+    );
+  });
 }
 
 export type ChangeRow = { label: string; from: string; to: string };

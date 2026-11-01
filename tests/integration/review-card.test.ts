@@ -6,7 +6,11 @@ import { IDBFactory } from 'fake-indexeddb';
 import { projectScopeReview, reviewLocations } from '@renovagent/core';
 import { WorkspaceController } from '../../apps/web/src/app/workspace-controller.js';
 import { IndexedDbProjectRepository } from '../../apps/web/src/adapters/indexeddb/project-repository.js';
-import { ReviewPopup, type JevRanking } from '../../apps/web/src/features/room3d/review-handoff.js';
+import {
+  HandoffPopup,
+  ReviewPopup,
+  type JevRanking,
+} from '../../apps/web/src/features/room3d/review-handoff.js';
 
 async function bayAreaReview() {
   const repo = await IndexedDbProjectRepository.open({
@@ -34,6 +38,24 @@ const render = (review: Awaited<ReturnType<typeof bayAreaReview>>, ranking: JevR
       onClose: () => {},
     }),
   );
+
+test('the handoff presents a readable brief while retaining folded context and escaping project text', () => {
+  const html = renderToStaticMarkup(
+    createElement(HandoffPopup, {
+      markdown:
+        '# Contractor handoff: <img src=x onerror=alert(1)>\n\n> Proposed scope\n\n## Overview\n- Request: Repaint\n- Recipe: living-room-refresh v2\n\n## Material allowances\n| Step | Materials |\n| --- | --- |\n| Paint | $100 |\n\n## Requirements register\nKeep the source record. [Source](https://example.com/source)\n',
+      fileName: 'brief.md',
+      onClose: () => {},
+    }),
+  );
+  assert.match(html, /<table>/);
+  assert.doesNotMatch(html, /<pre|<img/);
+  assert.match(html, /&lt;img src=x onerror=alert\(1\)&gt;/);
+  assert.match(html, /<summary>Location &amp; technical context<\/summary>/);
+  assert.match(html, /living-room-refresh v2/);
+  assert.match(html, /Keep the source record/);
+  assert.match(html, /href="https:\/\/example.com\/source"/);
+});
 
 test('the review card offers Jev and shows its relevance as interpretation', async () => {
   const review = await bayAreaReview();

@@ -1,3 +1,4 @@
+import { ExampleStudio } from './example-studio.js';
 import { RoomWelcome } from './room-welcome.js';
 import { OwnerPhotos, ownerPhotos } from './owner-photos.js';
 import { BestValuePopup, type BestValueResult, type BestValueState } from './best-value.js';
@@ -206,6 +207,7 @@ function TaskPopup({
   pricing,
   onPrice,
   onClose,
+  initialMode = 'diy',
 }: {
   pin: RoomAnnotation;
   quotes: ExampleQuote[];
@@ -214,11 +216,15 @@ function TaskPopup({
   pricing: string;
   onPrice: () => void;
   onClose: () => void;
+  initialMode?: 'diy' | 'pro';
 }) {
-  const [mode, setMode] = useState<'diy' | 'pro'>('diy');
+  const [mode, setMode] = useState<'diy' | 'pro'>(initialMode);
   const g = pin.guide;
   const e = pin.estimate;
-  const quoted = quotes.flatMap((q) => {
+  const comparedQuotes = isExample
+    ? quotes.filter((q) => !q.notQuoted.length && !q.needsArea.length).slice(0, 1)
+    : quotes;
+  const quoted = comparedQuotes.flatMap((q) => {
     const line = q.lines.find((l) => l.packageId === pin.id);
     return line ? [{ q, line }] : [];
   });
@@ -315,7 +321,7 @@ function TaskPopup({
           {quoted.map(({ q, line }) => (
             <li key={q.contractor.id}>
               <div className="room3d-line-head">
-                <strong>{q.contractor.name}</strong>
+                <strong>{isExample ? 'Materials + installation' : q.contractor.name}</strong>
                 <strong>{money(line.materialsMinor + line.labourMinor, 'USD')}</strong>
               </div>
               <div className="small-note">
@@ -324,7 +330,13 @@ function TaskPopup({
                 {line.areaSqFt !== null ? ` (${line.areaSqFt} sq ft)` : ''}
               </div>
               <div className="small-note">
-                <Stars c={q.contractor} /> <ExampleTag />
+                {isExample ? (
+                  <>
+                    <ExampleTag /> Labour and material allowances · before tax
+                  </>
+                ) : (
+                  <Stars c={q.contractor} />
+                )}
               </div>
             </li>
           ))}
@@ -449,31 +461,40 @@ const ROOMS = [
 function WorkPlanner({
   onDraft,
   busy,
+  recipeId,
+  packageIds,
+  fixedRoom = false,
 }: {
+  recipeId?: string;
+  packageIds?: string[];
+  fixedRoom?: boolean;
   onDraft: (recipeId: string, packageIds: string[], request: string) => void;
   busy: boolean;
 }) {
-  const [room, setRoom] = useState<(typeof ROOMS)[number]>(ROOMS[0]);
-  const [picked, setPicked] = useState<string[]>([...ROOMS[0].defaults]);
+  const initialRoom = ROOMS.find((r) => r.recipeId === recipeId) ?? ROOMS[0];
+  const [room, setRoom] = useState<(typeof ROOMS)[number]>(initialRoom);
+  const [picked, setPicked] = useState<string[]>(packageIds ?? [...initialRoom.defaults]);
   const packages = scopeRecipe(room.recipeId).packages;
   return (
     <div className="room3d-summary room3d-planner">
       <h4>Plan the work</h4>
-      <div className="room3d-tiers" role="group" aria-label="Room type">
-        {ROOMS.map((r) => (
-          <button
-            key={r.recipeId}
-            type="button"
-            aria-pressed={r === room}
-            onClick={() => {
-              setRoom(r);
-              setPicked([...r.defaults]);
-            }}
-          >
-            {r.label}
-          </button>
-        ))}
-      </div>
+      {!fixedRoom && (
+        <div className="room3d-tiers" role="group" aria-label="Room type">
+          {ROOMS.map((r) => (
+            <button
+              key={r.recipeId}
+              type="button"
+              aria-pressed={r === room}
+              onClick={() => {
+                setRoom(r);
+                setPicked([...r.defaults]);
+              }}
+            >
+              {r.label}
+            </button>
+          ))}
+        </div>
+      )}
       <ul className="room3d-checks">
         {packages.map((p) => (
           <li key={p.id}>
@@ -530,6 +551,7 @@ export function RoomStudio({
   const [webglError, setWebglError] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [pinId, setPinId] = useState<string | null>(null);
+  const [taskMode, setTaskMode] = useState<'diy' | 'pro'>('diy');
   const [pricing, setPricing] = useState('');
   const [replanning, setReplanning] = useState(false);
   // Wall dimensions default on for one room, off for busy multi-room plans.
@@ -808,7 +830,13 @@ export function RoomStudio({
   // Connected workspaces price straight away; the catalog is on the server.
   const draftWork = async (recipeId: string, packageIds: string[], request: string) => {
     const drafted = await run(() =>
-      controller.draftScope(projectId, recipeId, packageIds, request),
+      controller.draftScope(
+        projectId,
+        recipeId,
+        packageIds,
+        isExample ? `${EXAMPLE_TAG} ${request}` : request,
+        scopeDraft?.direction,
+      ),
     );
     if (!drafted) return;
     setReplanning(false);
@@ -940,6 +968,264 @@ export function RoomStudio({
     setPicked(null);
     if (controller.connected) await price();
   };
+  const viewControls = (
+    <div className="room3d-actions" role="group" aria-label="Room view">
+      {photoMode && (
+        <button type="button" aria-pressed={view === 'photo'} onClick={() => setView('photo')}>
+          Photo
+        </button>
+      )}
+      <button type="button" aria-pressed={view === '3d'} onClick={() => setView('3d')}>
+        3D
+      </button>
+      <button type="button" aria-pressed={view === 'plan'} onClick={() => setView('plan')}>
+        Plan
+      </button>
+      {photoMode && view === 'photo' ? (
+        <div className="studio-before-after" role="group" aria-label="Compare the room">
+          <button type="button" aria-pressed={!showAfter} onClick={() => setShowAfter(false)}>
+            Before
+          </button>
+          <button type="button" aria-pressed={showAfter} onClick={() => setShowAfter(true)}>
+            After
+          </button>
+        </div>
+      ) : view === 'photo' ? (
+        <button type="button" aria-pressed={showAfter} onClick={() => setShowAfter((v) => !v)}>
+          {showAfter ? 'After' : 'Before'}
+        </button>
+      ) : (
+        proposed && (
+          <button
+            type="button"
+            aria-pressed={showProposed}
+            onClick={() => setShowProposed((v) => !v)}
+          >
+            {showProposed ? 'After' : 'Before'}
+          </button>
+        )
+      )}
+      <details className="room3d-menu">
+        <summary aria-label="More">⋯</summary>
+        <div>
+          {view === '3d' && (
+            <button type="button" onClick={() => setShowDims(!dimsOn)}>
+              {dimsOn ? 'Hide' : 'Show'} dimensions
+            </button>
+          )}
+          <button type="button" onClick={() => download(`${title}-plan.svg`, svg, 'image/svg+xml')}>
+            Download drawing (SVG)
+          </button>
+          {view === '3d' && (
+            <button
+              type="button"
+              onClick={() =>
+                void scene.current
+                  ?.exportGlb()
+                  .then((glb) => download(`${title}.glb`, glb, 'model/gltf-binary'))
+              }
+            >
+              Download 3D model (GLB)
+            </button>
+          )}
+        </div>
+      </details>
+    </div>
+  );
+  const studioStage = (
+    <div className="room3d-stage">
+      {view === 'photo' ? (
+        <ExampleRoomPhoto
+          variant={variant}
+          pins={steps.map((s) => ({
+            id: s.id,
+            number: s.number,
+            title: s.title,
+            price: s.estimate ? `≈ ${money(s.estimate.totalMinor, 'USD')} DIY` : '',
+          }))}
+          activeId={pinId}
+          onPin={(id) => choosePin(id)}
+          muse={museNow}
+          showMuse={showMuse}
+          onShowMuse={setShowMuse}
+        />
+      ) : view === '3d' ? (
+        <div
+          key="canvas"
+          ref={host}
+          className={`room3d-canvas${dimsOn ? '' : ' hide-dims'}`}
+          data-testid="room3d-canvas"
+        />
+      ) : (
+        <div key="plan" className="room3d-plan" dangerouslySetInnerHTML={{ __html: svg }} />
+      )}
+      {panel === 'looks' && looks ? (
+        <LooksPopup state={looks} onClose={() => setPanel(null)} />
+      ) : panel === 'value' && value ? (
+        <BestValuePopup state={value} onClose={() => setPanel(null)} />
+      ) : panel === 'review' && review ? (
+        <ReviewPopup
+          review={review}
+          location={reviewAt}
+          onLocation={setReviewAt}
+          ranking={jevRanking}
+          onRank={() => void rankWithJev()}
+          draftNote={
+            changed ? 'This reviews the saved design; approve your new pick to review it.' : null
+          }
+          onClose={() => setPanel(null)}
+        />
+      ) : panel === 'handoff' && handoff ? (
+        <HandoffPopup
+          markdown={handoff}
+          fileName={`${title} - contractor handoff.md`}
+          onClose={() => setPanel(null)}
+        />
+      ) : activePin ? (
+        <TaskPopup
+          key={`${activePin.id}:${taskMode}`}
+          initialMode={taskMode}
+          pin={activePin}
+          quotes={quotes}
+          isExample={isExample}
+          connected={controller.connected}
+          pricing={pricing}
+          onPrice={() => void price()}
+          onClose={() => choosePin(null)}
+        />
+      ) : activeQuote ? (
+        <QuotePopup quote={activeQuote} onClose={() => setQuoteId(null)} />
+      ) : selected ? (
+        <div className="room3d-popup" role="dialog" aria-label={selected.label}>
+          <header>
+            <div />
+            <button
+              type="button"
+              className="room3d-close"
+              aria-label="Close"
+              onClick={() => choosePin(null)}
+            >
+              ×
+            </button>
+          </header>
+          <SurfaceDetail surface={selected} />
+          <p className="small-note">No planned work on this surface.</p>
+        </div>
+      ) : null}
+    </div>
+  );
+  if (photoMode)
+    return (
+      <ExampleStudio
+        stage={studioStage}
+        viewControls={viewControls}
+        pick={pick}
+        before={view === 'photo' && !showAfter}
+        onPick={(p) => {
+          setPicked(p);
+          setConfirming(false);
+        }}
+        steps={steps}
+        activeId={pinId}
+        onStep={(id, mode) => {
+          setTaskMode(mode ?? 'diy');
+          choosePin(id);
+        }}
+        quotes={quotes}
+        template={template}
+        changed={changed}
+        confirmation={
+          changed && confirming ? (
+            <ChangeConfirm
+              rows={changeRows}
+              busy={pricing === 'working'}
+              onApprove={() => void saveDesign()}
+              onCancel={() => setConfirming(false)}
+            />
+          ) : null
+        }
+        onReviewDesign={() => setConfirming(true)}
+        onReset={() => {
+          setPicked(null);
+          setConfirming(false);
+        }}
+        onHandoff={() => {
+          choosePin(null);
+          setPanel('handoff');
+        }}
+        onDownloadPlan={() => download(`${title}-plan.svg`, svg, 'image/svg+xml')}
+        onChangeWork={() => {
+          choosePin(null);
+          setReplanning(true);
+        }}
+        scopeEditor={
+          replanning ? (
+            <>
+              <WorkPlanner
+                fixedRoom
+                busy={pricing === 'working'}
+                recipeId={scopeDraft.recipe.id}
+                packageIds={scopeDraft.packages.filter((p) => p.included).map((p) => p.id)}
+                onDraft={(r, ids, request) => void draftWork(r, ids, request)}
+              />
+              <button
+                type="button"
+                className="studio-text-button"
+                onClick={() => setReplanning(false)}
+              >
+                Keep the current plan
+              </button>
+            </>
+          ) : null
+        }
+        stale={draft?.freshness !== 'current'}
+        onRefresh={() =>
+          void draftWork(
+            scopeDraft.recipe.id,
+            scopeDraft.packages.filter((p) => p.included).map((p) => p.id),
+            scopeDraft.request.replace(EXAMPLE_TAG, '').trim(),
+          )
+        }
+        status={pricing && pricing !== 'working' ? pricing : ''}
+        agentTools={
+          controller.connected ? (
+            <div>
+              <button
+                type="button"
+                disabled={museNow?.status === 'working'}
+                onClick={renderWithMuse}
+              >
+                {museNow?.status === 'working' ? 'Muse is rendering…' : 'Render with Muse'}
+              </button>
+              {museNow?.status === 'error' && (
+                <p role="alert" className="small-note">
+                  {museNow.message}
+                </p>
+              )}
+              {plan && (
+                <>
+                  <button type="button" onClick={() => void findBestValue()}>
+                    Best value with Jev
+                  </button>
+                  <button type="button" onClick={() => void openLooks()}>
+                    Explore looks
+                  </button>
+                </>
+              )}
+              <button
+                type="button"
+                onClick={() => {
+                  choosePin(null);
+                  setPanel('review');
+                }}
+              >
+                Review requirements
+              </button>
+            </div>
+          ) : null
+        }
+      />
+    );
   return (
     <section className="room3d" aria-label={heading}>
       <header className="room3d-head">
@@ -947,62 +1233,7 @@ export function RoomStudio({
           <h3>{heading}</h3>
           <p className="small-note">{source.label} · measured, not verified</p>
         </div>
-        <div className="room3d-actions" role="group" aria-label="Room view">
-          {photoMode && (
-            <button type="button" aria-pressed={view === 'photo'} onClick={() => setView('photo')}>
-              Photo
-            </button>
-          )}
-          <button type="button" aria-pressed={view === '3d'} onClick={() => setView('3d')}>
-            3D
-          </button>
-          <button type="button" aria-pressed={view === 'plan'} onClick={() => setView('plan')}>
-            Plan
-          </button>
-          {view === 'photo' ? (
-            <button type="button" aria-pressed={showAfter} onClick={() => setShowAfter((v) => !v)}>
-              {showAfter ? 'After' : 'Before'}
-            </button>
-          ) : (
-            proposed && (
-              <button
-                type="button"
-                aria-pressed={showProposed}
-                onClick={() => setShowProposed((v) => !v)}
-              >
-                {showProposed ? 'After' : 'Before'}
-              </button>
-            )
-          )}
-          <details className="room3d-menu">
-            <summary aria-label="More">⋯</summary>
-            <div>
-              {view === '3d' && (
-                <button type="button" onClick={() => setShowDims(!dimsOn)}>
-                  {dimsOn ? 'Hide' : 'Show'} dimensions
-                </button>
-              )}
-              <button
-                type="button"
-                onClick={() => download(`${title}-plan.svg`, svg, 'image/svg+xml')}
-              >
-                Download drawing (SVG)
-              </button>
-              {view === '3d' && (
-                <button
-                  type="button"
-                  onClick={() =>
-                    void scene.current
-                      ?.exportGlb()
-                      .then((glb) => download(`${title}.glb`, glb, 'model/gltf-binary'))
-                  }
-                >
-                  Download 3D model (GLB)
-                </button>
-              )}
-            </div>
-          </details>
-        </div>
+        {viewControls}
       </header>
       {source.warnings.map((w) => (
         <p key={w} role="status" className="small-note">
@@ -1035,91 +1266,13 @@ export function RoomStudio({
         </nav>
       )}
       <div className="room3d-body">
-        <div className="room3d-stage">
-          {view === 'photo' ? (
-            <ExampleRoomPhoto
-              variant={variant}
-              pins={steps.map((s) => ({
-                id: s.id,
-                number: s.number,
-                title: s.title,
-                price: s.estimate ? `≈ ${money(s.estimate.totalMinor, 'USD')} DIY` : '',
-              }))}
-              activeId={pinId}
-              onPin={(id) => choosePin(id)}
-              muse={museNow}
-              showMuse={showMuse}
-              onShowMuse={setShowMuse}
-            />
-          ) : view === '3d' ? (
-            <div
-              key="canvas"
-              ref={host}
-              className={`room3d-canvas${dimsOn ? '' : ' hide-dims'}`}
-              data-testid="room3d-canvas"
-            />
-          ) : (
-            <div key="plan" className="room3d-plan" dangerouslySetInnerHTML={{ __html: svg }} />
-          )}
-          {panel === 'looks' && looks ? (
-            <LooksPopup state={looks} onClose={() => setPanel(null)} />
-          ) : panel === 'value' && value ? (
-            <BestValuePopup state={value} onClose={() => setPanel(null)} />
-          ) : panel === 'review' && review ? (
-            <ReviewPopup
-              review={review}
-              location={reviewAt}
-              onLocation={setReviewAt}
-              ranking={jevRanking}
-              onRank={() => void rankWithJev()}
-              draftNote={
-                changed
-                  ? 'This reviews the saved design; approve your new pick to review it.'
-                  : null
-              }
-              onClose={() => setPanel(null)}
-            />
-          ) : panel === 'handoff' && handoff ? (
-            <HandoffPopup
-              markdown={handoff}
-              fileName={`${title} - contractor handoff.md`}
-              onClose={() => setPanel(null)}
-            />
-          ) : activePin ? (
-            <TaskPopup
-              key={activePin.id}
-              pin={activePin}
-              quotes={quotes}
-              isExample={isExample}
-              connected={controller.connected}
-              pricing={pricing}
-              onPrice={() => void price()}
-              onClose={() => choosePin(null)}
-            />
-          ) : activeQuote ? (
-            <QuotePopup quote={activeQuote} onClose={() => setQuoteId(null)} />
-          ) : selected ? (
-            <div className="room3d-popup" role="dialog" aria-label={selected.label}>
-              <header>
-                <div />
-                <button
-                  type="button"
-                  className="room3d-close"
-                  aria-label="Close"
-                  onClick={() => choosePin(null)}
-                >
-                  ×
-                </button>
-              </header>
-              <SurfaceDetail surface={selected} />
-              <p className="small-note">No planned work on this surface.</p>
-            </div>
-          ) : null}
-        </div>
+        {studioStage}
         <aside className="room3d-side">
           {!scopeDraft || replanning ? (
             <>
               <WorkPlanner
+                recipeId={scopeDraft?.recipe.id}
+                packageIds={scopeDraft?.packages.filter((p) => p.included).map((p) => p.id)}
                 busy={pricing === 'working'}
                 onDraft={(recipeId, packageIds, request) =>
                   void draftWork(recipeId, packageIds, request)

@@ -1,0 +1,123 @@
+{
+  "date": "2026-10-31",
+  "origin": "http://localhost:8757",
+  "data": "Isolated browser demo only; existing owner projects unchanged.",
+  "menu": [
+    {
+      "name": "Materials Requirements and sourcing",
+      "content": "Materials\nA shopping list with a reason behind every item.\n\nConnect the workspace to compare catalog offers and build tiered purchase plans.\n\nReview the current plan"
+    },
+    {
+      "name": "Contractors Scope and quote preparation",
+      "content": "Contractors\nGood help starts with a clear scope.\n\nReview what needs doing before requesting quotes. Local contractor search, credential checks and outreach aren’t connected yet. Tiered purchase plans can already be accepted or declined from Materials.\n\nReview the current scope"
+    },
+    {
+      "name": "Saved work Plans, decisions and earlier versions",
+      "content": "Project record\n\nSources, decisions and earlier work stay inspectable. These records are not a list of tasks to approve.\n\nScope & materials draft\nRevision 2 · Inputs changed — historical basis"
+    },
+    {
+      "name": "Facts & sources Photos, measurements and supporting evidence",
+      "content": "Facts & sources\n\nWHAT WE KNOW & HOW WE KNOW IT\n\nFacts & sources\n\nReported details stay separate from verified conditions. Every correction keeps its history and invalidates dependent work.\n\nRecord a detail\ngoal\n\nRepaint and replace the carpet with vinyl plank in a Philadelphia rowhouse living room. All details in this example are synthetic.\n\nExample assumption · unverified · revision 1\nEdit\nHistory & source\nstartingPoint\n\nExploring / planning\n\nExample assumption · unverified · revision 1\nEdit\nHistory & source\nfinishedLength\n\n4572 mm\n\nReported by you · unverified · revision 2\nEdit\nHistory & source\nfinishedWidth\n\n3657.6000000000004 mm\n\nReported by you · unverified · revision 1\nEdit\nHistory & source\nceilingHeight\n\n2438.4 mm\n\nReported by you · unverified · revision 1\nEdit\nHistory & source\nPhotos & documents\n0\n\nAttach files in the conversation. Originals stay on this device and are not analyzed."
+    },
+    {
+      "name": "Activity Work requests and project history",
+      "content": "Activity\n\nPERSISTED WORK, NOT A LOADING ANIMATION\n\nActivity & checkpoints\n\nAdvance a local fixture, pause for a clarification, retry a failure, or cancel. Checkpoints and outputs survive refresh.\n\nNo simulations yet. Choose a stage of the project to request one.\n\nYour decisions\nProject audit trail\nArtifact Invalidated\nProject revision 12 · 09:39 AM\nFact Recorded\nProject revision 12 · 09:39 AM\nEvidence Attached\nProject revision 11 · 09:39 AM\nArtifact Proposed\nProject revision 10 · 09:37 AM\nArtifact Proposed\nProject revision 9 · 08:11 PM\nFact Recorded\nProject revision 8 · 08:11 PM\nFact Recorded\nProject revision 7 · 08:11 PM\nFact Recorded\nProject revision 6 · 08:11 PM\nEvidence Attached\nProject revision 5 · 08:11 PM\nFact Recorded\nProject revision 4 · 08:11 PM\nFact Recorded\nProject revision 3 · 08:11 PM\nMessage Appended\nProject revision 2 · 08:11 PM\nProject Created\nProject revision 1 · 08:11 PM"
+    },
+    {
+      "name": "Muse & connections Your project beyond this window",
+      "content": "Use your project in Muse\nYour agent. The same project.\n\nThe web workspace and a standard Muse agent should share the same saved facts, plans and tools through MCP.\n\nConnect through Your house to enable local Muse photo analysis. General Muse agent access to this workspace is a separate integration and is not enabled by this screen.\n\nOpen house & photo tools"
+    },
+    {
+      "name": "Conversation history Saved messages and linked outputs",
+      "content": "Conversation history\nExample input\n\n[Example fixture] Repaint and replace the carpet with vinyl plank in a Philadelphia rowhouse living room. All details in this example are synthetic."
+    },
+    {
+      "name": "About this workspace",
+      "content": "A workspace for the whole job\n\nConversation directs the work. The project record holds the facts, evidence, options, decisions, and outputs that build toward a finished job.\n\nUnderstand the property and explore alternatives.\nResolve technical questions, then prepare scope and dependencies.\nCoordinate resources, guide execution, and keep the handover record.\nWhat is real here\n\nLocal persistence alongside source files, project switching, revision history, decisions, stale-output detection and workflow checkpoints.\n\nWhat is simulated\n\nThe general agent conversation and workflow demonstrations still use labeled fixtures. Muse photo observations and planning questions are real model proposals. Technical review, live pricing, professional approval and physical-work release remain unavailable.\n\nOpen the earlier preview"
+    }
+  ],
+  "stages": [
+    {
+      "stage": "Understand the project",
+      "content": "Understand the project\nMuse photo analysis Connect your local workspace\n01\nYour place\n02\nThe plan\n03\nThe work\n\nA GOOD PLAN STARTS WITH YOUR PLACE\n\nLet’s put your home\nin the picture.\n\nWe’ll gather the useful context, find what’s missing,\nand build the plan around the work you have in mind.\n\nUse this address"
+    },
+    {
+      "stage": "Explore the possibilities",
+      "content": "Explore the possibilities\n02 / THE PROJECT JOURNEY\nExplore the possibilities\n\nCompare approaches before committing to a direction.\n\nMeasurements\n15 × 12 ft floor · 8 ft ceiling\nEXAMPLE\nEdit\n\nThe scope draft was made before these measurements. Ask Muse to re-draft the scope to update quantities.\n\nA BOUNDED NEXT PIECE OF WORK\nOption comparison\n\nExplore two approaches, identify tradeoffs, and expose what still needs investigation.\n\nStart simulated work\nLocal fixture · no AI, web research, or external action\nProject artifacts\n1\nInspect facts & sources →\nScope & materials draft\nr2 · Inputs changed\n\nTHE PROJECT’S STARTING POINT\n\nA record that grows with the job.\nAdd a detail\n\nGOAL\nRepaint and replace the carpet with vinyl plank in a Philadelphia rowhouse living room. All details in this example are synthetic.\n\nSTARTINGPOINT\nExploring / planning\n\nFINISHEDLENGTH\n4572 mm"
+    },
+    {
+      "stage": "Resolve the technical work",
+      "content": "Resolve the technical work\n03 / THE PROJECT JOURNEY\nResolve the technical work\n\nConnect site evidence to applicable requirements and feasibility.\n\nTECHNICAL PLANNING · half-bath/1.3\n\nMeasure. Specify. Calculate.\n\nReal local calculations from explicit inputs. Blank means unknown. Source applicability and construction gates remain separate from arithmetic.\n\nCode coverage is incomplete and has no qualified reviewer. No code minimum, route or price is filled in automatically.\nLoad explicitly labeled example inputs\n01 / Finished room & observed route\nFinished room width\nmm\ncm\nm\nin\nft\nFinished room length\nmm\ncm\nm\nin\nft\nMeasurement basis\nunknown\nrough\nfinished\nconflicting\nMeasured drain horizontal run\nmm\ncm\nm\nin\nft\nAvailable drain fall\nmm\ncm\nm\nin\nft\n02 / Named fixtures & layout constraints\n03 / Floor specification, packages & sourced price\n04 / Jurisdiction, scope & code basis\n05 / Local property context & authority boundary\n06 / Local drainage method & source coverage\n07 / Electrical & exhaust observations\n08 / Electrical code path & basin measurement basis\nSupporting files / observations (optional)\nUser-measured room dimensions (Tape measure; not verified): Floor length 14 ft, Floor width 12 ft, C\nUser-measured room dimensions (Tape measure; not verified): Floor length 15 ft. Notes: Isolated demo\nUse these as my reported inputs (otherwise retain example labeling).\nSave inputs & calculate\nSaved through validated commands. No AI or b"
+    },
+    {
+      "stage": "Prepare the job",
+      "content": "Prepare the job\n04 / THE PROJECT JOURNEY\nPrepare the job\n\nMake decisions, trade responsibilities, and dependencies explicit.\n\nMeasurements\n15 × 12 ft floor · 8 ft ceiling\nEXAMPLE\nEdit\n\nThe scope draft was made before these measurements. Ask Muse to re-draft the scope to update quantities.\n\nA BOUNDED NEXT PIECE OF WORK\nWork sequence\n\nBuild an inspectable working artifact from the details recorded so far.\n\nStart simulated work\nLocal fixture · no AI, web research, or external action\nProject artifacts\n1\nInspect facts & sources →\nScope & materials draft\nr2 · Inputs changed\n\nTHE PROJECT’S STARTING POINT\n\nA record that grows with the job.\nAdd a detail\n\nGOAL\nRepaint and replace the carpet with vinyl plank in a Philadelphia rowhouse living room. All details in this example are synthetic.\n\nSTARTINGPOINT\nExploring / planning\n\nFINISHEDLENGTH\n4572 mm"
+    },
+    {
+      "stage": "Coordinate the resources",
+      "content": "Coordinate the resources\n05 / THE PROJECT JOURNEY\nCoordinate the resources\n\nBring scope, quantities, purchasing, and contractor questions together.\n\nA BOUNDED NEXT PIECE OF WORK\nProcurement & scope\n\nBuild an inspectable working artifact from the details recorded so far.\n\nStart simulated work\nLocal fixture · no AI, web research, or external action\nProject artifacts\n1\nInspect facts & sources →\nScope & materials draft\nr2 · Inputs changed\n\nTHE PROJECT’S STARTING POINT\n\nA record that grows with the job.\nAdd a detail\n\nGOAL\nRepaint and replace the carpet with vinyl plank in a Philadelphia rowhouse living room. All details in this example are synthetic.\n\nSTARTINGPOINT\nExploring / planning\n\nFINISHEDLENGTH\n4572 mm"
+    },
+    {
+      "stage": "Guide the work",
+      "content": "Guide the work\n06 / THE PROJECT JOURNEY\nGuide the work\n\nTrack evidence, surface discoveries, and understand the impact of changes.\n\nA BOUNDED NEXT PIECE OF WORK\nProgress & change review\n\nBuild an inspectable working artifact from the details recorded so far.\n\nStart simulated work\nLocal fixture · no AI, web research, or external action\nProject artifacts\n1\nInspect facts & sources →\nScope & materials draft\nr2 · Inputs changed\n\nTHE PROJECT’S STARTING POINT\n\nA record that grows with the job.\nAdd a detail\n\nGOAL\nRepaint and replace the carpet with vinyl plank in a Philadelphia rowhouse living room. All details in this example are synthetic.\n\nSTARTINGPOINT\nExploring / planning\n\nFINISHEDLENGTH\n4572 mm"
+    },
+    {
+      "stage": "Keep the useful record",
+      "content": "Keep the useful record\n07 / THE PROJECT JOURNEY\nKeep the useful record\n\nCollect approvals, as-built details, warranties, and maintenance needs.\n\nA BOUNDED NEXT PIECE OF WORK\nHandover checklist\n\nBuild an inspectable working artifact from the details recorded so far.\n\nStart simulated work\nLocal fixture · no AI, web research, or external action\nProject artifacts\n1\nInspect facts & sources →\nScope & materials draft\nr2 · Inputs changed\n\nTHE PROJECT’S STARTING POINT\n\nA record that grows with the job.\nAdd a detail\n\nGOAL\nRepaint and replace the carpet with vinyl plank in a Philadelphia rowhouse living room. All details in this example are synthetic.\n\nSTARTINGPOINT\nExploring / planning\n\nFINISHEDLENGTH\n4572 mm"
+    }
+  ],
+  "landingNavigation": [
+    {
+      "nav": "The plan",
+      "url": "http://127.0.0.1:8757/#how-it-works"
+    },
+    {
+      "nav": "See it work",
+      "url": "http://127.0.0.1:8757/#product-proof"
+    },
+    {
+      "nav": "Compare",
+      "url": "http://127.0.0.1:8757/#compare-tools"
+    },
+    {
+      "nav": "Muse",
+      "url": "http://127.0.0.1:8757/#agent-connection"
+    }
+  ],
+  "proofTabs": [
+    {
+      "view": "Materials",
+      "text": "See your space transform.\nHover or tap to look closer\nIKEA ÄNGSJÖN vanity\n$339\nBlack-framed mirror\n$85\nWhite subway wall tile\n$680\nCharcoal hex floor mosaic\n$240\nProduct breakdown\n$1,344 subtotal\nDesign previews\nMaterials\nScan & measure\nWork & costs"
+    },
+    {
+      "view": "Scan & measure",
+      "text": "See your space transform.\nroomplan.json\n6.00 m\n4.00 m\n24 m²\nFloor area\nBring your scan\ninto the plan.\n\nImport RoomPlan or OpenPlan3D. Review and save your measurements.\n\nFloor area\n24 m²\nPerimeter\n20 m\nCeiling height\n2.7 m\nExplore the workspace\nOpenPlan3D · MIT ↗\nDesign previews\nMaterials\nScan & measure\nWork & costs"
+    },
+    {
+      "view": "Work & costs",
+      "text": "See your space transform.\nThe details behind the finish.\n\nBathroom refresh · From the pipe to the last screw.\n\nMaterials\nLabor\nAll materials\nPlumbing\nTile prep\nFixings & supplies\nSharkBite\n½″ red PEX-B tubing\n\n1 × 25 ft coil\n\n$15.15\n$15.15 each\nSupplyHouse\nSharkBite\n½″ brass PEX elbows\n\n8 × UC248LFA elbow\n\n$23.84\n$2.98 each\nHome Depot\nVersaBond\nWhite thinset mortar\n\n2 × 50 lb bag\n\n$35.96\n$17.98 each\nHome Depot\nPolyblend Plus\nCharcoal unsanded grout\n\n1 × 10 lb box · #60\n\n$24.99\n$24.99 each\nStine\nBacker-On\n1¼″ cement-board screws\n\n1 × 185-count box\n\n$7.52\n$7.52 each\nHome Depot\nGE Advanced Silicone 2\nClear kitchen & bath sealant\n\n2 × 10.1 oz tube\n\n$21.96\n$10.98 each\nHome Depot\nMaterials subtotal\n6 product lines · Retail references, Oct 30\n$129.42\nDesign previews\nMaterials\nScan & measure\nWork & costs"
+    },
+    {
+      "view": "Design previews",
+      "text": "See your space transform.\nBefore\nAfter\n‹ ›\nDrag to reveal the transformation\nDesign previews\nMaterials\nScan & measure\nWork & costs"
+    }
+  ],
+  "observedChecks": {
+    "planView": "pass",
+    "threeDView": "pass",
+    "dimensions": "pass",
+    "svgDownload": "file returned; automation download wait was slow; not a measured product-performance result",
+    "glbDownload": "source traced; not executed",
+    "finishPreview": "LVP + warm white $825.60 DIY / $1876.64 example full quote; hardwood + soft blue $1414 / $3263.60",
+    "finishSave": "Use this design opens confirmation; Approve and save persisted after reload",
+    "measurementChange": "14 to 15 ft saved; existing 168 sq ft prices remained; warning requests Muse re-draft",
+    "workPlanner": "opens bathroom defaults for living-room project",
+    "planNavigation": "opens Prepare the job / Start simulated work despite saved scope artifact",
+    "home": "does not leave current project",
+    "productReference": "saved source/note/$12.34 sample and survived reload",
+    "chat": "send creates owner note only",
+    "phone": "390px document; room toolbar controls 27px high; selected flooring tab can remain offscreen",
+    "nativePhotoInputs": "source rejects HEIC and video in hero/intake; no native capture control",
+    "connectedCalls": "not run from QA origin; no paid jobs, account grants, imports, purchases or outreach"
+  }
+}

@@ -186,6 +186,7 @@ export function ExampleRoomPhoto({
               key={p.id}
               type="button"
               className="room3d-photo-pin"
+              aria-label={`${p.title}${p.price ? ` · ${p.price}` : ''}`}
               aria-current={activeId === p.id || undefined}
               style={{ left: `${at[0] * 100}%`, top: `${at[1] * 100}%` }}
               onClick={() => onPin(p.id)}

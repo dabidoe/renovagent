@@ -247,3 +247,6 @@
     min-height: 70px;
   }
 }
+.project-room-options .project-whole-home-option {
+  grid-column: 1 / -1;
+}

@@ -177,7 +177,7 @@ export function ContractorHandoff({ onExample, busy }: { onExample: () => void; 
           </button>
         </div>
         <button className="prompt-example" onClick={onExample} disabled={busy}>
-          Open the example room <Glyph name="right" />
+          Explore the whole-house project <Glyph name="right" />
         </button>
       </div>
       <figure className="room-product-proof">
@@ -290,7 +290,7 @@ export function MeasurementProof({ onExample, busy }: { onExample: () => void; b
         </dl>
 
         <button className="prompt-example" onClick={onExample} disabled={busy}>
-          Explore the workspace <Glyph name="right" />
+          Explore the whole-house project <Glyph name="right" />
         </button>
         <a
           className="scan-source"
