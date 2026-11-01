@@ -1,0 +1,11 @@
+{
+  "model": "muse-image-1.0",
+  "generatedAt": "2026-11-01T00:52:47.653Z",
+  "input": "photo-05.jpg",
+  "inputSha256": "d028d07957c8f6ebbcfd779d06ee98b187ff5d2a277232167f0b6b5038694bce",
+  "outputSha256": "fca15a43285f44dd2e968a861f66062f0444c2a716ab89d81590551ced5a0bd3",
+  "museSize": "1920x1280",
+  "shownSize": "1500x1000",
+  "prompt": "Edit this real-estate listing photo. Replace only the floor covering of this room with light natural oak wood-look luxury vinyl plank flooring, laid straight, meeting the existing baseboards. Remove the existing room carpet or floor covering only. Keep everything else exactly as it is: the same camera, framing and perspective, walls and wall color, ceiling, windows, doors, closets, radiators, staircase and its carpet, furniture and lighting. Photorealistic.",
+  "status": "generated-concept"
+}

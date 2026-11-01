@@ -1,0 +1,11 @@
+{
+  "model": "muse-image-1.0",
+  "generatedAt": "2026-11-01T00:52:58.729Z",
+  "input": "photo-05.jpg",
+  "inputSha256": "d028d07957c8f6ebbcfd779d06ee98b187ff5d2a277232167f0b6b5038694bce",
+  "outputSha256": "3fe6f035f4067d364ff0f0fa7090ab5b22f2ebd531b50d18727b32a1e974de8e",
+  "museSize": "1920x1280",
+  "shownSize": "1500x1000",
+  "prompt": "Edit this real-estate listing photo. Replace only the floor covering of this room with wide-plank white oak engineered hardwood flooring with a matte finish, laid straight, meeting the existing baseboards. Remove the existing room carpet or floor covering only. Keep everything else exactly as it is: the same camera, framing and perspective, walls and wall color, ceiling, windows, doors, closets, radiators, staircase and its carpet, furniture and lighting. Photorealistic.",
+  "status": "generated-concept"
+}

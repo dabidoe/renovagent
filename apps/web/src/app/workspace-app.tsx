@@ -10,9 +10,10 @@ import { scopePlanningCoverage } from '@renovagent/core';
 import { CandidateMeasurementsPanel } from '../features/work/candidate-measurements.js';
 import { RoomDimensionsCard } from '../features/scope/room-dimensions-card.js';
 import { RoomStudio } from '../features/room3d/room-studio.js';
-import { HouseExample } from '../features/house-example/house-example.js';
+import { PaintFloorStudio } from '../features/house-example/paint-floor-studio.js';
 import { isHouseCase } from '../features/house-example/house-example-model.js';
 import '../features/house-example/house-example.css';
+import '../features/house-example/paint-floor.css';
 import '../features/room3d/room-studio.css';
 import '../features/room3d/example-studio.css';
 import { ScopePlannerEntry } from '../features/work/scope-planner.js';
@@ -446,13 +447,7 @@ export function App({ controller }: { controller: WorkspaceController }) {
         </main>
       ) : showHouse ? (
         <main className="prompt-main has-room">
-          <HouseExample
-            state={state}
-            controller={controller}
-            projectId={wholeHouseProject ? active : undefined}
-            onFinishStudio={() => safe(openRoomExample())}
-            onTools={() => setModal('tools')}
-          />
+          <PaintFloorStudio onRoomExample={() => safe(openRoomExample())} />
         </main>
       ) : (
         <main className={`prompt-main has-room ${showRecent ? 'has-conversation' : ''}`}>

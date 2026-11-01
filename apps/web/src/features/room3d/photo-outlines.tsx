@@ -262,7 +262,7 @@ export function OutlineControls({ state }: { state: ReturnType<typeof usePhotoOu
   );
 }
 
-type PaintColor = {
+export type PaintColor = {
   id: string;
   brand: string;
   collection: string;
@@ -299,7 +299,7 @@ export function brandColorLink(color: Pick<PaintColor, 'brand' | 'code' | 'name'
   return `https://www.sherwin-williams.com/en-us/color/color-family/${color.family}-paint-colors/sw${digits}-${slug}`;
 }
 
-function PaintPicker({
+export function PaintPicker({
   selected,
   onPick,
 }: {

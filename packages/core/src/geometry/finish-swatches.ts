@@ -21,6 +21,8 @@ const SWATCHES: Record<string, string> = {
 
 export function wallSwatch(name: string): { hex: string; exact: boolean } {
   const key = name.trim().toLowerCase();
+  // A picked paint colour arrives as its screen hex and is shown as given.
+  if (/^#[0-9a-f]{6}$/.test(key)) return { hex: key, exact: true };
   const hit = Object.keys(SWATCHES)
     .sort((a, b) => b.length - a.length)
     .find((k) => key.includes(k));
