@@ -35,6 +35,7 @@ import {
 } from './design-service.js';
 import type { McpAccess } from './mcp-access.js';
 import { workspaceMongoConfig } from './database-config.js';
+import { STUDIO_MCP_TOOLS, registerStudioTools } from './mcp-studio.js';
 
 export const MCP_SERVER_NAME = 'renovagent-workspace';
 export const MCP_SERVER_VERSION = '0.2.0';
@@ -63,6 +64,7 @@ const CAPABILITIES = {
     'search_catalog',
     'get_offer_history',
     'build_checkout_review',
+    ...STUDIO_MCP_TOOLS,
   ],
   proposalCommands: [...PROPOSAL_ALLOWLIST],
   limits: [
@@ -271,7 +273,7 @@ export function createWorkspaceMcpServer(
     { name: MCP_SERVER_NAME, version: MCP_SERVER_VERSION },
     {
       instructions:
-        'Renovagent keeps durable home-improvement projects. Start with list_homes/list_projects or start_project for a new user request. Use list_project_files to discover saved work, then get_artifact to inspect exact revisions. Develop useful proposed work from project evidence. Keep unknown facts and prices explicit. Project creation stores intent only; it does not analyze photos or produce an estimate. Never claim a proposal is professional approval or a passed inspection.',
+        "Renovagent keeps durable home-improvement projects. For paint and floors from an owner's words or photos, choose with list_floor_styles and find_paint_color, then price with plan_paint_and_floor. Start with list_homes/list_projects or start_project for a new user request. Use list_project_files to discover saved work, then get_artifact to inspect exact revisions. Develop useful proposed work from project evidence. Keep unknown facts and prices explicit. Project creation stores intent only; it does not analyze photos or produce an estimate. Never claim a proposal is professional approval or a passed inspection.",
     },
   );
 
@@ -792,6 +794,7 @@ export function createWorkspaceMcpServer(
     },
   );
 
+  registerStudioTools(server, catalog);
   return server;
 }
 

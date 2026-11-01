@@ -608,3 +608,79 @@ test(
       assert.ok(!Object.values(state.facts).some((v) => v.at(-1)!.key === 'finishedLength'));
     }),
 );
+
+test(
+  'agents price paint and floors with the studio’s styles, real paint colours and demo prices',
+  { skip: !uri },
+  () =>
+    withClient(async (mcp, _repo, catalog) => {
+      await catalog.importPaint(
+        [
+          ['Naval', 'SW 6244', '#2F3D4C', 'blue'],
+          ['Alabaster', 'SW 7008', '#EDEAE0', 'white'],
+        ].map(([name, code, hex, family]) => ({
+          id: `test:${code}`,
+          brand: 'Test Paints',
+          collection: 'Test',
+          code: code!,
+          name: name!,
+          hex: hex!,
+          family: family as 'blue',
+          lightness: 0.5,
+        })),
+      );
+      const names = (await mcp.listTools()).tools.map((t) => t.name);
+      for (const tool of ['list_floor_styles', 'find_paint_color', 'plan_paint_and_floor'])
+        assert.ok(names.includes(tool), tool);
+
+      const styles = JSON.parse((await call(mcp, 'list_floor_styles', {})).text);
+      assert.ok(styles.some((s: { id: string }) => s.id === 'walnut'));
+      assert.deepEqual(JSON.parse((await call(mcp, 'find_paint_color', { name: 'naval' })).text), {
+        name: 'Naval',
+        code: 'SW 6244',
+        hex: '#2f3d4c',
+        brand: 'Test Paints',
+        match: 'name',
+      });
+      const navy = JSON.parse((await call(mcp, 'find_paint_color', { hex: '#1f2a44' })).text);
+      assert.deepEqual([navy.name, navy.match], ['Naval', 'nearest']);
+
+      const plan = JSON.parse(
+        (
+          await call(mcp, 'plan_paint_and_floor', {
+            ceilingFt: 9,
+            tier: 'mid',
+            rooms: [
+              {
+                name: 'Living room',
+                widthFt: 13,
+                lengthFt: 23,
+                existingFloor: 'carpet',
+                paint: { name: 'Naval' },
+                sheen: 'satin',
+                floorStyle: 'walnut',
+                floorMaterial: 'hardwood',
+              },
+              { name: 'Bedroom', widthFt: 11, lengthFt: 12, paint: { hex: '#eeeae0' } },
+            ],
+          })
+        ).text,
+      );
+      assert.equal(plan.rooms[0].paint, 'Naval (SW 6244)');
+      assert.equal(plan.rooms[0].floor, 'dark walnut engineered hardwood');
+      assert.ok(plan.rooms[0].materials.some((m: { item: string }) => /satin/.test(m.item)));
+      assert.equal(plan.rooms[1].paint, 'Alabaster (SW 7008)');
+      assert.equal(plan.rooms[1].floor, null);
+      assert.ok(plan.toBuy.some((b: { item: string }) => /— Naval$/.test(b.item)));
+      assert.match(plan.total, /^\$[\d,]+$/);
+      assert.match(plan.note, /not live offers/);
+      const bad = await mcp.callTool({
+        name: 'plan_paint_and_floor',
+        arguments: {
+          ceilingFt: 9,
+          rooms: [{ name: 'X', widthFt: 10, lengthFt: 10, floorStyle: 'marble' }],
+        },
+      });
+      assert.equal(bad.isError, true, 'only the studio’s floor styles');
+    }),
+);

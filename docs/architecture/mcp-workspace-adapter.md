@@ -17,6 +17,7 @@ served over stdio for a local agent client:
 | `propose_project_change` | Allowlisted commands (`ProposeArtifact`, `SaveDraft`, `AppendMessage`) through shared validation and atomic CAS; anything else returns an explicit capability limit |
 | `search_catalog` / `get_offer_history` | Shared products with offers, latest dated prices, and price history |
 | `build_checkout_review` | Computation-only checkout assembly from a stored plan; stores nothing |
+| `list_floor_styles` / `find_paint_color` / `plan_paint_and_floor` | The paint-and-floor studio for agents: floor styles (looks, not products), a paint name or hex resolved to a loaded brand colour, and rooms priced with the studio's quantities and labelled demo prices plus a shopping list; computation only, stores nothing |
 
 Reads and proposals share the web app's repository (`MongoWorkspaceRepository`),
 revision checks, idempotency records, and receipts. Calculations stay in core;
