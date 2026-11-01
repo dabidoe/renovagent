@@ -143,10 +143,8 @@
   display: grid;
 }
 .pf-stage-bar > div:first-child span {
-  font-size: 0.72rem;
+  font-size: 0.82rem;
   color: var(--pf-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
 }
 .pf-stage-bar strong {
   font-size: 1.15rem;
@@ -447,4 +445,30 @@
   .pf-rooms button {
     flex-basis: 128px;
   }
+}
+
+.pf-group-head > a {
+  font-size: 0.82rem;
+  color: var(--pf-ink);
+  text-underline-offset: 3px;
+}
+.pf-badge {
+  margin-left: 6px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: var(--pf-soft);
+  border: 1px solid var(--pf-line);
+  color: var(--pf-muted);
+  font-size: 0.68rem;
+  font-weight: 500;
+  vertical-align: 2px;
+}
+.pf-empty {
+  margin: 0;
+  color: var(--pf-muted);
+  font-size: 0.88rem;
+}
+/* The room name line carries the size; wall labels would crowd the view. */
+.pf-3d-host .room3d-dim {
+  display: none;
 }

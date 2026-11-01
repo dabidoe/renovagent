@@ -19,14 +19,28 @@ test('a picked paint colour reaches the 3D walls as its exact hex', () => {
   assert.equal(wallSwatch('#xyz').exact, false);
 });
 
-test('rooms use the listing plan dimensions and the owner-reported ceiling', () => {
-  const living = room('living');
+test('3D rooms are traced from the listing plans at the stated size', () => {
   assert.equal(CEILING_FT, 9);
-  assert.equal(Math.round(living.lengthFt * 12), 23 * 12 + 2);
-  assert.equal(Math.round(living.widthFt * 12), 13 * 12 + 1);
-  const model = roomModel(living);
-  assert.equal(model.walls.length, 4);
-  assert.ok(model.walls.every((w) => Math.abs(w.heightM! - 9 * 0.3048) < 0.001));
+  for (const r of HOUSE_ROOMS) {
+    const model = roomModel(r);
+    const xs = model.walls.map((w) => w.a[0]),
+      ys = model.walls.map((w) => w.a[1]);
+    // The traced outline spans exactly the listing's stated dimensions.
+    assert.ok(Math.abs(Math.max(...xs) - Math.min(...xs) - r.plan.xFt * 0.3048) < 0.01, r.id);
+    assert.ok(Math.abs(Math.max(...ys) - Math.min(...ys) - r.plan.yFt * 0.3048) < 0.01, r.id);
+    assert.ok(model.walls.every((w) => Math.abs(w.heightM! - 9 * 0.3048) < 0.001));
+    // Every opening fits inside its wall.
+    for (const w of model.walls)
+      for (const o of w.openings)
+        assert.ok(
+          o.alongM - o.widthM / 2 >= 0 && o.alongM + o.widthM / 2 <= w.lengthM + 1e-6,
+          `${r.id} ${o.id}`,
+        );
+  }
+  const living = roomModel(room('living'));
+  assert.equal(living.walls.length, 6);
+  // The front wall carries the front door and the front window.
+  assert.deepEqual(living.walls[2]!.openings.map((o) => o.kind).sort(), ['door', 'window']);
 });
 
 test('the living room takeoff runs through the core recipe and demo catalog', () => {

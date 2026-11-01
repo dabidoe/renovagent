@@ -52,7 +52,12 @@ export type ModelFixture = {
   confidence: Confidence;
 };
 export type RoomModel = {
-  format: 'roomplan-capture' | 'openplan3d-export' | 'openplan3d-project' | 'measured-box';
+  format:
+    | 'roomplan-capture'
+    | 'openplan3d-export'
+    | 'openplan3d-project'
+    | 'measured-box'
+    | 'listing-plan';
   storey: number;
   storeyCount: number;
   walls: ModelWall[];
@@ -365,5 +370,49 @@ export function boxRoomModel(size: {
     spaces: [],
     fixtures: [],
     notes: ['Box room from measured length × width; doors, windows and fixtures are not known.'],
+  };
+}
+
+// A room traced from a published floor plan: its outline (metres, in drawing
+// order) and the doors, windows and openings the plan shows on each wall.
+// Wall i runs from points[i] to points[i + 1]. Heights of doors and windows
+// are not on a plan; callers supply display heights for the 3D view.
+export function outlineRoomModel(plan: {
+  points: Pt[];
+  heightM: number;
+  openings: (ModelOpening & { wall: number })[];
+}): RoomModel {
+  const heightsM = [round3(plan.heightM)];
+  const corners = plan.points.map(([x, y]) => pt(x, y));
+  return {
+    format: 'listing-plan',
+    storey: 0,
+    storeyCount: 1,
+    walls: corners.map((a, i) =>
+      wall(
+        {
+          id: `wall-${i + 1}`,
+          a,
+          b: corners[(i + 1) % corners.length]!,
+          heightsM,
+          thicknessM: null,
+          curved: false,
+          confidence: null,
+        },
+        plan.openings
+          .filter((o) => o.wall === i)
+          .map(({ wall: _wall, ...o }) => ({
+            ...o,
+            alongM: round3(o.alongM),
+            widthM: round3(o.widthM),
+          })),
+      ),
+    ),
+    looseOpenings: [],
+    floorOutlines: [{ points: corners, confidence: null }],
+    rooms: [],
+    spaces: [],
+    fixtures: [],
+    notes: ['Traced from a published listing floor plan.'],
   };
 }

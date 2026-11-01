@@ -185,8 +185,8 @@ function BeforeAfter({ room, pick }: { room: HouseRoom; pick: RoomPick }) {
         role="img"
         aria-label={`${room.title} with the chosen paint and floor`}
       />
-      <span className="pf-tag pf-tag-before">Before · listing photo</span>
-      <span className="pf-tag pf-tag-after">After · your choices</span>
+      <span className="pf-tag pf-tag-before">Before</span>
+      <span className="pf-tag pf-tag-after">After</span>
       <span className="pf-handle" aria-hidden="true" />
       <input
         className="pf-slider"
@@ -241,10 +241,6 @@ function Room3D({ room, pick }: { room: HouseRoom; pick: RoomPick }) {
     <div className="pf-3d">
       <div ref={host} className="pf-3d-host" />
       {error && <p className="pf-error">{error}</p>}
-      <p className="pf-3d-note">
-        Box room from the listing plan, {feetInches(room.lengthFt)} × {feetInches(room.widthFt)} ×{' '}
-        {CEILING_FT}′. Doors and windows are not modelled.
-      </p>
     </div>
   );
 }
@@ -264,7 +260,13 @@ function ColorChoice({
     <div className="pf-group">
       <div className="pf-group-head">
         <h3>Walls</h3>
-        <span>{pick.color ? `${pick.color.name} · ${pick.color.code}` : 'Current walls'}</span>
+        {pick.color && link ? (
+          <a href={link} target="_blank" rel="noreferrer">
+            {pick.color.name} · {pick.color.code}
+          </a>
+        ) : (
+          <span>{pick.color ? `${pick.color.name} · ${pick.color.code}` : 'Current walls'}</span>
+        )}
       </div>
       <div className="pf-swatches" role="group" aria-label="Wall colour">
         <button
@@ -307,16 +309,6 @@ function ColorChoice({
             onColor({ name: c.name, code: c.code ?? '', hex: c.hex.toLowerCase(), brand: c.brand })
           }
         />
-      )}
-      {pick.color && (
-        <p className="pf-fine">
-          Screen colour; check a real chip before buying.{' '}
-          {link && (
-            <a href={link} target="_blank" rel="noreferrer">
-              {pick.color.name} on sherwin-williams.com
-            </a>
-          )}
-        </p>
       )}
     </div>
   );
@@ -410,8 +402,10 @@ export function PaintFloorStudio({ onRoomExample }: { onRoomExample?: () => void
         <div className="pf-stage">
           <div className="pf-stage-bar">
             <div>
-              <span>{room.level}</span>
               <strong>{room.title}</strong>
+              <span>
+                {feetInches(room.plan.xFt)} × {feetInches(room.plan.yFt)} · {CEILING_FT}′ ceilings
+              </span>
             </div>
             <div className="pf-views" role="tablist" aria-label="View">
               <button
@@ -437,24 +431,13 @@ export function PaintFloorStudio({ onRoomExample }: { onRoomExample?: () => void
           ) : (
             <Room3D room={room} pick={pick} />
           )}
-          <p className="pf-fine">
-            {view === 'photo'
-              ? `Walls outlined by SAM 3.1 and recoloured in your browser${pick.floor === 'keep' ? '' : '; the new floor is a Muse Image edit of the listing photo'}. A visual direction, not a construction drawing.`
-              : 'Drag to orbit. ✦ Photoreal renders this room with Muse Image; Blender HD renders it on a cloud GPU.'}
-            {room.photoNote ? ` ${room.photoNote}` : ''}
-          </p>
         </div>
 
         <aside className="pf-panel" aria-label="Choices and materials">
-          <p className="pf-dims">
-            {feetInches(room.lengthFt)} × {feetInches(room.widthFt)} · {CEILING_FT}′ ceiling ·{' '}
-            {takeoff.floorSqFt} sq ft floor · {takeoff.wallSqFt} sq ft walls
-          </p>
           <ColorChoice pick={pick} onColor={(color) => update({ color })} />
           <div className="pf-group">
             <div className="pf-group-head">
               <h3>Floor</h3>
-              <span>Now: {room.existingFloor}</span>
             </div>
             <div className="pf-chips" role="group" aria-label="Floor">
               {FLOOR_CHOICES.map((f) => (
@@ -472,7 +455,9 @@ export function PaintFloorStudio({ onRoomExample }: { onRoomExample?: () => void
 
           <div className="pf-group">
             <div className="pf-group-head">
-              <h3>Materials</h3>
+              <h3>
+                Materials <span className="pf-badge">Demo prices</span>
+              </h3>
               <div className="pf-tiers" role="group" aria-label="Price tier">
                 {(Object.keys(TIER_LABELS) as TierKey[]).map((t) => (
                   <button
@@ -493,7 +478,7 @@ export function PaintFloorStudio({ onRoomExample }: { onRoomExample?: () => void
                     <span>
                       {line.productName}
                       <small>
-                        {line.purchaseUnits} × {money(line.unitPriceMinor)} · {line.retailer}
+                        {line.purchaseUnits} × {money(line.unitPriceMinor)}
                       </small>
                     </span>
                     <b>{money(line.lineTotalMinor)}</b>
@@ -501,15 +486,12 @@ export function PaintFloorStudio({ onRoomExample }: { onRoomExample?: () => void
                 ))}
               </ul>
             ) : (
-              <p className="pf-fine">Pick a colour or a new floor to see what it takes.</p>
+              <p className="pf-empty">Pick a colour or a floor.</p>
             )}
             <div className="pf-subtotal">
               <span>Room materials</span>
               <b>{money(takeoff.totalMinor)}</b>
             </div>
-            <p className="pf-fine">
-              Example catalog prices for this demo, not live offers. Labour is quoted separately.
-            </p>
           </div>
 
           <label className="pf-include">
@@ -518,13 +500,13 @@ export function PaintFloorStudio({ onRoomExample }: { onRoomExample?: () => void
               checked={pick.included}
               onChange={(e) => update({ included: e.target.checked })}
             />
-            Include this room in the whole-house plan
+            Include in the whole-house total
           </label>
         </aside>
       </div>
 
       <details className="pf-sources">
-        <summary>Sources and receipts</summary>
+        <summary>Sources</summary>
         <ul>
           <li>
             Photos and floor plans:{' '}
@@ -534,6 +516,10 @@ export function PaintFloorStudio({ onRoomExample }: { onRoomExample?: () => void
             (Bright MLS photos; CubiCasa plans, “deemed highly reliable but not guaranteed”).
           </li>
           <li>Ceiling height 9′: reported by the owner.</li>
+          <li>
+            3D rooms: traced from the listing floor plans; door and window heights are for display.
+            The rear bedroom photo is matched to that room by us.
+          </li>
           <li>
             New floors: Muse Image edits of each listing photo;{' '}
             <a href={asset(`rooms/${room.photoId}-lvp.json`)} target="_blank" rel="noreferrer">
@@ -549,13 +535,13 @@ export function PaintFloorStudio({ onRoomExample }: { onRoomExample?: () => void
             .
           </li>
           <li>
-            Quantities: the living-room recipe (2 coats; openings not deducted). Prices: the
-            labelled demo catalog.
+            Quantities: the living-room recipe (2 coats; openings not deducted). Prices: an example
+            catalog for this demo, not live offers. Labour is quoted separately.
           </li>
         </ul>
         {onRoomExample && (
           <button type="button" className="link-button" onClick={onRoomExample}>
-            Open the measured-room example (work steps, contractor quotes, Blender stages)
+            The measured-room example: work steps, quotes and Blender stages
           </button>
         )}
       </details>

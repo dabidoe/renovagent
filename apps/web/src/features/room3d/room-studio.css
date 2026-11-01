@@ -1263,6 +1263,9 @@
   justify-content: flex-end;
   max-width: 70%;
 }
+.room3d-photoreal [hidden] {
+  display: none !important;
+}
 .room3d-photoreal-switch {
   display: flex;
   gap: 2px;

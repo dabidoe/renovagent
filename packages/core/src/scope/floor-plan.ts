@@ -121,7 +121,10 @@ export function summarizeFloorPlan(raw: unknown): FloorPlanSummary {
   if (confidence.low) notes.push(`${confidence.low} scanned surfaces have low confidence.`);
 
   return {
-    format: model.format === 'measured-box' ? 'openplan3d-project' : model.format,
+    format:
+      model.format === 'measured-box' || model.format === 'listing-plan'
+        ? 'openplan3d-project'
+        : model.format,
     floorAreaM2: floorAreaM2 && floorAreaM2 > 0 ? round2(floorAreaM2) : null,
     perimeterM: perimeterM && perimeterM > 0 ? round2(perimeterM) : null,
     ceilingHeightM: ceilingHeightM ? round2(ceilingHeightM) : null,
