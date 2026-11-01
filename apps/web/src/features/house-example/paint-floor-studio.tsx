@@ -404,6 +404,7 @@ export function PaintFloorStudio({
   renderFloor,
   onEditRoom,
   onCeiling,
+  roomTools,
 }: {
   project: HouseProject;
   kicker: string;
@@ -413,6 +414,8 @@ export function PaintFloorStudio({
   renderFloor?: (roomId: string, floor: NewFloor) => Promise<void>;
   onEditRoom?: (roomId: string, patch: Partial<StudioRoom>) => void;
   onCeiling?: (ft: number) => void;
+  // Owner-only controls for the selected room (e.g. which plan room it is).
+  roomTools?: (room: StudioRoom) => ReactNode;
 }) {
   const [roomId, setRoomId] = useState(project.rooms[0]?.id ?? '');
   const [view, setView] = useState<'photo' | '3d'>('photo');
@@ -562,6 +565,7 @@ export function PaintFloorStudio({
         </div>
 
         <aside className="pf-panel" aria-label="Choices and materials">
+          {roomTools?.(room)}
           {needsSize && onEditRoom && (
             <SizeEntry
               key={room.id}

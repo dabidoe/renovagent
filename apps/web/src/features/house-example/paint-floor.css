@@ -542,3 +542,162 @@
   opacity: 0.45;
   cursor: default;
 }
+
+/* Show your project: the intake before the studio. */
+.pf-intake {
+  --pf-ink: #26332c;
+  --pf-muted: #6a746c;
+  --pf-line: #dde2da;
+  --pf-accent: #2f4a3a;
+  max-width: 640px;
+  margin: 24px auto;
+  display: grid;
+  gap: 16px;
+  color: var(--pf-ink);
+}
+.pf-intake h1 {
+  margin: 0;
+  font-size: clamp(1.6rem, 4vw, 2.2rem);
+  letter-spacing: -0.02em;
+}
+.pf-intake .pf-kicker,
+.pf-intake .pf-sub {
+  margin: 0;
+}
+.pf-drop {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 10px;
+}
+.pf-drop button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 18px;
+  border: 1.5px dashed #b9c2b6;
+  border-radius: 16px;
+  background: #fff;
+  color: inherit;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+.pf-drop button:hover:not(:disabled) {
+  border-color: var(--pf-accent);
+}
+.pf-drop .glyph {
+  width: 26px;
+  height: 26px;
+  color: var(--pf-accent);
+}
+.pf-drop span {
+  display: grid;
+}
+.pf-drop small {
+  color: var(--pf-muted);
+}
+.pf-intake-row {
+  display: grid;
+  grid-template-columns: 1fr 160px;
+  gap: 10px;
+}
+.pf-intake-row input {
+  padding: 11px 14px;
+  border: 1px solid var(--pf-line);
+  border-radius: 12px;
+  font: inherit;
+  background: #fff;
+}
+.pf-build {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--pf-accent);
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.pf-build:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.pf-build .glyph {
+  width: 16px;
+  height: 16px;
+}
+.pf-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.pf-steps li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--pf-muted);
+}
+.pf-steps li > span {
+  width: 18px;
+  height: 18px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 2px solid var(--pf-line);
+  font-size: 0.7rem;
+}
+.pf-steps li.is-working {
+  color: var(--pf-ink);
+  font-weight: 600;
+}
+.pf-steps li.is-working > span {
+  border-color: var(--pf-line);
+  border-top-color: var(--pf-accent);
+  animation: pf-spin 0.8s linear infinite;
+}
+.pf-steps li.is-done {
+  color: var(--pf-ink);
+}
+.pf-steps li.is-done > span {
+  border-color: var(--pf-accent);
+  background: var(--pf-accent);
+  color: #fff;
+}
+.pf-intake-error {
+  margin: 0;
+  color: #8a2a12;
+}
+.pf-reset {
+  border: 1px solid var(--pf-line);
+  border-radius: 999px;
+  padding: 8px 14px;
+  background: #fff;
+  color: var(--pf-ink);
+  font-size: 0.85rem;
+}
+.pf-plan-pick {
+  display: grid;
+  gap: 6px;
+  font-size: 0.82rem;
+  color: var(--pf-muted);
+}
+.pf-plan-pick select {
+  padding: 8px 10px;
+  border: 1px solid var(--pf-line);
+  border-radius: 10px;
+  font: inherit;
+  color: var(--pf-ink);
+  background: #fff;
+}
+@media (max-width: 600px) {
+  .pf-drop,
+  .pf-intake-row {
+    grid-template-columns: 1fr;
+  }
+}

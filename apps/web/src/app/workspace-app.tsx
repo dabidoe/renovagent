@@ -11,6 +11,7 @@ import { CandidateMeasurementsPanel } from '../features/work/candidate-measureme
 import { RoomDimensionsCard } from '../features/scope/room-dimensions-card.js';
 import { RoomStudio } from '../features/room3d/room-studio.js';
 import { HutchinsonStudio } from '../features/house-example/hutchinson-studio.js';
+import { OwnStudio } from '../features/house-example/own-studio.js';
 import { isHouseCase } from '../features/house-example/house-example-model.js';
 import '../features/house-example/house-example.css';
 import '../features/house-example/paint-floor.css';
@@ -61,14 +62,19 @@ export function App({ controller }: { controller: WorkspaceController }) {
   const [houseExampleOpen, setHouseExampleOpen] = useState(
     () => window.location.hash === '#example-house',
   );
+  const [ownOpen, setOwnOpen] = useState(() => window.location.hash === '#your-project');
   useEffect(() => {
-    const sync = () => setHouseExampleOpen(window.location.hash === '#example-house');
+    const sync = () => {
+      setHouseExampleOpen(window.location.hash === '#example-house');
+      setOwnOpen(window.location.hash === '#your-project');
+    };
     window.addEventListener('hashchange', sync);
     return () => window.removeEventListener('hashchange', sync);
   }, []);
   const wholeHouseProject = Boolean(project && isHouseCase(state, active));
-  const showHouse = (houseExampleOpen || wholeHouseProject) && !landingVisible;
-  const isLanding = (!project || landingVisible) && !houseExampleOpen;
+  const showOwn = ownOpen && !landingVisible;
+  const showHouse = (houseExampleOpen || wholeHouseProject) && !landingVisible && !showOwn;
+  const isLanding = (!project || landingVisible) && !houseExampleOpen && !showOwn;
   const scope = state.artifacts[scopeDraftId(active)]?.at(-1)?.payload;
   const exampleStudio =
     !isLanding &&
@@ -216,9 +222,18 @@ export function App({ controller }: { controller: WorkspaceController }) {
       window.history.replaceState(null, '', window.location.pathname + window.location.search);
     setModal(null);
   };
+  const openOwnProject = () => {
+    setOwnOpen(true);
+    setHouseExampleOpen(false);
+    setLandingVisible(false);
+    setModal(null);
+    window.history.replaceState(null, '', '#your-project');
+    window.scrollTo({ top: 0 });
+  };
   const openExample = async () => {
     const saved = Object.values(state.projects).find((p) => isHouseCase(state, p.id));
     if (saved) await controller.setView(saved.id);
+    setOwnOpen(false);
     setHouseExampleOpen(true);
     setLandingVisible(false);
     setModal(null);
@@ -327,7 +342,7 @@ export function App({ controller }: { controller: WorkspaceController }) {
             : stageCopy[view.stage].label;
   return (
     <div
-      className={`prompt-workspace ${isLanding ? 'is-landing' : showHouse ? 'is-example-project is-house-example' : exampleStudio ? 'is-example-project' : ''}`}
+      className={`prompt-workspace ${isLanding ? 'is-landing' : showHouse || showOwn ? 'is-example-project is-house-example' : exampleStudio ? 'is-example-project' : ''}`}
     >
       <header className="prompt-header">
         <button
@@ -337,6 +352,9 @@ export function App({ controller }: { controller: WorkspaceController }) {
             setShowRecent(false);
             setLandingVisible(true);
             setHouseExampleOpen(false);
+            setOwnOpen(false);
+            if (window.location.hash === '#your-project')
+              window.history.replaceState(null, '', window.location.pathname);
             if (window.location.hash === '#example-house')
               window.history.replaceState(
                 null,
@@ -383,11 +401,13 @@ export function App({ controller }: { controller: WorkspaceController }) {
             onClick={() => setModal('projects')}
           >
             <span>
-              {showHouse
-                ? 'Hutchinson · whole-house plan'
-                : exampleStudio
-                  ? 'Living room refresh'
-                  : project && state.properties[project.propertyId].name.split(',')[0]}
+              {showOwn
+                ? 'Your project'
+                : showHouse
+                  ? 'Hutchinson · whole-house plan'
+                  : exampleStudio
+                    ? 'Living room refresh'
+                    : project && state.properties[project.propertyId].name.split(',')[0]}
             </span>
             <Glyph name="chevron" />
           </button>
@@ -442,8 +462,13 @@ export function App({ controller }: { controller: WorkspaceController }) {
             onPhotos={setStartPhotos}
             onStart={() => setModal('new')}
             onExample={() => safe(openExample())}
+            onOwnProject={openOwnProject}
             busy={busy}
           />
+        </main>
+      ) : showOwn ? (
+        <main className="prompt-main has-room">
+          <OwnStudio />
         </main>
       ) : showHouse ? (
         <main className="prompt-main has-room">

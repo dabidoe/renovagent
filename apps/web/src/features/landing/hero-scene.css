@@ -304,3 +304,25 @@
     padding: 17px;
   }
 }
+.hero-paint-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  margin: 14px 0 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #ffffffb3;
+}
+.hero-paint-line button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #ffffffed;
+  font: inherit;
+  cursor: pointer;
+}
+.hero-paint-line button:hover {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}

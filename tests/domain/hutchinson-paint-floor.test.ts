@@ -111,3 +111,39 @@ test('a room without a size has no 3D and no price until the owner adds one', ()
   assert.ok(noCeiling.plan!.lines.some((l) => l.bomItemId.startsWith('lvp-floor:')));
   assert.ok(!noCeiling.plan!.lines.some((l) => l.bomItemId === 'wall-paint:paint'));
 });
+
+test('photos take the printed plan room that names them, each room once', async () => {
+  const { matchPlanRooms, ownProject } = await import(
+    '../../apps/web/src/features/house-example/own-project.js'
+  );
+  const plans = [
+    { name: 'KITCHEN', widthFt: 9.5, lengthFt: 15.25 },
+    { name: 'LIVING ROOM', widthFt: 13.083, lengthFt: 23.167 },
+    { name: 'BEDROOM', widthFt: 9.5, lengthFt: 9.25 },
+    { name: 'PRIMARY BEDROOM', widthFt: 11.333, lengthFt: 10.25 },
+  ];
+  const photo = (title: string, kind: string) => ({
+    sha256: title.padEnd(64, '0'),
+    kind,
+    title,
+    floor: 'carpet',
+  });
+  const photos = [
+    photo('Primary bedroom', 'bedroom'),
+    photo('Living room', 'living room'),
+    photo('Back bedroom', 'bedroom'),
+    photo('Office', 'office'),
+  ];
+  assert.deepEqual(matchPlanRooms(photos, plans), [3, 1, 2, null]);
+  const project = ownProject({
+    id: 'own',
+    address: '',
+    ceilingFt: 8,
+    photos,
+    plans,
+    walls: {},
+  });
+  assert.equal(project.address, 'Your project');
+  assert.deepEqual(project.rooms[1]!.size, { xFt: 13.083, yFt: 23.167 });
+  assert.equal(project.rooms[3]!.size, undefined);
+});

@@ -480,6 +480,7 @@ export function Landing({
   onPhotos,
   onStart,
   onExample,
+  onOwnProject,
   busy,
 }: {
   prompt: string;
@@ -488,6 +489,7 @@ export function Landing({
   onPhotos: (files: File[]) => void;
   onStart: () => void;
   onExample: () => void;
+  onOwnProject: () => void;
   busy: boolean;
 }) {
   const input = useRef<HTMLTextAreaElement>(null);
@@ -541,6 +543,15 @@ export function Landing({
               </button>
             </div>
           </form>
+          <p className="hero-paint-line">
+            <button type="button" onClick={onOwnProject}>
+              Try paint &amp; floors on your photos <span aria-hidden="true">→</span>
+            </button>
+            <span aria-hidden="true">·</span>
+            <button type="button" onClick={onExample}>
+              See a listing plan: 2440 S Hutchinson <span aria-hidden="true">→</span>
+            </button>
+          </p>
           <p className="hero-agent-line">
             <img
               src={new URL('../../assets/brand/muse-app-icon.png', import.meta.url).href}
