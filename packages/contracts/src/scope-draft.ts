@@ -24,6 +24,8 @@ export const designDirectionSchema = z
   .object({
     wallColor: z.string().trim().min(1).max(80),
     floorFinish: z.string().trim().min(1).max(80),
+    // The wall paint's sheen, when chosen; the paint must state it to match.
+    paintSheen: z.enum(['flat', 'matte', 'eggshell', 'satin', 'semi-gloss']).optional(),
   })
   .strict();
 export type DesignDirection = z.infer<typeof designDirectionSchema>;

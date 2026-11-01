@@ -55,6 +55,7 @@ test(
               walls: true,
               colorName: 'Evergreen Mist',
               hex: '#2B4A36',
+              sheen: 'satin',
               floor: 'lvp',
               extras: ['built-in bookshelf', ' ', 'brass sconces'],
             },
@@ -194,6 +195,7 @@ test(
       });
       assert.equal(idea.hex, null, 'snapped to a loaded colour, not a made-up name');
       assert.equal(idea.floor, 'lvp');
+      assert.equal(idea.sheen, 'satin');
       assert.deepEqual(idea.extras, ['built-in bookshelf', 'brass sconces']);
       assert.match(prompts.at(-1)!, /"dark green walls, light oak floors/);
       assert.equal(

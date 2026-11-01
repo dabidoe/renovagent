@@ -57,21 +57,21 @@ test('the living room takeoff runs through the core recipe and demo catalog', ()
     t.wallSqFt,
     Math.round(2 * (room('living').size!.xFt + room('living').size!.yFt) * 9),
   );
-  const lines = new Map(t.plan!.lines.map((l) => [l.bomItemId, l]));
+  const lines = new Map(t.lines.map((l) => [l.bomItemId, l]));
   // Two coats over the gross wall area, at the mid paint's 400 sq ft per gallon.
   assert.equal(lines.get('wall-paint:paint')!.purchaseUnits, Math.ceil((t.wallSqFt * 2) / 400));
   assert.ok([...lines.keys()].some((id) => id.startsWith('lvp-floor:')));
   assert.equal(
     t.totalMinor,
-    t.plan!.lines.reduce((sum, l) => sum + l.lineTotalMinor, 0),
+    t.lines.reduce((sum, l) => sum + l.lineTotalMinor, 0),
   );
-  assert.ok(t.plan!.lines.every((l) => l.source === 'example-import'));
+  assert.ok(t.lines.every((l) => l.source === 'example-import'));
 });
 
 test('nothing chosen costs nothing; the kitchen keeps its vinyl as the base', () => {
   const none = roomTakeoff(room('primary'), { color: null, floor: 'keep', included: true }, 'mid');
   assert.equal(none.totalMinor, 0);
-  assert.equal(none.plan, null);
+  assert.deepEqual(none.lines, []);
   assert.deepEqual(
     roomPackages(room('kitchen'), { color: null, floor: 'hardwood', included: true }),
     ['removal-protection', 'hardwood-floor'],
@@ -108,8 +108,8 @@ test('a room without a size has no 3D and no price until the owner adds one', ()
   // Without a ceiling the floor still prices; paint waits for the height.
   const noCeiling = takeoff(sized, null, pick, 'mid');
   assert.equal(noCeiling.wallSqFt, null);
-  assert.ok(noCeiling.plan!.lines.some((l) => l.bomItemId.startsWith('lvp-floor:')));
-  assert.ok(!noCeiling.plan!.lines.some((l) => l.bomItemId === 'wall-paint:paint'));
+  assert.ok(noCeiling.lines.some((l) => l.bomItemId.startsWith('lvp-floor:')));
+  assert.ok(!noCeiling.lines.some((l) => l.bomItemId === 'wall-paint:paint'));
 });
 
 test('photos take the printed plan room that names them, each room once', async () => {
@@ -154,4 +154,31 @@ test('a ceiling estimate is rounded, bounded, and falls back to about 8 ft', asy
   assert.deepEqual(ceilingFrom({ estimateFt: 22, basis: 'door' }), { ft: 8, basis: 'none' });
   assert.deepEqual(ceilingFrom({ estimateFt: 10, basis: 'none' }), { ft: 8, basis: 'none' });
   assert.deepEqual(ceilingFrom('nonsense'), { ft: 8, basis: 'none' });
+});
+
+test('paint is priced by its line and finish, never by its colour', () => {
+  const pick = { color: gray, floor: 'keep' as const, included: true };
+  const paintLine = (p: Parameters<typeof roomTakeoff>[1], tier: 'builder' | 'mid' | 'high') =>
+    roomTakeoff(room('living'), p, tier).lines.find((l) => l.bomItemId === 'wall-paint:paint')!;
+  // Eggshell unless chosen; the line follows the tier until chosen.
+  assert.match(paintLine(pick, 'mid').productName, /Premium interior eggshell/);
+  assert.match(paintLine({ ...pick, sheen: 'satin' }, 'mid').productName, /satin/);
+  const designer = paintLine({ ...pick, paintLine: 'high' }, 'builder');
+  assert.match(designer.productName, /Designer interior eggshell/);
+  assert.ok(
+    designer.unitPriceMinor > paintLine(pick, 'builder').unitPriceMinor,
+    'a better line costs more per gallon',
+  );
+  const navy = { ...gray, name: 'Naval', code: 'SW 6244', hex: '#2f3d4c' };
+  assert.equal(
+    roomTakeoff(room('living'), { ...pick, color: navy }, 'mid').totalMinor,
+    roomTakeoff(room('living'), pick, 'mid').totalMinor,
+    'the colour does not change the price',
+  );
+  // The floor still follows the tier when the paint line is chosen.
+  const floor = (tier: 'builder' | 'high') =>
+    roomTakeoff(room('living'), { ...pick, floor: 'lvp', paintLine: 'mid' }, tier).lines.find((l) =>
+      l.bomItemId.startsWith('lvp-floor:'),
+    )!.unitPriceMinor;
+  assert.ok(floor('high') > floor('builder'));
 });

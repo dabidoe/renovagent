@@ -100,12 +100,25 @@ test('a described colour becomes the closest loaded colour, a named one only on 
 test('an imagined room keeps only the choices the studio prices', async () => {
   const { imagined } = await import('../../apps/api/src/studio.js');
   const tile = imagined(
-    { walls: false, colorName: '', hex: '#ffffff', floor: 'other', extras: ['tile floor'] },
+    {
+      walls: false,
+      colorName: '',
+      hex: '#ffffff',
+      sheen: 'satin',
+      floor: 'other',
+      extras: ['tile floor'],
+    },
     [],
   );
-  assert.deepEqual(tile, { color: null, hex: null, floor: 'keep', extras: ['tile floor'] });
+  assert.deepEqual(tile, {
+    color: null,
+    hex: null,
+    sheen: null,
+    floor: 'keep',
+    extras: ['tile floor'],
+  });
   const unloaded = imagined(
-    { walls: true, colorName: '', hex: '#2B4A36', floor: 'hardwood', extras: [] },
+    { walls: true, colorName: '', hex: '#2B4A36', sheen: '', floor: 'hardwood', extras: [] },
     [],
   );
   assert.deepEqual([unloaded.color, unloaded.hex], [null, '#2b4a36'], 'no paint loaded');

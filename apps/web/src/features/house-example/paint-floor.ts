@@ -5,9 +5,9 @@ import {
   livingRoomRefreshRecipe,
   outlineRoomModel,
   recipeRequirements,
-  type BuiltPlan,
   type PricedOffer,
 } from '@renovagent/core';
+import type { PlanLine } from '@renovagent/contracts';
 import { livingRoomCatalog } from '../../../../../fixtures/catalog/living-room-philadelphia.js';
 
 // A paint-and-floor project: rooms, each with a photo, the photo's SAM wall
@@ -100,10 +100,30 @@ export const TIER_LABELS: Record<TierKey, string> = {
   high: 'Premium',
 };
 
+// Paint is priced by its line and finish, never by its colour. The demo
+// catalog's three lines stand where a brand's ladder would (for
+// Sherwin-Williams, ProMar 200 up to Emerald); the comparison is a guide, not
+// those products' prices.
+export type Sheen = 'matte' | 'eggshell' | 'satin';
+export const SHEENS: { key: Sheen; label: string }[] = [
+  { key: 'matte', label: 'Matte' },
+  { key: 'eggshell', label: 'Eggshell' },
+  { key: 'satin', label: 'Satin' },
+];
+export const DEFAULT_SHEEN: Sheen = 'eggshell';
+export const PAINT_LINES: { key: TierKey; label: string; like: string }[] = [
+  { key: 'builder', label: 'Contractor', like: 'Like Sherwin-Williams ProMar 200' },
+  { key: 'mid', label: 'Mid-grade', like: 'Like Sherwin-Williams SuperPaint' },
+  { key: 'high', label: 'Designer', like: 'Like Sherwin-Williams Emerald' },
+];
+
 export type RoomPick = {
   color: WallColor | null;
   floor: FloorKey;
   included: boolean;
+  // The paint line (follows the price tier until chosen) and finish.
+  paintLine?: TierKey;
+  sheen?: Sheen;
   // What the owner described that the studio does not price.
   ideas?: string[];
 };
@@ -175,7 +195,7 @@ export function roomPackages(room: StudioRoom, pick: RoomPick) {
 }
 
 export type RoomTakeoff = {
-  plan: BuiltPlan | null;
+  lines: PlanLine[];
   // Null until the room's size (and, for walls, the ceiling) is known.
   wallSqFt: number | null;
   floorSqFt: number | null;
@@ -192,7 +212,7 @@ export function roomTakeoff(
   const wallSqFt = size && ceilingFt ? Math.round(2 * (size.xFt + size.yFt) * ceilingFt) : null;
   const floorSqFt = size ? Math.round(size.xFt * size.yFt) : null;
   const packages = roomPackages(room, pick);
-  if (!packages.length || !size) return { plan: null, wallSqFt, floorSqFt, totalMinor: 0 };
+  if (!packages.length || !size) return { lines: [], wallSqFt, floorSqFt, totalMinor: 0 };
   const values = {
     floorLengthFt: size.yFt,
     floorWidthFt: size.xFt,
@@ -201,18 +221,30 @@ export function roomTakeoff(
   const requirements = recipeRequirements(livingRoomRefreshRecipe.id, packages, values, {
     wallColor: pick.color ? `${pick.color.name} (${pick.color.code})` : 'existing',
     floorFinish: floorFinish(room, pick.floor),
+    ...(pick.color ? { paintSheen: pick.sheen ?? DEFAULT_SHEEN } : {}),
   });
   const { bom } = bomFromRequirements(
     livingRoomRefreshRecipe,
     requirements,
     livingRoomCatalog.products,
   );
-  const plan = bom ? (buildTierPlans(bom, priced).find((p) => p.tier === tier) ?? null) : null;
+  if (!bom) return { lines: [], wallSqFt, floorSqFt, totalMinor: 0 };
+  // The paint comes from its own line; everything else from the price tier.
+  const plans = buildTierPlans(bom, priced);
+  const paint = new Set(bom.items.filter((i) => i.category === 'interior-paint').map((i) => i.id));
+  const from = (t: TierKey, keep: (line: PlanLine) => boolean) =>
+    (plans.find((p) => p.tier === t)?.lines ?? []).filter(keep);
+  const chosen = [
+    ...from(tier, (l) => !paint.has(l.bomItemId)),
+    ...from(pick.paintLine ?? tier, (l) => paint.has(l.bomItemId)),
+  ];
+  const order = bom.items.map((i) => i.id);
+  const lines = chosen.sort((a, b) => order.indexOf(a.bomItemId) - order.indexOf(b.bomItemId));
   return {
-    plan,
+    lines,
     wallSqFt,
     floorSqFt,
-    totalMinor: plan?.lines.reduce((sum, line) => sum + line.lineTotalMinor, 0) ?? 0,
+    totalMinor: lines.reduce((sum, line) => sum + line.lineTotalMinor, 0),
   };
 }
 

@@ -154,11 +154,16 @@ export function livingRoomRequirements(
           {
             category: 'material',
             purpose: 'Finish coats.',
-            specification: `${wallColor} interior wall paint, ${COATS} finish coats (recipe selection; follow the product's directions).`,
+            specification: `${wallColor} interior wall paint${direction?.paintSheen ? `, ${direction.paintSheen} finish` : ''}, ${COATS} finish coats (recipe selection; follow the product's directions).`,
             kind: 'measured',
             unit: 'sq ft',
             sourceIds: RECIPE,
-            catalog: { category: 'interior-paint', constraints: [] },
+            catalog: {
+              category: 'interior-paint',
+              constraints: direction?.paintSheen
+                ? [{ attribute: 'sheen', operator: 'eq', value: direction.paintSheen }]
+                : [],
+            },
           },
           paintCoverage(v),
         ),

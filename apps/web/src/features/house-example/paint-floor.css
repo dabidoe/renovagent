@@ -829,3 +829,13 @@
   color: var(--pf-muted);
   font-size: 0.68rem;
 }
+
+.pf-paint {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+}
+.pf-paint .pf-chips button {
+  padding: 5px 11px;
+  font-size: 0.8rem;
+}

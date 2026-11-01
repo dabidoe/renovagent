@@ -6,7 +6,10 @@ import { mountRoomScene, type RoomScene } from '../room3d/room-scene.js';
 import { PaintPicker, brandColorLink } from '../room3d/photo-outlines.js';
 import {
   DEFAULT_PICK,
+  DEFAULT_SHEEN,
   FLOOR_CHOICES,
+  PAINT_LINES,
+  SHEENS,
   PRESET_COLORS,
   TIER_LABELS,
   feetInches,
@@ -19,6 +22,7 @@ import {
   type NewFloor,
   type RoomImage,
   type RoomPick,
+  type Sheen,
   type StudioRoom,
   type TierKey,
   type WallColor,
@@ -260,10 +264,14 @@ function familyOf(hex: string) {
 
 function ColorChoice({
   pick,
+  tier,
   onColor,
+  onPaint,
 }: {
   pick: RoomPick;
+  tier: TierKey;
   onColor: (color: WallColor | null) => void;
+  onPaint: (paint: { paintLine?: TierKey; sheen?: Sheen }) => void;
 }) {
   const [browsing, setBrowsing] = useState(false);
   const link = pick.color
@@ -315,6 +323,35 @@ function ColorChoice({
           {browsing ? 'Close' : 'All colours'}
         </button>
       </div>
+      {pick.color && (
+        <div className="pf-paint">
+          <div className="pf-chips" role="group" aria-label="Paint line">
+            {PAINT_LINES.map((l) => (
+              <button
+                key={l.key}
+                type="button"
+                title={l.like}
+                aria-pressed={(pick.paintLine ?? tier) === l.key}
+                onClick={() => onPaint({ paintLine: l.key })}
+              >
+                {l.label}
+              </button>
+            ))}
+          </div>
+          <div className="pf-chips" role="group" aria-label="Finish">
+            {SHEENS.map((f) => (
+              <button
+                key={f.key}
+                type="button"
+                aria-pressed={(pick.sheen ?? DEFAULT_SHEEN) === f.key}
+                onClick={() => onPaint({ sheen: f.key })}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
       {browsing && (
         <PaintPicker
           selected={pick.color ? `${pick.color.brand} ${pick.color.name} ${pick.color.code}` : null}
@@ -333,6 +370,7 @@ function ColorChoice({
 type Idea = {
   color: WallColor | null;
   hex: string | null;
+  sheen: Sheen | null;
   floor: 'keep' | NewFloor;
   extras: string[];
 };
@@ -507,6 +545,7 @@ export function PaintFloorStudio({
         idea.floor !== 'keep' && (target.floors[idea.floor] || renderFloor) ? idea.floor : null;
       updateRoom(target.id, {
         ...(color ? { color } : {}),
+        ...(idea.sheen ? { sheen: idea.sheen } : {}),
         ...(floor ? { floor } : {}),
         ideas: idea.extras,
       });
@@ -693,7 +732,12 @@ export function PaintFloorStudio({
                 : {})}
             />
           )}
-          <ColorChoice pick={pick} onColor={(color) => update({ color })} />
+          <ColorChoice
+            pick={pick}
+            tier={tier}
+            onColor={(color) => update({ color })}
+            onPaint={(paint) => update(paint)}
+          />
           <div className="pf-group">
             <div className="pf-group-head">
               <h3>Floor</h3>
@@ -731,9 +775,9 @@ export function PaintFloorStudio({
                 ))}
               </div>
             </div>
-            {takeoff.plan?.lines.length ? (
+            {takeoff.lines.length ? (
               <ul className="pf-lines">
-                {takeoff.plan.lines.map((line) => (
+                {takeoff.lines.map((line) => (
                   <li key={line.bomItemId}>
                     <span>
                       {line.productName}

@@ -130,22 +130,24 @@ ${plans ? 'From the floor plans, list every room whose dimensions are printed on
 export const imagineSchema = {
   type: 'object',
   additionalProperties: false,
-  required: ['walls', 'colorName', 'hex', 'floor', 'extras'],
+  required: ['walls', 'colorName', 'hex', 'sheen', 'floor', 'extras'],
   properties: {
     walls: { type: 'boolean' },
     colorName: { type: 'string' },
     hex: { type: 'string' },
+    sheen: { type: 'string', enum: ['', 'matte', 'eggshell', 'satin'] },
     floor: { type: 'string', enum: ['keep', 'lvp', 'hardwood', 'other'] },
     extras: { type: 'array', items: { type: 'string' } },
   },
 } as const;
 export const imaginePrompt = (text: string, room: string) =>
   `A homeowner describes how they imagine their ${room || 'room'}: ${JSON.stringify(text)}
-Turn it into choices. walls: true if they want the walls a new colour. colorName: the exact paint colour name only if they named one (for example "Naval"), otherwise "". hex: the wall colour they describe as #rrggbb ("" if walls is false). floor: "lvp" for vinyl plank, laminate or a wood look, "hardwood" for real or engineered wood, "keep" if they do not ask for a new floor, "other" for any other floor (tile, carpet, concrete). extras: everything else they ask for, each as a short noun phrase (for example "built-in bookshelf", "tile floor" when floor is "other"); at most four; [] if nothing else.`;
+Turn it into choices. walls: true if they want the walls a new colour. colorName: the exact paint colour name only if they named one (for example "Naval"), otherwise "". hex: the wall colour they describe as #rrggbb ("" if walls is false). sheen: the paint finish only if they name one (matte, eggshell or satin), otherwise "". floor: "lvp" for vinyl plank, laminate or a wood look, "hardwood" for real or engineered wood, "keep" if they do not ask for a new floor, "other" for any other floor (tile, carpet, concrete). extras: everything else they ask for, each as a short noun phrase (for example "built-in bookshelf", "tile floor" when floor is "other"); at most four; [] if nothing else.`;
 const imagineResult = z.object({
   walls: z.boolean(),
   colorName: z.string().max(60),
   hex: z.string().max(9),
+  sheen: z.enum(['', 'matte', 'eggshell', 'satin']),
   floor: z.enum(['keep', 'lvp', 'hardwood', 'other']),
   extras: z.array(z.string().max(80)).max(8),
 });
@@ -153,6 +155,7 @@ export type Imagined = {
   color: { name: string; code: string; hex: string; brand: string } | null;
   // The described colour when no paint is loaded to snap it to.
   hex: string | null;
+  sheen: 'matte' | 'eggshell' | 'satin' | null;
   floor: 'keep' | StudioFloor;
   extras: string[];
 };
@@ -176,6 +179,7 @@ export function imagined(raw: unknown, paint: PaintColor[]): Imagined {
         }
       : null,
     hex: found ? null : hex,
+    sheen: r.walls && r.sheen ? r.sheen : null,
     floor: r.floor === 'other' ? 'keep' : r.floor,
     extras,
   };
