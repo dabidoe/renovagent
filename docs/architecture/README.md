@@ -1,6 +1,6 @@
 # Build architecture — Renovagent
 
-Status: Slices 1–2, local Slice 3 core, loopback Slice 4 (API/Mongo/jobs/accounts/MCP) and Slice 5 commerce planning implemented; technical review gate and hosting open · October 29, 2026
+Status: Slices 1–2, local Slice 3 core, hosted Slice 4 (API/Atlas/accounts/MCP on Railway) and Slice 5 commerce planning implemented; technical review gate open · November 1, 2026
 
 **Active hackathon implementation sequence:** [Muse-first project workflow](hackathon-implementation-plan.md). The four–five-day plan covers casual intake, room recognition, visual design alternatives with cost breakdowns, full material requirements, contractor/inspection scope, shopping and receipts. It records planned work and acceptance gates, not completed capabilities.
 
@@ -14,15 +14,15 @@ The system must be able to explain **what it knows, how it knows it, what remain
 
 ## Read in this order
 
-| Document | Purpose |
-|---|---|
-| [Product and workspace](01-product-and-workspace.md) | Full lifecycle, agent responsibilities, user surfaces, and scope boundaries |
-| [System and repository](02-system-and-repository.md) | Runtime boundaries, target file tree, current-code audit, migration strategy |
-| [Domain and contracts](03-domain-and-contracts.md) | Project record, provenance, artifacts, commands, revisions, invalidation |
-| [Agent execution and knowledge](04-agents-and-knowledge.md) | Durable runs, tools, technical research, evaluation, recovery |
-| [Delivery and verification](05-delivery-and-verification.md) | Ordered implementation slices with evidence required to call each complete |
-| [Architecture decisions](decisions/0001-foundation.md) | Selected defaults, reasons, revisit triggers, open decisions |
-| [Reference scenario](examples/half-bath-change.json) | Concrete dependency and stale-result example for implementation tests |
+| Document                                                     | Purpose                                                                      |
+| ------------------------------------------------------------ | ---------------------------------------------------------------------------- |
+| [Product and workspace](01-product-and-workspace.md)         | Full lifecycle, agent responsibilities, user surfaces, and scope boundaries  |
+| [System and repository](02-system-and-repository.md)         | Runtime boundaries, target file tree, current-code audit, migration strategy |
+| [Domain and contracts](03-domain-and-contracts.md)           | Project record, provenance, artifacts, commands, revisions, invalidation     |
+| [Agent execution and knowledge](04-agents-and-knowledge.md)  | Durable runs, tools, technical research, evaluation, recovery                |
+| [Delivery and verification](05-delivery-and-verification.md) | Ordered implementation slices with evidence required to call each complete   |
+| [Architecture decisions](decisions/0001-foundation.md)       | Selected defaults, reasons, revisit triggers, open decisions                 |
+| [Reference scenario](examples/half-bath-change.json)         | Concrete dependency and stale-result example for implementation tests        |
 
 ## Decisions to build against
 
@@ -41,6 +41,8 @@ The system must be able to explain **what it knows, how it knows it, what remain
 A user can give the agent work to do, watch its real progress, inspect a produced artifact, resolve a decision or missing fact, and continue from the same durable state after refresh or a failed run. The result includes a next action and a visible basis. A new tab, attractive mockup, canned specialist reply, or green build alone does not meet this bar.
 
 ## Implementation boundary
+
+**As of November 1, 2026 the site is hosted on Railway** (one origin: site, API, `/mcp`; Atlas; Google and guest sign-in), with a paint and floor studio driven by SAM 3.1, Muse Spark and Muse Image, and an inspiration panel. [HANDOFF.md](../../HANDOFF.md) is the current entry point; the paragraphs below are the dated record of earlier increments.
 
 **Slices 1 and 2 are implemented and tested locally.** See the [foundation evidence](slice-1-foundation.md) and [workspace evidence](slice-2-workspace.md). The main frontend now uses durable commands/repositories, typed artifact viewers, decisions, and explicit simulated runs. The old frontend remains available at `/legacy.html`.
 

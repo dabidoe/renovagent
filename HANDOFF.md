@@ -1,147 +1,239 @@
 # Renovagent handoff
 
-October 29, 2026 · America/New_York · Repository: `/Users/deastridge/Documents/Meta hackathon`
+**Updated 1 November 2026 (America/New_York).** This file replaces the 29 October handoff. That version's tunnel URL, grant expiry, QA project IDs and "uncommitted work" note are historical. Git history has them.
 
-**Resume here:** Atlas is now the shared database. Consumer Muse Mac has successfully discovered tools, read the migrated projects, created a separately authorized QA project, and reread its saved brief. The website displays the same revision. The next work is the useful product workflow: photo/inspiration → visual options with costs → complete material requirements → contractor/inspection handoff. A saved brief alone does not fulfill that goal.
+Any agent or person picking this up should read this file first, then [AGENTS.md](AGENTS.md). Read the linked docs only for the area you are changing.
 
-## Product direction
+## Resume here
 
-The owner wants a polished, simple, agent-first home improvement product for a Meta hackathon, with roughly four–five working days originally allocated. Ordinary consumer Muse is a required client. Someone should be able to say “how much for this bathroom?” with a photo/Pinterest link, or “renovate my living room,” and receive useful work with few questions.
+- **Deadline:** Meta Global AI Developer Hackathon submission is due **4 Nov 2026, 9:00 PM ET** (Cerebral Valley portal). Judging runs 4–8 Nov and finals are 9 Nov.
+- **Judging weights:** Impact 30%, use of Meta AI tooling beyond a basic integration 25%, technical depth 20%, and a demo that holds up live (including the video) 25%.
+- **Live site:** https://renovagent-production.up.railway.app. Railway redeploys every push to `main` in about 2–3 minutes. Health check: `/healthz`.
+- **Priorities until the deadline:** a live demo that works and deeper use of the Meta models. Defer billing, Premium, Bunny and Stripe; they are in [launch-checklist.md](docs/launch-checklist.md) and not built.
+- **In progress:** Slice B of inspiration. The owner's own agent (Muse, or any MCP client) can add links, products and photos to the studio's inspiration panel. See [Next work](#next-work).
 
-- Establish scope and needed materials before recommending products. A vanity shopping demo is insufficient: include supporting parts, connections, preparation, finishes and justified consumable allowances.
-- Design should accept existing inspiration/shopping links and conversational changes such as “make it blue.” Show two or three same-room visual options with their corresponding scope and cost breakdowns. Preserve original photos.
-- Check compatibility from supplied measurements and manufacturer specifications. Keep unmeasured routes, concealed conditions and unsupported feasibility unknown/conditional.
-- Save useful Design, Materials, Contractors and Requirements files in the project. Avoid a long sequence of mandatory choices or approvals.
-- Contractor handoff should specify work, exclusions, materials responsibilities, permit/inspection responsibilities and quote differences. Diagnostics, avoiding unnecessary spending, price alternatives, and receipt accounting are important use cases.
-- Keep the property/project model general. The bathroom is the first reference case; living-room flooring/refresh proves broader visual exploration.
+## What a judge sees
 
-Before substantial work, read [AGENTS.md](AGENTS.md), [architecture index](docs/architecture/README.md), the relevant linked specifications, and [PROGRESS.md](PROGRESS.md). The [hackathon plan](docs/architecture/hackathon-implementation-plan.md) is the intended sequence, not a completion claim. Its opening inventory predates this connector/migration work: there are now ten MCP tools and a verified consumer Muse connection. Day 1's connection is proven; useful scope/cost generation remains open.
+| Where                             | What it does                                                                                                                                                                                                                                                                                   | Main code                                                                                                              |
+| --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `/` landing                       | A hero bathroom with SAM 3.1 outlines of vanity, mirror, shower tile and floor (computed once, committed). A card per finish with example prices. Before/after, "the room, the work, the price" preview, agent section                                                                         | `apps/web/src/features/landing/` (`hero-scene.tsx`, `hero-segments.json` from `scripts/hero-segments.ts`)              |
+| `#examples`                       | Three real listings: Hutchinson, Oakland, Brooklyn. Each opens a paint and floor studio                                                                                                                                                                                                        | `listing-studio.tsx`, `hutchinson-studio.tsx`, `public/examples/<id>/` (built by `scripts/prepare-listing-example.ts`) |
+| Studio (examples and own project) | Per room: photo before/after with SAM wall masks tinted to the chosen paint, Muse Image floors, 3D room, priced paint and floor list, "Imagine" (words to paint and floor picks), **Inspiration** (photo you love → items, colours, 3 nearest paints, shop searches, restyle → _Inspired_ tab) | `paint-floor-studio.tsx`, `inspo-panel.tsx`, `paint-floor.ts`, `apps/api/src/studio.ts`                                |
+| `#your-project`                   | Owner uploads their own photos and an optional floor plan → SAM walls, Muse Spark reads (room type, ceiling height from doors), Muse floors, priced plan                                                                                                                                       | `own-studio.tsx`, `own-project.ts`                                                                                     |
+| `#connect`                        | Signed-in owner (guest or Google) makes or revokes 7-day agent keys for `https://<site>/mcp`. Muse and any MCP client                                                                                                                                                                          | `apps/web/src/features/connect/`, `apps/api/src/mcp-access.ts`, `mcp-http.ts`                                          |
+| Workspace (project picker)        | The older prompt-first project workspace: projects, evidence, inspiration & products board, scope drafts, design options, review, contractor handoff                                                                                                                                           | `apps/web/src/app/workspace-app.tsx`, `features/*`                                                                     |
 
-## What was completed
+**Accounts:**
 
-| Area | Verified result | Remaining boundary |
-| --- | --- | --- |
-| Database | API, stdio MCP, HTTP MCP, launcher, catalog seed and grant CLI share server-side database selection; configured `MONGODB_URI` selects Atlas | No automatic synchronization or fallback to another database |
-| Migration | Seven original projects, 41 artifact identities with revision histories, three blobs, two completed photo jobs, and 17 products/offers/price observations each copied to Atlas | Original local copies remain; do not replay migration over the live workspace |
-| Photos | 25 private job JSON files copied, including five cached image inputs and historical execution receipts; all five images served with original hashes | Future provider checkpoints/receipts still use local disk; distributed recovery is open |
-| MCP | Ten tools over stdio and authenticated stateless Streamable HTTP; expiring/revocable owner-bound read/proposal grants | Temporary HTTPS test, not stable deployment; no MCP photo-upload/job tool yet |
-| Consumer Muse | Native Mac app discovered schemas, listed seven originals, created QA project and reread brief revision 1 | Shipped client template stalled; working client in Muse uses individual stateless calls and a bounded 180-second timeout |
-| Website | Reload displayed Muse's exact QA brief; corrected misleading “Simulated output” label to “Saved project intent · unreviewed” | Website general chat still saves notes; it does not run a general live assistant |
+- "Continue as guest" gives a private workspace in one click, capped at 20 per hour per address. `RENOVAGENT_GUESTS=off` turns it off.
+- "Add Google" turns the guest into a Google account in place (`completeLogin(..., guestId)` in `apps/api/src/accounts.ts`).
+- Meta login has been dropped. Don't add the Facebook JS SDK.
 
-Agents propose through validated commands. They cannot accept decisions, record technical facts through the MCP allowlist, pass inspections or purchase anything. Technical-source coverage and qualified review gates remain open. Catalog prices remain visibly labeled demo observations.
+**Where edits are kept:**
 
-## Canonical data and backup
+- Example studio edits stay in the browser (localStorage `renovagent.studio.<id>.*`, `renovagent.example.<id>.edits.v1`). The kicker says so. There is no "save to my account" for examples; the owner rates it low priority.
+- Own-project photos are stored on the server for each owner, keyed by SHA-256.
+- Agents save paint and floor plans with `save_plan`, which hands the owner a link.
 
-The original project aggregate was in **`unpermitted_workspace` on local port 27018**, while the catalog was in local **`renovagent_workspace`**. The configured Atlas **`renovagent_workspace`** was empty apart from an initialized blank owner aggregate. Migration used validation, a private EJSON backup, a source recheck and one majority-write Atlas transaction.
+## Meta models: where each is used
 
-- Owner: `local-homeowner`.
-- Atlas had **eight projects after QA**: seven originals plus the clearly labeled test below. Later user work may change that count.
-- Backup folder: `.local/backups/atlas-migration-2026-10-29T22-08-34.859Z/`.
-- `snapshot.ejson` contains source and pre-migration destination records; `verification.json` records successful comparisons. Both files are private, mode 0600, ignored by Git.
-- Source snapshot SHA-256: `d153030a97ff58640d7f8f1580f92ee4f16ce94c6c415033a31ff9266a9c3462`.
-- Originals remain in local Mongo, browser IndexedDB, and `.local/photo-jobs`. They are backups, not the connected workspace's write target.
-- A later dry-run correctly refuses the changed destination: website navigation receipts and the QA project make it diverge from the frozen source. Do not reset Atlas to make the old snapshot match.
+All calls are server-side through `scripts/muse-provider.ts`, against `https://api.meta.ai/v1` with `MUSE_API_KEY`. Older workspace photo jobs still use the `muse` CLI.
 
-Configuration precedence is `RENOVAGENT_MONGO_URI`, `WORKSPACE_MONGODB_URI`, then `MONGODB_URI`. Process values override the corresponding file variables; root `.env` is read before `server/.env`. An omitted database path normalizes to `renovagent_workspace`. Explicit local mode is `RENOVAGENT_MONGO_TARGET=local`, selecting `MONGODB_URI_LOCAL`.
+| Model                                           | Used for                                                                                                                              | Entry points                                                                                   |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| **SAM 3.1** (`samSegmentText`)                  | Wall masks, hero outlines (counts 33 hex floor tiles), and outlining each inspiration item                                            | `/studio/walls`, `/studio/inspo`, `/photos/segment`; parsing in `apps/api/src/segmentation.ts` |
+| **Muse Spark** (`museJson`)                     | Room reads (type, ceiling height from door heights), "Imagine" words → picks, naming what makes an inspiration look                   | `/studio/read`, `/studio/imagine`, `/studio/inspo`                                             |
+| **Muse Image** (`museEditImage`, about 20–30 s) | New floors on the real photo, restyle a room with the look of an inspiration photo (reference image), photoreal stills of the 3D room | `/studio/floor`, `/studio/restyle`, `/model/photoreal`                                         |
+| **Jev** (TypeSafe, `TYPESAFE_API_KEY`)          | Ranking review findings, best value across tiers, pinning photos                                                                      | `apps/api/src/jev.ts`                                                                          |
+| Blender on Modal                                | HD Cycles renders of the measured 3D room                                                                                             | `modal/render_room.py`, `/model/hq-render`                                                     |
 
-**Local configuration trap:** the existing `MONGODB_URI_LOCAL` value points to the older `27017/unpermitted` service, not the persistent project service on 27018. It was preserved. Use an explicit correct URI if investigating old local data. Never print connection strings, provider keys or bearer tokens. Private environment files, `.local/` and `atlas-credentials.env` must stay out of Git.
+**Per-owner limits:** each owner gets 60 segment calls, 12 repaint calls and 10 read calls per 10 minutes (`apps/api/src/studio.ts`).
 
-Details: [migration evidence](docs/architecture/atlas-migration.md), [database/connector setup](docs/architecture/remote-mcp-connector.md).
+**Paint matching:**
 
-## Exact consumer Muse proof
+- `nearestPaints` uses CIELAB distance (CIE76 ΔE) in `packages/core/src/commerce/paint-colors.ts`.
+- Matches with ΔE ≤ 12 (`FAR_MATCH_DE`) count as close. Further than that, the UI says nothing is close.
+- The palette is Sherwin-Williams, loaded with `npm run seed:paint`; the brand file is not in git. Without it the app falls back to six starter colours.
 
-Native app: **Muse**, tester name **renovagent tester**, custom provider **`custom.renovagent`**. The credential was entered only through Muse's secure Add custom connector field.
+## Rules that must not be broken
 
-| Record | Value |
-| --- | --- |
-| Project name | QA · Muse living-room connector test |
-| Request ID | `muse-mac-qa-20261029-living-room` |
-| Project ID | `agent-project:e2fa554fb2e66006918a582f` |
-| Separate home ID | `agent-home:e2fa554fb2e66006918a582f` |
-| Artifact ID | `agent-project:e2fa554fb2e66006918a582f:agent-brief` |
-| Revision/state | 1 · proposed/current · unaccepted |
+These come from the owner across sessions. They are not visible in the code.
 
-Muse called `start_project`, `list_project_files` and `get_artifact`, then stopped. The brief compares hardwood with keeping the existing floor and explicitly leaves dimensions, budget, conditions and prices unknown. Independent Atlas comparison confirmed all original properties/projects/facts/evidence/artifacts/decisions/runs unchanged. No estimate, design, physical fact, approval or purchase was added.
+**Honesty**
 
-Evidence preserved in the repository:
+- No invented physical defaults, code citations, live prices, verified contractor credentials or savings claims.
+- Demo prices stay labelled ("Example prices for this demo, not live offers").
+- Generated images are labelled as generated. The Inspired view says "a picture, not a plan".
+- Don't show the AI `product-*.jpg` images as product photos.
+- Shopping links are **store searches**, never a claimed product, price or stock. The Amazon tag (`RENOVAGENT_AMAZON_TAG`) is added only when set, and the disclosure then shows.
+- Example reviews are never shown as Google's.
+- An agent's finds are shown as found by the agent and not checked.
 
-- [Website showing the saved brief](docs/previews/atlas-muse-brief.png).
-- [Native Muse completion result](docs/previews/muse-mac-qa-result.png).
+**Sources**
 
-The website was left on the QA brief. To reopen: project selector → QA project → Tools → Saved work → Project brief, revision 1. Do not accept it just to improve the screenshot.
+- No scraping: no Pinterest, IKEA or retailer page fetching.
+- No downloading retailer images.
+- The server never fetches an image URL (SSRF risk).
+- Inspiration photos arrive only by the owner's upload.
+- The brand paint swatch files and raw listing photo folders stay out of git.
 
-## Runtime and connection lifetime
+**Secrets**
 
-At approximately **6:38 PM Eastern on October 29**, the frontend returned HTTP 200, the API's `/api/workspace/auth/me` returned HTTP 200 with `local-single-owner`, and MCP `/health` returned HTTP 200. Recheck ports before starting duplicates.
+- Never commit `.env`, `server/.env` or `atlas-credentials.env`.
+- Never print credentials, tokens or partial API keys.
+- Mask Mongo URIs: `sed -E 's#//[^@ ]*@#//***@#g'`.
+- Provider keys stay on the server.
+- The render token lives only in the Modal secret, `.local/render-token` and `.env`.
+- MCP keys go only into the agent's secure credential field. Docs use `reno_YOUR_KEY`. Mask `.ca-secret` in screenshots.
 
-| Service | Address / resume command |
-| --- | --- |
-| Frontend | `http://127.0.0.1:8741/` · `npm run dev -- --strictPort` |
-| Website API | `127.0.0.1:4000` · `npm run dev:api` |
-| MCP HTTP | `127.0.0.1:4010/mcp` · `npm run serve:mcp:http` |
-| Persistent local Mongo backup/test service | `127.0.0.1:27018` · `npm run dev:mongo` |
-| Combined website startup | `npm run dev:connected` starts API/frontend and starts local Mongo only when local selection is active |
+**Live data**
 
-The current MCP process was started with a temporary diagnostic wrapper, `/tmp/renovagent-mcp-observed.ts`, using the same maintained `createMcpHttpServer`. It records only timestamp, method, route class and status in `.local/mcp/test-http-status.log`. Replace it with the maintained CLI on restart; do not assume `/tmp` files will survive.
+- No scripts that write to, or take screenshots against, live Atlas or the live site without the owner asking that time. That includes guest sign-ins, uploads and model spend.
+- Run e2e against local Mongo on port 27018.
+- Read-only page loads of the live site are fine.
 
-The authorized test endpoint was `https://switches-impressive-vids-duplicate.trycloudflare.com/mcp`. The tunnel forwards **only 4010** and was configured to terminate after one hour, approximately **7:09 PM Eastern**. The grant expires approximately **7:11 PM Eastern**, October 29. A stale URL/key is expected to fail after that window; neither is a permanent integration endpoint.
+**Owner-only steps**
 
-The owner authorized that one-hour exposure/pairing, then separately authorized the QA project write. Persistent “Always allow this site” permission was rejected by automatic approval review and was not granted. Requests were approved individually. Do not treat the old test as permanent authorization to reopen public access or grant broader permissions.
+- The owner does the GitHub settings, Railway variables, Atlas users and network, Google Cloud and Meta console.
+- New npm dependencies and downloads need the owner's approval first.
 
-For a newly authorized connection: establish the HTTPS hostname, set `RENOVAGENT_MCP_PUBLIC_URL` to its exact `/mcp` URL, restart the HTTP listener, and issue an owner-bound expiring grant with `npm run mcp:access`. The CLI writes the key to a private ignored file without printing it. Enter it only through the client's secure credential flow. Changing a Quick Tunnel hostname also changes Muse's registered allowed host; reuse is not automatic.
+**Agent authority**
 
-The shipped Muse template timed out with a 45-second request budget. One interactive initialize returned HTTP 200 after 51.6 seconds; an initialized-notification probe also stalled. The working Muse client uses one stateless JSON-RPC call per invocation with 180-second timeout. The precise contribution of network approvals versus transport behavior remains unresolved. Do not claim the server's protocol support is universally broken or that the developer stdio test alone proves consumer integration.
+- Agents propose; they never approve, record site facts, pass inspections or buy anything.
+- MCP writes go through validated commands or dedicated narrow tools.
 
-## Code map for this increment
+## Run, test, deploy
 
-| Files | Responsibility |
-| --- | --- |
-| `apps/api/src/database-config.ts` | Shared cluster/local selection without secret logging |
-| `apps/api/src/mcp-access.ts`, `scripts/mcp-access.ts` | Hashed owner/access/expiry grants and private credential issuance/revocation |
-| `apps/api/src/mcp-http.ts` | Separate authenticated stateless HTTP listener, Host/Origin checks, request/rate limits |
-| `apps/api/src/agent-projects.ts` | Atomic, retry-safe project creation plus proposed intent brief |
-| `apps/api/src/mcp.ts` | Ten tools, grant-based discovery, saved files, proposal allowlist; stale/rejected checkout-plan check |
-| `apps/api/src/cluster-migration.ts`, `scripts/migrate-to-cluster.ts` | Preflight, private backup, transactional copy and hash verification |
-| `apps/api/src/photo-job-files.ts` | Owner/job/name-scoped immutable private files with checksum checks |
-| `apps/api/src/photo-jobs.ts`, `apps/api/src/server.ts` | Persist/reuse cloud image inputs; authorized hash-matched image serving |
-| `apps/web/src/features/work/artifact-panel.tsx`, `artifact-view.tsx` | Correct label/title for saved agent intent; other commerce viewers still need work |
-| `scripts/dev-connected.ts`, `scripts/seed-catalog.ts`, `package.json` | Shared selection and operational commands |
-| `tests/integration/mcp-http.test.ts`, `database-config.test.ts`, `cluster-migration.test.ts`, `connected-workspace.test.ts` | Connection, access, migration and cloud-only photo rendering checks |
+**Local**
 
-## Next implementation sequence
+| Command                  | What                                                                                                     |
+| ------------------------ | -------------------------------------------------------------------------------------------------------- |
+| `npm run dev`            | Frontend only, http://127.0.0.1:8741 (IndexedDB workspace)                                               |
+| `npm run dev:connected`  | API, MCP (4010) and frontend against the **configured database, which is Atlas**. Writes go to real data |
+| `npm run dev:local`      | The same against local Mongo on 27018                                                                    |
+| `npm run dev:accounts`   | Turns Google sign-in on locally                                                                          |
+| `npm test`               | 15 legacy JS plus about 280 TS tests (contract, domain, integration)                                     |
+| `npm run test:connected` | Integration suites against a real local Mongo on 27018 (about 57)                                        |
+| `npm run build`          | Types, boundaries, production builds                                                                     |
+| `npx tsc --noEmit -p .`  | Fast type check                                                                                          |
 
-1. **Make the existing commerce artifacts inspectable and trustworthy.** Add BOM, purchase-plan and checkout-review renderers. Reproduce and fix the review findings below before using price comparisons in a demo.
-2. **Done October 29 — see [scope draft](docs/architecture/scope-draft.md).** Produce a useful scope and full materials draft from casual intent. Reuse the existing command/revision model. Add a bounded versioned reference recipe covering the declared bathroom work packages, supporting parts and justified allowances. Missing facts should block affected decisions, not every draft. Ask few questions and retain “I don't know.” A big dataset acquisition is not a prerequisite; use attributable installation documents/specifications first.
-3. **Implemented locally October 29 — see [design options](docs/architecture/design-options.md); demo data not yet applied to Atlas.** Deliver the visible wow moment. A real room photo plus a vague request produces two or three same-room alternatives with cost breakdowns tied to their own scope/quantities/rate basis. Selection or “make it blue/cheaper” updates saved design, materials and stale dependencies together. Distinguish image search/reference retrieval from generated previews, and label generated images.
-4. **Turn the selected scope into a contractor/inspection package.** Work packages, exclusions, materials owner/contractor responsibilities, quote comparison and unresolved local requirements. Preserve actual inspection evidence; scheduled never means passed. Named outreach and purchases require their own authorization.
-5. **Finish the demo journey and polish.** Durable project files, clear unknowns and price coverage, reconnect/retry, phone usability, receipt reconciliation if time permits. Reduce breadth before dropping the complete journey. Stable hosting is still a separate implementation task.
+**Before every push:**
 
-### Commerce review findings — addressed October 29 (step 1)
+1. `npx tsc --noEmit -p .`
+2. `npm test`
+3. `npm run test:connected`, with mongod running on 27018
+4. `npm run build`
+5. `npx prettier --write` on touched files
 
-All seven findings below have failing-first regressions and fixes; see the PROGRESS.md entry “Commerce integrity and saved-file viewers” and `docs/architecture/commerce-catalog.md` § Integrity rules. Remaining limits: catalog observations do not stale saved plans, and local import rollback is compensating rather than transactional. Next is step 2. Original findings:
+**Local e2e with real models but local data** (how the inspiration feature was tested):
 
-- `artifact-view.tsx` declares commerce titles but lacks rendering cases for `bom`, `purchase-plan` and `checkout-review`; opening these artifacts can show no useful content.
-- Proposal-grade commerce payloads need authoritative semantic validation of totals, line/source identity and dependencies. A schema-valid agent proposal must not become trusted purchasing math by assertion.
-- `packages/core/src/commerce/plans.ts` maps product ID to a single priced offer; multiple offers for the same product are overwritten. Earlier order reversal selected a $1 versus $999 offer depending on array order.
-- Offer selection needs pack-unit compatibility, stock handling and delivered-cost ranking. Current ranking uses merchandise line totals before shipping; shipping is added afterward.
-- BOM → purchase-plan → checkout dependencies and downstream invalidation need complete source/revision coverage.
-- `CatalogStore.importBatch` can write collections independently before a later conflict; make an operator import atomic. The migration tool's transaction does not repair the regular importer.
-- Recheck empty candidate lookup semantics: `offersFor([])` currently removes the product filter and can return the catalog. `CatalogStore.search` already rejects blank queries; do not conflate those paths.
+```bash
+set -a; . "/Users/deastridge/Documents/Meta hackathon/.env"; set +a
+env -u RENOVAGENT_PUBLIC_URL -u RENOVAGENT_HOST -u META_APP_ID -u META_APP_SECRET \
+  GOOGLE_CLIENT_ID=e2e-client GOOGLE_CLIENT_SECRET=e2e-secret PORT=4100 \
+  RENOVAGENT_MONGO_URI=mongodb://127.0.0.1:27018/renovagent_workspace \
+  node --import tsx apps/api/src/server.ts
+npx vite --config .local/vite.e2e.config.js   # 8743, proxies /api to 4100
+```
 
-Keep changes in reviewable slices. Preserve the preview and the original projects. Avoid expanding the scope into unrelated infrastructure or rewriting the domain.
+- The fake Google client turns account mode on, so "Continue as guest" works.
+- The local database has no paint palette, so paints fall back to the six starter colours.
+- Local mongod binary: `.local/mongodb-binaries/mongod-arm64-darwin-8.0.16 --dbpath <dir> --port 27018 --bind_ip 127.0.0.1`.
 
-## Verification and Git state
+**Git**
 
-Last completed verification for this implementation:
+- Commit to `main` and push. There is no PR flow for the hackathon.
+- Parallel agent sessions use a detached worktree (`git checkout --detach origin/main`, commit, `git push origin HEAD:main`), then fast-forward the main checkout.
+- Railway deploys `main`. Watch with a read-only page load, never by signing in.
 
-- `npm test`: **150 passed** (15 legacy JavaScript + 135 TypeScript), **25 Mongo scenarios skipped** without the explicit test URI.
-- `npm run test:connected`: **28/28 passed**, against isolated temporary databases on the real local Mongo service. These overlap regular-suite scenarios; do not add the counts as unique tests.
-- `npm run build`: strict types, dependency boundaries, frontend and foundation builds passed. Existing frontend bundle-size advisory remains.
-- `npm run format:check` and `git diff --check`: passed.
-- Real Atlas copy/hash/source-preservation checks, five authorized photo hashes, public unauthenticated 401, consumer Muse read/write/read, and website reload were verified separately.
+**Deploy configuration (Railway Variables, names only)**
 
-Logs: `/tmp/renovagent-cluster-unit.log`, `/tmp/renovagent-cluster-connected.log`, `/tmp/renovagent-cluster-build.log`, `/tmp/renovagent-cluster-format.log`. Temporary files may disappear; the maintained tests and linked evidence are the durable record. Handoff creation itself does not rerun those suites.
+- **Database:** `RENOVAGENT_MONGO_URI`. Precedence is `RENOVAGENT_MONGO_URI` → `WORKSPACE_MONGODB_URI` → `MONGODB_URI`. A URI with no database path means `renovagent_workspace`.
+  - **Unverified:** which database the live URI names. The launch checklist proposed `/renovagent_demo`. The Sherwin-Williams palette (1526 colours) was counted in `renovagent_workspace`. Check in Railway before any data work.
+- **Site:** `RENOVAGENT_PUBLIC_URL`.
+- **Sign-in:** `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`.
+- **Models:** `MUSE_API_KEY`, `TYPESAFE_API_KEY`.
+- **Renders:** `RENOVAGENT_RENDER_URL`, `RENOVAGENT_RENDER_TOKEN`.
+- **Optional:** `RENOVAGENT_GUESTS`, `RENOVAGENT_AMAZON_TAG`, `RENOVAGENT_CATALOG_OPERATOR`.
+- **Don't set:** `PORT` is injected. `GOOGLE_REDIRECT_URI` is derived.
+- **Atlas password rotation:** update `.env`, `server/.env` and Railway together.
 
-The checkout was on **`main`**, latest commit **`de30aab`** (`feat: enhance MCP tools and catalog integration`), preceded by `45e88d3`. All connector/migration/UI-label/documentation changes from this session were **uncommitted** at handoff. Inspect `git status`/diff before continuing; do not discard this work. `.DS_Store` and `docs/.DS_Store` were already modified and should not be staged or reverted casually. No PR, remote push or application deployment was performed.
+**Local configuration traps**
 
-Start the next session by reading this document and the current Git diff, confirming the selected Atlas workspace and preserving the verified connection/data baseline, then implement the first useful scope/materials/visual-options slice. Do not spend the next session repeating the migration or proving the same seven-project read again.
+- The `.env` URI has no database path, but scripts run against it have landed in the `test` database. Name the database explicitly.
+- `MONGODB_URI_LOCAL` points at an old 27017 service, not 27018.
+
+## MCP for agents
+
+The endpoint is `https://<site>/mcp`, a stateless Streamable HTTP endpoint. Each key belongs to one owner and expires after 7 days. Owners make keys at `#connect`. Local stdio: `npm run serve:mcp`.
+
+**Tools (from `CAPABILITIES` in `apps/api/src/mcp.ts` and `mcp-studio.ts`)**
+
+| Kind                            | Tools                                                                                                                                                                                                                                                                       |
+| ------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Read                            | `list_homes`, `list_projects`, `get_project_context` (includes inspiration and product references), `review_scope`, `export_contractor_handoff`, `list_project_files`, `get_artifact`, `get_design_options`, `search_catalog`, `get_offer_history`, `build_checkout_review` |
+| Studio                          | `list_floor_styles`, `find_paint_color`, `plan_paint_and_floor`                                                                                                                                                                                                             |
+| Propose (not on read-only keys) | `start_project`, `draft_scope`, `build_design_options`, `revise_design_option`, `propose_project_change` (allows only `ProposeArtifact`, `SaveDraft`, `AppendMessage`)                                                                                                      |
+| Hosted with a propose key       | `save_plan`, which saves a paint and floor plan and returns a link for the owner                                                                                                                                                                                            |
+
+Consumer Muse on Mac connected and created and read projects on 29 Oct ([evidence](docs/architecture/remote-mcp-connector.md)). The hosted `/mcp` replaced the temporary tunnel.
+
+## Inspiration, as built (Slice A, `4e947d1`)
+
+**The flow**
+
+1. In any studio, under Imagine, the owner chooses **Use an inspiration photo**.
+2. The photo is uploaded owner-scoped through `/studio/photo`.
+3. `/studio/inspo` runs: Muse Spark names up to 6 items, each with a phrase, name and kind (walls, floor, bedding, textile, furniture, lighting, decor). SAM 3.1 then outlines each phrase.
+   - The result is cached for each owner and photo.
+   - It costs 1 read plus 1 segment per item.
+4. In the browser:
+   - each item's colour is a trimmed mean of the pixels inside its mask;
+   - walls call `/paint/nearest`, which returns the 3 nearest paints;
+   - the other items get Amazon, Wayfair and Target search links (`shop-links.ts`).
+5. **Restyle** (`/studio/restyle`) sends the room photo plus the inspiration photo as a reference to Muse Image, with only the ticked items and the chosen paint.
+   - The result is stored and shown in an **Inspired** tab with a slider.
+   - It persists per room in localStorage.
+
+**Measured locally with the real models:** about 21 s to analyse, about 28 s to restyle.
+
+**Known behaviour:** Muse adds the furniture you borrow. An empty room gains a bed. Untick furniture to change finishes only.
+
+## Next work
+
+1. **Slice B: the agent adds to the inspiration panel.** A tool for the owner's own agent to save a link, product or photo to that owner's inspiration list. The studio's panel shows them with "Found by <agent> · not checked", and the owner can add their own links there too.
+   - Links are validated like `projectReferenceSchema`: http(s) only, no credentials.
+   - The server never fetches URLs.
+   - Photos come only as bytes the agent already holds, with a size cap.
+   - Read-only keys can't use it.
+   - Status: see [PROGRESS.md](PROGRESS.md).
+2. **Bedroom refresh example.** A worked inspiration example (a saved Pinterest pin applied to the owner's bedroom). Ship the before/after and extracted items, never the pin itself. Status: see PROGRESS.
+3. **Design-pass open items:** see [docs/design-pass-2026-11-01.md](docs/design-pass-2026-11-01.md). Medium: the `product-*.jpg` disclaimer on every Materials view.
+4. **Paint lines** (owner: "good enough for now"):
+   - tiers are contractor, mid and designer, not real Sherwin-Williams lines;
+   - sheen (Matte, Eggshell, Satin) exists;
+   - Behr is not loaded.
+5. **Demo video and submission text.** Not started.
+
+**Not built** (do not claim):
+
+- billing and credits;
+- live retailer prices;
+- contractor verification;
+- purchasing;
+- reviewed code guidance;
+- saving an example to an account.
+
+## Where the details live
+
+| Area                                           | Doc                                                                                                                                                                                                                                    |
+| ---------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Status, newest first                           | [PROGRESS.md](PROGRESS.md)                                                                                                                                                                                                             |
+| Architecture index and implementation boundary | [docs/architecture/README.md](docs/architecture/README.md)                                                                                                                                                                             |
+| Hosting                                        | [hosted-deployment.md](docs/architecture/hosted-deployment.md), [launch-checklist.md](docs/launch-checklist.md)                                                                                                                        |
+| Accounts                                       | [accounts-and-google-login.md](docs/architecture/accounts-and-google-login.md)                                                                                                                                                         |
+| MCP                                            | [mcp-workspace-adapter.md](docs/architecture/mcp-workspace-adapter.md), [remote-mcp-connector.md](docs/architecture/remote-mcp-connector.md)                                                                                           |
+| Inspiration                                    | [inspiration-and-products.md](docs/architecture/inspiration-and-products.md)                                                                                                                                                           |
+| Studio and examples                            | [example-studio-polish.md](docs/design/demo-readiness/example-studio-polish.md), [hutchinson-whole-house-concept.md](docs/design/demo-readiness/hutchinson-whole-house-concept.md), [room-studio.md](docs/architecture/room-studio.md) |
+| Model integration                              | [MODEL_INTEGRATION.md](docs/MODEL_INTEGRATION.md)                                                                                                                                                                                      |
+| Last design review                             | [design-pass-2026-11-01.md](docs/design-pass-2026-11-01.md)                                                                                                                                                                            |

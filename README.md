@@ -23,8 +23,9 @@ This is an early development project. The current local working tree includes:
 - An authenticated MCP connector, tested in the consumer Muse Mac app: discover projects, start a separate project and save/read its proposed brief.
 - Optional Google/Meta sign-in with per-owner workspaces (needs your OAuth clients; see the accounts doc).
 - A demo commerce catalog with tiered purchase plans and contractor review (example prices only).
+- **Hosted** at https://renovagent-production.up.railway.app: listing examples and your own photos in a paint and floor studio (SAM 3.1 walls, Muse Image floors and restyles, 3D rooms), inspiration photos turned into items, paints and store searches, one-click guests, and `/mcp` for your own agent.
 
-General messages in the website are saved notes; the tested consumer Muse connection uses the shared MCP tools. Both local stdio and authenticated Streamable HTTP expose owner-scoped reads and proposals. The one-hour HTTPS test uses a temporary tunnel; stable hosting, live supplier pricing, contractor verification, purchasing and hosted customer accounts remain open. The older MCP demo uses a different project model.
+General messages in the website are saved notes; the tested consumer Muse connection uses the shared MCP tools. Both local stdio and authenticated Streamable HTTP expose owner-scoped reads and proposals. Live supplier pricing, contractor verification, purchasing and billing remain open. The older MCP demo uses a different project model.
 
 See [current implementation and limits](docs/architecture/connected-muse-and-mongo.md), [Atlas migration](docs/architecture/atlas-migration.md) and [consumer Muse connection evidence](docs/architecture/remote-mcp-connector.md).
 

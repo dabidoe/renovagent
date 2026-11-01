@@ -1,8 +1,10 @@
 # Hosted deployment: one origin, one container
 
-Status: deployable scaffolding implemented and tested locally (October 30, 2026).
-Nothing has been deployed. Owner accounts, domain, production database and
-provider credentials are not set up by code.
+Status: **deployed on Railway** at https://renovagent-production.up.railway.app
+(November 1, 2026), auto-deploying `main`, with Atlas, Google sign-in, guests and
+`/mcp` on the same origin. Bunny, a custom domain and billing are not set up. The
+owner sets the Railway variables, Atlas users and OAuth clients; code does not.
+Variable names and the current state are in [HANDOFF.md](../../HANDOFF.md).
 
 ## Shape
 
@@ -23,13 +25,13 @@ without CORS, and the web client's absolute `/api/workspace` paths need no
 change. (`build:pages` is the older static package for GitHub Pages: it puts
 the pre-v2 static `landing.html` at `/`, so it is not used for hosting.)
 
-| Path               | Served as                                                | Cache                   |
-| ------------------ | -------------------------------------------------------- | ----------------------- |
+| Path               | Served as                                                       | Cache                   |
+| ------------------ | --------------------------------------------------------------- | ----------------------- |
 | `/`                | React app: landing v2, then the workspace; sign-in returns here | `no-cache` (revalidate) |
-| `/assets/*`        | Hashed JS/CSS/images                                     | 1 year, `immutable`     |
-| `/legacy.html`     | Earlier preview                                          | `no-cache`              |
-| `/api/workspace/*` | Workspace API (unchanged rules)                          | `no-store`              |
-| `/healthz`         | Liveness `{ok:true}`, no workspace data                  | `no-store`              |
+| `/assets/*`        | Hashed JS/CSS/images                                            | 1 year, `immutable`     |
+| `/legacy.html`     | Earlier preview                                                 | `no-cache`              |
+| `/api/workspace/*` | Workspace API (unchanged rules)                                 | `no-store`              |
+| `/healthz`         | Liveness `{ok:true}`, no workspace data                         | `no-store`              |
 
 The provider's redirect back to `/api/workspace/auth/<provider>/callback` is a
 cross-site navigation, so that one GET is exempt from the `Sec-Fetch-Site`

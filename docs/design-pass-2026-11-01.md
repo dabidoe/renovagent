@@ -19,8 +19,8 @@ what fixing them would take.
 | Agent section                    | "Connect your agent" / "Built on MCP" were 11 px links that broke into fragments on phones                                  | Primary and secondary 44 px buttons                                                                                                                                                                                   | `3451107`              |
 | Footer links                     | 14 px tall                                                                                                                  | 44 px hit areas                                                                                                                                                                                                       | `3451107`              |
 | Example studio                   | 29 controls under 40 px on a phone (paint line, finish, floor material, tier, view toggle, swatches 34 px, "Listing" 16 px) | 44 px on touch screens and narrow windows, compact with a mouse; "View listing ↗" is a button                                                                                                                        | `3451107`              |
-| Phone account                    | Below 480 px the header hid the account, so a phone guest had no Sign out and no Add Google                           | The projects dialog (header picker) always shows "Signed in as …", Add Google (guests) and Sign out                                                                                                             | `3451107`              |
-| Desktop account                  | "Add Google" / "Sign out" 11 px links                                                                                 | 36 px pills                                                                                                                                                                                                           | `3451107`              |
+| Phone account                    | Below 480 px the header hid the account, so a phone guest had no Sign out and no Add Google                                 | The projects dialog (header picker) always shows "Signed in as …", Add Google (guests) and Sign out                                                                                                                   | `3451107`              |
+| Desktop account                  | "Add Google" / "Sign out" 11 px links                                                                                       | 36 px pills                                                                                                                                                                                                           | `3451107`              |
 | `#connect`                       | Copy 32 px, Make key 36 px, key name 37 px                                                                                  | 44 px                                                                                                                                                                                                                 | `3451107`              |
 | Examples                         | Edits are kept in this browser (localStorage), but nothing said so                                                          | Kicker: "Example from a real listing · your changes stay in this browser" (checked: a paint and floor change survive a reload)                                                                                        | `3451107`, this commit |
 | Guests                           | Signing in with Google stranded the guest's work                                                                            | The guest account becomes the Google account (workspace, keys, plans kept)                                                                                                                                            | `72b39df`              |
@@ -45,15 +45,14 @@ what fixing them would take.
    partial tiles at the edges and excludes tiles under the vanity, so it is an observation
    to show, never an order quantity. Muse Spark can name objects first and SAM outline
    them.
-2. **Existing paint, nearest match.** Average the pixels inside SAM's wall mask, correct for
-   white balance where possible, and find the nearest catalog colours by perceptual
-   distance (CIEDE2000) in code. Jev then picks among the five nearest given the owner's
-   words ("warm, not yellow"). Label it "closest catalog colour to the photo", not the
-   paint on the wall.
-3. **Inspiration photo → your room.** The same pipeline on someone else's photo: SAM finds
-   walls, floor and cabinets; code takes their colours and nearest products; the studio
-   proposes them on the owner's own photos. Reuses the studio's SAM wall masks, the paint
-   catalog and Jev.
+2. **Existing paint, nearest match.** Built for inspiration photos (`4e947d1`): the browser
+   takes a trimmed mean of the pixels inside SAM's wall mask and `/paint/nearest` returns the
+   three nearest catalog colours by CIELAB distance (CIE76 ΔE; "nothing close" past 12). Not
+   yet run on the owner's own walls, and no white-balance correction. Label it "closest catalog
+   colour to the photo", not the paint on the wall. CIEDE2000 would rank near-greys better.
+3. **Inspiration photo → your room.** Built as the studio's Inspiration panel (`4e947d1`):
+   Muse Spark names the items, SAM outlines them, the owner ticks what to borrow, and Muse
+   Image restyles their room. See [inspiration-and-products](architecture/inspiration-and-products.md).
 
 ## How this was checked
 
