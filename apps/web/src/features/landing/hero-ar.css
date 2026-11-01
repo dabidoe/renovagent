@@ -1,4 +1,4 @@
-/* Object-linked example, aligned to the mirrored room photograph. */
+/* SAM 3.1 outlines of the mirrored room photograph, with an example price card. */
 .prompt-workspace.is-landing .prompt-header::before {
   content: '';
   position: absolute;
@@ -34,26 +34,19 @@
 }
 .ar-object {
   cursor: pointer;
-  pointer-events: all;
-}
-.ar-object polygon {
-  fill: #0866ff08;
-  stroke: #b5d7ff9c;
-  stroke-width: 2;
+  pointer-events: visiblePainted;
+  fill: #ffffff05;
+  stroke: #d6e8ff73;
+  stroke-width: 1.5;
   vector-effect: non-scaling-stroke;
+  fill-rule: evenodd;
   transition:
     fill 0.2s,
     stroke 0.2s;
 }
-.ar-object circle {
-  fill: #fff;
-  stroke: #0866ff;
-  stroke-width: 2;
-  vector-effect: non-scaling-stroke;
-}
-.ar-object.is-active polygon {
-  fill: #0866ff1a;
-  stroke: #69adff;
+.ar-object.is-active {
+  fill: #0866ff2e;
+  stroke: #8cc1ff;
   stroke-width: 2;
 }
 .hero-ar-controls {
@@ -66,6 +59,7 @@
   display: flex;
   align-items: center;
   gap: 7px;
+  min-height: 44px;
   border: 0;
   background: transparent;
   padding: 8px;
@@ -73,39 +67,34 @@
   font: inherit;
   cursor: pointer;
   pointer-events: auto;
+  transform: translate(-15px, -50%);
 }
 .hero-ar-target > span {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
+  flex: none;
   background: #fff;
   border: 2px solid #0866ff;
   border-radius: 50%;
-  box-shadow: 0 0 0 3px #ffffff50;
+  box-shadow: 0 0 0 4px #ffffff50;
 }
 .hero-ar-target > b {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
-  padding: 6px 9px;
-  background: #102337c9;
-  border-radius: 4px;
+  padding: 6px 10px;
+  background: #102337d9;
+  border-radius: 5px;
+  white-space: nowrap;
 }
 .hero-ar-target[aria-pressed='true'] > b {
   background: #0866ff;
 }
-.ar-target-vanity {
-  right: 12%;
-  top: 68%;
-}
-.ar-target-floor {
-  left: 53%;
-  bottom: 6%;
-}
 .hero-ar-card {
   position: absolute;
   right: 4%;
-  top: 25%;
-  width: 290px;
-  padding: 15px;
+  top: 27%;
+  width: 320px;
+  padding: 12px 15px 13px;
   background: #fffffff2;
   backdrop-filter: blur(12px);
   border: 1px solid #ffffff;
@@ -114,15 +103,34 @@
   color: #142038;
   box-shadow: 0 6px 30px #0713211a;
 }
+.hero-ar-tabs {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+  margin-bottom: 11px;
+}
+.hero-ar-tabs button {
+  min-height: 36px;
+  padding: 4px 2px;
+  border: 1px solid #dfe7f2;
+  border-radius: 5px;
+  background: #fff;
+  color: #334155;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.15;
+  cursor: pointer;
+}
+.hero-ar-tabs button[aria-pressed='true'] {
+  background: #0866ff;
+  border-color: #0866ff;
+  color: #fff;
+}
 .hero-ar-card-heading {
   display: flex;
   align-items: center;
   gap: 9px;
-}
-.hero-ar-card-heading > img {
-  width: 48px;
-  height: 54px;
-  object-fit: contain;
 }
 .hero-ar-card-heading > div {
   flex: 1;
@@ -153,20 +161,24 @@
 .hero-ar-card dl > div {
   display: flex;
   justify-content: space-between;
-  gap: 12px;
+  gap: 14px;
   font-size: 11px;
-  line-height: 1.6;
+  line-height: 1.45;
   padding: 4px 0;
+}
+.hero-ar-card dt {
+  color: #64748b;
+  white-space: nowrap;
 }
 .hero-ar-card dd {
   margin: 0;
   font-weight: 600;
-  white-space: nowrap;
+  text-align: right;
 }
 .hero-ar-card > p {
-  font-size: 9px;
+  font-size: 10px;
   color: #64748b;
-  margin: 7px 0 0;
+  margin: 8px 0 0;
 }
 @media (max-width: 760px) {
   .prompt-workspace.is-landing .prompt-header {
@@ -178,7 +190,7 @@
   }
   .landing.landing-v2.landing-refined.landing-cinematic .landing-hero {
     min-height: 640px;
-    padding: 124px 20px 190px;
+    padding: 124px 20px 236px;
     gap: 18px;
   }
   .landing.landing-v2.landing-refined.landing-cinematic .prompt-intro h1 {
@@ -196,8 +208,7 @@
     min-height: 42px;
   }
   .hero-agent-line {
-    margin-top: 12px;
-    font-size: 12px;
+    margin-top: 8px;
   }
   .hero-ar-scene .hero-room-shade {
     background: linear-gradient(180deg, #07132166, #071321a6 25%, #07132140 62%, #0713211a);
@@ -209,10 +220,6 @@
     right: 16px;
     width: auto;
     padding: 11px 13px;
-  }
-  .hero-ar-card-heading > img {
-    width: 38px;
-    height: 39px;
   }
   .hero-ar-card-heading > strong {
     font-size: 21px;
@@ -229,17 +236,8 @@
     margin-top: 5px;
     font-size: 9px;
   }
-  .ar-target-vanity {
-    top: auto;
-    bottom: 164px;
-    right: 8%;
-  }
-  .ar-target-floor {
-    left: 9%;
-    bottom: 164px;
-  }
   .hero-ar-target > b {
-    font-size: 11px;
+    font-size: 12px;
     padding: 5px 8px;
   }
 }
