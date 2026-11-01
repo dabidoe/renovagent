@@ -44,6 +44,14 @@ test('a public origin is trusted alongside loopback, with secure cookies and hos
   );
 });
 
+test('a bare public domain, as hosts display it, means https', () => {
+  const h = hostingConfigFromEnv({
+    RENOVAGENT_HOST: '0.0.0.0',
+    RENOVAGENT_PUBLIC_URL: ' renovagent.up.railway.app ',
+  });
+  assert.equal(h.publicUrl?.origin, 'https://renovagent.up.railway.app');
+});
+
 test('unsafe hosting settings refuse to start', () => {
   assert.throws(() => hostingConfigFromEnv({ RENOVAGENT_HOST: '0.0.0.0' }), /PUBLIC_URL/);
   assert.throws(

@@ -21,8 +21,12 @@ export function hostingConfigFromEnv(env: NodeJS.ProcessEnv = process.env): Host
   if (!Number.isInteger(listenPort) || listenPort < 1 || listenPort > 65535)
     throw new Error('Invalid API port');
   let publicUrl: URL | undefined;
-  if (env.RENOVAGENT_PUBLIC_URL) {
-    publicUrl = new URL(env.RENOVAGENT_PUBLIC_URL);
+  const supplied = env.RENOVAGENT_PUBLIC_URL?.trim();
+  if (supplied) {
+    // Hosts show the bare domain ("app.up.railway.app"); it means https.
+    publicUrl = new URL(
+      /^[a-z][a-z0-9+.-]*:\/\//i.test(supplied) ? supplied : `https://${supplied}`,
+    );
     if (publicUrl.pathname !== '/' || publicUrl.search || publicUrl.hash)
       throw new Error('RENOVAGENT_PUBLIC_URL must be an origin, like https://example.com');
     if (publicUrl.protocol !== 'https:' && !LOOPBACK.has(publicUrl.hostname))
