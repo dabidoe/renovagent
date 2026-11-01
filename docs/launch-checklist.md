@@ -41,6 +41,7 @@ Agent calls over MCP run on the user's own model, so they cost us only storage. 
   - **M0 (free)** is fine for a beta. We use about 5.4 MB of its 512 MB.
   - M0 has **no backups**. Before taking money, move to Flex or M10 for backups. Check the current prices in Atlas.
 - [ ] Put the cluster in the **same region** as the Railway service.
+- [ ] Load the paint palette into the hosted database: `npm run seed:paint -- --brand <name> --collection <name> --file <file.ase>`, with `RENOVAGENT_MONGO_URI` set to it, from the brand file you downloaded. Without it, "Imagine the room" snaps colours to the six starting colours.
 - [ ] Network access: Railway's outbound IPs change unless your plan includes static outbound IPs. If it does, allow just those. Otherwise allow `0.0.0.0/0` and rely on the strong, rotated password.
 
 ### Railway
