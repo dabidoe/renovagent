@@ -4,6 +4,10 @@
 FROM node:22-bookworm-slim
 
 WORKDIR /app
+# libvips converts uploaded photos (JPEG, PNG, WebP, HEIC); macOS uses sips instead.
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends libvips-tools \
+ && rm -rf /var/lib/apt/lists/*
 COPY package.json package-lock.json ./
 COPY apps/web/package.json apps/web/
 COPY packages/contracts/package.json packages/contracts/

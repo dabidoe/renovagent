@@ -50,14 +50,15 @@ Agent calls over MCP run on the user's own model, so they cost us only storage. 
 - [ ] Generate the `*.up.railway.app` domain first, then add your custom domain.
 - [ ] Variables:
 
-  | Variable                                     | Value                                                    |
-  | -------------------------------------------- | -------------------------------------------------------- |
-  | `RENOVAGENT_MONGO_URI`                       | production Atlas URI                                     |
-  | `RENOVAGENT_PUBLIC_URL`                      | `https://<railway domain>` now; your custom domain later |
-  | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`   | from the Google OAuth client                             |
-  | `TYPESAFE_API_KEY`                           | Jev, a **production key** with a spend limit             |
-  | `MUSE_API_KEY`                               | Muse, a production key with a spend limit                |
-  | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` | once I've built billing                                  |
+  | Variable                                           | Value                                                                                                                    |
+  | -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+  | `RENOVAGENT_MONGO_URI`                             | cluster0 URI ending in `/renovagent_demo` for the hackathon demo (its own database; the local workspace stays untouched) |
+  | `RENOVAGENT_PUBLIC_URL`                            | `https://<railway domain>` now; your custom domain later                                                                 |
+  | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`         | from the Google OAuth client                                                                                             |
+  | `TYPESAFE_API_KEY`                                 | Jev, a **production key** with a spend limit                                                                             |
+  | `MUSE_API_KEY`                                     | Meta Model API key (Muse Spark, Muse Image, SAM 3.1)                                                                     |
+  | `RENOVAGENT_RENDER_URL`, `RENOVAGENT_RENDER_TOKEN` | Blender HD on Modal; same values as local `.env`                                                                         |
+  | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`       | once I've built billing                                                                                                  |
 
   Railway provides `PORT`. Don't set `GOOGLE_REDIRECT_URI`; it is derived from the public URL.
 

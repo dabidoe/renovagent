@@ -186,24 +186,40 @@ export async function createWorkspaceServer(
       throw new DomainError('VALIDATION', 'Preview limit reached; try again in a few minutes');
     repaintCalls.set(ownerId, [...recent, now]);
   };
+  // Recovered workers only: ticks and shutdown see a worker once its jobs are reloaded.
   const workers = new Map<string, PhotoWorker>();
-  async function workerFor(repo: MongoWorkspaceRepository) {
-    let worker = workers.get(repo.ownerId);
-    if (!worker) {
-      worker = new PhotoWorker(repo, photoFiles);
-      workers.set(repo.ownerId, worker);
-      await worker.recover();
+  const starting = new Map<string, Promise<PhotoWorker>>();
+  function workerFor(repo: MongoWorkspaceRepository) {
+    let started = starting.get(repo.ownerId);
+    if (!started) {
+      const worker = new PhotoWorker(repo, photoFiles);
+      started = worker.recover().then(
+        () => (workers.set(repo.ownerId, worker), worker),
+        (error) => {
+          starting.delete(repo.ownerId);
+          throw error;
+        },
+      );
+      starting.set(repo.ownerId, started);
     }
-    return worker;
+    return started;
   }
-  if (!accountMode) await workerFor(repository);
-  else {
+  // Reloading every owner's photo jobs runs in the background, so a cold start
+  // listens within the host's health-check timeout. A request for an owner
+  // waits on that owner's recovery through workerFor.
+  const recovery = (async () => {
+    if (!accountMode) {
+      await workerFor(repository);
+      return;
+    }
     for (const id of await repository.collection.distinct('_id')) {
       // Moves any attachments still embedded in the owner's document.
       await repository.forUser(id).moveEmbeddedBlobs();
       await workerFor(repository.forUser(id));
     }
-  }
+  })().catch((error) =>
+    console.error('Photo job recovery failed:', error instanceof Error ? error.message : error),
+  );
   // Staged uploads match the intake's per-file allowance (20 MiB originals).
   const STAGED_MAX = 20 * 1024 * 1024;
   const STAGED_TYPES = new Set([
@@ -1175,7 +1191,7 @@ export async function createWorkspaceServer(
     for (const worker of designWorkers.values()) void worker.tick().catch(() => {});
   }, 3000);
   server.on('close', () => clearInterval(interval));
-  return { server, workers };
+  return { server, workers, recovery };
 }
 if (process.argv[1]?.endsWith('/apps/api/src/server.ts')) {
   await mkdir('.local', { recursive: true, mode: 0o700 });

@@ -34,27 +34,35 @@ export async function normalizeImage(bytes: Uint8Array, maxEdge = 1600) {
   const dir = await mkdtemp(join(tmpdir(), 'renovagent-image-'));
   try {
     await writeFile(join(dir, 'in'), bytes);
-    // macOS image conversion; the local hackathon server only.
-    await run(
-      'sips',
-      [
-        '-s',
-        'format',
-        'jpeg',
-        '-s',
-        'formatOptions',
-        '85',
-        '-Z',
-        String(maxEdge),
-        join(dir, 'in'),
-        '--out',
-        join(dir, 'out.jpg'),
-      ],
-      {
-        timeout: 60000,
-      },
-    );
-    const out = new Uint8Array(await readFile(join(dir, 'out.jpg')));
+    // macOS sips locally; libvips (the container's libvips-tools) elsewhere.
+    // Both rotate by EXIF, shrink to fit maxEdge and never enlarge.
+    const input = join(dir, 'in'),
+      output = join(dir, 'out.jpg'),
+      edge = String(maxEdge);
+    const [tool, args] =
+      process.platform === 'darwin'
+        ? [
+            'sips',
+            [
+              '-s',
+              'format',
+              'jpeg',
+              '-s',
+              'formatOptions',
+              '85',
+              '-Z',
+              edge,
+              input,
+              '--out',
+              output,
+            ],
+          ]
+        : [
+            'vips',
+            ['thumbnail', input, `${output}[Q=85,strip]`, edge, '--height', edge, '--size', 'down'],
+          ];
+    await run(tool, args, { timeout: 60000 });
+    const out = new Uint8Array(await readFile(output));
     const size = imageSize(out);
     if (!size.width || !size.height) throw new DomainError('VALIDATION', 'Unreadable image');
     return { bytes: out, width: size.width, height: size.height, mediaType: 'image/jpeg' as const };
