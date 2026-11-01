@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { workspaceRequest } from '../../adapters/http/project-repository.js';
 import { Glyph } from '../../components/glyph.js';
 import { PaintFloorStudio, parseFeet } from './paint-floor-studio.js';
@@ -42,11 +42,14 @@ const outline = (sha256: string) => workspaceRequest('/studio/walls', { sha256 }
 type Step = { label: string; state: 'waiting' | 'working' | 'done' };
 const MAX_PHOTOS = 8;
 
-function Intake({ onBuilt }: { onBuilt: (saved: Saved) => void }) {
+// What the home page handed over: the owner's words and room photos.
+export type OwnStart = { idea: string; photos: File[] };
+
+function Intake({ start, onBuilt }: { start?: OwnStart | null; onBuilt: (saved: Saved) => void }) {
   const [where, setWhere] = useState('');
   const [ceiling, setCeiling] = useState('');
-  const [idea, setIdea] = useState('');
-  const [photos, setPhotos] = useState<File[]>([]);
+  const [idea, setIdea] = useState(start?.idea ?? '');
+  const [photos, setPhotos] = useState<File[]>(start?.photos.slice(0, MAX_PHOTOS) ?? []);
   const [plans, setPlans] = useState<File[]>([]);
   const [steps, setSteps] = useState<Step[] | null>(null);
   const [error, setError] = useState('');
@@ -106,6 +109,14 @@ function Intake({ onBuilt }: { onBuilt: (saved: Saved) => void }) {
       setError(e instanceof Error ? e.message : String(e));
     }
   };
+  // Photos from the home page start building at once.
+  const started = useRef(false);
+  useEffect(() => {
+    if (started.current || !start?.photos.length) return;
+    started.current = true;
+    void build();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const busy = steps !== null;
   return (
     <section className="pf-intake" aria-label="Show your project">
@@ -206,13 +217,14 @@ function Intake({ onBuilt }: { onBuilt: (saved: Saved) => void }) {
   );
 }
 
-export function OwnStudio() {
-  const [saved, setSaved] = useState<Saved | null>(load);
+export function OwnStudio({ start }: { start?: OwnStart | null }) {
+  // A new start from the home page replaces the project kept in the browser.
+  const [saved, setSaved] = useState<Saved | null>(() => (start?.photos.length ? null : load()));
   const commit = (next: Saved | null) => {
     setSaved(next);
     keep(next);
   };
-  if (!saved) return <Intake onBuilt={commit} />;
+  if (!saved) return <Intake start={start} onBuilt={commit} />;
   const { project, plans } = saved;
   const editRoom = (roomId: string, patch: Partial<StudioRoom>) =>
     setSaved((current) => {

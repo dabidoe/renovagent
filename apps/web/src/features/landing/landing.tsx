@@ -547,7 +547,10 @@ export function Landing({
           </form>
           <p className="hero-paint-line">
             <button type="button" onClick={onOwnProject}>
-              Try paint &amp; floors on your photos <span aria-hidden="true">→</span>
+              {photos.length
+                ? `Imagine it on ${photos.length === 1 ? 'this photo' : `these ${photos.length} photos`}`
+                : 'Try paint & floors on your photos'}{' '}
+              <span aria-hidden="true">→</span>
             </button>
             <span aria-hidden="true">·</span>
             <button type="button" onClick={onExamples}>

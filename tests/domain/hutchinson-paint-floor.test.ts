@@ -5,6 +5,8 @@ import {
   PRESET_COLORS,
   floorFinish,
   floorImage,
+  shoppingList,
+  shoppingText,
   roomModel as model,
   roomPackages,
   roomTakeoff as takeoff,
@@ -139,6 +141,7 @@ test('photos take the printed plan room that names them, each room once', async 
     photo('Back bedroom', 'bedroom'),
     photo('Office', 'office'),
   ];
+  const office = { ...photos[3]!, approxSize: { xFt: 10, yFt: 11.5 } };
   assert.deepEqual(matchPlanRooms(photos, plans), [3, 1, 2, null]);
   const project = ownProject({
     id: 'own',
@@ -151,6 +154,19 @@ test('photos take the printed plan room that names them, each room once', async 
   assert.equal(project.address, 'Your project');
   assert.deepEqual(project.rooms[1]!.size, { xFt: 13.083, yFt: 23.167 });
   assert.equal(project.rooms[3]!.size, undefined);
+  // Without a plan room, the size by eye, labelled; each photo once.
+  const estimated = ownProject({
+    id: 'own',
+    address: '',
+    ceilingFt: 8,
+    photos: [...photos.slice(0, 3), office, office],
+    plans,
+    walls: {},
+  });
+  assert.equal(estimated.rooms.length, 4);
+  assert.deepEqual(estimated.rooms[3]!.size, { xFt: 10, yFt: 11.5 });
+  assert.equal(estimated.rooms[3]!.sizeNote, 'Size estimated from the photo');
+  assert.equal(estimated.rooms[1]!.sizeNote, undefined, 'a printed plan size is not an estimate');
 });
 
 test('a ceiling estimate is rounded, bounded, and falls back to about 8 ft', async () => {
@@ -208,4 +224,52 @@ test('a floor style changes the look, never the price; the material changes the 
     floorFinish(room('living'), { ...lvp, floorStyle: 'walnut' }),
     'dark walnut vinyl plank',
   );
+});
+
+test('the shopping list adds up products across rooms and keeps each paint colour apart', () => {
+  const navy = { ...gray, name: 'Naval', code: 'SW 6244', hex: '#2f3d4c' };
+  const picks: Record<string, RoomPick> = {
+    living: {
+      color: gray,
+      floor: 'lvp',
+      floorStyle: 'walnut',
+      included: true,
+      ideas: ['bookshelf'],
+    },
+    kitchen: { color: navy, floor: 'keep', included: true },
+    primary: { color: gray, floor: 'lvp', included: true },
+    middle: { color: gray, floor: 'lvp', included: false },
+  };
+  const takeoffs = Object.fromEntries(
+    HOUSE_ROOMS.map((r) => [
+      r.id,
+      roomTakeoff(r, picks[r.id] ?? { color: null, floor: 'keep', included: true }, 'mid'),
+    ]),
+  );
+  const list = shoppingList(HUTCHINSON, picks, takeoffs);
+  assert.deepEqual(
+    list.rooms.map((r) => r.title),
+    ['Living & dining', 'Kitchen', 'Primary bedroom'],
+    'deferred and untouched rooms are left out',
+  );
+  assert.equal(list.rooms[0]!.floor, 'dark walnut vinyl plank');
+  assert.match(list.rooms[0]!.paint!, /Agreeable Gray \(SW 7029\), eggshell/);
+  const paint = list.buy.filter((b) => /paint/.test(b.item));
+  assert.deepEqual(
+    paint.map((b) => b.item.split(' — ')[1]).sort(),
+    ['Agreeable Gray', 'Naval'],
+    'one paint line per colour',
+  );
+  const plank = list.buy.find((b) => /vinyl plank/i.test(b.item))!;
+  const plankLines = ['living', 'primary'].map(
+    (id) => takeoffs[id]!.lines.find((l) => l.productName === plank.item)!.purchaseUnits,
+  );
+  assert.equal(plank.units, plankLines[0]! + plankLines[1]!);
+  assert.equal(
+    list.totalMinor,
+    ['living', 'kitchen', 'primary'].reduce((sum, id) => sum + takeoffs[id]!.totalMinor, 0),
+  );
+  const text = shoppingText(HUTCHINSON, list, 'mid');
+  assert.match(text, /example prices for this demo, not live offers/);
+  assert.match(text, /Not priced: bookshelf/);
 });

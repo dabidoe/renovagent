@@ -80,12 +80,14 @@ export const readSchema = {
       items: {
         type: 'object',
         additionalProperties: false,
-        required: ['index', 'kind', 'title', 'floor'],
+        required: ['index', 'kind', 'title', 'floor', 'approxWidthFt', 'approxLengthFt'],
         properties: {
           index: { type: 'integer' },
           kind: { type: 'string', enum: [...ROOM_KINDS] },
           title: { type: 'string' },
           floor: { type: 'string', enum: [...FLOORS] },
+          approxWidthFt: { type: 'number' },
+          approxLengthFt: { type: 'number' },
         },
       },
     },
@@ -112,6 +114,8 @@ const readResult = z.object({
       kind: z.enum(ROOM_KINDS),
       title: z.string().max(60),
       floor: z.enum(FLOORS),
+      approxWidthFt: z.number(),
+      approxLengthFt: z.number(),
     }),
   ),
   plans: z.array(z.object({ name: z.string().max(60), widthFt: z.number(), lengthFt: z.number() })),
@@ -151,9 +155,17 @@ export const ceilingNote = (c: CeilingEstimate) =>
       ? 'Ceiling estimated from the photos'
       : 'Ceiling assumed at about 8 ft; nothing in the photos gives a scale';
 
+// A room's size by eye: rounded to the half foot, and only when both sides
+// are plausible for a room. Shown as an estimate the owner can correct.
+export function roomSizeEstimate(widthFt: number, lengthFt: number) {
+  const half = (v: number) => Math.round(v * 2) / 2;
+  const [x, y] = [half(widthFt), half(lengthFt)];
+  return x >= 5 && x <= 40 && y >= 5 && y <= 40 ? { xFt: x, yFt: y } : null;
+}
+
 export const readPrompt = (photos: number, plans: number) =>
   `You are helping a homeowner plan paint and flooring. The first ${photos} image(s) are photos of rooms, numbered 0 to ${photos - 1} in order.${plans ? ` The last ${plans} image(s) are floor plans.` : ''}
-For each room photo, give its index, the kind of room, a short title a homeowner would use (for example "Living room", "Front bedroom", "Kitchen"), and what the floor is now covered with. If two photos show the same kind of room, make the titles distinct.
+For each room photo, give its index, the kind of room, a short title a homeowner would use (for example "Living room", "Front bedroom", "Kitchen"), and what the floor is now covered with. If two photos show the same kind of room, make the titles distinct. List each photo once. Also estimate the room's floor size by eye as approxWidthFt and approxLengthFt, using things of known size as the scale (an interior door is about 3 ft wide and 6 ft 8 in tall; a queen bed is 5 ft by 6 ft 8 in; kitchen counters are 2 ft deep); 0 for both if the photo shows too little of the room to tell.
 ${plans ? 'From the floor plans, list every room whose dimensions are printed on the plan, with its printed name, and its two dimensions converted to decimal feet (13\' 1" is 13.083) as widthFt (the first printed number) and lengthFt (the second). Only use numbers printed on the plan; never estimate one.' : 'There are no floor plans; return an empty plans list.'}`;
 
 // "Imagine your room": the owner's own words become the studio's choices —
@@ -369,7 +381,13 @@ export function studioRoutes(deps: {
       return {
         photos: parsed.photos
           .filter((p) => p.index >= 0 && p.index < n)
-          .map((p) => ({ ...p, sha256: input.photos[p.index]! })),
+          // Each photo is one room, even if the model lists it twice.
+          .filter((p, i, all) => all.findIndex((q) => q.index === p.index) === i)
+          .map(({ approxWidthFt, approxLengthFt, ...p }) => ({
+            ...p,
+            sha256: input.photos[p.index]!,
+            approxSize: roomSizeEstimate(approxWidthFt, approxLengthFt),
+          })),
         plans: parsed.plans.filter(
           (p) => p.widthFt > 0 && p.widthFt < 100 && p.lengthFt > 0 && p.lengthFt < 100,
         ),

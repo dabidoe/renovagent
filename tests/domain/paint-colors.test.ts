@@ -134,3 +134,11 @@ test('an imagined room keeps only the choices the studio prices', async () => {
   assert.deepEqual([unloaded.color, unloaded.hex], [null, '#2b4a36'], 'no paint loaded');
   assert.deepEqual([unloaded.floorStyle, unloaded.material], ['walnut', 'hardwood']);
 });
+
+test('a room size by eye is kept only when both sides are plausible', async () => {
+  const { roomSizeEstimate } = await import('../../apps/api/src/studio.js');
+  assert.deepEqual(roomSizeEstimate(11.2, 14.7), { xFt: 11, yFt: 14.5 });
+  assert.equal(roomSizeEstimate(0, 0), null, 'too little of the room to tell');
+  assert.equal(roomSizeEstimate(3, 12), null);
+  assert.equal(roomSizeEstimate(12, 80), null);
+});

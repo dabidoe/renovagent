@@ -5,7 +5,14 @@ import type { HouseProject, Masks, StudioRoom } from './paint-floor.js';
 // the plan's printed sizes; this file only matches the two up and keeps the
 // project in the browser. Images live in the owner's server image store.
 
-export type ReadPhoto = { sha256: string; kind: string; title: string; floor: string };
+export type ReadPhoto = {
+  sha256: string;
+  kind: string;
+  title: string;
+  floor: string;
+  // Muse Spark's estimate by eye, used only when no plan gives the size.
+  approxSize?: { xFt: number; yFt: number } | null;
+};
 export type PlanRoom = { name: string; widthFt: number; lengthFt: number };
 
 export const imageUrl = (sha256: string) => `/api/workspace/design-images/${sha256}`;
@@ -72,8 +79,10 @@ export function ownProject(input: {
   plans: PlanRoom[];
   walls: Record<string, Masks | null>;
 }): HouseProject {
-  const matches = matchPlanRooms(input.photos, input.plans);
-  const rooms: StudioRoom[] = input.photos.map((p, i) => {
+  const seen = new Set<string>();
+  const photos = input.photos.filter((p) => !seen.has(p.sha256) && seen.add(p.sha256));
+  const matches = matchPlanRooms(photos, input.plans);
+  const rooms: StudioRoom[] = photos.map((p, i) => {
     const plan = matches[i] === null ? undefined : input.plans[matches[i]!];
     return {
       id: p.sha256.slice(0, 12),
@@ -81,7 +90,11 @@ export function ownProject(input: {
       existingFloor: FLOOR_NAMES[p.floor] ?? 'floor',
       photo: { src: imageUrl(p.sha256), walls: input.walls[p.sha256] ?? null },
       floors: {},
-      ...(plan ? { size: { xFt: plan.widthFt, yFt: plan.lengthFt } } : {}),
+      ...(plan
+        ? { size: { xFt: plan.widthFt, yFt: plan.lengthFt } }
+        : p.approxSize
+          ? { size: p.approxSize, sizeNote: 'Size estimated from the photo' }
+          : {}),
     };
   });
   return {

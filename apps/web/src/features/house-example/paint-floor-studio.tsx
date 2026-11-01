@@ -21,6 +21,8 @@ import {
   money,
   roomModel,
   roomTakeoff,
+  shoppingList,
+  shoppingText,
   type HouseProject,
   type Masks,
   type RoomImage,
@@ -420,6 +422,106 @@ function Imagine({
   );
 }
 
+function ShoppingSheet({
+  project,
+  picks,
+  takeoffs,
+  tier,
+  onClose,
+}: {
+  project: HouseProject;
+  picks: Record<string, RoomPick>;
+  takeoffs: Record<string, ReturnType<typeof roomTakeoff>>;
+  tier: TierKey;
+  onClose: () => void;
+}) {
+  const list = shoppingList(project, picks, takeoffs);
+  const [copied, setCopied] = useState(false);
+  return (
+    <div className="pf-list-backdrop" role="presentation" onClick={onClose}>
+      <section
+        className="pf-list"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Shopping list"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <header>
+          <div>
+            <p className="pf-kicker">Shopping list</p>
+            <h2>{project.address}</h2>
+            <p className="pf-sub">
+              Materials, {TIER_LABELS[tier].toLowerCase()} · <b>{money(list.totalMinor)}</b>
+            </p>
+          </div>
+          <div className="pf-list-actions">
+            <button
+              type="button"
+              onClick={() =>
+                void navigator.clipboard
+                  ?.writeText(shoppingText(project, list, tier))
+                  .then(() => setCopied(true))
+              }
+            >
+              {copied ? 'Copied' : 'Copy'}
+            </button>
+            <button type="button" onClick={() => window.print()}>
+              Print
+            </button>
+            <button type="button" aria-label="Close" onClick={onClose}>
+              <Glyph name="close" />
+            </button>
+          </div>
+        </header>
+        {list.rooms.length ? (
+          <>
+            <ol className="pf-list-rooms">
+              {list.rooms.map((r) => (
+                <li key={r.title}>
+                  <div className="pf-list-room">
+                    <b>{r.title}</b>
+                    <span>{money(r.totalMinor)}</span>
+                  </div>
+                  {r.paint && <p>Walls · {r.paint}</p>}
+                  {r.floor && <p>Floor · {r.floor}</p>}
+                  {r.ideas.length > 0 && (
+                    <p className="pf-list-ideas">Not priced · {r.ideas.join(', ')}</p>
+                  )}
+                </li>
+              ))}
+            </ol>
+            <h3>To buy</h3>
+            <table className="pf-list-buy">
+              <tbody>
+                {list.buy.map((b) => (
+                  <tr key={`${b.item}${b.unitPriceMinor}`}>
+                    <td>{b.units} ×</td>
+                    <td>
+                      {b.item}
+                      <small>{money(b.unitPriceMinor)} each</small>
+                    </td>
+                    <td>{money(b.totalMinor)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </>
+        ) : (
+          <p className="pf-empty">
+            {project.rooms.some((r) => !r.size)
+              ? 'Add each room’s size to price it, then the list fills in.'
+              : 'Pick a colour or a floor for a room to start the list.'}
+          </p>
+        )}
+        <p className="pf-fine">
+          Example prices for this demo, not live offers. Quantities: 2 coats plus 10% paint, rounded
+          up; floors by the room's area. Labour is quoted separately.
+        </p>
+      </section>
+    </div>
+  );
+}
+
 // Feet from a "12.5" or "12' 6"" style entry; null when unreadable.
 export function parseFeet(text: string) {
   const m = /^\s*(\d+(?:\.\d+)?)\s*(?:'|′|ft)?\s*(?:(\d+(?:\.\d+)?)\s*(?:"|″|in)?)?\s*$/.exec(text);
@@ -431,11 +533,14 @@ export function parseFeet(text: string) {
 function SizeEntry({
   room,
   ceilingFt,
+  editSize = false,
   onSize,
   onCeiling,
 }: {
   room: StudioRoom;
   ceilingFt: number | null;
+  // Asks for the size even when one is known (an estimate being corrected).
+  editSize?: boolean;
   onSize: (size: { xFt: number; yFt: number }) => void;
   onCeiling?: (ft: number) => void;
 }) {
@@ -456,7 +561,7 @@ function SizeEntry({
     >
       <h3>Room size</h3>
       <div>
-        {!room.size && (
+        {(!room.size || editSize) && (
           <>
             <input
               aria-label="Width in feet"
@@ -517,6 +622,7 @@ export function PaintFloorStudio({
   const [roomId, setRoomIdState] = useState(project.rooms[0]?.id ?? '');
   const setRoomId = (id: string) => {
     setApplied(false);
+    setEditSize(false);
     setRoomIdState(id);
   };
   const [view, setView] = useState<'photo' | '3d'>('photo');
@@ -524,6 +630,8 @@ export function PaintFloorStudio({
   const [picks, setPicks] = useState<Record<string, RoomPick>>(() => loadPicks(project));
   const [working, setWorking] = useState<Record<string, string>>({});
   const [editCeiling, setEditCeiling] = useState(false);
+  const [editSize, setEditSize] = useState(false);
+  const [listOpen, setListOpen] = useState(false);
   const room = project.rooms.find((r) => r.id === roomId) ?? project.rooms[0];
   const pick = (room && picks[room.id]) ?? DEFAULT_PICK;
   const ceilingFt = project.ceilingFt;
@@ -597,11 +705,13 @@ export function PaintFloorStudio({
         ideas: idea.extras,
       });
       setImagining({ busy: false, error: '' });
+      return true;
     } catch (e) {
       setImagining({
         busy: false,
         error: e instanceof Error ? e.message.slice(0, 160) : 'That could not be read.',
       });
+      return false;
     }
   };
   const ideaUsed = useRef(false);
@@ -609,7 +719,10 @@ export function PaintFloorStudio({
     const first = project.rooms[0];
     if (!project.idea || !first || ideaUsed.current) return;
     ideaUsed.current = true;
-    void imagine(project.idea, first).finally(() => onIdeaUsed?.());
+    // A description given for the whole project applies to every room.
+    void imagine(project.idea, first)
+      .then((ok) => ok && applyEverywhere(first))
+      .finally(() => onIdeaUsed?.());
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [project.idea]);
   // A floor that is picked but not made yet is rendered once, on demand.
@@ -669,6 +782,9 @@ export function PaintFloorStudio({
           )}
         </div>
         <div className="pf-head-side">
+          <button type="button" className="pf-reset" onClick={() => setListOpen(true)}>
+            Shopping list
+          </button>
           {actions}
           <div className="pf-total" aria-live="polite">
             <span>
@@ -709,7 +825,18 @@ export function PaintFloorStudio({
               <strong>{room.title}</strong>
               {room.size && (
                 <span>
-                  {feetInches(room.size.xFt)} × {feetInches(room.size.yFt)}
+                  {room.sizeNote && onEditRoom ? (
+                    <button
+                      type="button"
+                      className="pf-ceiling"
+                      title={room.sizeNote}
+                      onClick={() => setEditSize(true)}
+                    >
+                      ≈{feetInches(room.size.xFt)} × {feetInches(room.size.yFt)}
+                    </button>
+                  ) : (
+                    `${feetInches(room.size.xFt)} × ${feetInches(room.size.yFt)}`
+                  )}
                   {ceilingFt && ' · '}
                   {ceilingFt && onCeiling ? (
                     <button
@@ -764,12 +891,17 @@ export function PaintFloorStudio({
             onImagine={(text) => void imagine(text, room)}
           />
           {roomTools?.(room)}
-          {((needsSize && onEditRoom) || editCeiling) && (
+          {((needsSize && onEditRoom) || editCeiling || editSize) && (
             <SizeEntry
               key={room.id}
               room={room}
               ceilingFt={editCeiling ? null : ceilingFt}
-              onSize={(size) => onEditRoom?.(room.id, { size })}
+              editSize={editSize}
+              onSize={(size) => {
+                // A typed size is the owner's, no longer an estimate.
+                onEditRoom?.(room.id, { size, sizeNote: undefined });
+                setEditSize(false);
+              }}
               {...(onCeiling
                 ? {
                     onCeiling: (ft: number) => {
@@ -907,6 +1039,15 @@ export function PaintFloorStudio({
         </aside>
       </div>
 
+      {listOpen && (
+        <ShoppingSheet
+          project={project}
+          picks={picks}
+          takeoffs={takeoffs}
+          tier={tier}
+          onClose={() => setListOpen(false)}
+        />
+      )}
       {sources && (
         <details className="pf-sources">
           <summary>Sources</summary>

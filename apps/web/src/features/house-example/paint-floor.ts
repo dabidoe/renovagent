@@ -57,6 +57,8 @@ export type StudioRoom = {
   floors: Partial<Record<string, RoomImage>>;
   // Plan width (x) and depth (y) in feet, when known.
   size?: { xFt: number; yFt: number };
+  // Set when the size is an estimate rather than printed or measured.
+  sizeNote?: string;
   plan?: TracedPlan;
 };
 
@@ -280,3 +282,86 @@ export const feetInches = (feet: number) => {
   if (inches === 12) return `${whole + 1}′`;
   return inches ? `${whole}′${inches}″` : `${whole}′`;
 };
+
+// The whole-house shopping list: each included room's choices and lines,
+// then what to buy across rooms. Paint is kept apart by colour (each colour
+// is tinted on its own); everything else adds up by product.
+export type ShoppingList = {
+  rooms: {
+    title: string;
+    paint: string | null;
+    floor: string | null;
+    lines: PlanLine[];
+    totalMinor: number;
+    ideas: string[];
+  }[];
+  buy: { item: string; units: number; unitPriceMinor: number; totalMinor: number }[];
+  totalMinor: number;
+};
+export function shoppingList(
+  project: HouseProject,
+  picks: Record<string, RoomPick>,
+  takeoffs: Record<string, RoomTakeoff>,
+): ShoppingList {
+  const rooms = project.rooms
+    .filter((r) => (picks[r.id] ?? DEFAULT_PICK).included)
+    .map((r) => {
+      const pick = picks[r.id] ?? DEFAULT_PICK;
+      const line = PAINT_LINES.find((l) => l.key === pick.paintLine);
+      const sheen = SHEENS.find((s) => s.key === (pick.sheen ?? DEFAULT_SHEEN))!;
+      return {
+        title: r.title,
+        paint: pick.color
+          ? `${pick.color.name}${pick.color.code ? ` (${pick.color.code})` : ''}, ${sheen.label.toLowerCase()}${line ? `, ${line.label.toLowerCase()} line` : ''}`
+          : null,
+        floor: pick.floor === 'keep' ? null : floorFinish(r, pick),
+        lines: takeoffs[r.id]?.lines ?? [],
+        totalMinor: takeoffs[r.id]?.totalMinor ?? 0,
+        ideas: pick.ideas ?? [],
+        color: pick.color,
+      };
+    })
+    .filter((r) => r.lines.length || r.ideas.length);
+  const buy = new Map<string, ShoppingList['buy'][number]>();
+  for (const r of rooms)
+    for (const l of r.lines) {
+      const item =
+        l.bomItemId === 'wall-paint:paint' && r.color
+          ? `${l.productName} — ${r.color.name}`
+          : l.productName;
+      const key = `${item}\n${l.unitPriceMinor}`;
+      const found = buy.get(key) ?? {
+        item,
+        units: 0,
+        unitPriceMinor: l.unitPriceMinor,
+        totalMinor: 0,
+      };
+      found.units += l.purchaseUnits;
+      found.totalMinor += l.lineTotalMinor;
+      buy.set(key, found);
+    }
+  return {
+    rooms: rooms.map(({ color: _color, ...r }) => r),
+    buy: [...buy.values()],
+    totalMinor: rooms.reduce((sum, r) => sum + r.totalMinor, 0),
+  };
+}
+
+// The list as plain text, to paste into a message or a note.
+export function shoppingText(project: HouseProject, list: ShoppingList, tier: TierKey) {
+  const lines = [
+    `${project.address} — paint & floors`,
+    `Materials, ${TIER_LABELS[tier].toLowerCase()}: ${money(list.totalMinor)} (example prices for this demo, not live offers; labour not included)`,
+    '',
+    ...list.rooms.flatMap((r) => [
+      `${r.title}: ${money(r.totalMinor)}`,
+      ...(r.paint ? [`  Walls: ${r.paint}`] : []),
+      ...(r.floor ? [`  Floor: ${r.floor}`] : []),
+      ...(r.ideas.length ? [`  Not priced: ${r.ideas.join(', ')}`] : []),
+    ]),
+    '',
+    'To buy:',
+    ...list.buy.map((b) => `  ${b.units} × ${b.item} — ${money(b.totalMinor)}`),
+  ];
+  return lines.join('\n');
+}

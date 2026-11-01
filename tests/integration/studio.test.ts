@@ -75,8 +75,30 @@ test(
         return {
           result: {
             photos: [
-              { index: 0, kind: 'living room', title: 'Living room', floor: 'carpet' },
-              { index: 7, kind: 'bedroom', title: 'Ghost', floor: 'carpet' },
+              {
+                index: 0,
+                kind: 'living room',
+                title: 'Living room',
+                floor: 'carpet',
+                approxWidthFt: 12.8,
+                approxLengthFt: 22.1,
+              },
+              {
+                index: 0,
+                kind: 'living room',
+                title: 'Living room again',
+                floor: 'carpet',
+                approxWidthFt: 0,
+                approxLengthFt: 0,
+              },
+              {
+                index: 7,
+                kind: 'bedroom',
+                title: 'Ghost',
+                floor: 'carpet',
+                approxWidthFt: 10,
+                approxLengthFt: 12,
+              },
             ],
             plans: [
               { name: 'LIVING ROOM', widthFt: 13.083, lengthFt: 23.167 },
@@ -177,7 +199,9 @@ test(
       assert.deepEqual(
         read.photos.map((p: { title: string; sha256: string }) => [p.title, p.sha256]),
         [['Living room', uploaded.sha256]],
+        'each photo once, and only photos that were sent',
       );
+      assert.deepEqual(read.photos[0].approxSize, { xFt: 13, yFt: 22 });
       assert.deepEqual(read.plans, [{ name: 'LIVING ROOM', widthFt: 13.083, lengthFt: 23.167 }]);
       assert.deepEqual(
         [read.ceiling.ft, read.ceiling.note],

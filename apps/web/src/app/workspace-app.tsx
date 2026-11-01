@@ -11,7 +11,7 @@ import { CandidateMeasurementsPanel } from '../features/work/candidate-measureme
 import { RoomDimensionsCard } from '../features/scope/room-dimensions-card.js';
 import { RoomStudio } from '../features/room3d/room-studio.js';
 import { HutchinsonStudio } from '../features/house-example/hutchinson-studio.js';
-import { OwnStudio } from '../features/house-example/own-studio.js';
+import { OwnStudio, type OwnStart } from '../features/house-example/own-studio.js';
 import { ExamplesGallery, ListingStudio } from '../features/house-example/listing-studio.js';
 import { isHouseCase } from '../features/house-example/house-example-model.js';
 import '../features/house-example/house-example.css';
@@ -110,6 +110,11 @@ export function App({ controller }: { controller: WorkspaceController }) {
   const [showQuestions, setShowQuestions] = useState(false);
   const [startPrompt, setStartPrompt] = useState('');
   const [startPhotos, setStartPhotos] = useState<File[]>([]);
+  const [ownStart, setOwnStart] = useState<OwnStart | null>(null);
+  // A home-page start is used once, by the studio it opened.
+  useEffect(() => {
+    if (studioRoute !== '#your-project') setOwnStart(null);
+  }, [studioRoute]);
   useEffect(() => {
     // A landing-page brief is a draft for a new project, never a write to the active home.
     try {
@@ -469,7 +474,11 @@ export function App({ controller }: { controller: WorkspaceController }) {
             onPhotos={setStartPhotos}
             onStart={() => setModal('new')}
             onExample={() => safe(openExample())}
-            onOwnProject={() => openStudio('#your-project')}
+            onOwnProject={() => {
+              // The words and photos typed on the home page carry into the studio.
+              setOwnStart({ idea: startPrompt.trim(), photos: startPhotos });
+              openStudio('#your-project');
+            }}
             onExamples={() => openStudio('#examples')}
             busy={busy}
           />
@@ -477,7 +486,7 @@ export function App({ controller }: { controller: WorkspaceController }) {
       ) : showOwn ? (
         <main className="prompt-main has-room">
           {studioRoute === '#your-project' ? (
-            <OwnStudio />
+            <OwnStudio key={ownStart ? 'start' : 'own'} start={ownStart} />
           ) : studioRoute === '#examples' ? (
             <ExamplesGallery
               onOpen={(route) =>
