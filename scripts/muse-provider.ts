@@ -184,15 +184,24 @@ export async function museJson({
 export async function museEditImage({
   image,
   prompt,
+  references = [],
   timeoutMs = 240000,
 }: {
   image: MuseImage;
   prompt: string;
+  // Further images the prompt refers to (for example a finish swatch); the
+  // photo being edited is always the first image.
+  references?: MuseImage[];
   timeoutMs?: number;
 }) {
   const body = (await metaRequest(
     '/images/edits',
-    { model: MUSE_IMAGE_MODEL, prompt, images: [{ image_url: dataUrl(image) }], n: 1 },
+    {
+      model: MUSE_IMAGE_MODEL,
+      prompt,
+      images: [image, ...references].map((i) => ({ image_url: dataUrl(i) })),
+      n: 1,
+    },
     timeoutMs,
   )) as { data?: { b64_json?: string }[] };
   const encoded = body.data?.[0]?.b64_json;
