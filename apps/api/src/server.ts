@@ -55,6 +55,8 @@ import {
 } from './design-service.js';
 import { renderExample } from './example-render.js';
 import { studioProviders, studioRoutes, type StudioProviders } from './studio.js';
+import { McpAccessStore } from './mcp-access.js';
+import { mcpEndpoint } from './mcp-http.js';
 import { configuredJevKey, judgeProducts, rankReviewFindings, readRoomPhoto } from './jev.js';
 import {
   bestValue,
@@ -140,6 +142,9 @@ export async function createWorkspaceServer(
   render: RenderService | undefined = renderServiceFromEnv(),
   // The paint-and-floor studio's providers (SAM, Muse Image, Muse Spark); injectable for tests.
   studio: StudioProviders = studioProviders,
+  // Remote agents (Muse and other MCP clients) at /mcp, with keys owners
+  // create in the website; absent, both stay off.
+  mcpAccess?: McpAccessStore,
 ) {
   const accountMode = Boolean(accounts);
   // A public origin with the shared local token would give every visitor one workspace.
@@ -300,6 +305,9 @@ export async function createWorkspaceServer(
     }
     return parsed;
   }
+  const mcp = mcpAccess
+    ? mcpEndpoint(repository, mcpAccess, catalog, design ? { images: design.images } : {})
+    : undefined;
   const server = createServer(async (req, res) => {
     res.setHeader('Cache-Control', 'no-store');
     res.setHeader('X-Content-Type-Options', 'nosniff');
@@ -341,6 +349,21 @@ export async function createWorkspaceServer(
       const port = bound && typeof bound !== 'string' ? bound.port : 4000;
       if (!trustedHost(hosting, port, host))
         throw new DomainError('FORBIDDEN', 'Only the workspace origin is allowed');
+      const pathname = (req.url || '/').split('?')[0];
+      // Agents connect here with a key, never a browser session. Server-to-server
+      // clients send no Origin; a browser one must be this site's.
+      if (pathname === '/mcp') {
+        if (!mcp) throw new DomainError('NOT_FOUND', 'Agent connections are not enabled here');
+        if (req.headers.origin && !trustedOrigins(hosting, port).has(req.headers.origin))
+          throw new DomainError('FORBIDDEN', 'Origin is not allowed');
+        await mcp.handle(req, res);
+        return;
+      }
+      // No OAuth discovery yet: clients that look after a 401 get JSON, not a page.
+      if (pathname.startsWith('/.well-known/')) {
+        json(404, { error: 'Not found' });
+        return;
+      }
       // Pages are public and linked from anywhere; the API checks below stay strict.
       if (hosting.staticDir && (await serveStatic(hosting.staticDir, req, res))) return;
       const url = new URL(req.url || '/', 'http://127.0.0.1:4000');
@@ -490,6 +513,53 @@ export async function createWorkspaceServer(
           throw new DomainError('FORBIDDEN', 'Open the local workspace session first');
       }
       const activeWorker = await workerFor(activeRepo);
+      // Keys for the owner's own agents (Muse, Claude, any MCP client). A key is
+      // shown once, at creation; only its hash is kept. Seven days, five at most.
+      if (path.startsWith('/agent-keys')) {
+        if (!mcpAccess)
+          throw new DomainError('NOT_FOUND', 'Agent connections are not enabled here');
+        const endpoint = `${hosting.publicUrl?.origin ?? `http://127.0.0.1:${port}`}/mcp`;
+        const shown = (g: Awaited<ReturnType<McpAccessStore['active']>>[number]) => ({
+          id: g._id,
+          name: g.name,
+          access: g.access,
+          createdAt: g.createdAt,
+          expiresAt: g.expiresAt,
+        });
+        if (path === '/agent-keys' && req.method === 'GET') {
+          json(200, { endpoint, keys: (await mcpAccess.active(activeRepo.ownerId)).map(shown) });
+          return;
+        }
+        if (path === '/agent-keys' && req.method === 'POST') {
+          const input = z
+            .object({
+              name: z.string().trim().min(1).max(60),
+              access: z.enum(['read', 'propose']),
+            })
+            .strict()
+            .parse(await body(req));
+          if ((await mcpAccess.active(activeRepo.ownerId)).length >= 5)
+            throw new DomainError('VALIDATION', 'Up to five keys at a time; revoke one first');
+          const { token: key, grant } = await mcpAccess.issue({
+            ownerId: activeRepo.ownerId,
+            ...input,
+            hours: 168,
+          });
+          json(200, { endpoint, key, grant: shown(grant) });
+          return;
+        }
+        if (path === '/agent-keys/revoke' && req.method === 'POST') {
+          const { id: grantId } = z
+            .object({ id: z.string().regex(/^[a-f0-9]{64}$/) })
+            .strict()
+            .parse(await body(req));
+          const result = await mcpAccess.revoke(grantId, activeRepo.ownerId);
+          if (!result.matchedCount) throw new DomainError('NOT_FOUND', 'No such key');
+          json(200, { revoked: grantId });
+          return;
+        }
+        throw new DomainError('NOT_FOUND', 'Unknown agent key request');
+      }
       const requireOperator = () => {
         if (!accountMode) return;
         const expected = process.env.RENOVAGENT_CATALOG_OPERATOR || '';
@@ -1228,7 +1298,10 @@ export async function createWorkspaceServer(
     for (const worker of workers.values()) void worker.tick().catch(() => {});
     for (const worker of designWorkers.values()) void worker.tick().catch(() => {});
   }, 3000);
-  server.on('close', () => clearInterval(interval));
+  server.on('close', () => {
+    clearInterval(interval);
+    mcp?.close();
+  });
   return { server, workers, recovery };
 }
 if (process.argv[1]?.endsWith('/apps/api/src/server.ts')) {
@@ -1254,6 +1327,8 @@ if (process.argv[1]?.endsWith('/apps/api/src/server.ts')) {
       : undefined;
   const catalog = new CatalogStore(client.db());
   await catalog.ensureIndexes();
+  const mcpAccess = new McpAccessStore(client.db());
+  await mcpAccess.ensureIndexes();
   const { server, workers } = await createWorkspaceServer(
     repository,
     token,
@@ -1266,6 +1341,12 @@ if (process.argv[1]?.endsWith('/apps/api/src/server.ts')) {
       ...((await configuredMuseKey()) ? { provider: new MusePreviewProvider() } : {}),
     },
     hosting,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    mcpAccess,
   );
   server.listen(hosting.listenPort, hosting.listenHost, () =>
     console.log(

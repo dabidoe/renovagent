@@ -1,4 +1,4 @@
-import { createServer, type IncomingMessage } from 'node:http';
+import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
 import { pathToFileURL } from 'node:url';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { MongoWorkspaceRepository } from './repository.js';
@@ -37,8 +37,7 @@ export function createMcpHttpServer(
   options: McpHttpOptions = {},
 ) {
   const publicUrl = options.publicUrl ? mcpPublicUrl(options.publicUrl) : undefined;
-  const windows = new Map<string, { start: number; count: number }>();
-  const active = new Set<ReturnType<typeof createWorkspaceMcpServer>>();
+  const endpoint = mcpEndpoint(repository, access, catalog, options);
   const server = createServer(async (req, res) => {
     res.setHeader('Cache-Control', 'no-store');
     res.setHeader('X-Content-Type-Options', 'nosniff');
@@ -80,7 +79,7 @@ export function createMcpHttpServer(
             'Enter the key only in the client secure credential setup. Never send it in a chat or URL.',
             'The credential selects one workspace. It expires and can be revoked. Each request rechecks access.',
             '',
-            'Read tools: list_homes, list_projects, get_project_context, list_project_files, get_artifact, search_catalog, get_offer_history, build_checkout_review.',
+            'Read tools: list_homes, list_projects, get_project_context, list_project_files, get_artifact, search_catalog, get_offer_history, build_checkout_review, list_floor_styles, find_paint_color, plan_paint_and_floor.',
             'Proposal tools (only when granted): start_project, propose_project_change.',
             'List the actual tools and read their schemas before invoking them. Read-only credentials do not expose proposal tools.',
             'Project creation saves intent and a proposed brief only; it does not generate a design or estimate.',
@@ -96,6 +95,40 @@ export function createMcpHttpServer(
         fail(404, 'Not found');
         return;
       }
+      await endpoint.handle(req, res);
+    } catch {
+      // Request bodies, authorization headers and provider errors never enter
+      // logs or unauthenticated responses.
+      if (!res.headersSent) fail(500, 'Connector request failed');
+      else res.end();
+    }
+  });
+  server.requestTimeout = 30_000;
+  server.headersTimeout = 10_000;
+  server.maxHeadersCount = 40;
+  server.on('close', () => endpoint.close());
+  return server;
+}
+
+// The authenticated /mcp endpoint, shared by this listener and the hosted
+// workspace server. The caller checks Host and Origin first. Only a
+// connector credential (Bearer) is accepted, never a browser session; each
+// request gets a server scoped to the credential's owner.
+export function mcpEndpoint(
+  repository: MongoWorkspaceRepository,
+  access: McpAccessStore,
+  catalog?: CatalogStore,
+  options: { requestsPerMinute?: number; images?: DesignImageStore } = {},
+) {
+  const windows = new Map<string, { start: number; count: number }>();
+  const active = new Set<ReturnType<typeof createWorkspaceMcpServer>>();
+  const handle = async (req: IncomingMessage, res: ServerResponse) => {
+    const fail = (status: number, message: string) => {
+      res.writeHead(status, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: message }));
+    };
+    res.setHeader('Cache-Control', 'no-store');
+    try {
       const match = req.headers.authorization?.match(/^Bearer (reno_[A-Za-z0-9_-]{43})$/);
       const grant = match ? await access.authenticate(match[1]) : null;
       if (!grant) {
@@ -147,16 +180,13 @@ export function createMcpHttpServer(
       if (!res.headersSent) fail(500, 'Connector request failed');
       else res.end();
     }
-  });
-  server.requestTimeout = 30_000;
-  server.headersTimeout = 10_000;
-  server.maxHeadersCount = 40;
-  server.on('close', () => {
+  };
+  const close = () => {
     windows.clear();
     for (const mcp of active) void mcp.close().catch(() => {});
     active.clear();
-  });
-  return server;
+  };
+  return { handle, close };
 }
 
 function allowedOrigin(req: IncomingMessage, publicUrl: URL | undefined, port: number) {

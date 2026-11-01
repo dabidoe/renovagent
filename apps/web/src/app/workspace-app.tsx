@@ -12,6 +12,7 @@ import { RoomDimensionsCard } from '../features/scope/room-dimensions-card.js';
 import { RoomStudio } from '../features/room3d/room-studio.js';
 import { HutchinsonStudio } from '../features/house-example/hutchinson-studio.js';
 import { OwnStudio, type OwnStart } from '../features/house-example/own-studio.js';
+import { ConnectAgent } from '../features/connect/connect-agent.js';
 import { ExamplesGallery, ListingStudio } from '../features/house-example/listing-studio.js';
 import { isHouseCase } from '../features/house-example/house-example-model.js';
 import '../features/house-example/house-example.css';
@@ -65,7 +66,7 @@ export function App({ controller }: { controller: WorkspaceController }) {
   );
   // Paint & floor studio pages: your own project, the examples, one example.
   const studioHash = () =>
-    /^#(your-project|examples|example\/[a-z0-9-]+)$/.test(window.location.hash)
+    /^#(your-project|examples|connect|example\/[a-z0-9-]+)$/.test(window.location.hash)
       ? window.location.hash
       : null;
   const [studioRoute, setStudioRoute] = useState(studioHash);
@@ -73,6 +74,8 @@ export function App({ controller }: { controller: WorkspaceController }) {
     const sync = () => {
       setHouseExampleOpen(window.location.hash === '#example-house');
       setStudioRoute(studioHash());
+      // A link to a studio page (e.g. #connect) leaves the landing.
+      if (studioHash()) setLandingVisible(false);
     };
     window.addEventListener('hashchange', sync);
     return () => window.removeEventListener('hashchange', sync);
@@ -414,7 +417,9 @@ export function App({ controller }: { controller: WorkspaceController }) {
               {showOwn
                 ? studioRoute === '#your-project'
                   ? 'Your project'
-                  : 'Examples'
+                  : studioRoute === '#connect'
+                    ? 'Connect your agent'
+                    : 'Examples'
                 : showHouse
                   ? 'Hutchinson · whole-house plan'
                   : exampleStudio
@@ -485,7 +490,9 @@ export function App({ controller }: { controller: WorkspaceController }) {
         </main>
       ) : showOwn ? (
         <main className="prompt-main has-room">
-          {studioRoute === '#your-project' ? (
+          {studioRoute === '#connect' ? (
+            <ConnectAgent />
+          ) : studioRoute === '#your-project' ? (
             <OwnStudio key={ownStart ? 'start' : 'own'} start={ownStart} />
           ) : studioRoute === '#examples' ? (
             <ExamplesGallery

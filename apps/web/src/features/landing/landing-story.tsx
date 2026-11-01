@@ -323,6 +323,9 @@ export function AgentConnection() {
           proposes changes. You decide what makes it into the plan.
         </p>
         <div className="agent-connection-links">
+          <a className="landing-source-link" href="#connect">
+            Connect your agent <Glyph name="right" />
+          </a>
           <span>
             <img src={museIcon} alt="" width={20} height={20} /> Tested with Muse
           </span>

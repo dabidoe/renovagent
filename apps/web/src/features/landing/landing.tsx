@@ -564,7 +564,7 @@ export function Landing({
               width={20}
               height={20}
             />
-            <a href="#agent-connection">
+            <a href="#connect">
               Connect with Muse or your agent <span aria-hidden="true">↗</span>
             </a>
           </p>

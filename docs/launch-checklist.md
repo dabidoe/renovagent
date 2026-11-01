@@ -101,7 +101,7 @@ Agent calls over MCP run on the user's own model, so they cost us only storage. 
 2. **Hosting fixes:**
    - Start listening before the first workspace read. The health check timeout is 60 s, and the cold start here took about 2 minutes.
    - Use `/readyz` for readiness.
-   - Serve MCP from the same container at `/mcp`.
+   - Serve MCP from the same container at `/mcp`. **Done:** the site serves `https://<your-app>/mcp`, and signed-in owners make and revoke their own 7-day agent keys at `#connect`. No extra variables; the address comes from `RENOVAGENT_PUBLIC_URL`.
    - Swap macOS `sips` for a Linux image converter. That's a new dependency; I'll name it for your approval.
    - Make Muse photo jobs call its API instead of the local CLI.
 3. **Plans and limits:**

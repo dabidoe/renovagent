@@ -65,11 +65,22 @@ export class McpAccessStore {
     });
   }
 
-  async revoke(grantId: string) {
+  // With an owner, only that owner's grant can be revoked (the website); the
+  // operator CLI revokes by ID alone.
+  async revoke(grantId: string, ownerId?: string) {
     return this.grants.updateOne(
-      { _id: grantId, revokedAt: null },
+      { _id: grantId, revokedAt: null, ...(ownerId ? { ownerId } : {}) },
       { $set: { revokedAt: new Date() } },
     );
+  }
+
+  // An owner's unexpired, unrevoked grants, newest first. The ID is the
+  // credential's hash, safe to show; the credential itself is never stored.
+  async active(ownerId: string) {
+    return this.grants
+      .find({ ownerId, revokedAt: null, expiresAt: { $gt: new Date() } })
+      .sort({ createdAt: -1 })
+      .toArray();
   }
 }
 
