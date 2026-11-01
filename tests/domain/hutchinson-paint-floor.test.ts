@@ -58,8 +58,11 @@ test('the living room takeoff runs through the core recipe and demo catalog', ()
     Math.round(2 * (room('living').size!.xFt + room('living').size!.yFt) * 9),
   );
   const lines = new Map(t.lines.map((l) => [l.bomItemId, l]));
-  // Two coats over the gross wall area, at the mid paint's 400 sq ft per gallon.
-  assert.equal(lines.get('wall-paint:paint')!.purchaseUnits, Math.ceil((t.wallSqFt * 2) / 400));
+  // Two coats over the gross wall area plus 10%, at the mid paint's 400 sq ft per gallon.
+  assert.equal(
+    lines.get('wall-paint:paint')!.purchaseUnits,
+    Math.ceil((t.wallSqFt! * 2 * 1.1) / 400),
+  );
   assert.ok([...lines.keys()].some((id) => id.startsWith('lvp-floor:')));
   assert.equal(
     t.totalMinor,
@@ -181,4 +184,11 @@ test('paint is priced by its line and finish, never by its colour', () => {
       l.bomItemId.startsWith('lvp-floor:'),
     )!.unitPriceMinor;
   assert.ok(floor('high') > floor('builder'));
+});
+
+test('the living room needs about five gallons of budget paint, rounded up', () => {
+  const t = roomTakeoff(room('living'), { color: gray, floor: 'keep', included: true }, 'builder');
+  const paint = t.lines.find((l) => l.bomItemId === 'wall-paint:paint')!;
+  assert.equal(paint.purchaseUnits, 5);
+  assert.equal(paint.unitPriceMinor, 2598, 'budget eggshell, about $25 a gallon');
 });

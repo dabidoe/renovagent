@@ -43,9 +43,9 @@ test('candidates span every tier, priced from the dated observations', () => {
     [...new Set(c.filter((x) => x.itemId === 'paint').map((x) => x.priced.offer.tier))].sort(),
     ['builder', 'high', 'mid'],
   );
-  // 832 sq ft at 350 sq ft per gallon rounds up to 3 gallons of builder paint.
+  // 832 sq ft at 300 sq ft per gallon rounds up to 3 gallons of builder paint.
   const builder = c.find((x) => x.priced.offer.id === 'offer-lr-paint-b')!;
-  assert.deepEqual([builder.units, builder.totalMinor], [3, 3 * 2898]);
+  assert.deepEqual([builder.units, builder.totalMinor], [3, 3 * 2498]);
 });
 
 test('the cheapest product judged a fit wins; a poor fit is passed over with a reason', () => {

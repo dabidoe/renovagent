@@ -84,6 +84,9 @@ const XULON = ['xulon-lvp-install', ...RECIPE];
 
 // Two finish coats is this recipe's design selection, stated wherever it is used.
 const COATS = 2;
+// So is buying 10% more paint than the coats need: touch-ups, rolling loss
+// and porous walls, so the job rounds up rather than running short.
+const PAINT_EXTRA = 0.1;
 
 function paintCoverage(v: RecipeValues) {
   const walls = wallArea(v);
@@ -91,8 +94,8 @@ function paintCoverage(v: RecipeValues) {
     ? { ...walls, quantityBasis: 'Wall area × 2 coats; dimensions not yet provided.' }
     : {
         ...walls,
-        quantity: round(walls.quantity * COATS),
-        quantityBasis: `${walls.quantity} sq ft gross wall area × ${COATS} coats (recipe selection); openings not deducted. Gallons follow the selected paint's published coverage.`,
+        quantity: round(walls.quantity * COATS * (1 + PAINT_EXTRA)),
+        quantityBasis: `${walls.quantity} sq ft gross wall area × ${COATS} coats, plus ${PAINT_EXTRA * 100}% for touch-ups and loss (recipe selections); openings not deducted. Gallons follow the selected paint's stated coverage, rounded up.`,
       };
 }
 
