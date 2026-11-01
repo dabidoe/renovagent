@@ -14,6 +14,20 @@ export const EXAMPLES: ExampleCard[] = [
     cover: './examples/hutchinson/rooms/photo-04-lvp.jpg',
     rooms: 5,
   },
+  {
+    route: '#example/oakland',
+    address: '2244 E 20th St',
+    place: 'Oakland, CA',
+    cover: './examples/oakland/image-01-lvp.jpg',
+    rooms: 6,
+  },
+  {
+    route: '#example/brooklyn',
+    address: '621 E 43rd St',
+    place: 'Brooklyn, NY',
+    cover: './examples/brooklyn/image-03-lvp.jpg',
+    rooms: 5,
+  },
 ];
 
 type Edits = { ceilingFt?: number; sizes?: Record<string, { xFt: number; yFt: number }> };

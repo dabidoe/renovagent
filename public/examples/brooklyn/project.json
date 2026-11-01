@@ -1,0 +1,311 @@
+{
+  "id": "brooklyn",
+  "address": "621 E 43rd St",
+  "place": "Brooklyn, NY",
+  "listing": "https://www.redfin.com/NY/Brooklyn/621-E-43rd-St-11203/home/40782904",
+  "ceilingFt": null,
+  "rooms": [
+    {
+      "id": "image-03",
+      "title": "Living room",
+      "existingFloor": "carpet",
+      "photo": {
+        "src": "./examples/brooklyn/image-03.jpg",
+        "walls": "./examples/brooklyn/image-03-walls.json"
+      },
+      "floors": {
+        "lvp": {
+          "src": "./examples/brooklyn/image-03-lvp.jpg",
+          "walls": "./examples/brooklyn/image-03-lvp-walls.json"
+        },
+        "hardwood": {
+          "src": "./examples/brooklyn/image-03-hardwood.jpg",
+          "walls": "./examples/brooklyn/image-03-hardwood-walls.json"
+        }
+      }
+    },
+    {
+      "id": "image-04",
+      "title": "Dining room",
+      "existingFloor": "hardwood",
+      "photo": {
+        "src": "./examples/brooklyn/image-04.jpg",
+        "walls": "./examples/brooklyn/image-04-walls.json"
+      },
+      "floors": {
+        "lvp": {
+          "src": "./examples/brooklyn/image-04-lvp.jpg",
+          "walls": "./examples/brooklyn/image-04-lvp-walls.json"
+        },
+        "hardwood": {
+          "src": "./examples/brooklyn/image-04-hardwood.jpg",
+          "walls": "./examples/brooklyn/image-04-hardwood-walls.json"
+        }
+      }
+    },
+    {
+      "id": "image-05",
+      "title": "Front bedroom",
+      "existingFloor": "carpet",
+      "photo": {
+        "src": "./examples/brooklyn/image-05.jpg",
+        "walls": "./examples/brooklyn/image-05-walls.json"
+      },
+      "floors": {
+        "lvp": {
+          "src": "./examples/brooklyn/image-05-lvp.jpg",
+          "walls": "./examples/brooklyn/image-05-lvp-walls.json"
+        },
+        "hardwood": {
+          "src": "./examples/brooklyn/image-05-hardwood.jpg",
+          "walls": "./examples/brooklyn/image-05-hardwood-walls.json"
+        }
+      }
+    },
+    {
+      "id": "image-06",
+      "title": "Yellow bedroom",
+      "existingFloor": "hardwood",
+      "photo": {
+        "src": "./examples/brooklyn/image-06.jpg",
+        "walls": "./examples/brooklyn/image-06-walls.json"
+      },
+      "floors": {
+        "lvp": {
+          "src": "./examples/brooklyn/image-06-lvp.jpg",
+          "walls": "./examples/brooklyn/image-06-lvp-walls.json"
+        },
+        "hardwood": {
+          "src": "./examples/brooklyn/image-06-hardwood.jpg",
+          "walls": "./examples/brooklyn/image-06-hardwood-walls.json"
+        }
+      }
+    },
+    {
+      "id": "image-07",
+      "title": "Back bedroom",
+      "existingFloor": "carpet",
+      "photo": {
+        "src": "./examples/brooklyn/image-07.jpg",
+        "walls": "./examples/brooklyn/image-07-walls.json"
+      },
+      "floors": {
+        "lvp": {
+          "src": "./examples/brooklyn/image-07-lvp.jpg",
+          "walls": "./examples/brooklyn/image-07-lvp-walls.json"
+        },
+        "hardwood": {
+          "src": "./examples/brooklyn/image-07-hardwood.jpg",
+          "walls": "./examples/brooklyn/image-07-hardwood-walls.json"
+        }
+      }
+    }
+  ],
+  "starting": {
+    "image-03": {
+      "color": {
+        "name": "Agreeable Gray",
+        "code": "SW 7029",
+        "hex": "#d1cbc1",
+        "brand": "Sherwin-Williams"
+      },
+      "floor": "lvp",
+      "included": true
+    },
+    "image-04": {
+      "color": {
+        "name": "Sea Salt",
+        "code": "SW 6204",
+        "hex": "#cdd2ca",
+        "brand": "Sherwin-Williams"
+      },
+      "floor": "hardwood",
+      "included": true
+    },
+    "image-05": {
+      "color": {
+        "name": "Evergreen Fog",
+        "code": "SW 9130",
+        "hex": "#95978a",
+        "brand": "Sherwin-Williams"
+      },
+      "floor": "lvp",
+      "included": true
+    },
+    "image-06": {
+      "color": {
+        "name": "Alabaster",
+        "code": "SW 7008",
+        "hex": "#edeae0",
+        "brand": "Sherwin-Williams"
+      },
+      "floor": "hardwood",
+      "included": true
+    },
+    "image-07": {
+      "color": {
+        "name": "Agreeable Gray",
+        "code": "SW 7029",
+        "hex": "#d1cbc1",
+        "brand": "Sherwin-Williams"
+      },
+      "floor": "lvp",
+      "included": true
+    }
+  },
+  "receipts": {
+    "sources": [
+      {
+        "image": "image-01",
+        "original": "503807_0.jpg",
+        "originalSha256": "fb6f8e95eb5e58b9215ac908641bda10752bc5c0eec9c3107bcf4f5366df2fd7",
+        "type": "exterior"
+      },
+      {
+        "image": "image-02",
+        "original": "503807_14_0.jpg",
+        "originalSha256": "1e6a5c99360534f4180fd10f1fbef289204337a49b23fbdec18179995fcfe59e",
+        "type": "floor plan"
+      },
+      {
+        "image": "image-03",
+        "original": "503807_2_0.jpg",
+        "originalSha256": "4489a71e49a8d6f342c225db46a18c338120a28fdef1f3681fdd564cb8a5140b",
+        "type": "interior room"
+      },
+      {
+        "image": "image-04",
+        "original": "503807_3_0.jpg",
+        "originalSha256": "7f9aa7221d7c550332d08d2ee121d8ab4b50453ac3bc4830708208915b161093",
+        "type": "interior room"
+      },
+      {
+        "image": "image-05",
+        "original": "503807_4_0.jpg",
+        "originalSha256": "21837209eddea9d639607e5eb3718d0701f9985458d02e9fbc7c298904503910",
+        "type": "interior room"
+      },
+      {
+        "image": "image-06",
+        "original": "503807_5_0.jpg",
+        "originalSha256": "6c3fbbc3487a3376c8829387941efce5960d4474b5abc2324d1d55525d6b45a2",
+        "type": "interior room"
+      },
+      {
+        "image": "image-07",
+        "original": "503807_6_0.jpg",
+        "originalSha256": "77f360d35049982a6f79a8b9c40824154efb9ba31cc65180611e6ce0c3f617a4",
+        "type": "interior room"
+      },
+      {
+        "image": "image-08",
+        "original": "503807_7_0.jpg",
+        "originalSha256": "2615e3d2dd2095a63f73d8920831b3750469d2379fb5c08319960cc41932fb49",
+        "type": "other"
+      },
+      {
+        "image": "image-09",
+        "original": "503807_8_0.jpg",
+        "originalSha256": "c05f6c4408250d2f50034015730ec1733e6c297c437ee252ae5a6e913e08cab5",
+        "type": "bathroom"
+      },
+      {
+        "image": "image-10",
+        "original": "503807_9_0.jpg",
+        "originalSha256": "f29f3dbe5966e374f9480541c260b192574ed5beda7ecff05d955de285eaba1a",
+        "type": "bathroom"
+      }
+    ],
+    "sort": {
+      "model": "muse-spark-1.3",
+      "runId": "resp_6ae6ac34e050b6d3d2c64042"
+    },
+    "read": {
+      "model": "muse-spark-1.3",
+      "runId": "resp_6ae6ac4124a7eb6246bd4302",
+      "plans": []
+    },
+    "floors": {
+      "image-03-lvp": {
+        "model": "muse-image-1.0",
+        "input": "image-03.jpg",
+        "inputSha256": "725e909dca9afe66d976c1fd05a7bee14f2a5cc8b140dc72640ac7d0614052b5",
+        "outputSha256": "1a67d8e7fc7c8c884dbfabf51c892321591d0383f45b89ad5edb30b0a55feb17",
+        "prompt": "Edit this photo of a room. Replace only the floor covering of this room with light natural oak wood-look luxury vinyl plank flooring, laid straight, meeting the existing baseboards. Remove the existing room carpet or floor covering only. Keep everything else exactly as it is: the same camera, framing and perspective, walls and wall color, ceiling, windows, doors, closets, radiators, stairs, furniture and lighting. Photorealistic.",
+        "status": "generated-concept"
+      },
+      "image-03-hardwood": {
+        "model": "muse-image-1.0",
+        "input": "image-03.jpg",
+        "inputSha256": "725e909dca9afe66d976c1fd05a7bee14f2a5cc8b140dc72640ac7d0614052b5",
+        "outputSha256": "b7c6d56f25ee0621d4b3cb50431c62dda547ab2b37e8bbf30c3ae6663bc842c7",
+        "prompt": "Edit this photo of a room. Replace only the floor covering of this room with wide-plank white oak engineered hardwood flooring with a matte finish, laid straight, meeting the existing baseboards. Remove the existing room carpet or floor covering only. Keep everything else exactly as it is: the same camera, framing and perspective, walls and wall color, ceiling, windows, doors, closets, radiators, stairs, furniture and lighting. Photorealistic.",
+        "status": "generated-concept"
+      },
+      "image-04-lvp": {
+        "model": "muse-image-1.0",
+        "input": "image-04.jpg",
+        "inputSha256": "0c6dcc77df2d61b02d95b6e047ed163ba3d31ee88a4f01d7911a5b50504f0c3b",
+        "outputSha256": "9c95fa84f083bd55ad5f4f02f65ca73dade7bb6acfa1f427314d837f4d21fc70",
+        "prompt": "Edit this photo of a room. Replace only the floor covering of this room with light natural oak wood-look luxury vinyl plank flooring, laid straight, meeting the existing baseboards. Remove the existing room carpet or floor covering only. Keep everything else exactly as it is: the same camera, framing and perspective, walls and wall color, ceiling, windows, doors, closets, radiators, stairs, furniture and lighting. Photorealistic.",
+        "status": "generated-concept"
+      },
+      "image-04-hardwood": {
+        "model": "muse-image-1.0",
+        "input": "image-04.jpg",
+        "inputSha256": "0c6dcc77df2d61b02d95b6e047ed163ba3d31ee88a4f01d7911a5b50504f0c3b",
+        "outputSha256": "7a63738fb37f53ac80e5c321a0dc50d45524fb562aed5d159f92c0b1e8ced1ab",
+        "prompt": "Edit this photo of a room. Replace only the floor covering of this room with wide-plank white oak engineered hardwood flooring with a matte finish, laid straight, meeting the existing baseboards. Remove the existing room carpet or floor covering only. Keep everything else exactly as it is: the same camera, framing and perspective, walls and wall color, ceiling, windows, doors, closets, radiators, stairs, furniture and lighting. Photorealistic.",
+        "status": "generated-concept"
+      },
+      "image-05-lvp": {
+        "model": "muse-image-1.0",
+        "input": "image-05.jpg",
+        "inputSha256": "e9deb82469cd6ecb550128676797382901978c42df2889e2dd5153d2a3d0517f",
+        "outputSha256": "5590d6c74cb2c390826f5e97cd2bc4f8f5c41c7b2205064fb861166b85566f2e",
+        "prompt": "Edit this photo of a room. Replace only the floor covering of this room with light natural oak wood-look luxury vinyl plank flooring, laid straight, meeting the existing baseboards. Remove the existing room carpet or floor covering only. Keep everything else exactly as it is: the same camera, framing and perspective, walls and wall color, ceiling, windows, doors, closets, radiators, stairs, furniture and lighting. Photorealistic.",
+        "status": "generated-concept"
+      },
+      "image-05-hardwood": {
+        "model": "muse-image-1.0",
+        "input": "image-05.jpg",
+        "inputSha256": "e9deb82469cd6ecb550128676797382901978c42df2889e2dd5153d2a3d0517f",
+        "outputSha256": "7644abec39e449c1a60273fde7bac43507ce93c9768d370b517a032edce7d73e",
+        "prompt": "Edit this photo of a room. Replace only the floor covering of this room with wide-plank white oak engineered hardwood flooring with a matte finish, laid straight, meeting the existing baseboards. Remove the existing room carpet or floor covering only. Keep everything else exactly as it is: the same camera, framing and perspective, walls and wall color, ceiling, windows, doors, closets, radiators, stairs, furniture and lighting. Photorealistic.",
+        "status": "generated-concept"
+      },
+      "image-06-lvp": {
+        "model": "muse-image-1.0",
+        "input": "image-06.jpg",
+        "inputSha256": "5cdb65191ffa807297c2515385c722b2b812a50af9ddb7528abe9ef355d333dd",
+        "outputSha256": "64de61ce3e94f412c899b7e2dcf41748e6da50266710f10d81be9fc920802bad",
+        "prompt": "Edit this photo of a room. Replace only the floor covering of this room with light natural oak wood-look luxury vinyl plank flooring, laid straight, meeting the existing baseboards. Remove the existing room carpet or floor covering only. Keep everything else exactly as it is: the same camera, framing and perspective, walls and wall color, ceiling, windows, doors, closets, radiators, stairs, furniture and lighting. Photorealistic.",
+        "status": "generated-concept"
+      },
+      "image-06-hardwood": {
+        "model": "muse-image-1.0",
+        "input": "image-06.jpg",
+        "inputSha256": "5cdb65191ffa807297c2515385c722b2b812a50af9ddb7528abe9ef355d333dd",
+        "outputSha256": "b4a73ad98580d48d8b8877f98a0496f6948796c632a6e41aa933266b2a01dd99",
+        "prompt": "Edit this photo of a room. Replace only the floor covering of this room with wide-plank white oak engineered hardwood flooring with a matte finish, laid straight, meeting the existing baseboards. Remove the existing room carpet or floor covering only. Keep everything else exactly as it is: the same camera, framing and perspective, walls and wall color, ceiling, windows, doors, closets, radiators, stairs, furniture and lighting. Photorealistic.",
+        "status": "generated-concept"
+      },
+      "image-07-lvp": {
+        "model": "muse-image-1.0",
+        "input": "image-07.jpg",
+        "inputSha256": "376513e29bf836673fac771b40483487a9fae8edd7691b8310d7a0779e6342ca",
+        "outputSha256": "3c41e2ad9d38a59f648655c7731cec126c57b68bf8fea8f49f658581e9a0917c",
+        "prompt": "Edit this photo of a room. Replace only the floor covering of this room with light natural oak wood-look luxury vinyl plank flooring, laid straight, meeting the existing baseboards. Remove the existing room carpet or floor covering only. Keep everything else exactly as it is: the same camera, framing and perspective, walls and wall color, ceiling, windows, doors, closets, radiators, stairs, furniture and lighting. Photorealistic.",
+        "status": "generated-concept"
+      },
+      "image-07-hardwood": {
+        "model": "muse-image-1.0",
+        "input": "image-07.jpg",
+        "inputSha256": "376513e29bf836673fac771b40483487a9fae8edd7691b8310d7a0779e6342ca",
+        "outputSha256": "98943db1a28884a3406bd5a437124193a2323ed3ae027af6f85eb772326ada38",
+        "prompt": "Edit this photo of a room. Replace only the floor covering of this room with wide-plank white oak engineered hardwood flooring with a matte finish, laid straight, meeting the existing baseboards. Remove the existing room carpet or floor covering only. Keep everything else exactly as it is: the same camera, framing and perspective, walls and wall color, ceiling, windows, doors, closets, radiators, stairs, furniture and lighting. Photorealistic.",
+        "status": "generated-concept"
+      }
+    }
+  }
+}

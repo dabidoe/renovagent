@@ -1,0 +1,547 @@
+{
+  "id": "oakland",
+  "address": "2244 E 20th St",
+  "place": "Oakland, CA",
+  "listing": "https://www.redfin.com/CA/Oakland/2244-E-20th-St-94606/home/1727158",
+  "ceilingFt": null,
+  "rooms": [
+    {
+      "id": "image-01",
+      "title": "Living room",
+      "existingFloor": "hardwood",
+      "photo": {
+        "src": "./examples/oakland/image-01.jpg",
+        "walls": "./examples/oakland/image-01-walls.json"
+      },
+      "floors": {
+        "lvp": {
+          "src": "./examples/oakland/image-01-lvp.jpg",
+          "walls": "./examples/oakland/image-01-lvp-walls.json"
+        },
+        "hardwood": {
+          "src": "./examples/oakland/image-01-hardwood.jpg",
+          "walls": "./examples/oakland/image-01-hardwood-walls.json"
+        }
+      },
+      "size": {
+        "xFt": 11.167,
+        "yFt": 14.75
+      }
+    },
+    {
+      "id": "image-02",
+      "title": "Accent bedroom",
+      "existingFloor": "vinyl plank",
+      "photo": {
+        "src": "./examples/oakland/image-02.jpg",
+        "walls": "./examples/oakland/image-02-walls.json"
+      },
+      "floors": {
+        "lvp": {
+          "src": "./examples/oakland/image-02-lvp.jpg",
+          "walls": "./examples/oakland/image-02-lvp-walls.json"
+        },
+        "hardwood": {
+          "src": "./examples/oakland/image-02-hardwood.jpg",
+          "walls": "./examples/oakland/image-02-hardwood-walls.json"
+        }
+      },
+      "size": {
+        "xFt": 7.5,
+        "yFt": 7.5
+      }
+    },
+    {
+      "id": "image-03",
+      "title": "Main kitchen",
+      "existingFloor": "tile",
+      "photo": {
+        "src": "./examples/oakland/image-03.jpg",
+        "walls": "./examples/oakland/image-03-walls.json"
+      },
+      "floors": {
+        "lvp": {
+          "src": "./examples/oakland/image-03-lvp.jpg",
+          "walls": "./examples/oakland/image-03-lvp-walls.json"
+        },
+        "hardwood": {
+          "src": "./examples/oakland/image-03-hardwood.jpg",
+          "walls": "./examples/oakland/image-03-hardwood-walls.json"
+        }
+      },
+      "size": {
+        "xFt": 15.75,
+        "yFt": 16.417
+      }
+    },
+    {
+      "id": "image-04",
+      "title": "Barn door bedroom",
+      "existingFloor": "vinyl plank",
+      "photo": {
+        "src": "./examples/oakland/image-04.jpg",
+        "walls": "./examples/oakland/image-04-walls.json"
+      },
+      "floors": {
+        "lvp": {
+          "src": "./examples/oakland/image-04-lvp.jpg",
+          "walls": "./examples/oakland/image-04-lvp-walls.json"
+        },
+        "hardwood": {
+          "src": "./examples/oakland/image-04-hardwood.jpg",
+          "walls": "./examples/oakland/image-04-hardwood-walls.json"
+        }
+      },
+      "size": {
+        "xFt": 11.083,
+        "yFt": 11.25
+      }
+    },
+    {
+      "id": "image-07",
+      "title": "Attic bedroom",
+      "existingFloor": "carpet",
+      "photo": {
+        "src": "./examples/oakland/image-07.jpg",
+        "walls": "./examples/oakland/image-07-walls.json"
+      },
+      "floors": {
+        "lvp": {
+          "src": "./examples/oakland/image-07-lvp.jpg",
+          "walls": "./examples/oakland/image-07-lvp-walls.json"
+        },
+        "hardwood": {
+          "src": "./examples/oakland/image-07-hardwood.jpg",
+          "walls": "./examples/oakland/image-07-hardwood-walls.json"
+        }
+      },
+      "size": {
+        "xFt": 20.667,
+        "yFt": 38.833
+      }
+    },
+    {
+      "id": "image-08",
+      "title": "Family room",
+      "existingFloor": "hardwood",
+      "photo": {
+        "src": "./examples/oakland/image-08.jpg",
+        "walls": "./examples/oakland/image-08-walls.json"
+      },
+      "floors": {
+        "lvp": {
+          "src": "./examples/oakland/image-08-lvp.jpg",
+          "walls": "./examples/oakland/image-08-lvp-walls.json"
+        },
+        "hardwood": {
+          "src": "./examples/oakland/image-08-hardwood.jpg",
+          "walls": "./examples/oakland/image-08-hardwood-walls.json"
+        }
+      },
+      "size": {
+        "xFt": 15.167,
+        "yFt": 18.5
+      }
+    }
+  ],
+  "starting": {
+    "image-01": {
+      "color": {
+        "name": "Agreeable Gray",
+        "code": "SW 7029",
+        "hex": "#d1cbc1",
+        "brand": "Sherwin-Williams"
+      },
+      "floor": "lvp",
+      "included": true
+    },
+    "image-02": {
+      "color": {
+        "name": "Sea Salt",
+        "code": "SW 6204",
+        "hex": "#cdd2ca",
+        "brand": "Sherwin-Williams"
+      },
+      "floor": "hardwood",
+      "included": true
+    },
+    "image-03": {
+      "color": {
+        "name": "Evergreen Fog",
+        "code": "SW 9130",
+        "hex": "#95978a",
+        "brand": "Sherwin-Williams"
+      },
+      "floor": "lvp",
+      "included": true
+    },
+    "image-04": {
+      "color": {
+        "name": "Alabaster",
+        "code": "SW 7008",
+        "hex": "#edeae0",
+        "brand": "Sherwin-Williams"
+      },
+      "floor": "hardwood",
+      "included": true
+    },
+    "image-07": {
+      "color": {
+        "name": "Agreeable Gray",
+        "code": "SW 7029",
+        "hex": "#d1cbc1",
+        "brand": "Sherwin-Williams"
+      },
+      "floor": "lvp",
+      "included": true
+    },
+    "image-08": {
+      "color": {
+        "name": "Sea Salt",
+        "code": "SW 6204",
+        "hex": "#cdd2ca",
+        "brand": "Sherwin-Williams"
+      },
+      "floor": "hardwood",
+      "included": true
+    }
+  },
+  "receipts": {
+    "sources": [
+      {
+        "image": "image-01",
+        "original": "41147489_10_3.jpg",
+        "originalSha256": "6d344a93534654d3ca19a64458c7b3b1a896f77a9afbd7b28d3a85ec02c77e9f",
+        "type": "interior room"
+      },
+      {
+        "image": "image-02",
+        "original": "41147489_12_3.jpg",
+        "originalSha256": "b73a5ba4447d90d42b989c3d2a0eb85a9ba0a9551bc8c2025c3b44ab44996c5d",
+        "type": "interior room"
+      },
+      {
+        "image": "image-03",
+        "original": "41147489_19_3.jpg",
+        "originalSha256": "3443f82d2f7fbb3f5bcf0ed6ea7f6f698b80cb9d7ddd862b886b4e2665dedf30",
+        "type": "interior room"
+      },
+      {
+        "image": "image-04",
+        "original": "41147489_25_3.jpg",
+        "originalSha256": "f556fb84016cdbcce6cf6ba8d5f4895261c82609291efab5b30d1c2dd358dd53",
+        "type": "interior room"
+      },
+      {
+        "image": "image-05",
+        "original": "41147489_28_3.jpg",
+        "originalSha256": "56acb5d7b02721cfe0295d47d58524850967f4022b8f0d9930b1613039c3a939",
+        "type": "bathroom"
+      },
+      {
+        "image": "image-06",
+        "original": "41147489_3.jpg",
+        "originalSha256": "75530d27bd662a40ed35916a37012a10b7e7c9d766ac873bda1a4ffa23ea2b96",
+        "type": "exterior"
+      },
+      {
+        "image": "image-07",
+        "original": "41147489_30_3.jpg",
+        "originalSha256": "52b39c362505a99baf5b548adc1a5e0a06e84c6224f8e9b40f0b1615d3c9e74a",
+        "type": "interior room"
+      },
+      {
+        "image": "image-08",
+        "original": "41147489_39_3.jpg",
+        "originalSha256": "73903e232ff2d74c0f9a1e553230901aeca560d5d8d7d78599ec31e1e193b4b5",
+        "type": "interior room"
+      },
+      {
+        "image": "image-09",
+        "original": "41147489_51_3.jpg",
+        "originalSha256": "44f57021e1463fc1b51ef87ebde21f6ff395d47b705d8d404206eb2c624d3b20",
+        "type": "exterior"
+      },
+      {
+        "image": "image-10",
+        "original": "41147489_55_3.jpg",
+        "originalSha256": "d1015dbf8ba1c2685c49938e351c41f85085619e61944949d697ea6433141154",
+        "type": "interior room"
+      },
+      {
+        "image": "image-11",
+        "original": "41147489_61_3.jpg",
+        "originalSha256": "4332ad6d3008625ee7fbe7066f42dbae048aa2005537c3019d2a79880d1dadbb",
+        "type": "interior room"
+      },
+      {
+        "image": "image-12",
+        "original": "41147489_66_3.jpg",
+        "originalSha256": "92daa9ebd04c5701b081f9d71d16124fb1405113b27f995a3da07ad589298ccf",
+        "type": "interior room"
+      },
+      {
+        "image": "image-13",
+        "original": "41147489_6_3.jpg",
+        "originalSha256": "0a12cbc12cb136a956f2213536ebda8b2be0d50908acbb3e5559c104d9ef1015",
+        "type": "interior room"
+      },
+      {
+        "image": "image-14",
+        "original": "41147489_80_3.jpg",
+        "originalSha256": "7ec435226b59f5b56971fa1a4541798452b7d2222b012dd6a27b08695c3ba5c4",
+        "type": "floor plan"
+      },
+      {
+        "image": "image-15",
+        "original": "41147489_81_2 (1).jpg",
+        "originalSha256": "1b3b159ed86e8956c4d40d6463da89dbdf2fc5d33f6813ab363f5aaff72749f3",
+        "type": "floor plan"
+      },
+      {
+        "image": "image-16",
+        "original": "41147489_82_0 (1).jpg",
+        "originalSha256": "4df49c39f85b5184e2402ade86158abda321773758760b344d3c9552b1cbe3e4",
+        "type": "floor plan"
+      }
+    ],
+    "sort": {
+      "model": "muse-spark-1.3",
+      "runId": "resp_6ae6ac3a3403858697f64ff3"
+    },
+    "read": {
+      "model": "muse-spark-1.3",
+      "runId": "resp_6ae6ac600f94b619c51d49e8",
+      "plans": [
+        {
+          "lengthFt": 11.833,
+          "name": "DECK",
+          "widthFt": 22
+        },
+        {
+          "lengthFt": 18.5,
+          "name": "FAMILY ROOM",
+          "widthFt": 15.167
+        },
+        {
+          "lengthFt": 7.5,
+          "name": "BEDROOM",
+          "widthFt": 7.5
+        },
+        {
+          "lengthFt": 8.25,
+          "name": "LAUNDRY",
+          "widthFt": 7.5
+        },
+        {
+          "lengthFt": 11.25,
+          "name": "PRIMARY BEDROOM",
+          "widthFt": 11.083
+        },
+        {
+          "lengthFt": 16.417,
+          "name": "KITCHEN",
+          "widthFt": 15.75
+        },
+        {
+          "lengthFt": 12.417,
+          "name": "DINING AREA",
+          "widthFt": 19.417
+        },
+        {
+          "lengthFt": 11.5,
+          "name": "BEDROOM",
+          "widthFt": 11.083
+        },
+        {
+          "lengthFt": 7.083,
+          "name": "FOYER",
+          "widthFt": 3.167
+        },
+        {
+          "lengthFt": 14.75,
+          "name": "LIVING ROOM",
+          "widthFt": 11.167
+        },
+        {
+          "lengthFt": 3.917,
+          "name": "SCREENED PORCH",
+          "widthFt": 14.417
+        },
+        {
+          "lengthFt": 13,
+          "name": "BATH",
+          "widthFt": 7.667
+        },
+        {
+          "lengthFt": 38.833,
+          "name": "ATTIC BEDROOM",
+          "widthFt": 20.667
+        },
+        {
+          "lengthFt": 7.667,
+          "name": "W.I.C.",
+          "widthFt": 10.417
+        },
+        {
+          "lengthFt": 12.917,
+          "name": "BEDROOM",
+          "widthFt": 10.5
+        },
+        {
+          "lengthFt": 14.917,
+          "name": "KITCHEN",
+          "widthFt": 14.25
+        },
+        {
+          "lengthFt": 4.833,
+          "name": "BATH",
+          "widthFt": 7.5
+        },
+        {
+          "lengthFt": 5.417,
+          "name": "HALL",
+          "widthFt": 21.5
+        },
+        {
+          "lengthFt": 13.75,
+          "name": "BEDROOM",
+          "widthFt": 9.583
+        },
+        {
+          "lengthFt": 13.833,
+          "name": "LIVING ROOM",
+          "widthFt": 16.917
+        },
+        {
+          "lengthFt": 12.667,
+          "name": "BATH",
+          "widthFt": 6.25
+        },
+        {
+          "lengthFt": 7.5,
+          "name": "BATH",
+          "widthFt": 8
+        },
+        {
+          "lengthFt": 13.333,
+          "name": "KITCHEN",
+          "widthFt": 16.917
+        },
+        {
+          "lengthFt": 4.417,
+          "name": "HALL",
+          "widthFt": 4.667
+        },
+        {
+          "lengthFt": 8.75,
+          "name": "BEDROOM",
+          "widthFt": 14.583
+        },
+        {
+          "lengthFt": 13,
+          "name": "BEDROOM",
+          "widthFt": 10.833
+        }
+      ]
+    },
+    "floors": {
+      "image-01-lvp": {
+        "model": "muse-image-1.0",
+        "input": "image-01.jpg",
+        "inputSha256": "4fa4deea44d9117f294c545a697679e69e09f27baee1056e37218cfa897712c2",
+        "outputSha256": "eab332a90d0f03ae6e2277b1c1f68dbe53b3a3894e7de3172ae71f2aa8e4057e",
+        "prompt": "Edit this photo of a room. Replace only the floor covering of this room with light natural oak wood-look luxury vinyl plank flooring, laid straight, meeting the existing baseboards. Remove the existing room carpet or floor covering only. Keep everything else exactly as it is: the same camera, framing and perspective, walls and wall color, ceiling, windows, doors, closets, radiators, stairs, furniture and lighting. Photorealistic.",
+        "status": "generated-concept"
+      },
+      "image-01-hardwood": {
+        "model": "muse-image-1.0",
+        "input": "image-01.jpg",
+        "inputSha256": "4fa4deea44d9117f294c545a697679e69e09f27baee1056e37218cfa897712c2",
+        "outputSha256": "6fff791dcc91f7e8d7098ce9816ef1d37c76fab5ae22b2bff675ee17abb3e4d3",
+        "prompt": "Edit this photo of a room. Replace only the floor covering of this room with wide-plank white oak engineered hardwood flooring with a matte finish, laid straight, meeting the existing baseboards. Remove the existing room carpet or floor covering only. Keep everything else exactly as it is: the same camera, framing and perspective, walls and wall color, ceiling, windows, doors, closets, radiators, stairs, furniture and lighting. Photorealistic.",
+        "status": "generated-concept"
+      },
+      "image-02-lvp": {
+        "model": "muse-image-1.0",
+        "input": "image-02.jpg",
+        "inputSha256": "f4ee7eecd17183ee20a16fbb265dc24f28d6f11570c4ac78316b2d86997f3a40",
+        "outputSha256": "98768394daadd6be43a885538e1a3f4b172922e2a51bb73106b32775a287baa2",
+        "prompt": "Edit this photo of a room. Replace only the floor covering of this room with light natural oak wood-look luxury vinyl plank flooring, laid straight, meeting the existing baseboards. Remove the existing room carpet or floor covering only. Keep everything else exactly as it is: the same camera, framing and perspective, walls and wall color, ceiling, windows, doors, closets, radiators, stairs, furniture and lighting. Photorealistic.",
+        "status": "generated-concept"
+      },
+      "image-02-hardwood": {
+        "model": "muse-image-1.0",
+        "input": "image-02.jpg",
+        "inputSha256": "f4ee7eecd17183ee20a16fbb265dc24f28d6f11570c4ac78316b2d86997f3a40",
+        "outputSha256": "38ffa315a0a6d45f01743ef3237da24ddf35bd6b8baaa87e3cda6ef8615938f8",
+        "prompt": "Edit this photo of a room. Replace only the floor covering of this room with wide-plank white oak engineered hardwood flooring with a matte finish, laid straight, meeting the existing baseboards. Remove the existing room carpet or floor covering only. Keep everything else exactly as it is: the same camera, framing and perspective, walls and wall color, ceiling, windows, doors, closets, radiators, stairs, furniture and lighting. Photorealistic.",
+        "status": "generated-concept"
+      },
+      "image-03-lvp": {
+        "model": "muse-image-1.0",
+        "input": "image-03.jpg",
+        "inputSha256": "75ffab2349e5158b444ae76982e55451b3cc3a737a5b7ad51449b82196aca26f",
+        "outputSha256": "48fdd9653474d14e556fdaa0c7fa880ca103c87e334a4d14e94ea00dfb287be6",
+        "prompt": "Edit this photo of a room. Replace only the floor covering of this room with light natural oak wood-look luxury vinyl plank flooring, laid straight, meeting the existing baseboards. Remove the existing room carpet or floor covering only. Keep everything else exactly as it is: the same camera, framing and perspective, walls and wall color, ceiling, windows, doors, closets, radiators, stairs, furniture and lighting. Photorealistic.",
+        "status": "generated-concept"
+      },
+      "image-03-hardwood": {
+        "model": "muse-image-1.0",
+        "input": "image-03.jpg",
+        "inputSha256": "75ffab2349e5158b444ae76982e55451b3cc3a737a5b7ad51449b82196aca26f",
+        "outputSha256": "b96e7d55803927fc4cfd2f3643d0e2f436110bbada9640faf621bc16b1b529a1",
+        "prompt": "Edit this photo of a room. Replace only the floor covering of this room with wide-plank white oak engineered hardwood flooring with a matte finish, laid straight, meeting the existing baseboards. Remove the existing room carpet or floor covering only. Keep everything else exactly as it is: the same camera, framing and perspective, walls and wall color, ceiling, windows, doors, closets, radiators, stairs, furniture and lighting. Photorealistic.",
+        "status": "generated-concept"
+      },
+      "image-04-lvp": {
+        "model": "muse-image-1.0",
+        "input": "image-04.jpg",
+        "inputSha256": "3c0072145a4133dcfb73f739984d8412aa8ff55fcb4efa65129ebb971942c5ef",
+        "outputSha256": "ebf3efdd2c58649d97ed6ceff9b02882c9dd108066c40896f68e707f219bb8af",
+        "prompt": "Edit this photo of a room. Replace only the floor covering of this room with light natural oak wood-look luxury vinyl plank flooring, laid straight, meeting the existing baseboards. Remove the existing room carpet or floor covering only. Keep everything else exactly as it is: the same camera, framing and perspective, walls and wall color, ceiling, windows, doors, closets, radiators, stairs, furniture and lighting. Photorealistic.",
+        "status": "generated-concept"
+      },
+      "image-04-hardwood": {
+        "model": "muse-image-1.0",
+        "input": "image-04.jpg",
+        "inputSha256": "3c0072145a4133dcfb73f739984d8412aa8ff55fcb4efa65129ebb971942c5ef",
+        "outputSha256": "a686b8dae2171862b2703bc8f50b1c3d15b8c70f41f029228a50643807362a8d",
+        "prompt": "Edit this photo of a room. Replace only the floor covering of this room with wide-plank white oak engineered hardwood flooring with a matte finish, laid straight, meeting the existing baseboards. Remove the existing room carpet or floor covering only. Keep everything else exactly as it is: the same camera, framing and perspective, walls and wall color, ceiling, windows, doors, closets, radiators, stairs, furniture and lighting. Photorealistic.",
+        "status": "generated-concept"
+      },
+      "image-07-lvp": {
+        "model": "muse-image-1.0",
+        "input": "image-07.jpg",
+        "inputSha256": "0e9e17e9f6f78cc5ca6d02428d767e3eb77b0243554db082a33fb40a521ffd75",
+        "outputSha256": "c251c6d6cb32d117e14a5475b3101945dcad88cfd17eba9cdffc2e5974762788",
+        "prompt": "Edit this photo of a room. Replace only the floor covering of this room with light natural oak wood-look luxury vinyl plank flooring, laid straight, meeting the existing baseboards. Remove the existing room carpet or floor covering only. Keep everything else exactly as it is: the same camera, framing and perspective, walls and wall color, ceiling, windows, doors, closets, radiators, stairs, furniture and lighting. Photorealistic.",
+        "status": "generated-concept"
+      },
+      "image-07-hardwood": {
+        "model": "muse-image-1.0",
+        "input": "image-07.jpg",
+        "inputSha256": "0e9e17e9f6f78cc5ca6d02428d767e3eb77b0243554db082a33fb40a521ffd75",
+        "outputSha256": "cf72ed2cde35f89807be8bcf52a12487274630204bfb750d935c90bf855b4aaf",
+        "prompt": "Edit this photo of a room. Replace only the floor covering of this room with wide-plank white oak engineered hardwood flooring with a matte finish, laid straight, meeting the existing baseboards. Remove the existing room carpet or floor covering only. Keep everything else exactly as it is: the same camera, framing and perspective, walls and wall color, ceiling, windows, doors, closets, radiators, stairs, furniture and lighting. Photorealistic.",
+        "status": "generated-concept"
+      },
+      "image-08-lvp": {
+        "model": "muse-image-1.0",
+        "input": "image-08.jpg",
+        "inputSha256": "e2bb020ac3704da765b04fd4f1f05b5e22dca4336e989a6a65c5f520ee2da6bc",
+        "outputSha256": "af09e6812e1120ace8a6e6b8ffcb787809395cd4455e3c9579449c868d15bdee",
+        "prompt": "Edit this photo of a room. Replace only the floor covering of this room with light natural oak wood-look luxury vinyl plank flooring, laid straight, meeting the existing baseboards. Remove the existing room carpet or floor covering only. Keep everything else exactly as it is: the same camera, framing and perspective, walls and wall color, ceiling, windows, doors, closets, radiators, stairs, furniture and lighting. Photorealistic.",
+        "status": "generated-concept"
+      },
+      "image-08-hardwood": {
+        "model": "muse-image-1.0",
+        "input": "image-08.jpg",
+        "inputSha256": "e2bb020ac3704da765b04fd4f1f05b5e22dca4336e989a6a65c5f520ee2da6bc",
+        "outputSha256": "8439da577fb67ad2cceff028d0217a2c80bbdee48fc6fc2022f0950315408b78",
+        "prompt": "Edit this photo of a room. Replace only the floor covering of this room with wide-plank white oak engineered hardwood flooring with a matte finish, laid straight, meeting the existing baseboards. Remove the existing room carpet or floor covering only. Keep everything else exactly as it is: the same camera, framing and perspective, walls and wall color, ceiling, windows, doors, closets, radiators, stairs, furniture and lighting. Photorealistic.",
+        "status": "generated-concept"
+      }
+    }
+  }
+}
