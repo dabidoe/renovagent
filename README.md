@@ -134,7 +134,7 @@ npm install
 npm run dev
 ```
 
-Open the local workspace at `http://127.0.0.1:8741/` or the landing page at `http://127.0.0.1:8741/landing.html`.
+Open the local app at `http://127.0.0.1:8741/`.
 
 The default local workspace uses browser storage. To run the connected API, database, and MCP services:
 
