@@ -64,10 +64,10 @@ export function FurniturePanel({
   return (
     <div className="pf-furniture-panel">
       <div className="pf-group-head">
-        <h3>Build the room in 3D</h3>
+        <h3>Arrange a layout reference</h3>
         <span>{placements.length} objects</span>
       </div>
-      <p>Add pieces. Rotate to explore, Move to arrange, then render with Muse.</p>
+      <p>Add reference pieces. Rotate to explore or Move to arrange.</p>
       {!model && (
         <p className="pf-intake-error">
           Add room dimensions to place furniture. The photo designer works without them.
@@ -182,19 +182,11 @@ export function FurniturePanel({
                   />
                 </label>
               ))}
-              <label>
-                Colour
-                <input
-                  type="color"
-                  aria-label="Selected furniture colour"
-                  value={chosen.color}
-                  onChange={(e) => patch({ color: e.target.value })}
-                />
-              </label>
             </div>
           )}
           <small>
-            Concept sizes are editable starting points. Measure your actual piece before buying.
+            Models keep their proportions within these size limits. Measure real products before
+            buying.
           </small>
         </div>
       )}

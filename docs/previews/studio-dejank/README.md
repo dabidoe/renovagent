@@ -24,3 +24,17 @@ API requests intercepted. No live provider, Atlas, production or deployment work
   `phase-1-after-*.png`, and `phase-1-error-details.png`.
 
 Live model success, production relay behavior and measured product fit are unverified.
+
+## Phase 2 — honest furniture reference
+
+- The 3D view says “Layout reference · not to scale of real products”.
+- Native meshes use the largest uniform scale inside width/depth/height limits,
+  centered on the floor. Neutral `#ece8e1`, roughness 0.9 material applies to both
+  placements and thumbnails; the inapplicable colour control is hidden.
+- Regression test exercises width-, height- and depth-limited fits. Browser QA
+  loaded all twelve actual GLBs and verified uniform fit, centering, floor
+  grounding (including the existing rug offset) and neutral material.
+- `npm test`: **329 passed** (15 legacy + 314 TypeScript), **52 skipped**, zero failures.
+- `npm run build`: passed; existing bundle-size advisory remains.
+- Before/after: `phase-2-before-furniture.png`, `phase-2-after-furniture.png`;
+  companion default captures retain the opening paint/floor view.

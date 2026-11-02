@@ -22,46 +22,35 @@ export async function furnitureObject(p: StudioPlacement) {
   const size = box.getSize(new THREE.Vector3());
   const center = box.getCenter(new THREE.Vector3());
   root.position.sub(new THREE.Vector3(center.x, box.min.y, center.z));
+  const material = new THREE.MeshStandardMaterial({
+    color: '#ece8e1',
+    roughness: 0.9,
+    metalness: 0,
+  });
   root.traverse((o) => {
     if (!(o instanceof THREE.Mesh)) return;
     o.castShadow = o.receiveShadow = true;
-    const tint = (raw: THREE.MeshStandardMaterial) => {
-      const m = raw.clone();
-      // Recolour the main material while retaining legs, lamp shades and secondary details.
-      if (
-        /carpet$|carpetDarker/.test(m.name) ||
-        (p.assetId === 'plant' && m.name === 'plant') ||
-        (p.assetId === 'bed' && m.name === 'carpetWhite') ||
-        (['coffee-table', 'desk', 'bookcase', 'dining-table', 'media-console'].includes(
-          p.assetId,
-        ) &&
-          m.name === 'wood') ||
-        (p.assetId === 'floor-lamp' && m.name === 'metal')
-      ) {
-        m.color.set(p.color);
-        if (m.name === 'carpetDarker') m.color.multiplyScalar(0.72);
-      }
-      m.roughness = 0.8;
-      return m;
-    };
-    o.material = Array.isArray(o.material) ? o.material.map((m) => tint(m)) : tint(o.material);
+    o.material = material;
   });
   const sized = new THREE.Group();
   sized.add(root);
-  sized.scale.set(
-    1 / Math.max(size.x, 0.001),
-    1 / Math.max(size.y, 0.001),
-    1 / Math.max(size.z, 0.001),
-  );
   const group = new THREE.Group();
   group.add(sized);
   group.userData.placementId = p.id;
+  group.userData.assetSize = size;
   return group;
 }
 export function positionFurniture(group: THREE.Group, p: StudioPlacement) {
   group.position.set(p.xM, p.assetId === 'rug' ? 0.008 : 0, p.zM);
   group.rotation.y = (p.rotationDeg * Math.PI) / 180;
-  group.scale.set(p.widthM, p.heightM, p.depthM);
+  const size = group.userData.assetSize as THREE.Vector3;
+  // Fit the native proportions inside the concept envelope; never stretch an axis.
+  const scale = Math.min(
+    p.widthM / Math.max(size.x, 0.001),
+    p.heightM / Math.max(size.y, 0.001),
+    p.depthM / Math.max(size.z, 0.001),
+  );
+  group.scale.setScalar(scale);
   group.name = studioAsset(p.assetId).name;
   group.userData.renovagent = {
     kind: 'proposed-furniture',

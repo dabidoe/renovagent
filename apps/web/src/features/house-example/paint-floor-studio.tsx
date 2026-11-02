@@ -404,6 +404,7 @@ export function Room3D({
   }, [selectedPlacement]);
   return (
     <div className="pf-3d">
+      <p className="pf-3d-note">Layout reference · not to scale of real products</p>
       <div ref={host} className="pf-3d-host" />
       <p className="pf-3d-basis">
         {room.sizeNote
@@ -1601,7 +1602,7 @@ export function PaintFloorStudio({
                     aria-selected={view === '3d'}
                     onClick={() => setView('3d')}
                   >
-                    <Glyph name="layers" /> 3D room
+                    <Glyph name="layers" /> Layout reference
                   </button>
                 )}
                 {inspired[room.id] && (
