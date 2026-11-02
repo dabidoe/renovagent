@@ -399,7 +399,7 @@ const requests = {
         .min(1)
         .max(30 * 1024 * 1024)
         .regex(/^[A-Za-z0-9+/]*={0,2}$/),
-      name: z.string().max(200).default('photo'),
+      name: z.string().max(300).default('photo'),
       // A listing example's photo, sent so it can be restyled, is not the owner's.
       origin: z.enum(['owner', 'listing-example']).default('owner'),
     })
@@ -490,7 +490,7 @@ export function studioRoutes(deps: {
     if (!found) throw new DomainError('NOT_FOUND', 'Photo not found in this workspace');
     return found;
   };
-  return async (path: string, ownerId: string, raw: unknown): Promise<unknown> => {
+  const handle = async (path: string, ownerId: string, raw: unknown): Promise<unknown> => {
     if (path === '/studio/ideas') {
       const input = requests.ideas.parse(raw);
       const photo = await stored(ownerId, input.sha256);
@@ -687,6 +687,11 @@ export function studioRoutes(deps: {
           .catch(() => ceilingFrom(null)),
       ]);
       const parsed = readResult.parse(result.result);
+      if (input.photos.some((_, index) => !parsed.photos.some((p) => p.index === index)))
+        throw new DomainError(
+          'STORAGE',
+          'Muse did not return every room photo. Retry analysis or open the studio without analysis.',
+        );
       return {
         photos: parsed.photos
           .filter((p) => p.index >= 0 && p.index < n)
@@ -706,5 +711,50 @@ export function studioRoutes(deps: {
       };
     }
     return undefined;
+  };
+  return async (path: string, ownerId: string, raw: unknown): Promise<unknown> => {
+    try {
+      return await handle(path, ownerId, raw);
+    } catch (error) {
+      if (error instanceof DomainError) throw error;
+      const labels: Record<string, string> = {
+        '/studio/photo': 'Photo upload',
+        '/studio/read': 'Room analysis',
+        '/studio/walls': 'Wall outlines',
+        '/studio/floor': 'Floor preview',
+        '/studio/restyle': 'Room rendering',
+        '/studio/model-render': '3D rendering',
+        '/studio/imagine': 'Design request',
+        '/studio/ideas': 'Room ideas',
+        '/studio/inspo': 'Inspiration analysis',
+      };
+      if (error instanceof z.ZodError) {
+        // Validate the request separately: provider output must not be reported as bad user input.
+        const schema = Object.entries(requests).find(
+          ([name]) => `/studio/${name === 'modelRender' ? 'model-render' : name}` === path,
+        )?.[1];
+        if (schema && !schema.safeParse(raw).success)
+          throw new DomainError(
+            'VALIDATION',
+            `${labels[path] || 'Studio request'}: check the photo, text and file limits and try again.`,
+          );
+      }
+      const detail = error instanceof Error ? error.message : '';
+      const reason = /not configured|401|403/.test(detail)
+        ? 'service configuration'
+        : /429|limit reached/.test(detail)
+          ? 'provider busy'
+          : /timed out|TimeoutError/.test(detail)
+            ? 'provider timeout'
+            : error instanceof z.ZodError
+              ? 'unexpected provider result'
+              : 'service unavailable';
+      // Never log upstream response text: it may contain private image data or credentials.
+      console.warn(`[studio] ${path}: ${reason}`);
+      throw new DomainError(
+        'STORAGE',
+        `${labels[path] || 'Studio request'} could not complete (${reason}). Please retry.${path === '/studio/read' ? ' You can also open the studio without analysis and enter measurements yourself.' : ''}`,
+      );
+    }
   };
 }

@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { studioDesignSchema } from '@renovagent/contracts';
 import { wallSwatch } from '@renovagent/core';
 import {
   PRESET_COLORS,
@@ -24,6 +25,21 @@ const roomTakeoff = (r: StudioRoom, pick: RoomPick, tier: TierKey) =>
 
 const room = (id: string) => HOUSE_ROOMS.find((r) => r.id === id)!;
 const gray = PRESET_COLORS[0]!;
+
+test('the actual whole-house example can be saved with its floor-plan image references', () => {
+  studioDesignSchema.parse({
+    kind: 'studio-design',
+    basis: 'listing-example',
+    project: HUTCHINSON,
+    picks: HUTCHINSON.starting,
+    tier: 'mid',
+    inspired: {},
+    styling: {},
+    renderSignatures: {},
+  });
+  for (const room of HUTCHINSON.rooms)
+    assert.match(room.plan!.image, /^\.\/examples\/hutchinson\/photo-2[01]\.jpg$/);
+});
 
 test('a picked paint colour reaches the 3D walls as its exact hex', () => {
   assert.deepEqual(wallSwatch('#2f3d4c'), { hex: '#2f3d4c', exact: true });

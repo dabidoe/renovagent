@@ -5,6 +5,7 @@ import { SignInChoices } from '../connect/sign-in.js';
 import { PaintFloorStudio, parseFeet, type SavedStudioDesign } from './paint-floor-studio.js';
 import { imageUrl, ownProject, photoSha, type PlanRoom, type ReadPhoto } from './own-project.js';
 import type { HouseProject, Masks, StudioRoom } from './paint-floor.js';
+import { loadOwnIntake, saveOwnIntake, type OwnIntakeDraft } from './own-intake-draft.js';
 
 const STORE = 'renovagent.own-project.v1';
 type Saved = { project: HouseProject; plans: PlanRoom[] };
@@ -20,21 +21,16 @@ function keep(saved: Saved | null) {
   try {
     if (saved) localStorage.setItem(STORE, JSON.stringify(saved));
     else localStorage.removeItem(STORE);
+    return true;
   } catch {
     // The project still works for this visit.
+    return false;
   }
 }
 
-const base64 = (file: File) =>
-  new Promise<string>((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result).split(',')[1] ?? '');
-    reader.onerror = () => reject(new Error(`${file.name} could not be read`));
-    reader.readAsDataURL(file);
-  });
 const upload = async (file: File) =>
   (
-    (await workspaceRequest('/studio/photo', { data: await base64(file), name: file.name })) as {
+    (await workspaceRequest('/studio/photo', file)) as {
       sha256: string;
     }
   ).sha256;
@@ -48,36 +44,66 @@ export type OwnStart = { idea: string; photos: File[] };
 
 function Intake({
   start,
+  draft,
   onBuilt,
   onSignedIn,
 }: {
   start?: OwnStart | null;
+  draft?: OwnIntakeDraft | null;
   onBuilt: (saved: Saved) => void;
   onSignedIn?: () => Promise<void>;
 }) {
-  const [where, setWhere] = useState('');
-  const [ceiling, setCeiling] = useState('');
-  const [idea, setIdea] = useState(start?.idea ?? '');
-  const [photos, setPhotos] = useState<File[]>(start?.photos.slice(0, MAX_PHOTOS) ?? []);
-  const [plans, setPlans] = useState<File[]>([]);
+  const [where, setWhere] = useState(draft?.where ?? '');
+  const [ceiling, setCeiling] = useState(draft?.ceiling ?? '');
+  const [idea, setIdea] = useState(start?.idea || draft?.idea || '');
+  const [photos, setPhotos] = useState<File[]>(
+    start?.photos.length ? start.photos.slice(0, MAX_PHOTOS) : (draft?.photos ?? []),
+  );
+  const [plans, setPlans] = useState<File[]>(draft?.plans ?? []);
+  const [recovery, setRecovery] = useState('');
   const [steps, setSteps] = useState<Step[] | null>(null);
   const [error, setError] = useState('');
   const [needsAccess, setNeedsAccess] = useState(false);
   const photoInput = useRef<HTMLInputElement>(null);
   const planInput = useRef<HTMLInputElement>(null);
-  const build = async () => {
+  useEffect(() => {
+    let live = true;
+    setRecovery('Saving draft in this browser…');
+    void saveOwnIntake({ where, ceiling, idea, photos, plans }).then(
+      () =>
+        live &&
+        setRecovery(
+          'Photo files and brief saved in this browser. No project saved to your account yet.',
+        ),
+      () =>
+        live &&
+        setRecovery(
+          'This browser could not save the draft. Keep this tab open to retain your photos and brief.',
+        ),
+    );
+    return () => {
+      live = false;
+    };
+  }, [where, ceiling, idea, photos, plans]);
+  const build = async (analyze = true) => {
     setError('');
     const list: Step[] = [
       { label: `Uploading ${photos.length + plans.length} images`, state: 'working' },
       { label: 'Muse Spark reads each room and the plan', state: 'waiting' },
       { label: 'SAM 3.1 outlines the walls', state: 'waiting' },
     ];
-    const advance = (i: number) =>
+    let stage = 'Uploading photos';
+    const advance = (i: number) => {
+      stage = list[i]!.label;
       setSteps(
         list.map((s, j) => ({ ...s, state: j < i ? 'done' : j === i ? 'working' : 'waiting' })),
       );
+    };
     advance(0);
     try {
+      await saveOwnIntake({ where, ceiling, idea, photos, plans }).catch(() => {
+        setRecovery('Draft recovery is unavailable in this browser. Keep this tab open.');
+      });
       const session = (await workspaceRequest('/session')) as { mode?: string; signedIn?: boolean };
       if (session.mode === 'account' && !session.signedIn) {
         setSteps(null);
@@ -87,21 +113,33 @@ function Intake({
       const photoShas = await Promise.all(photos.map(upload));
       const planShas = await Promise.all(plans.map(upload));
       advance(1);
-      const read = (await workspaceRequest('/studio/read', {
-        photos: photoShas,
-        plans: planShas,
-      })) as {
-        photos: ReadPhoto[];
-        plans: PlanRoom[];
-        ceiling: { ft: number; note: string };
-      };
+      const read = analyze
+        ? ((await workspaceRequest('/studio/read', {
+            photos: photoShas,
+            plans: planShas,
+          })) as {
+            photos: ReadPhoto[];
+            plans: PlanRoom[];
+            ceiling: { ft: number; note: string };
+          })
+        : {
+            photos: photoShas.map((sha256, i) => ({
+              sha256,
+              kind: 'other',
+              title: `Room ${i + 1}`,
+              floor: 'other',
+            })),
+            plans: [],
+            ceiling: { ft: null, note: 'Ceiling height not supplied; room analysis was skipped' },
+          };
       advance(2);
       const walls: Record<string, Masks | null> = {};
-      await Promise.all(
-        read.photos.map(async (p) => {
-          walls[p.sha256] = await outline(p.sha256).catch(() => null);
-        }),
-      );
+      if (analyze)
+        await Promise.all(
+          read.photos.map(async (p) => {
+            walls[p.sha256] = await outline(p.sha256).catch(() => null);
+          }),
+        );
       const listing = /^https?:\/\//i.test(where.trim()) ? where.trim() : undefined;
       onBuilt({
         plans: read.plans,
@@ -122,7 +160,7 @@ function Intake({
       });
     } catch (e) {
       setSteps(null);
-      setError(e instanceof Error ? e.message : String(e));
+      setError(`${stage}: ${e instanceof Error ? e.message : String(e)}`);
     }
   };
   // Photos from the home page start building at once.
@@ -182,6 +220,7 @@ function Intake({
           onChange={(e) => setPlans([...(e.target.files ?? [])].slice(0, 2))}
         />
       </div>
+      {!!photos.length && <p className="pf-sub">{photos.map((file) => file.name).join(' · ')}</p>}
       <input
         className="pf-intake-idea"
         aria-label="What do you imagine?"
@@ -229,6 +268,14 @@ function Intake({
         </button>
       )}
       {error && <p className="pf-intake-error">{error}</p>}
+      {error && !!photos.length && !busy && !needsAccess && (
+        <button type="button" className="pf-reset" onClick={() => void build(false)}>
+          Open studio without analysis
+        </button>
+      )}
+      <p className="pf-sub" role="status">
+        {recovery}
+      </p>
       {needsAccess && (
         <div className="pf-studio-access">
           <h3>Keep this studio yours.</h3>
@@ -257,21 +304,50 @@ export function OwnStudio({
   onSignedIn?: () => Promise<void>;
 }) {
   // A new start from the home page replaces the project kept in the browser.
-  const [saved, setSaved] = useState<Saved | null>(() =>
-    initialDesign
-      ? { project: initialDesign.snapshot.project, plans: [] }
-      : start?.photos.length
-        ? null
-        : load(),
+  const [draft, setDraft] = useState<OwnIntakeDraft | null>(null);
+  const [usedStart, setUsedStart] = useState(false);
+  const [saved, setSaved] = useState<Saved | null | undefined>(() =>
+    initialDesign ? { project: initialDesign.snapshot.project, plans: [] } : undefined,
   );
+  useEffect(() => {
+    if (initialDesign) return;
+    let live = true;
+    void loadOwnIntake()
+      .catch(() => null)
+      .then((pending) => {
+        if (!live) return;
+        // An explicit new photo set wins; a recoverable intake wins over an older built room.
+        const restored = start?.photos.length ? null : pending;
+        setDraft(restored);
+        setSaved(start || restored?.photos.length || restored?.idea ? null : load());
+      });
+    return () => {
+      live = false;
+    };
+  }, [initialDesign, start]);
   const keepLocal = (next: Saved | null) => {
-    if (!initialDesign) keep(next);
+    if (!initialDesign && keep(next) && next) void saveOwnIntake(null).catch(() => {});
   };
   const commit = (next: Saved | null) => {
+    if (next) setUsedStart(true);
     setSaved(next);
     keepLocal(next);
   };
-  if (!saved) return <Intake start={start} onBuilt={commit} onSignedIn={onSignedIn} />;
+  if (saved === undefined)
+    return (
+      <p className="pf-empty" role="status">
+        Restoring your studio draft…
+      </p>
+    );
+  if (!saved)
+    return (
+      <Intake
+        start={usedStart ? null : start}
+        draft={draft}
+        onBuilt={commit}
+        onSignedIn={onSignedIn}
+      />
+    );
   const { project, plans } = saved;
   const editRoom = (roomId: string, patch: Partial<StudioRoom>) =>
     setSaved((current) => {
@@ -362,7 +438,20 @@ export function OwnStudio({
         ) : null
       }
       actions={
-        <button type="button" className="pf-reset" onClick={() => commit(null)}>
+        <button
+          type="button"
+          className="pf-reset"
+          onClick={() => {
+            if (
+              !window.confirm(
+                'Start a new room? Save this project first to keep an account link. This replaces the current browser room.',
+              )
+            )
+              return;
+            setDraft(null);
+            commit(null);
+          }}
+        >
           Start over
         </button>
       }

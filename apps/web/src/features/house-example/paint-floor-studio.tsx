@@ -1,6 +1,7 @@
 import { studioFinishSignature as lookSignature } from './studio-signatures.js';
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import {
+  DomainError,
   studioDesignSchema,
   studioItemSchema,
   type StudioDesign,
@@ -9,6 +10,7 @@ import {
 import { nearestPaint, roomSurfaces, studioItemBudget } from '@renovagent/core';
 import { workspaceRequest } from '../../adapters/http/project-repository.js';
 import { Glyph } from '../../components/glyph.js';
+import { SignInChoices } from '../connect/sign-in.js';
 import { mountRoomScene, type RoomScene } from '../room3d/room-scene.js';
 import { PaintPicker, brandColorLink } from '../room3d/photo-outlines.js';
 import { InspiredView, InspoPanel, stylingDraft, type StylingDraft } from './inspo-panel.js';
@@ -563,6 +565,7 @@ function ShoppingSheet({
   takeoffs,
   tier,
   onClose,
+  onPlan,
 }: {
   project: HouseProject;
   picks: Record<string, RoomPick>;
@@ -570,6 +573,7 @@ function ShoppingSheet({
   takeoffs: Record<string, ReturnType<typeof roomTakeoff>>;
   tier: TierKey;
   onClose: () => void;
+  onPlan: () => void;
 }) {
   const list = shoppingList(
     project,
@@ -589,6 +593,7 @@ function ShoppingSheet({
     )
     .join('\n\n');
   const [copied, setCopied] = useState(false);
+  const listText = `${shoppingText(project, list, tier)}\n\n${itemText}\nOwner allowances are not retailer prices. Confirm products, dimensions and fit.`;
   return (
     <div className="pf-list-backdrop" role="presentation" onClick={onClose}>
       <section
@@ -608,6 +613,22 @@ function ShoppingSheet({
             </p>
           </div>
           <div className="pf-list-actions">
+            <button
+              type="button"
+              onClick={() => {
+                const url = URL.createObjectURL(new Blob([listText], { type: 'text/plain' }));
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = 'renovagent-shopping-list.txt';
+                link.click();
+                setTimeout(() => URL.revokeObjectURL(url), 60_000);
+              }}
+            >
+              Download list
+            </button>
+            <button type="button" onClick={onPlan}>
+              Work plan & export
+            </button>
             <button
               type="button"
               onClick={() =>
@@ -1113,6 +1134,8 @@ export function PaintFloorStudio({
   });
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
+  const [saveAccess, setSaveAccess] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
   const requestId = useRef(crypto.randomUUID());
   const snapshot = {
     kind: 'studio-design' as const,
@@ -1159,6 +1182,8 @@ export function PaintFloorStudio({
     if (saveMeta && savedJson === snapshotJson) return saveMeta;
     setSaving(true);
     setSaveError('');
+    setSaveAccess(false);
+    setLinkCopied(false);
     try {
       const parsed = studioDesignSchema.safeParse(snapshot);
       if (!parsed.success)
@@ -1187,6 +1212,7 @@ export function PaintFloorStudio({
       }
       return meta;
     } catch (e) {
+      if (e instanceof DomainError && e.code === 'FORBIDDEN') setSaveAccess(true);
       setSaveError(e instanceof Error ? e.message : 'Could not save the project');
       return null;
     } finally {
@@ -1386,8 +1412,33 @@ export function PaintFloorStudio({
                 Open saved revision
               </a>
               <small>Project {saveMeta!.projectId} · private to your account</small>
+              <button
+                type="button"
+                onClick={() => {
+                  const url = new URL(
+                    `#design/${encodeURIComponent(saveMeta!.projectId)}/${saveMeta!.revision}`,
+                    window.location.href,
+                  ).href;
+                  void navigator.clipboard.writeText(url).then(
+                    () => setLinkCopied(true),
+                    () => setSaveError(`Copy this private project link: ${url}`),
+                  );
+                }}
+              >
+                {linkCopied ? 'Link copied' : 'Copy project link'}
+              </button>
             </>
           )}
+        </div>
+      )}
+      {saveAccess && (
+        <div className="pf-studio-access">
+          <p>Continue as a guest to save this design. Your current choices stay here.</p>
+          <SignInChoices
+            onSignedIn={async () => {
+              await save();
+            }}
+          />
         </div>
       )}
 
@@ -1812,6 +1863,10 @@ export function PaintFloorStudio({
           takeoffs={takeoffs}
           tier={tier}
           onClose={() => setListOpen(false)}
+          onPlan={() => {
+            setListOpen(false);
+            setInspector('plan');
+          }}
         />
       )}
       {sources && (

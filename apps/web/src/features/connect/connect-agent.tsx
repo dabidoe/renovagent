@@ -1,3 +1,4 @@
+import { MuseAnimation } from './muse-animation.js';
 import { useEffect, useState } from 'react';
 import { workspaceRequest } from '../../adapters/http/project-repository.js';
 import { Glyph } from '../../components/glyph.js';
@@ -224,8 +225,14 @@ export function ConnectAgent() {
           )}
         </div>
         <aside className="ca-example" aria-label="What you can ask Muse">
+          <div className="ca-muse-intro">
+            <div>
+              <h2>Muse + Renovagent</h2>
+              <p>Plans open in your studio. Finds go to Your board.</p>
+            </div>
+            <MuseAnimation variant="connect" />
+          </div>
           <MuseConversation />
-          <p className="ca-example-note">Plans open in the studio. Finds go to Your board.</p>
         </aside>
       </div>
       <section className="ca-card ca-say" aria-labelledby="ca-say-title">

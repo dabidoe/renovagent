@@ -1,0 +1,72 @@
+.muse-animation {
+  width: 112px;
+  max-width: 100%;
+  margin: 0;
+  flex-shrink: 0;
+}
+.muse-animation video {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+  border-radius: 10px;
+  background: #fff;
+}
+.agent-story-intro {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+.agent-story-intro .muse-animation {
+  width: 144px;
+}
+.ca-muse-intro {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 0 18px 12px;
+}
+.ca-muse-intro .muse-animation {
+  width: 112px;
+}
+.ca-muse-intro h2 {
+  margin: 0 0 10px;
+  font-size: 22px;
+  letter-spacing: -0.03em;
+}
+.ca-muse-intro p {
+  max-width: 235px;
+  margin: 0;
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.65;
+}
+.agent-story .muse-demo-stage,
+.ca-example .muse-demo-stage {
+  min-height: 400px;
+  aspect-ratio: 1.25;
+}
+.agent-story .muse-demo-overlay,
+.ca-example .muse-demo-overlay {
+  margin-top: 64px;
+}
+@media (max-width: 560px) {
+  .agent-story-intro {
+    gap: 16px;
+  }
+  .agent-story-intro .muse-animation {
+    width: 112px;
+  }
+  .agent-story-copy > p {
+    margin-block: 12px;
+  }
+  .ca-muse-intro {
+    padding-inline: 8px;
+  }
+  .agent-story .muse-demo-stage,
+  .ca-example .muse-demo-stage {
+    min-height: 390px;
+  }
+}

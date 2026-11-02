@@ -1241,9 +1241,26 @@ export async function createWorkspaceServer(
       }
       if (path.startsWith('/studio/') && req.method === 'POST') {
         if (!studioRoute) throw new DomainError('VALIDATION', 'Image storage is unavailable');
-        if (!providerConfigured)
+        if (!providerConfigured && path !== '/studio/photo')
           throw new DomainError('VALIDATION', 'Configure MUSE_API_KEY on the server first');
-        const result = await studioRoute(path, activeRepo.ownerId, await body(req));
+        let input: unknown;
+        if (path === '/studio/photo' && req.headers['content-type']?.startsWith('image/')) {
+          if (!STAGED_TYPES.has(req.headers['content-type']))
+            throw new DomainError('VALIDATION', 'Unsupported photo format');
+          const parts: Buffer[] = [];
+          let bytes = 0;
+          for await (const part of req) {
+            bytes += part.length;
+            if (bytes > STAGED_MAX)
+              throw new DomainError('VALIDATION', 'Each photo must be 20 MB or smaller');
+            parts.push(part);
+          }
+          input = {
+            data: Buffer.concat(parts).toString('base64'),
+            name: decodeURIComponent(String(req.headers['x-file-name'] || 'photo')),
+          };
+        } else input = await body(req);
+        const result = await studioRoute(path, activeRepo.ownerId, input);
         if (result === undefined) throw new DomainError('NOT_FOUND', 'Unknown studio request');
         json(200, result);
         return;
@@ -1444,13 +1461,18 @@ export async function createWorkspaceServer(
       }
       json(404, { message: 'Unknown workspace endpoint' });
     } catch (error) {
-      const code = error instanceof DomainError ? error.code : 'VALIDATION';
+      const code =
+        error instanceof DomainError
+          ? error.code
+          : error instanceof z.ZodError
+            ? 'VALIDATION'
+            : 'STORAGE';
       const message =
         error instanceof DomainError
           ? error.message
           : error instanceof z.ZodError
             ? 'Request failed schema validation'
-            : 'Request failed; saved state was preserved';
+            : 'The server could not complete this request. Please retry.';
       json(
         code === 'FORBIDDEN'
           ? 403
@@ -1458,7 +1480,9 @@ export async function createWorkspaceServer(
             ? 409
             : code === 'NOT_FOUND'
               ? 404
-              : 400,
+              : code === 'STORAGE'
+                ? 503
+                : 400,
         { code, message },
       );
     }

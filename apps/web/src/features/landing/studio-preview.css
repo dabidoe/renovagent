@@ -367,3 +367,61 @@
     padding: 14px 16px;
   }
 }
+/* Keep the preview and controls in one compact row; the launch action lives above them. */
+.studio-preview-toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-shrink: 0;
+}
+.studio-preview-toolbar .studio-preview-open {
+  min-height: 40px;
+  padding: 9px 13px;
+  font-size: 11px !important;
+}
+.studio-preview-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.studio-preview-cost {
+  margin-top: auto;
+}
+.studio-preview-hint {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: calc(100% - 24px);
+  padding: 7px 10px;
+  border-radius: 6px;
+  background: #fffffff0;
+  white-space: nowrap;
+  pointer-events: none;
+  font-size: 10px;
+}
+@media (max-width: 860px) {
+  .studio-preview-controls {
+    display: grid;
+  }
+  .studio-preview-cost {
+    margin-top: 0;
+  }
+}
+@media (max-width: 560px) {
+  .studio-preview-toolbar {
+    gap: 10px;
+    padding: 12px;
+  }
+  .studio-preview-toolbar-actions {
+    gap: 8px;
+  }
+  .studio-preview-toolbar .studio-preview-size {
+    display: none;
+  }
+  .studio-preview-toolbar .studio-preview-open {
+    min-height: 44px;
+    padding-inline: 10px;
+    gap: 8px;
+  }
+}

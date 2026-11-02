@@ -161,6 +161,7 @@ export const HUTCHINSON: HouseProject = {
   starting,
   rooms: ROOMS.map(({ photoId, ...room }) => ({
     ...room,
+    plan: { ...room.plan, image: asset(`${room.plan.image}.jpg`) },
     photo: image(photoId),
     // Light and white oak were made first, as "lvp" and "hardwood"; the
     // other styles by scripts/fill-floor-styles.ts.

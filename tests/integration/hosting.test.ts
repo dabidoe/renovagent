@@ -71,6 +71,7 @@ test('the packaged site is served with cache rules, and never outside its folder
   await writeFile(join(dir, 'index.html'), '<h1>Landing</h1>');
   await writeFile(join(dir, 'agent-guide.md'), '# Agent guide\nUse stored image hashes.');
   await writeFile(join(dir, 'chair.glb'), Buffer.from('glTF-fixture'));
+  await writeFile(join(dir, 'mascot.mp4'), Buffer.from('0123456789'));
   await writeFile(join(dir, 'assets', 'app-abc.js'), 'export {}');
   await writeFile(join(dir, '404.html'), '<h1>Missing</h1>');
   await writeFile(join(dir, '..', 'renovagent-secret.txt'), 'secret').catch(() => {});
@@ -96,6 +97,31 @@ test('the packaged site is served with cache rules, and never outside its folder
     assert.equal(model.status, 200);
     assert.equal(model.headers.get('content-type'), 'model/gltf-binary');
     assert.equal(await model.text(), 'glTF-fixture');
+    const video = await fetch(`${base}/mascot.mp4`);
+    assert.equal(video.headers.get('content-type'), 'video/mp4');
+    assert.equal(video.headers.get('accept-ranges'), 'bytes');
+    assert.equal(await video.text(), '0123456789');
+    for (const [range, expected, contentRange] of [
+      ['bytes=0-1', '01', 'bytes 0-1/10'],
+      ['bytes=6-', '6789', 'bytes 6-9/10'],
+      ['bytes=-3', '789', 'bytes 7-9/10'],
+      ['bytes=8-99', '89', 'bytes 8-9/10'],
+    ]) {
+      const part = await fetch(`${base}/mascot.mp4`, { headers: { Range: range } });
+      assert.equal(part.status, 206);
+      assert.equal(part.headers.get('content-range'), contentRange);
+      assert.equal(part.headers.get('content-length'), String(expected.length));
+      assert.equal(await part.text(), expected);
+    }
+    for (const range of ['bytes=10-', 'bytes=5-2', 'bytes=-0', 'bytes=-', 'bytes=0-1,4-5']) {
+      const invalid = await fetch(`${base}/mascot.mp4`, { headers: { Range: range } });
+      assert.equal(invalid.status, 416);
+      assert.equal(invalid.headers.get('content-range'), 'bytes */10');
+    }
+    const videoHead = await fetch(`${base}/mascot.mp4`, { method: 'HEAD' });
+    assert.equal(videoHead.status, 200);
+    assert.equal(videoHead.headers.get('content-length'), '10');
+    assert.equal(await videoHead.text(), '');
     const asset = await fetch(`${base}/assets/app-abc.js`);
     assert.match(asset.headers.get('content-type')!, /javascript/);
     assert.match(asset.headers.get('cache-control')!, /immutable/);

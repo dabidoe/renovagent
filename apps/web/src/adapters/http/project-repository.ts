@@ -6,14 +6,22 @@ import {
 } from '@renovagent/contracts';
 import type { AttachmentBlob, ProjectRepository } from '@renovagent/core';
 export async function workspaceRequest(path: string, body?: unknown) {
+  const binary = body instanceof Blob;
   const response = await fetch(`/api/workspace${path}`, {
     method: body === undefined ? 'GET' : 'POST',
     credentials: 'same-origin',
     headers: {
       'X-Renovagent-Client': 'workspace',
-      ...(body === undefined ? {} : { 'Content-Type': 'application/json' }),
+      ...(body === undefined
+        ? {}
+        : {
+            'Content-Type': binary ? body.type || 'application/octet-stream' : 'application/json',
+          }),
+      ...(binary && typeof File !== 'undefined' && body instanceof File
+        ? { 'X-File-Name': encodeURIComponent(body.name) }
+        : {}),
     },
-    body: body === undefined ? undefined : JSON.stringify(body),
+    body: body === undefined ? undefined : binary ? body : JSON.stringify(body),
   });
   const result = await response.json().catch(() => ({ message: 'Workspace API is unavailable' }));
   if (!response.ok)

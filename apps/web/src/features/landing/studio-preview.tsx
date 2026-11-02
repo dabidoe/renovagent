@@ -77,9 +77,14 @@ export function StudioPreview({ onOpen, busy }: { onOpen: () => void; busy: bool
           <span>
             <i aria-hidden="true" /> Living & dining <small>Philadelphia · listing example</small>
           </span>
-          <span className="studio-preview-size">
-            {feetInches(room.size!.xFt)} × {feetInches(room.size!.yFt)}
-          </span>
+          <div className="studio-preview-toolbar-actions">
+            <span className="studio-preview-size">
+              {feetInches(room.size!.xFt)} × {feetInches(room.size!.yFt)}
+            </span>{' '}
+            <button className="studio-preview-open" type="button" onClick={open} disabled={busy}>
+              Explore house <Glyph name="right" />
+            </button>
+          </div>
         </div>
         <div className="studio-preview-body">
           <div className="studio-preview-scene">
@@ -200,9 +205,6 @@ export function StudioPreview({ onOpen, busy }: { onOpen: () => void; busy: bool
               </ul>
               <small>Demo catalog · labour quoted separately</small>
             </div>
-            <button className="studio-preview-open" type="button" onClick={open} disabled={busy}>
-              Explore the whole house <Glyph name="right" />
-            </button>
           </div>
         </div>
         <div className="studio-preview-caption">

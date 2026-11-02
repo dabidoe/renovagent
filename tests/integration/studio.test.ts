@@ -478,6 +478,17 @@ test(
         await post('/studio/photo', { data: photo.toString('base64'), name: 'living.jpg' })
       ).json();
       assert.match(uploaded.sha256, /^[a-f0-9]{64}$/);
+      // A 16 MB phone image fits the advertised 20 MB file limit but its
+      // base64 JSON previously exceeded the server's 20 MB request limit.
+      const largePhoto = Buffer.alloc(16 * 1024 * 1024);
+      photo.copy(largePhoto);
+      const binaryUpload = await fetch(base + '/studio/photo', {
+        method: 'POST',
+        headers: { ...auth, 'Content-Type': 'image/jpeg', 'X-File-Name': 'large-room.jpg' },
+        body: largePhoto,
+      });
+      assert.equal(binaryUpload.status, 200, await binaryUpload.clone().text());
+      assert.match((await binaryUpload.json()).sha256, /^[a-f0-9]{64}$/);
       const served = await fetch(`${base}/design-images/${uploaded.sha256}`, { headers: auth });
       assert.equal(served.headers.get('content-type'), 'image/jpeg');
 

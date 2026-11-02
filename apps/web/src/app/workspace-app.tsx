@@ -490,7 +490,6 @@ export function App({ controller }: { controller: WorkspaceController }) {
             onPrompt={setStartPrompt}
             photos={startPhotos}
             onPhotos={setStartPhotos}
-            onStart={() => setModal('new')}
             onExample={() => safe(openExample())}
             onOwnProject={(idea) => {
               // The words and photos typed on the home page carry into the studio.

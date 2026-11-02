@@ -1,3 +1,4 @@
+import { MuseAnimation } from '../connect/muse-animation.js';
 import { useRef, useState } from 'react';
 import { STUDIO_DIRECTIONS, DIRECTION_ORIGINAL } from '../house-example/studio-directions.js';
 import { Copy } from '../connect/copy-button.js';
@@ -34,9 +35,8 @@ export function StudioStory({
         <div>
           <p className="studio-story-eyebrow">What would look good here?</p>
           <h2 id="studio-story-title">
-            One room.
-            <br />
-            <em>Three ways to live.</em>
+            <span className="direction-heading-line">One room.</span>
+            <em className="direction-heading-line">Three ways.</em>
           </h2>
         </div>
         <p>
@@ -202,14 +202,16 @@ export function AgentConnection() {
       aria-labelledby="agent-title"
     >
       <div className="agent-story-copy">
-        <h2 id="agent-title">
-          Plan it with
-          <br />
-          <em>Muse.</em>
-        </h2>
+        <div className="agent-story-intro">
+          <h2 id="agent-title">
+            Plan with
+            <br />
+            <em>Muse.</em>
+          </h2>
+          <MuseAnimation variant="home" />
+        </div>
         <p>
-          Ask for a paint-and-floor plan. Save the things you find. Pick up in the studio with your
-          choices ready to review.
+          Plan a room. Save your finds. Pick up in the studio with your choices ready to review.
         </p>
         <div className="agent-connection-links">
           <a className="landing-source-link" href="#connect">

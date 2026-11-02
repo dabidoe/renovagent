@@ -30,7 +30,6 @@ export function Landing({
   onPrompt,
   photos,
   onPhotos,
-  onStart,
   onExample,
   onOwnProject,
   onExamples,
@@ -41,7 +40,6 @@ export function Landing({
   onPrompt: (text: string) => void;
   photos: File[];
   onPhotos: (files: File[]) => void;
-  onStart: () => void;
   onExample: () => void;
   onOwnProject: (idea?: string) => void;
   onExamples: () => void;
@@ -72,11 +70,11 @@ export function Landing({
             className="prompt-start launch-prompt"
             onSubmit={(event) => {
               event.preventDefault();
-              onStart();
+              onOwnProject();
             }}
           >
             <p id="project-setup-hint" className="sr-only">
-              Next, add your place and project details.
+              Next, add your room photo and build it in the studio.
             </p>
             <label htmlFor="start-prompt" className="sr-only">
               What would you like to improve?

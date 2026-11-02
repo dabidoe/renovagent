@@ -1,0 +1,24 @@
+{
+  "source": "Owner-provided generated animations, November 2, 2026",
+  "processing": "Full-length silent H.264 web copies with fast-start enabled; original files unchanged. Posters extracted from the supplied animations. GIF transparency composited onto white.",
+  "files": [
+    {
+      "sourceFile": "avatar-working.gif",
+      "sourceSha256": "f7b0d05a71428a7b8fe766501ed2c892452010774f28a34e603296fd6e42047b",
+      "webFile": "home-working.mp4",
+      "webSha256": "c057db74b1944bcc06f3c17805f6a42df2b294ccfd3a4bb5e21e7142b47ddd04",
+      "webBytes": 148683,
+      "size": [384, 384],
+      "audio": false
+    },
+    {
+      "sourceFile": "avatar-making_something.gif",
+      "sourceSha256": "1c8fde3947e99a2a91430a6cdb7dea883399632044d44b5dfff08133d6db631f",
+      "webFile": "connect-making.mp4",
+      "webSha256": "53ce428a7595df8e24f58b087cf2d15f8fc8dab9e9c73b993acf138d51ff72be",
+      "webBytes": 219724,
+      "size": [384, 384],
+      "audio": false
+    }
+  ]
+}

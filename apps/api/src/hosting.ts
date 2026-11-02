@@ -82,6 +82,7 @@ const TYPES: Record<string, string> = {
   '.jpg': 'image/jpeg',
   '.jpeg': 'image/jpeg',
   '.webp': 'image/webp',
+  '.mp4': 'video/mp4',
   '.ico': 'image/x-icon',
   '.woff2': 'font/woff2',
   '.txt': 'text/plain; charset=utf-8',
@@ -113,12 +114,50 @@ export async function serveStatic(dir: string, req: IncomingMessage, res: Server
     res.end(req.method === 'HEAD' ? undefined : (body ?? 'Not found'));
     return true;
   }
-  res.writeHead(200, {
+  const headers: Record<string, string | number> = {
     'Content-Type': type,
     'Cache-Control': relative.startsWith('assets/')
       ? 'public, max-age=31536000, immutable'
       : 'no-cache',
-  });
+    ...(body ? { 'Content-Length': body.length } : {}),
+  };
+  // Safari and mobile players request individual byte ranges for MP4 playback.
+  if (type === 'video/mp4' && body) {
+    headers['Accept-Ranges'] = 'bytes';
+    if (req.method === 'GET' && req.headers.range) {
+      const range = /^bytes=(\d*)-(\d*)$/.exec(req.headers.range);
+      const suffix = range?.[1] === '';
+      const first = Number(range?.[1]);
+      const last = Number(range?.[2]);
+      const start = suffix ? Math.max(0, body.length - last) : first;
+      const end = suffix || range?.[2] === '' ? body.length - 1 : Math.min(last, body.length - 1);
+      if (
+        !range ||
+        (!range[1] && !range[2]) ||
+        !Number.isSafeInteger(first) ||
+        !Number.isSafeInteger(last) ||
+        (suffix && last <= 0) ||
+        start >= body.length ||
+        start > end
+      ) {
+        res.writeHead(416, {
+          ...headers,
+          'Content-Range': `bytes */${body.length}`,
+          'Content-Length': 0,
+        });
+        res.end();
+        return true;
+      }
+      res.writeHead(206, {
+        ...headers,
+        'Content-Range': `bytes ${start}-${end}/${body.length}`,
+        'Content-Length': end - start + 1,
+      });
+      res.end(body.subarray(start, end + 1));
+      return true;
+    }
+  }
+  res.writeHead(200, headers);
   res.end(req.method === 'HEAD' ? undefined : body);
   return true;
 }

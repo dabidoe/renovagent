@@ -715,3 +715,47 @@
     min-height: 44px;
   }
 }
+/* Tighter section rhythm, with the mascot using the space beside the heading. */
+.landing.landing-v2 .landing-block {
+  margin-top: 36px;
+}
+.landing.landing-v2 .agent-story {
+  gap: 40px;
+  padding-top: 32px;
+}
+.landing .agent-story-copy > p {
+  margin: 14px 0;
+  font-size: 14px;
+  line-height: 1.7;
+}
+.landing .agent-connection-links {
+  margin-top: 18px;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+.landing.landing-v2 .studio-story {
+  padding-block: 16px;
+}
+.landing.landing-v2 .studio-story h2 {
+  font-size: clamp(32px, 3.6vw, 49px);
+  line-height: 1.07;
+}
+.direction-heading-line {
+  display: block;
+  white-space: nowrap;
+}
+.studio-story-heading {
+  margin-bottom: 22px;
+}
+@media (max-width: 560px) {
+  .landing.landing-v2 .landing-block {
+    margin-top: 28px;
+  }
+  .landing.landing-v2 .agent-story {
+    gap: 24px;
+    padding-top: 24px;
+  }
+  .landing.landing-v2 .studio-story {
+    padding-block: 0;
+  }
+}
