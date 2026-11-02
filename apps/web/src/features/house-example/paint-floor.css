@@ -2730,3 +2730,66 @@
   padding: 7px 10px;
   font-size: 11px;
 }
+
+/* Captured local sources are a compact brief, never a technical release. */
+.pf-local-code {
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid var(--pf-line);
+  border-radius: 12px;
+  background: #f8f9fc;
+  font-size: 12px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.pf-local-code h3 {
+  margin: 0 0 6px;
+  font-size: 14px;
+}
+.pf-local-code p {
+  margin: 6px 0 10px;
+  color: var(--pf-muted);
+}
+.pf-local-code details {
+  border-top: 1px solid var(--pf-line);
+  padding-block: 8px;
+}
+.pf-local-code summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+.pf-local-code ul {
+  padding-left: 18px;
+}
+.pf-local-code li + li {
+  margin-top: 10px;
+}
+.pf-code-sources small,
+.pf-local-code footer small {
+  display: block;
+  margin-top: 4px;
+}
+.pf-code-status {
+  display: inline-block;
+  font-size: 10px;
+  color: #6b501a;
+  background: #fff1ce;
+  border-radius: 4px;
+  padding: 1px 5px;
+}
+.pf-code-record {
+  margin-top: 12px;
+}
+.pf-local-code footer {
+  border-top: 1px solid var(--pf-line);
+  padding-top: 10px;
+  color: var(--pf-muted);
+  font-size: 10px;
+}
+.pf-local-code footer > span {
+  display: block;
+  padding: 6px 8px;
+  border-radius: 6px;
+  background: #fff1ce;
+  color: #6b501a;
+}

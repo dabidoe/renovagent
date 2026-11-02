@@ -1,11 +1,25 @@
+import { emptyPlanningInputs } from '@renovagent/contracts';
 import { EXAMPLE_PRIVACY_NOTE } from './example-privacy.js';
 import { HUTCHINSON } from './hutchinson-project.js';
 import { PaintFloorStudio } from './paint-floor-studio.js';
 
 export function HutchinsonStudio({ onRoomExample }: { onRoomExample?: () => void }) {
+  // Location from the owner-supplied Philadelphia listing, not the privacy alias
+  // or postal/geocoding inference. Filing, building and technical scope stay unknown.
+  const codeInputs = emptyPlanningInputs();
+  codeInputs.context.jurisdiction = 'philadelphia';
+  codeInputs.context.locality = {
+    countryCode: 'US',
+    regionCode: 'PA',
+    municipality: 'Philadelphia',
+    postalCode: null,
+    propertyReference: HUTCHINSON.address,
+    boundaryBasis: 'user-reported',
+  };
   return (
     <PaintFloorStudio
       project={HUTCHINSON}
+      localCodeInputs={codeInputs}
       kicker="Listing example · address changed for privacy"
       sources={
         <>

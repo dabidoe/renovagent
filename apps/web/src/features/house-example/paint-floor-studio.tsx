@@ -1,3 +1,4 @@
+import { LocalCodeCard } from './local-code-card.js';
 import { studioFinishSignature as lookSignature } from './studio-signatures.js';
 import { StudioError } from './studio-error.js';
 import { StudioSync, pendingStudioSave, type StudioSaveMeta } from './studio-sync.js';
@@ -7,6 +8,7 @@ import {
   studioDesignSchema,
   studioItemSchema,
   type StudioDesign,
+  type PlanningInputs,
   type StudioItem,
 } from '@renovagent/contracts';
 import { nearestPaint, roomSurfaces, studioItemBudget } from '@renovagent/core';
@@ -825,6 +827,7 @@ export function PaintFloorStudio({
   autoImagine = true,
   autoSave = false,
   intake,
+  localCodeInputs,
 }: {
   project: HouseProject;
   kicker: string;
@@ -845,6 +848,8 @@ export function PaintFloorStudio({
   autoImagine?: boolean;
   autoSave?: boolean;
   intake?: StudioDesign['intake'];
+  // Explicit reported context only; free-text studio addresses never select authority.
+  localCodeInputs?: PlanningInputs;
 }) {
   const localScope = savedDesign
     ? `${project.id}.saved.${savedDesign.projectId}.${savedDesign.revision}`
@@ -1849,6 +1854,7 @@ export function PaintFloorStudio({
             </label>
           </div>
           <div hidden={inspector !== 'plan'}>
+            <LocalCodeCard address={project.address} inputs={localCodeInputs} />
             <RoomPlan
               key={room.id}
               items={items[room.id] ?? []}
