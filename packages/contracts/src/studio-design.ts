@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { id } from './common.js';
 import { studioIdeasSchema, studioPlacementSchema } from './studio-furniture.js';
 
 // A versioned proposal from the photo studio. Estimates remain estimates;
@@ -134,6 +135,34 @@ export const studioDesignSchema = z
   .object({
     kind: z.literal('studio-design'),
     basis: z.enum(['owner-studio', 'listing-example']),
+    intake: z
+      .object({
+        analysis: z
+          .object({
+            photos: z
+              .array(z.string().regex(/^[a-f0-9]{64}$/))
+              .min(1)
+              .max(8),
+            plans: z.array(z.string().regex(/^[a-f0-9]{64}$/)).max(2),
+            error: z.string().max(1000).optional(),
+          })
+          .strict()
+          .optional(),
+        planRooms: z
+          .array(
+            z
+              .object({
+                name: z.string().max(500),
+                widthFt: z.number().positive().max(10000),
+                lengthFt: z.number().positive().max(10000),
+              })
+              .strict(),
+          )
+          .max(100)
+          .optional(),
+      })
+      .strict()
+      .optional(),
     project: z
       .object({
         id: text,
@@ -204,4 +233,13 @@ export const studioDesignSchema = z
   })
   .strict();
 export type StudioDesign = z.infer<typeof studioDesignSchema>;
+export const studioDesignSaveRequestSchema = z
+  .object({
+    requestId: id,
+    projectId: id.optional(),
+    expectedRevision: z.number().int().nonnegative(),
+    snapshot: studioDesignSchema,
+  })
+  .strict();
+export type StudioDesignSaveRequest = z.infer<typeof studioDesignSaveRequestSchema>;
 export type StudioStylingDraft = z.infer<typeof studioStylingDraftSchema>;

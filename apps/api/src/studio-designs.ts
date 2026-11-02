@@ -1,6 +1,11 @@
 import { createHash } from 'node:crypto';
 import { z } from 'zod';
-import { DomainError, id, studioDesignSchema, type Command } from '@renovagent/contracts';
+import {
+  DomainError,
+  id,
+  studioDesignSaveRequestSchema,
+  type Command,
+} from '@renovagent/contracts';
 import {
   handleCommand,
   projectHandoff,
@@ -15,14 +20,7 @@ import { startAgentProject } from './agent-projects.js';
 import type { MongoWorkspaceRepository } from './repository.js';
 import type { DesignImageStore } from './design-images.js';
 
-export const saveStudioDesignSchema = z
-  .object({
-    requestId: id,
-    projectId: id.optional(),
-    expectedRevision: z.number().int().nonnegative(),
-    snapshot: studioDesignSchema,
-  })
-  .strict();
+export const saveStudioDesignSchema = studioDesignSaveRequestSchema;
 
 export async function readStudioDesign(
   repo: MongoWorkspaceRepository,
@@ -57,6 +55,11 @@ export async function saveStudioDesign(
   );
   for (const draft of Object.values(input.snapshot.styling))
     if (draft.inspo) hashes.add(draft.inspo.sha256);
+  for (const hash of [
+    ...(input.snapshot.intake?.analysis?.photos ?? []),
+    ...(input.snapshot.intake?.analysis?.plans ?? []),
+  ])
+    hashes.add(hash);
   for (const hash of hashes)
     if (!images || !(await images.get(repo.ownerId, hash)))
       throw new DomainError('NOT_FOUND', 'A studio image is missing from this owner’s workspace');

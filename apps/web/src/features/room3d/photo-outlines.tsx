@@ -299,6 +299,48 @@ export function brandColorLink(color: Pick<PaintColor, 'brand' | 'code' | 'name'
   return `https://www.sherwin-williams.com/en-us/color/color-family/${color.family}-paint-colors/sw${digits}-${slug}`;
 }
 
+function CustomColour({ onPick }: { onPick: (color: PaintColor) => void }) {
+  const [hex, setHex] = useState('#808080');
+  const apply = (value: string) => {
+    if (!/^#[0-9a-f]{6}$/i.test(value)) return;
+    const strict = value.toLowerCase();
+    setHex(strict);
+    onPick({
+      id: `custom-${strict.slice(1)}`,
+      brand: 'Custom',
+      collection: '',
+      code: null,
+      name: `Custom ${strict}`,
+      hex: strict,
+      family: '',
+    });
+  };
+  return (
+    <div className="paint-custom">
+      <span>Pick a new colour</span>
+      <input
+        type="color"
+        aria-label="Pick a new colour"
+        value={/^#[0-9a-f]{6}$/i.test(hex) ? hex : '#808080'}
+        onChange={(e) => apply(e.target.value)}
+      />
+      <input
+        type="text"
+        aria-label="Custom colour hex"
+        value={hex}
+        maxLength={7}
+        spellCheck={false}
+        autoComplete="off"
+        onChange={(e) => setHex(e.target.value)}
+        onBlur={() => apply(hex)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') apply(hex);
+        }}
+      />
+    </div>
+  );
+}
+
 export function PaintPicker({
   selected,
   onPick,
@@ -333,16 +375,33 @@ export function PaintPicker({
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [brand, family, q]);
-  if (error) return null;
+  if (error)
+    return (
+      <div className="paint-picker">
+        <p className="small-note">
+          The paint catalogue is unavailable. You can still pick a custom colour.
+        </p>
+        <CustomColour onPick={onPick} />
+      </div>
+    );
   if (page && !page.brands.length)
     return (
-      <p className="small-note">
-        No paint colours loaded yet: npm run seed:paint with a brand's swatch file.
-      </p>
+      <div className="paint-picker">
+        <p className="small-note">
+          No paint colours loaded yet: npm run seed:paint with a brand's swatch file.
+        </p>
+        <CustomColour onPick={onPick} />
+      </div>
     );
   const link = picked ? brandColorLink(picked) : null;
   return (
     <div className="paint-picker">
+      <CustomColour
+        onPick={(c) => {
+          setPicked(c);
+          onPick(c);
+        }}
+      />
       <div className="paint-picker-filters">
         <select value={brand} aria-label="Paint brand" onChange={(e) => setBrand(e.target.value)}>
           <option value="">All brands</option>

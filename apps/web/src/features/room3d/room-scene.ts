@@ -3,6 +3,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { CSS2DObject, CSS2DRenderer } from 'three/examples/jsm/renderers/CSS2DRenderer.js';
 import { GLTFExporter } from 'three/examples/jsm/exporters/GLTFExporter.js';
 import { attachPhotoreal } from './photoreal.js';
+import { attachCameraControls } from './camera-controls.js';
 import { furnitureObject, positionFurniture, disposeFurniture } from './furniture-assets.js';
 import type { StudioPlacement } from '@renovagent/contracts';
 import type { StudioModelRenderContext } from './photoreal.js';
@@ -464,7 +465,14 @@ export function mountRoomScene(
   renderer.domElement.addEventListener(
     'pointerdown',
     (e) => {
-      if (!meta.onPlacementMove || e.button !== 0) return;
+      if (
+        !navigation.isMoving() ||
+        !meta.onPlacementMove ||
+        dragging ||
+        !e.isPrimary ||
+        e.button !== 0
+      )
+        return;
       pointRay(e);
       let hit: THREE.Object3D | undefined = furnitureRay.intersectObjects(
         [...objects.values()].map((v) => v.group),
@@ -509,6 +517,14 @@ export function mountRoomScene(
   };
   renderer.domElement.addEventListener('pointerup', finishDrag);
   renderer.domElement.addEventListener('pointercancel', finishDrag);
+  const navigation = attachCameraControls(
+    host,
+    camera,
+    controls,
+    !!meta.onPlacementMove,
+    finishDrag,
+    { width: maxX - minX, depth: maxY - minY, wallHeight: roomHeightForFrame() },
+  );
 
   // Callouts sit on their surfaces' measured geometry: the middle of the
   // longest wall (just inside the room), above the floor or fixture, or under
@@ -589,6 +605,21 @@ export function mountRoomScene(
   el.addEventListener('pointerdown', (e) => (down = [e.clientX, e.clientY]));
   el.addEventListener('pointerup', (e) => {
     if (!down || Math.hypot(e.clientX - down[0], e.clientY - down[1]) > 4) return;
+    if (meta.onPlacementSelect) {
+      pointRay(e);
+      let furniture: THREE.Object3D | undefined = furnitureRay.intersectObjects(
+        [...objects.values()].map((v) => v.group),
+        true,
+      )[0]?.object;
+      while (furniture && !furniture.userData.placementId)
+        furniture = furniture.parent ?? undefined;
+      if (furniture) {
+        const id = furniture.userData.placementId as string;
+        selectPlacement(id);
+        meta.onPlacementSelect(id);
+        return;
+      }
+    }
     const r = el.getBoundingClientRect();
     ray.setFromCamera(
       new THREE.Vector2(
@@ -749,6 +780,7 @@ export function mountRoomScene(
       cancelAnimationFrame(frame);
       observer.disconnect();
       controls.dispose();
+      navigation.dispose();
       renderer.dispose();
       renderer.domElement.remove();
       labels.domElement.remove();

@@ -1229,10 +1229,10 @@ export function App({ controller }: { controller: WorkspaceController }) {
           <button
             className="secondary prompt-example-project"
             disabled={busy}
-            onClick={() => safe(openExample())}
+            onClick={() => openStudio('#examples')}
           >
             <Glyph name="paint" />
-            Explore the example project
+            Explore the example projects
             <Glyph name="right" />
           </button>
           {auth.required && (

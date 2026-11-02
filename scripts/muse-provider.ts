@@ -85,6 +85,42 @@ export const MUSE_VISION_MODEL = 'muse-spark-1.3';
 export const MUSE_IMAGE_MODEL = 'muse-image-1.0';
 export const SAM_MODEL = 'sam-3.1';
 
+// Deployment diagnostics: authenticated catalog reads only, never inference.
+export async function museModelAvailability() {
+  const key = await configuredMuseKey();
+  if (!key) return { configured: false, models: [] };
+  const models = await Promise.all(
+    [MUSE_VISION_MODEL, MUSE_IMAGE_MODEL, SAM_MODEL].map(async (model) => {
+      try {
+        const response = await fetch(`${META_API}/models/${model}`, {
+          headers: { Authorization: `Bearer ${key}` },
+          signal: AbortSignal.timeout(15000),
+        });
+        await response.body?.cancel();
+        return { model, status: response.status, available: response.ok };
+      } catch {
+        return { model, status: null, available: false };
+      }
+    }),
+  );
+  return { configured: true, models };
+}
+
+// Only documented machine codes may reach logs; never log upstream message text.
+const META_ERROR_CODES = new Set([
+  'invalid_api_key',
+  'model_not_found',
+  'file_not_found',
+  'rate_limit_exceeded',
+  'server_shutting_down',
+  'service_overloaded',
+  'backend_unavailable',
+  'payload_too_large',
+  'gateway_timeout',
+  'content_policy_violation',
+  'billing_not_configured',
+]);
+
 export type MuseImage = { bytes: Uint8Array; mediaType: string };
 const dataUrl = ({ bytes, mediaType }: MuseImage) =>
   `data:${mediaType};base64,${Buffer.from(bytes).toString('base64')}`;
@@ -125,14 +161,26 @@ async function metaRequest(path: string, body: unknown, timeoutMs: number) {
   const text = await response.text();
   if (!response.ok) {
     let detail = '';
+    let providerCode: string | undefined;
     try {
-      detail = JSON.parse(text)?.error?.message ?? '';
+      const upstream = JSON.parse(text)?.error;
+      detail = typeof upstream?.message === 'string' ? upstream.message : '';
+      if (META_ERROR_CODES.has(upstream?.code)) providerCode = upstream.code;
     } catch {}
     const failure = Error(
       `Meta Model API ${response.status}${detail ? `: ${detail.split(key).join('[REDACTED]').slice(0, 300)}` : ''}`,
     );
     // The HTTP status carries no response content, so the server may log it.
-    (failure as unknown as { status: number }).status = response.status;
+    Object.assign(failure, {
+      status: response.status,
+      endpoint: path,
+      providerCode,
+      model: [MUSE_VISION_MODEL, MUSE_IMAGE_MODEL, SAM_MODEL].includes(
+        (body as { model: string }).model,
+      )
+        ? (body as { model: string }).model
+        : undefined,
+    });
     throw failure;
   }
   return JSON.parse(text) as Record<string, unknown>;

@@ -1,4 +1,39 @@
-# Landing comparison evidence — October 30, 2026
+# Landing comparison evidence — November 2, 2026
+
+Latest owner-directed trim: the live component now contains only the headline,
+price ladder, $0 checklist and a short dated source line. The five-row disclosure,
+workflow cards and long explanations were removed. Detailed evidence stays in
+this document instead of the sales pitch. The following records the earlier
+November 2 iteration and its source checks.
+
+Current local presentation leads with a price ladder, a four-item $0 checklist,
+a collapsed five-row matrix and Evaluate → Measure → Collaborate → Build. The
+last two stages are explicitly in progress; full contractor handoff and purchasing
+are coming next. The owner selected public code without adding a license, so the
+headline is **Open code. Not open wallet.**, not a licensed open-source claim.
+
+The ladder shows each company once: Renovagent $0 demo, JobTread $199 monthly
+for one internal user, Buildertrend **$499+ · Advanced plan** and Handoff Scale
+$899 monthly. The Buildertrend benchmark was explicitly supplied by the owner
+on November 2; the current vendor page is quote-based and does not confirm it.
+The page footnotes that distinction and links to current vendor pricing. It also
+states that Handoff Flex is $149. Selected plans differ in audience and scope;
+there is no parity or universal-free-service claim. Renovagent demo usage limits,
+demo material pricing and separate model/hosting costs remain visible.
+
+Primary sources checked November 2:
+
+- [JobTread pricing](https://www.jobtread.com/pricing) and [AI Connector](https://www.jobtread.com/integrations/ai-connector).
+- [Handoff plan comparison](https://help.handoff.ai/en/articles/13745799-handoff-plans-compared) and [MCP setup](https://help.handoff.ai/en/articles/16414728-how-to-connect-your-ai-assistant-to-handoff-mcp).
+- [Buildertrend pricing](https://buildertrend.com/pricing/) now describes custom quotes; the previous `/pricing-1026/` URL redirects there. The owner chose to retain the $499+ Advanced reference with its supplied basis disclosed, replacing the briefly proposed Homesage entry.
+
+MCP is published by JobTread and Handoff; Buildertrend MCP is not verified here.
+The page does not claim MCP is unique to Renovagent. Guest use means a private session without Google sign-in,
+not absence of account/session state. The five rows describe monthly pricing,
+source availability, agents, getting started and room-design focus using words
+instead of unsupported negative checkmarks.
+
+## Earlier presentation — October 30, 2026
 
 Latest presentation: one full-width capability table replaces the chart, sidebar and carousel. A phone selector compares Renovagent with one platform at a time. Monthly prices remain a small secondary footer row. Muse precedes the comparison. Product capabilities are keyed records; published plan/source values are unchanged. No negative availability cells or equivalence claims are made.
 

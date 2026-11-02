@@ -1,14 +1,20 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { pendingStudioSave, restorePendingStudioDesign } from './studio-sync.js';
 import { workspaceRequest } from '../../adapters/http/project-repository.js';
 import { Glyph } from '../../components/glyph.js';
 import { SignInChoices } from '../connect/sign-in.js';
 import { PaintFloorStudio, parseFeet, type SavedStudioDesign } from './paint-floor-studio.js';
-import { imageUrl, ownProject, photoSha, type PlanRoom, type ReadPhoto } from './own-project.js';
-import type { HouseProject, Masks, StudioRoom } from './paint-floor.js';
+import { imageUrl, photoSha } from './own-project.js';
+import type { Masks, StudioRoom } from './paint-floor.js';
+import {
+  analyzeUploadedRooms,
+  applyOwnAnalysis,
+  uploadedOwnStudio,
+  type OwnStudioDraft as Saved,
+} from './own-analysis.js';
 import { loadOwnIntake, saveOwnIntake, type OwnIntakeDraft } from './own-intake-draft.js';
 
 const STORE = 'renovagent.own-project.v1';
-type Saved = { project: HouseProject; plans: PlanRoom[] };
 function load(): Saved | null {
   try {
     const saved = JSON.parse(localStorage.getItem(STORE) || 'null') as Saved | null;
@@ -85,12 +91,10 @@ function Intake({
       live = false;
     };
   }, [where, ceiling, idea, photos, plans]);
-  const build = async (analyze = true) => {
+  const build = async () => {
     setError('');
     const list: Step[] = [
       { label: `Uploading ${photos.length + plans.length} images`, state: 'working' },
-      { label: 'Muse Spark reads each room and the plan', state: 'waiting' },
-      { label: 'SAM 3.1 outlines the walls', state: 'waiting' },
     ];
     let stage = 'Uploading photos';
     const advance = (i: number) => {
@@ -112,52 +116,15 @@ function Intake({
       }
       const photoShas = await Promise.all(photos.map(upload));
       const planShas = await Promise.all(plans.map(upload));
-      advance(1);
-      const read = analyze
-        ? ((await workspaceRequest('/studio/read', {
-            photos: photoShas,
-            plans: planShas,
-          })) as {
-            photos: ReadPhoto[];
-            plans: PlanRoom[];
-            ceiling: { ft: number; note: string };
-          })
-        : {
-            photos: photoShas.map((sha256, i) => ({
-              sha256,
-              kind: 'other',
-              title: `Room ${i + 1}`,
-              floor: 'other',
-            })),
-            plans: [],
-            ceiling: { ft: null, note: 'Ceiling height not supplied; room analysis was skipped' },
-          };
-      advance(2);
-      const walls: Record<string, Masks | null> = {};
-      if (analyze)
-        await Promise.all(
-          read.photos.map(async (p) => {
-            walls[p.sha256] = await outline(p.sha256).catch(() => null);
-          }),
-        );
-      const listing = /^https?:\/\//i.test(where.trim()) ? where.trim() : undefined;
-      onBuilt({
-        plans: read.plans,
-        project: {
-          ...ownProject({
-            id: `own-${photoShas[0]!.slice(0, 10)}`,
-            address: listing ? 'Your listing' : where.trim() || 'Your project',
-            ...(listing ? { listing } : {}),
-            ceilingFt: parseFeet(ceiling) ?? read.ceiling.ft,
-            photos: read.photos,
-            plans: read.plans,
-            walls,
-          }),
-          // Typed heights are the owner's; otherwise Spark's estimate, labelled.
-          ...(parseFeet(ceiling) ? {} : { ceilingNote: read.ceiling.note }),
-          ...(idea.trim().length >= 3 ? { idea: idea.trim() } : {}),
-        },
-      });
+      onBuilt(
+        uploadedOwnStudio({
+          photos: photoShas,
+          plans: planShas,
+          where,
+          ceilingFt: parseFeet(ceiling),
+          idea,
+        }),
+      );
     } catch (e) {
       setSteps(null);
       setError(`${stage}: ${e instanceof Error ? e.message : String(e)}`);
@@ -268,11 +235,6 @@ function Intake({
         </button>
       )}
       {error && <p className="pf-intake-error">{error}</p>}
-      {error && !!photos.length && !busy && !needsAccess && (
-        <button type="button" className="pf-reset" onClick={() => void build(false)}>
-          Open studio without analysis
-        </button>
-      )}
       <p className="pf-sub" role="status">
         {recovery}
       </p>
@@ -303,11 +265,37 @@ export function OwnStudio({
   initialDesign?: SavedStudioDesign;
   onSignedIn?: () => Promise<void>;
 }) {
+  const recoveredDesign = useMemo(() => {
+    if (!initialDesign) return undefined;
+    const key = `renovagent.studio.${initialDesign.snapshot.project.id}.saved.${initialDesign.projectId}.${initialDesign.revision}.saved.v1.pending`;
+    try {
+      return restorePendingStudioDesign(
+        initialDesign,
+        pendingStudioSave(JSON.parse(localStorage.getItem(key) || 'null')),
+      );
+    } catch {
+      return initialDesign;
+    }
+  }, [initialDesign]);
   // A new start from the home page replaces the project kept in the browser.
   const [draft, setDraft] = useState<OwnIntakeDraft | null>(null);
   const [usedStart, setUsedStart] = useState(false);
+  const [analyzing, setAnalyzing] = useState(false);
+  const analysisRun = useRef(0);
+  useEffect(
+    () => () => {
+      analysisRun.current++;
+    },
+    [],
+  );
   const [saved, setSaved] = useState<Saved | null | undefined>(() =>
-    initialDesign ? { project: initialDesign.snapshot.project, plans: [] } : undefined,
+    recoveredDesign
+      ? {
+          project: recoveredDesign.snapshot.project,
+          plans: recoveredDesign.snapshot.intake?.planRooms ?? [],
+          analysis: recoveredDesign.snapshot.intake?.analysis,
+        }
+      : undefined,
   );
   useEffect(() => {
     if (initialDesign) return;
@@ -330,8 +318,43 @@ export function OwnStudio({
   };
   const commit = (next: Saved | null) => {
     if (next) setUsedStart(true);
+    else {
+      analysisRun.current++;
+      setAnalyzing(false);
+    }
     setSaved(next);
     keepLocal(next);
+  };
+  const analyze = async (input: Saved) => {
+    if (!input.analysis) return;
+    const run = ++analysisRun.current;
+    setAnalyzing(true);
+    try {
+      const read = await analyzeUploadedRooms(input.analysis);
+      if (run !== analysisRun.current) return;
+      setSaved((current) => {
+        if (!current || current.project.id !== input.project.id) return current;
+        const next = applyOwnAnalysis(current, read);
+        keepLocal(next);
+        return next;
+      });
+    } catch (error) {
+      if (run !== analysisRun.current) return;
+      setSaved((current) => {
+        if (!current?.analysis || current.project.id !== input.project.id) return current;
+        const next = {
+          ...current,
+          analysis: {
+            ...current.analysis,
+            error: error instanceof Error ? error.message : 'Room analysis is unavailable.',
+          },
+        };
+        keepLocal(next);
+        return next;
+      });
+    } finally {
+      if (run === analysisRun.current) setAnalyzing(false);
+    }
   };
   if (saved === undefined)
     return (
@@ -344,7 +367,10 @@ export function OwnStudio({
       <Intake
         start={usedStart ? null : start}
         draft={draft}
-        onBuilt={commit}
+        onBuilt={(next) => {
+          commit(next);
+          void analyze(next);
+        }}
         onSignedIn={onSignedIn}
       />
     );
@@ -390,71 +416,106 @@ export function OwnStudio({
     });
   };
   return (
-    <PaintFloorStudio
-      key={project.id}
-      project={project}
-      savedDesign={initialDesign}
-      kicker={
-        initialDesign?.snapshot.basis === 'listing-example'
-          ? 'Saved listing example · proposed design'
-          : 'Your project'
-      }
-      renderFloor={renderFloor}
-      onEditRoom={editRoom}
-      onCeiling={(ceilingFt) => {
-        const { ceilingNote: _estimate, ...reported } = project;
-        commit({ ...saved, project: { ...reported, ceilingFt } });
-      }}
-      onIdeaUsed={() =>
-        setSaved((current) => {
-          if (!current?.project.idea) return current;
-          const { idea: _used, ...rest } = current.project;
-          const next = { ...current, project: rest };
-          keepLocal(next);
-          return next;
-        })
-      }
-      roomTools={(room) =>
-        plans.length ? (
-          <label className="pf-plan-pick">
-            <span>Size from plan</span>
-            <select
-              value={plans.findIndex(
-                (p) => p.widthFt === room.size?.xFt && p.lengthFt === room.size?.yFt,
-              )}
-              onChange={(e) => {
-                const p = plans[Number(e.target.value)];
-                if (p) editRoom(room.id, { size: { xFt: p.widthFt, yFt: p.lengthFt } });
-              }}
-            >
-              <option value={-1}>Choose a room</option>
-              {plans.map((p, i) => (
-                <option key={i} value={i}>
-                  {p.name.toLowerCase()} · {p.widthFt.toFixed(1)} × {p.lengthFt.toFixed(1)} ft
-                </option>
-              ))}
-            </select>
-          </label>
-        ) : null
-      }
-      actions={
-        <button
-          type="button"
-          className="pf-reset"
-          onClick={() => {
-            if (
-              !window.confirm(
-                'Start a new room? Save this project first to keep an account link. This replaces the current browser room.',
+    <>
+      {saved.analysis && (
+        <aside className="pf-analysis-status" aria-label="Room analysis">
+          <div>
+            <p role="status">
+              <strong>
+                {analyzing
+                  ? 'Photo uploaded. Reading room details…'
+                  : 'Photo uploaded. Room details are not ready.'}
+              </strong>
+            </p>
+            <p>
+              Your photo and brief are here. You can enter measurements while analysis is
+              unavailable.
+            </p>
+            {saved.analysis.error && (
+              <details>
+                <summary>Analysis details</summary>
+                <p>{saved.analysis.error}</p>
+              </details>
+            )}
+          </div>
+          <button type="button" disabled={analyzing} onClick={() => void analyze(saved)}>
+            {analyzing ? 'Reading room…' : 'Retry room analysis'}
+          </button>
+        </aside>
+      )}
+      <PaintFloorStudio
+        key={project.id}
+        project={project}
+        autoImagine={!saved.analysis}
+        autoSave
+        intake={
+          saved.analysis || plans.length
+            ? { analysis: saved.analysis, planRooms: plans }
+            : undefined
+        }
+        savedDesign={recoveredDesign}
+        kicker={
+          initialDesign?.snapshot.basis === 'listing-example'
+            ? 'Saved listing example · proposed design'
+            : 'Your project'
+        }
+        renderFloor={renderFloor}
+        onEditRoom={editRoom}
+        onCeiling={(ceilingFt) => {
+          const { ceilingNote: _estimate, ...reported } = project;
+          commit({ ...saved, project: { ...reported, ceilingFt } });
+        }}
+        onIdeaUsed={() =>
+          setSaved((current) => {
+            if (!current?.project.idea) return current;
+            const { idea: _used, ...rest } = current.project;
+            const next = { ...current, project: rest };
+            keepLocal(next);
+            return next;
+          })
+        }
+        roomTools={(room) =>
+          plans.length ? (
+            <label className="pf-plan-pick">
+              <span>Size from plan</span>
+              <select
+                value={plans.findIndex(
+                  (p) => p.widthFt === room.size?.xFt && p.lengthFt === room.size?.yFt,
+                )}
+                onChange={(e) => {
+                  const p = plans[Number(e.target.value)];
+                  if (p) editRoom(room.id, { size: { xFt: p.widthFt, yFt: p.lengthFt } });
+                }}
+              >
+                <option value={-1}>Choose a room</option>
+                {plans.map((p, i) => (
+                  <option key={i} value={i}>
+                    {p.name.toLowerCase()} · {p.widthFt.toFixed(1)} × {p.lengthFt.toFixed(1)} ft
+                  </option>
+                ))}
+              </select>
+            </label>
+          ) : null
+        }
+        actions={
+          <button
+            type="button"
+            className="pf-reset"
+            onClick={() => {
+              if (
+                !window.confirm(
+                  'Start a new room? Save this project first to keep an account link. This replaces the current browser room.',
+                )
               )
-            )
-              return;
-            setDraft(null);
-            commit(null);
-          }}
-        >
-          Start over
-        </button>
-      }
-    />
+                return;
+              setDraft(null);
+              commit(null);
+            }}
+          >
+            Start over
+          </button>
+        }
+      />
+    </>
   );
 }

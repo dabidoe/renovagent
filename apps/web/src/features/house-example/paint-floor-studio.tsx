@@ -1,4 +1,5 @@
 import { studioFinishSignature as lookSignature } from './studio-signatures.js';
+import { StudioSync, pendingStudioSave, type StudioSaveMeta } from './studio-sync.js';
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import {
   DomainError,
@@ -83,6 +84,10 @@ function loadImage(src: string) {
   return found;
 }
 const masksLoaded = new Map<string, Promise<Masks | null>>();
+// Old failed SAM results used a 0×0 sentinel. It is unavailable, not a valid
+// segmentation to carry into an otherwise saveable studio revision.
+const validMasks = (walls: RoomImage['walls']) =>
+  typeof walls === 'object' && walls && (walls.width <= 0 || walls.height <= 0) ? null : walls;
 function loadMasks(walls: RoomImage['walls']): Promise<Masks | null> {
   if (!walls) return Promise.resolve(null);
   if (typeof walls !== 'string') return Promise.resolve(walls);
@@ -173,6 +178,7 @@ export function BeforeAfter({
   const [ready, setReady] = useState(false);
   const [error, setError] = useState('');
   const [downloadError, setDownloadError] = useState('');
+  const [paintAvailable, setPaintAvailable] = useState(false);
   const download = () => {
     if (!canvas.current || !ready || pending) return;
     setDownloadError('');
@@ -190,7 +196,9 @@ export function BeforeAfter({
       ctx.font = `${Math.max(12, Math.round(labelHeight / 3))}px sans-serif`;
       ctx.textBaseline = 'middle';
       ctx.fillText(
-        'Renovagent · generated finish preview · concept only',
+        paintAvailable || !pick.color
+          ? 'Renovagent · generated finish preview · concept only'
+          : 'Renovagent · wall colour preview unavailable · concept only',
         16,
         source.height + labelHeight / 2,
         output.width - 32,
@@ -228,6 +236,7 @@ export function BeforeAfter({
         if (!live || !canvas.current) return;
         setRatio(`${img.naturalWidth} / ${img.naturalHeight}`);
         paintWalls(canvas.current, img, masks, hex);
+        setPaintAvailable(!!masks?.segments.length);
         setReady(true);
         setError('');
       })
@@ -247,10 +256,16 @@ export function BeforeAfter({
           ref={canvas}
           className={`pf-after${ready ? ' is-ready' : ''}`}
           role="img"
-          aria-label={`${room.title} with the chosen paint and floor`}
+          aria-label={
+            ready && hex && !paintAvailable
+              ? `${room.title} preview; wall colour unavailable`
+              : `${room.title} with the chosen paint and floor`
+          }
         />
         <span className="pf-tag pf-tag-before">Before</span>
-        <span className="pf-tag pf-tag-after">After</span>
+        <span className="pf-tag pf-tag-after">
+          {ready && hex && !paintAvailable ? 'Preview' : 'After'}
+        </span>
         <span className="pf-handle" aria-hidden="true" />
         <input
           className="pf-slider"
@@ -269,6 +284,11 @@ export function BeforeAfter({
         )}
         {error && <p className="pf-error">{error}</p>}
       </div>
+      {ready && hex && !paintAvailable && (
+        <p className="pf-sub" role="status">
+          Wall-colour preview unavailable for this photo. The selected paint remains in your plan.
+        </p>
+      )}
       {allowDownload && (
         <div className="pf-preview-export">
           <button type="button" disabled={!ready || !!pending || !!error} onClick={download}>
@@ -345,8 +365,12 @@ export function Room3D({
           title: room.title,
           renderActions,
           placements,
-          onPlacementSelect: (id) => live.current.onPlacementSelect?.(id),
-          onPlacementMove: (id, x, z) => live.current.onPlacementMove?.(id, x, z),
+          onPlacementSelect: onPlacementSelect
+            ? (id) => live.current.onPlacementSelect?.(id)
+            : undefined,
+          onPlacementMove: onPlacementMove
+            ? (id, x, z) => live.current.onPlacementMove?.(id, x, z)
+            : undefined,
           modelRender: modelRender
             ? {
                 current: () => live.current.modelRender!.current(),
@@ -829,6 +853,9 @@ export function PaintFloorStudio({
   onIdeaUsed,
   savedDesign,
   initialDesign,
+  autoImagine = true,
+  autoSave = false,
+  intake,
 }: {
   project: HouseProject;
   kicker: string;
@@ -845,6 +872,10 @@ export function PaintFloorStudio({
   savedDesign?: SavedStudioDesign;
   // Validated bundled proposal, used only when this example has no browser draft.
   initialDesign?: StudioDesign;
+  // Own photos open before analysis; defer automatic finish choices until sizes are ready.
+  autoImagine?: boolean;
+  autoSave?: boolean;
+  intake?: StudioDesign['intake'];
 }) {
   const localScope = savedDesign
     ? `${project.id}.saved.${savedDesign.projectId}.${savedDesign.revision}`
@@ -1136,9 +1167,9 @@ export function PaintFloorStudio({
   const [saveError, setSaveError] = useState('');
   const [saveAccess, setSaveAccess] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
-  const requestId = useRef(crypto.randomUUID());
   const snapshot = {
     kind: 'studio-design' as const,
+    intake,
     basis:
       savedDesign?.snapshot.basis ??
       initialDesign?.basis ??
@@ -1150,14 +1181,15 @@ export function PaintFloorStudio({
       listing: project.listing,
       ceilingFt: project.ceilingFt,
       ceilingNote: project.ceilingNote,
+      idea: project.idea,
       rooms: project.rooms.map((r) => ({
         id: r.id,
         title: r.title,
         existingFloor: r.existingFloor,
-        photo: { src: r.photo.src, walls: r.photo.walls },
+        photo: { src: r.photo.src, walls: validMasks(r.photo.walls) },
         floors: Object.fromEntries(
           Object.entries(r.floors).flatMap(([style, f]) =>
-            f ? [[style, { src: f.src, walls: f.walls }]] : [],
+            f ? [[style, { src: f.src, walls: validMasks(f.walls) }]] : [],
           ),
         ),
         size: r.size,
@@ -1174,43 +1206,81 @@ export function PaintFloorStudio({
     placements,
     modelRenders,
   };
-  const snapshotJson = JSON.stringify(snapshot);
-  const [savedJson, setSavedJson] = useState(
-    savedDesign ? JSON.stringify(savedDesign.snapshot) : '',
+  const validatedSnapshot = studioDesignSchema.safeParse(snapshot);
+  const snapshotJson = JSON.stringify(
+    validatedSnapshot.success ? validatedSnapshot.data : snapshot,
   );
+  const [savedJson, setSavedJson] = useState(() => {
+    try {
+      if (pendingStudioSave(JSON.parse(localStorage.getItem(`${saveKey}.pending`) || 'null')))
+        return '';
+    } catch {}
+    if (savedDesign) return JSON.stringify(savedDesign.snapshot);
+    try {
+      const saved = JSON.parse(localStorage.getItem(saveKey) || 'null');
+      if (typeof saved?.json === 'string') return saved.json;
+    } catch {}
+    return '';
+  });
+  const alive = useRef(true);
+  useEffect(() => {
+    alive.current = true;
+    return () => {
+      alive.current = false;
+    };
+  }, []);
+  const writer = useRef<StudioSync | null>(null);
+  const saveLocation = useRef({ autoSave, savedDesign: !!savedDesign });
+  saveLocation.current = { autoSave, savedDesign: !!savedDesign };
+  if (!writer.current) {
+    let pending: unknown = null;
+    try {
+      pending = pendingStudioSave(JSON.parse(localStorage.getItem(`${saveKey}.pending`) || 'null'));
+    } catch {}
+    writer.current = new StudioSync({
+      meta: saveMeta,
+      acknowledged: savedJson,
+      pending,
+      requestId: () => crypto.randomUUID(),
+      send: async (request) =>
+        (await workspaceRequest('/studio-designs', request)) as StudioSaveMeta,
+      persist: (request) => {
+        try {
+          if (request) localStorage.setItem(`${saveKey}.pending`, JSON.stringify(request));
+          else localStorage.removeItem(`${saveKey}.pending`);
+        } catch {}
+      },
+      onSaved: (meta, json) => {
+        if (alive.current) {
+          setSaveMeta(meta);
+          setSavedJson(json);
+        }
+        // Keep new own studios on their recoverable browser route; saved links advance.
+        if (alive.current && (!saveLocation.current.autoSave || saveLocation.current.savedDesign))
+          window.history.replaceState(
+            null,
+            '',
+            `#design/${encodeURIComponent(meta.projectId)}/${meta.revision}`,
+          );
+        try {
+          localStorage.setItem(saveKey, JSON.stringify({ ...meta, json }));
+        } catch {}
+      },
+    });
+  }
   const save = async () => {
-    if (saveMeta && savedJson === snapshotJson) return saveMeta;
+    if (saveMeta && savedJson === snapshotJson && !writer.current?.hasPending) return saveMeta;
     setSaving(true);
     setSaveError('');
     setSaveAccess(false);
     setLinkCopied(false);
     try {
-      const parsed = studioDesignSchema.safeParse(snapshot);
+      const parsed = validatedSnapshot;
       if (!parsed.success)
         throw new Error(
           `This design cannot be saved: ${parsed.error.issues[0]?.path.join('.')} ${parsed.error.issues[0]?.message}`,
         );
-      const result = (await workspaceRequest('/studio-designs', {
-        requestId: requestId.current,
-        ...(saveMeta ? { projectId: saveMeta.projectId } : {}),
-        expectedRevision: saveMeta?.revision ?? 0,
-        snapshot: parsed.data,
-      })) as SavedStudioDesign;
-      const meta = { projectId: result.projectId, revision: result.revision };
-      setSaveMeta(meta);
-      setSavedJson(snapshotJson);
-      requestId.current = crypto.randomUUID();
-      window.history.replaceState(
-        null,
-        '',
-        `#design/${encodeURIComponent(meta.projectId)}/${meta.revision}`,
-      );
-      try {
-        localStorage.setItem(saveKey, JSON.stringify(meta));
-      } catch {
-        /* The saved link remains available. */
-      }
-      return meta;
+      return await writer.current!.sync(parsed.data);
     } catch (e) {
       if (e instanceof DomainError && e.code === 'FORBIDDEN') setSaveAccess(true);
       setSaveError(e instanceof Error ? e.message : 'Could not save the project');
@@ -1219,6 +1289,13 @@ export function PaintFloorStudio({
       setSaving(false);
     }
   };
+  const latestSave = useRef(save);
+  latestSave.current = save;
+  useEffect(() => {
+    if (!autoSave || saving || saveAccess || saveError || savedJson === snapshotJson) return;
+    const timer = setTimeout(() => void latestSave.current(), 750);
+    return () => clearTimeout(timer);
+  }, [autoSave, snapshotJson, savedJson, saving, saveAccess, saveError]);
   const [working, setWorking] = useState<Record<string, string>>({});
   const [editCeiling, setEditCeiling] = useState(false);
   const [editSize, setEditSize] = useState(false);
@@ -1306,14 +1383,14 @@ export function PaintFloorStudio({
   const ideaUsed = useRef(false);
   useEffect(() => {
     const first = project.rooms[0];
-    if (!project.idea || !first || ideaUsed.current) return;
+    if (!autoImagine || !project.idea || !first || ideaUsed.current) return;
     ideaUsed.current = true;
     // A description given for the whole project applies to every room.
     void imagine(project.idea, first)
       .then((ok) => ok && applyEverywhere(first))
       .finally(() => onIdeaUsed?.());
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [project.idea]);
+  }, [project.idea, autoImagine]);
   // A floor that is picked but not made yet is rendered once, on demand.
   const pickedStyle = styleOf(pick);
   const missing =
@@ -1352,9 +1429,7 @@ export function PaintFloorStudio({
   const photoless = !room.photo.src;
   const needsSize = !room.size || !ceilingFt;
   const shownImage = pickedStyle ? floorImage(room, pickedStyle) : room.photo;
-  const pending =
-    (workKey && working[workKey]) ||
-    (shownImage && !shownImage.walls && pick.color ? 'Finding the walls…' : null);
+  const pending = (workKey && working[workKey]) || null;
   return (
     <section className="pf-studio" aria-label={`${project.address} room studio`}>
       <header className="pf-head">
@@ -1398,15 +1473,25 @@ export function PaintFloorStudio({
           </div>
         </div>
       </header>
-      {(saveMeta || saveError) && (
+      {(autoSave || saveMeta || saveError) && (
         <div className="pf-save-status" role="status">
           {saveError ? (
-            saveError
+            `Sync failed: ${saveError}`
+          ) : !saveMeta ? (
+            saving ? (
+              'Saving your room to your workspace…'
+            ) : (
+              'Changes waiting to sync…'
+            )
           ) : (
             <>
               <span>
-                {savedJson === snapshotJson ? 'Saved' : 'Unsaved changes'} · revision{' '}
-                {saveMeta!.revision}
+                {saving
+                  ? 'Syncing'
+                  : savedJson === snapshotJson
+                    ? 'Saved to your workspace'
+                    : 'Changes waiting to sync'}{' '}
+                · revision {saveMeta!.revision}
               </span>
               <a href={`#design/${encodeURIComponent(saveMeta!.projectId)}/${saveMeta!.revision}`}>
                 Open saved revision
@@ -1478,6 +1563,18 @@ export function PaintFloorStudio({
           <div className="pf-stage-bar">
             <div>
               <strong>{room.title}</strong>
+              {needsSize && onEditRoom && (
+                <button
+                  type="button"
+                  className="pf-ceiling"
+                  onClick={() => {
+                    setInspector('finishes');
+                    setEditSize(!room.size);
+                  }}
+                >
+                  Add room measurements
+                </button>
+              )}
               {room.size && (
                 <span>
                   {onEditRoom ? (
@@ -1486,7 +1583,10 @@ export function PaintFloorStudio({
                       className="pf-ceiling"
                       title={room.sizeNote ?? 'Change room measurements'}
                       aria-label="Edit room measurements"
-                      onClick={() => setEditSize(true)}
+                      onClick={() => {
+                        setEditSize(true);
+                        setInspector('finishes');
+                      }}
                     >
                       {room.sizeNote ? '≈' : ''}
                       {feetInches(room.size.xFt)} × {feetInches(room.size.yFt)} · Edit
@@ -1500,7 +1600,10 @@ export function PaintFloorStudio({
                       type="button"
                       className="pf-ceiling"
                       title={project.ceilingNote ?? 'Change the ceiling height'}
-                      onClick={() => setEditCeiling(true)}
+                      onClick={() => {
+                        setEditCeiling(true);
+                        setInspector('finishes');
+                      }}
                     >
                       {project.ceilingNote ? '≈' : ''}
                       {feetInches(ceilingFt)} ceilings

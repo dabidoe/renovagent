@@ -1484,7 +1484,13 @@ export async function createWorkspaceServer(
               : code === 'STORAGE'
                 ? 503
                 : 400,
-        { code, message },
+        {
+          code,
+          message,
+          ...(error instanceof DomainError && typeof error.details.studioDiagnostic === 'string'
+            ? { diagnostic: error.details.studioDiagnostic.slice(0, 240) }
+            : {}),
+        },
       );
     }
   });

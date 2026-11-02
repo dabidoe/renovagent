@@ -606,6 +606,46 @@
 }
 
 /* Show your project: the intake before the studio. */
+.pf-analysis-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  max-width: 1380px;
+  margin: 12px auto;
+  padding: 14px 18px;
+  border: 1px solid #d7e2f3;
+  border-radius: 12px;
+  background: #f1f6ff;
+  color: #263b5d;
+  font-size: 13px;
+}
+.pf-analysis-status p {
+  margin: 3px 0;
+}
+.pf-analysis-status details {
+  margin-top: 6px;
+}
+.pf-analysis-status button {
+  flex: none;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid #bccce5;
+  border-radius: 8px;
+  background: white;
+  color: #1857bf;
+  cursor: pointer;
+}
+.pf-analysis-status button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+@media (max-width: 600px) {
+  .pf-analysis-status {
+    flex-wrap: wrap;
+    margin: 12px 16px;
+  }
+}
 .pf-intake {
   --pf-ink: #142038;
   --pf-muted: #64748b;

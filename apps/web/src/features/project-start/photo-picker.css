@@ -105,4 +105,25 @@
 /* A finger-sized target, even in the compact hero prompt. */
 .photo-picker.is-compact .photo-picker-add {
   min-height: 40px;
+  min-width: 40px;
+  justify-content: center;
+  padding: 8px;
+  border-radius: 7px;
+  position: relative;
+}
+.photo-picker.is-compact .photo-picker-add:hover {
+  background: #edf4ff;
+}
+.photo-picker-count {
+  position: absolute;
+  top: 0;
+  right: 0;
+  min-width: 16px;
+  height: 16px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  background: #0866ff;
+  color: white;
+  font-size: 10px;
 }

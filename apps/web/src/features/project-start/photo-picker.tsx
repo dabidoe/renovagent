@@ -73,9 +73,13 @@ export function PhotoPicker({
         type="button"
         onClick={() => input.current?.click()}
         disabled={disabled}
+        aria-label={
+          compact ? `Add room photos${files.length ? ` · ${files.length} added` : ''}` : undefined
+        }
+        title={compact ? 'Add room photos' : undefined}
       >
-        {compact && previews[0] ? <img src={previews[0]} alt="" /> : <Glyph name="photo" />}
-        <span>
+        <Glyph name="photo" />
+        <span className={compact ? 'sr-only' : undefined}>
           {compact ? (
             files.length ? (
               `${files.length} photo${files.length === 1 ? '' : 's'} added`
@@ -89,6 +93,11 @@ export function PhotoPicker({
             </>
           )}
         </span>
+        {compact && files.length > 0 && (
+          <small className="photo-picker-count" aria-hidden="true">
+            {files.length}
+          </small>
+        )}
         {!compact && <Glyph name="plus" />}
       </button>
       {!compact && files.length > 0 && (

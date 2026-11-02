@@ -117,6 +117,8 @@ The visual studio helps you explore what a space could become. The project works
 
 You can explore prepared listing examples or start with your own room photos. The hosted experience includes guest access and a connection flow for compatible MCP clients.
 
+**Explore the examples** (no sign-in): [all examples](https://renovagent-production.up.railway.app/#examples) · [Philadelphia rowhouse](https://renovagent-production.up.railway.app/#example-house) · [Oakland](https://renovagent-production.up.railway.app/#example/oakland) · [Brooklyn](https://renovagent-production.up.railway.app/#example/brooklyn) · [bedroom refresh](https://renovagent-production.up.railway.app/#example/bedroom-refresh)
+
 For agent connections, use the application's **Connect** flow to create a scoped access key. The MCP endpoint is:
 
 ```text

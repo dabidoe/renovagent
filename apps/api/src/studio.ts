@@ -18,6 +18,7 @@ import {
 import {
   imageMediaType,
   museEditImage,
+  museModelAvailability,
   museJson,
   samSegmentText,
 } from '../../../scripts/muse-provider.js';
@@ -453,11 +454,13 @@ export type StudioProviders = {
   segment: typeof samSegmentText;
   repaint: typeof museEditImage;
   read: typeof museJson;
+  models?: typeof museModelAvailability;
 };
 export const studioProviders: StudioProviders = {
   segment: samSegmentText,
   repaint: museEditImage,
   read: museJson,
+  models: museModelAvailability,
 };
 
 export function studioRoutes(deps: {
@@ -491,6 +494,16 @@ export function studioRoutes(deps: {
     return found;
   };
   const handle = async (path: string, ownerId: string, raw: unknown): Promise<unknown> => {
+    if (path === '/studio/provider-status') {
+      z.object({}).strict().parse(raw);
+      deps.spend(ownerId, 'read');
+      if (!deps.providers.models)
+        throw new DomainError(
+          'VALIDATION',
+          'Provider diagnostics are unavailable in this environment',
+        );
+      return deps.providers.models();
+    }
     if (path === '/studio/ideas') {
       const input = requests.ideas.parse(raw);
       const photo = await stored(ownerId, input.sha256);
@@ -554,8 +567,14 @@ export function studioRoutes(deps: {
           image: { bytes, mediaType: imageMediaType(bytes) },
           phrase: 'wall',
         });
+        const parsed = await parseSegmentation('wall', sam.text);
+        if (parsed.width <= 0 || parsed.height <= 0)
+          throw new DomainError(
+            'STORAGE',
+            'Wall outlines were unavailable for this photo. The photo can still be used without a wall-colour preview.',
+          );
         result = {
-          ...(await parseSegmentation('wall', sam.text)),
+          ...parsed,
           model: sam.model,
           runId: sam.runId,
         };
@@ -740,21 +759,30 @@ export function studioRoutes(deps: {
           );
       }
       const detail = error instanceof Error ? error.message : '';
-      const reason = /not configured|401|403/i.test(detail)
-        ? 'service configuration'
-        : /429|rate limit|limit reached|overloaded|capacity/i.test(detail)
-          ? 'provider busy'
-          : /timed out|timeout/i.test(detail)
-            ? 'provider timeout'
-            : /unreachable|ENOTFOUND|ECONNREFUSED|EAI_AGAIN|fetch failed/i.test(detail)
-              ? 'provider unreachable'
-              : error instanceof z.ZodError ||
-                  /did not complete|exceeded limit|budget exhausted/i.test(detail)
-                ? 'unexpected provider result'
-                : 'service unavailable';
+      const upstream = error as {
+        status?: unknown;
+        providerCode?: unknown;
+        endpoint?: unknown;
+        model?: unknown;
+      } | null;
+      const status = upstream?.status;
+      const reason =
+        status === 404
+          ? 'model or endpoint unavailable'
+          : /not configured|401|403/i.test(detail)
+            ? 'service configuration'
+            : /429|rate limit|limit reached|overloaded|capacity/i.test(detail)
+              ? 'provider busy'
+              : /timed out|timeout/i.test(detail)
+                ? 'provider timeout'
+                : /unreachable|ENOTFOUND|ECONNREFUSED|EAI_AGAIN|fetch failed/i.test(detail)
+                  ? 'provider unreachable'
+                  : error instanceof z.ZodError ||
+                      /did not complete|exceeded limit|budget exhausted/i.test(detail)
+                    ? 'unexpected provider result'
+                    : 'service unavailable';
       // Never log upstream response text: it may contain private image data or credentials.
       // Machine signals (an HTTP status, a Node error code) carry no content and may be logged.
-      const status = (error as { status?: unknown } | null)?.status;
       const code = (error as { code?: unknown } | null)?.code;
       const signal =
         typeof status === 'number'
@@ -762,10 +790,37 @@ export function studioRoutes(deps: {
           : typeof code === 'string' && code
             ? ` (${code})`
             : '';
-      console.warn(`[studio] ${path}: ${reason}${signal}`);
+      // These fields are set by our provider boundary from a closed set of values.
+      const context = [
+        upstream?.endpoint === '/responses' || upstream?.endpoint === '/images/edits'
+          ? `endpoint=${upstream.endpoint}`
+          : '',
+        ['muse-spark-1.3', 'muse-image-1.0', 'sam-3.1'].includes(String(upstream?.model))
+          ? `model=${upstream?.model}`
+          : '',
+        [
+          'model_not_found',
+          'file_not_found',
+          'invalid_api_key',
+          'billing_not_configured',
+          'rate_limit_exceeded',
+          'server_shutting_down',
+          'service_overloaded',
+          'backend_unavailable',
+          'payload_too_large',
+          'gateway_timeout',
+          'content_policy_violation',
+        ].includes(String(upstream?.providerCode))
+          ? `code=${upstream?.providerCode}`
+          : '',
+      ]
+        .filter(Boolean)
+        .join(' ');
+      console.warn(`[studio] ${path}: ${reason}${signal}${context ? ` ${context}` : ''}`);
       throw new DomainError(
         'STORAGE',
         `${labels[path] || 'Studio request'} could not complete (${reason}). Please retry.${path === '/studio/read' ? ' You can also open the studio without analysis and enter measurements yourself.' : ''}`,
+        context ? { studioDiagnostic: context } : {},
       );
     }
   };

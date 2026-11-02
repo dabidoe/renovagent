@@ -55,6 +55,24 @@ test('room analysis cannot silently drop an uploaded photo or open an empty proj
     /did not return every room photo/,
   );
 });
+
+test('an empty SAM response is an unavailable preview, never a zero-sized saved mask', async () => {
+  const route = studioRoutes({
+    images,
+    spend: () => {},
+    providers: {
+      ...providers,
+      segment: async () => ({ text: '', model: 'fixture', runId: 'fixture' }),
+    },
+  });
+  await assert.rejects(
+    () => route('/studio/walls', 'owner', { sha256 }),
+    (error: unknown) =>
+      error instanceof DomainError &&
+      error.code === 'STORAGE' &&
+      /Wall outlines were unavailable/.test(error.message),
+  );
+});
 test('provider failures keep a machine signal in the server log but never leak response text', async () => {
   const warnings: string[] = [];
   const warn = console.warn;
@@ -94,11 +112,31 @@ test('provider failures keep a machine signal in the server log but never leak r
 
     const cut = Error('Meta Model API unreachable');
     (cut as unknown as { code: string }).code = 'ENOTFOUND';
-    await assert.rejects(() => failing(cut)('/studio/ideas', 'owner', input), /provider unreachable/);
+    await assert.rejects(
+      () => failing(cut)('/studio/ideas', 'owner', input),
+      /provider unreachable/,
+    );
     assert.match(warnings.join('\n'), /\(ENOTFOUND\)/);
 
+    const missing = Object.assign(Error('private upstream text and secret-token'), {
+      status: 404,
+      providerCode: 'model_not_found',
+      model: 'muse-spark-1.3',
+      endpoint: '/responses',
+    });
     await assert.rejects(
-      () => failing(Error('Muse did not complete this job: failed'))('/studio/ideas', 'owner', input),
+      () => failing(missing)('/studio/ideas', 'owner', input),
+      /model or endpoint unavailable/,
+    );
+    assert.match(
+      warnings.join('\n'),
+      /upstream 404.*endpoint=\/responses model=muse-spark-1\.3 code=model_not_found/,
+    );
+    assert.doesNotMatch(warnings.join('\n'), /private upstream|secret-token/);
+
+    await assert.rejects(
+      () =>
+        failing(Error('Muse did not complete this job: failed'))('/studio/ideas', 'owner', input),
       /unexpected provider result/,
     );
   } finally {

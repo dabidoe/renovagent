@@ -30,6 +30,24 @@ not a furniture measurement, exact-product or installation approval system.
   shared thumbnail renderer. They are library illustrations, not generated photos
   of the owner's room.
 
+## Room camera follow-up — November 2
+
+The shared `mountRoomScene` viewer now supplies visible left/right 45° turns,
+Top and Reset controls. Editable furniture viewers start in **Rotate** mode;
+**Move** enables floor-plane dragging. A click still selects furniture in either
+mode. This separates camera gestures from layout edits and retains scroll/pinch
+zoom. Top frames the floor with space for the camera controls; Reset restores the
+initial target and viewpoint. These are local display operations, not saved
+project changes, measurements or render-invalidating edits. Controls hide while
+a generated still is displayed and dispose with the scene. Phone layouts retain
+44 px targets and allow the groups to wrap.
+
+Local browser checks exercised turns, keyboard Top, Reset, drag-to-orbit over a
+piece and Move-mode dragging. Turning the camera preserved the selected piece's
+position/dimensions and list quantities. Phone widths of 390 and 320 px were
+checked for overflow. Build/type/boundary checks pass; no provider call or hosted
+deployment was part of this change.
+
 ## Photo ideas
 
 **What would look good here?** sends the owner-scoped source photo, brief and keep
@@ -72,6 +90,36 @@ The earlier `/model/photoreal` route remains for the older measured-room viewer.
 Blender HD is hidden for this new furnishing path because its current server-side
 renderer does not consume these proposed furniture placements. No claim that
 Blender HD produces furnished results is made.
+
+### Provider failure diagnostics — November 2
+
+An HTTP 503 from the studio API can wrap a Meta HTTP 404; it does not by itself
+prove overload or a missing local server. The provider boundary now retains only
+allowlisted machine codes and known model/endpoint values for safe logging.
+Studio logs identify a 404 as model/endpoint unavailable. The viewer preserves
+the API's safe failure message instead of substituting development instructions.
+There is no automatic inference retry or model/Contributor-mode fallback.
+
+`node --import tsx scripts/check-muse-models.ts` performs three authenticated,
+read-only model-catalog GETs using the environment's existing key. It runs no
+inference, submits no images/prompts and makes no database changes. Run it in the
+environment being diagnosed; a successful local catalog check does not prove
+that a deployed service uses the same key or can generate an image.
+
+The owner's reported Railway ideas/read failures had upstream 404. Local catalog
+lookups returned 200 for the configured Spark, Image and SAM IDs. The configured
+paths/IDs match Meta's [models](https://dev.meta.ai/docs/models) and
+[image edit](https://dev.meta.ai/docs/api-reference/images/edit-image) docs;
+[error handling](https://dev.meta.ai/docs/error-handling) distinguishes model,
+file and endpoint not-found errors. The failing production model-render's exact
+provider code and a successful live rendering round-trip remain open.
+
+Follow-up: with explicit owner approval, exactly two direct provider probes using
+the same configured key succeeded: Spark returned a small validated JSON response,
+and Muse Image edited a public bundled floor swatch into a valid 1600 × 1600 image.
+No house photo or database was used. This confirms local provider generation at
+the time of the checks; it does not establish that the production studio request
+has recovered. A fresh production render attempt is still needed.
 
 ## Homepage directions and studio handoff
 

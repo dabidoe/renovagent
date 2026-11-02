@@ -9,6 +9,21 @@ export type StudioModelRenderContext = {
   onRendered: (image: string, signature: string) => void;
 };
 
+export function renderFailureMessage(error: unknown): string {
+  const message = error instanceof Error ? error.message : String(error);
+  if (
+    /^(Failed to fetch|Load failed|NetworkError when attempting to fetch resource\.)$/i.test(
+      message,
+    )
+  )
+    return 'Could not reach Renovagent. Check your connection and try again.';
+  if (message === 'Workspace API is unavailable')
+    return 'The Renovagent service is unavailable. Please try again.';
+  // The API supplies safe, specific errors for configuration, limits and outages.
+  // Preserve those instead of treating every "unavailable" as a missing dev server.
+  return message.slice(0, 300);
+}
+
 // "Photoreal" for the 3D view: an eye-level still of the measured model goes
 // to Muse Image (POST /model/photoreal), which renders it as a photo of the
 // same room in the chosen finishes. Runs from any phone; the result is a
@@ -109,10 +124,7 @@ export function attachPhotoreal(
   const fromBase64 = (data: string, type: string) =>
     new Blob([Uint8Array.from(atob(data), (c) => c.charCodeAt(0))], { type });
   const failed = (e: unknown) => {
-    const text = e instanceof Error ? e.message : String(e);
-    status.textContent = /unavailable|Failed to fetch/i.test(text)
-      ? 'This needs the Renovagent server (npm run dev:connected).'
-      : text.slice(0, 160);
+    status.textContent = renderFailureMessage(e);
   };
   // Muse Image from a still: the 3D capture, or the Blender interior.
   const photoreal = async (still: Blob, source: string) => {

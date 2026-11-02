@@ -67,7 +67,7 @@ export function FurniturePanel({
         <h3>Build the room in 3D</h3>
         <span>{placements.length} objects</span>
       </div>
-      <p>Place a piece, drag it around, then render the layout with Muse.</p>
+      <p>Add pieces. Rotate to explore, Move to arrange, then render with Muse.</p>
       {!model && (
         <p className="pf-intake-error">
           Add room dimensions to place furniture. The photo designer works without them.

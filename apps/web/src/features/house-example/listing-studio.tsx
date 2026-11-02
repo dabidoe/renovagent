@@ -170,6 +170,13 @@ export function ExamplesGallery({ onOpen }: { onOpen: (route: string) => void })
         a room restyled from a photo someone loved.
       </p>
       <div className="pf-cards">
+        <button type="button" className="pf-card is-own" onClick={() => onOpen('#your-project')}>
+          <Glyph name="plus" />
+          <span>
+            <b>Your project</b>
+            <small>Your photos and floor plan</small>
+          </span>
+        </button>
         {EXAMPLES.map((e) => (
           <button key={e.route} type="button" className="pf-card" onClick={() => onOpen(e.route)}>
             <img src={e.cover} alt="" loading="lazy" />
@@ -182,13 +189,6 @@ export function ExamplesGallery({ onOpen }: { onOpen: (route: string) => void })
             </span>
           </button>
         ))}
-        <button type="button" className="pf-card is-own" onClick={() => onOpen('#your-project')}>
-          <Glyph name="plus" />
-          <span>
-            <b>Your project</b>
-            <small>Your photos and floor plan</small>
-          </span>
-        </button>
       </div>
     </section>
   );

@@ -55,6 +55,13 @@ test(
       const snapshot: StudioDesign = {
         kind: 'studio-design',
         basis: 'listing-example',
+        intake: {
+          analysis: {
+            photos: [photoRecord.sha256],
+            plans: [],
+            error: 'Fixture analysis unavailable',
+          },
+        },
         tier: 'builder',
         project: {
           id: 'fixture-photo-studio',
@@ -160,6 +167,18 @@ test(
       assert.deepEqual(retry, saved, 'a retry returns the same saved revision');
       assert.equal(saved.revision, 1);
       assert.equal(saved.snapshot.tier, 'builder');
+      assert.deepEqual(saved.snapshot.intake, snapshot.intake);
+      await assert.rejects(
+        saveStudioDesign(repo, images, {
+          requestId: 'fixture-foreign-intake',
+          expectedRevision: 0,
+          snapshot: {
+            ...snapshot,
+            intake: { analysis: { photos: [photoRecord.sha256], plans: ['f'.repeat(64)] } },
+          },
+        }),
+        /image is missing/,
+      );
       assert.deepEqual(saved.snapshot.picks.living.ideas, ['striped rug', 'coffee table']);
       assert.equal(saved.snapshot.project.rooms[0].sizeNote, 'Fixture estimate, not measured');
       const black = structuredClone(snapshot);

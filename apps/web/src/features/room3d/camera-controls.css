@@ -1,0 +1,64 @@
+.room3d-camera {
+  position: absolute;
+  z-index: 3;
+  bottom: 12px;
+  left: 8px;
+  right: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  pointer-events: none;
+}
+.room3d-camera-group {
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid #d6dfe9;
+  border-radius: 12px;
+  background: rgb(255 255 255 / 0.96);
+  box-shadow: 0 3px 14px rgb(15 23 42 / 0.1);
+  pointer-events: auto;
+}
+.room3d-camera-group[hidden],
+.is-photoreal > .room3d-camera {
+  display: none;
+}
+.room3d-camera button {
+  box-sizing: border-box;
+  min-width: 44px;
+  min-height: 44px;
+  margin: 0;
+  padding: 6px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #334155;
+  font:
+    600 12px/1.2 system-ui,
+    sans-serif;
+  cursor: pointer;
+}
+.room3d-camera svg {
+  display: block;
+  width: 22px;
+  height: 22px;
+}
+.room3d-camera button:hover {
+  background: #eff6ff;
+  color: #145bea;
+}
+.room3d-camera button[aria-pressed='true'] {
+  background: #145bea;
+  color: white;
+}
+.room3d-camera button:focus-visible {
+  outline: 2px solid #145bea;
+  outline-offset: 1px;
+}
+@media (max-width: 600px) {
+  .pf-3d-host:not(.is-photoreal) {
+    aspect-ratio: auto;
+    height: 320px;
+  }
+}
