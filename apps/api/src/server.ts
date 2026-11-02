@@ -16,8 +16,8 @@ import {
 } from './accounts.js';
 import {
   checkMuseModels,
-  configuredMuseKey,
   imageMediaType,
+  metaAccessMode,
   museEditImage,
   samSegmentText,
 } from '../../../scripts/muse-provider.js';
@@ -1533,16 +1533,18 @@ if (process.argv[1]?.endsWith('/apps/api/src/server.ts')) {
   await mcpAccess.ensureIndexes();
   const plans = new StudioPlanStore(client.db());
   await plans.ensureIndexes();
+  // Relay-only deploys carry no Meta key: the relay token is sufficient.
+  const museConfigured = (await metaAccessMode()) !== 'none';
   const { server, workers } = await createWorkspaceServer(
     repository,
     token,
-    Boolean(await configuredMuseKey()),
+    museConfigured,
     accounts,
     catalog,
     new PhotoJobFiles(client.db()),
     {
       images: new DesignImageStore(client.db()),
-      ...((await configuredMuseKey()) ? { provider: new MusePreviewProvider() } : {}),
+      ...(museConfigured ? { provider: new MusePreviewProvider() } : {}),
     },
     hosting,
     undefined,
