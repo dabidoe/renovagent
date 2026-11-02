@@ -82,7 +82,7 @@ export function StudioPreview({ onOpen, busy }: { onOpen: () => void; busy: bool
               {feetInches(room.size!.xFt)} × {feetInches(room.size!.yFt)}
             </span>{' '}
             <button className="studio-preview-open" type="button" onClick={open} disabled={busy}>
-              Explore house <Glyph name="right" />
+              Explore examples <Glyph name="right" />
             </button>
           </div>
         </div>

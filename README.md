@@ -1,87 +1,177 @@
-# Renovagent
+<img src="apps/web/src/assets/brand/renovagent-mark.png" alt="RenovAgent logo" width="120" />
 
-**From renovation idea to a quote-ready plan.**
+# RenovAgent
 
-A persistent project for your house, your AI agent, and the people doing the work. Collect the evidence, define the job, and keep decisions connected as the project changes.
+### See the possibilities. Plan the renovation. Bring your AI agent.
 
-[Product direction](docs/design/agent-first-product.md) · [Architecture](docs/architecture/README.md) · [Build status](PROGRESS.md) · [Current handoff](HANDOFF.md)
+**RenovAgent is an AI-powered renovation studio that transforms real room photos into visual designs, 3D mockups, and persistent renovation projects.**
 
-## The idea
+Built for the **Meta Global AI Developer Hackathon**, RenovAgent combines Meta's SAM 3.1, Muse Spark, and Muse Image with an interactive design studio and an agent-accessible project workspace.
 
-Tell your agent what you want to improve. Renovagent should turn that brief into a specific scope, traceable materials, and comparable supplier offers and contractor quotes. Your agent and the website work from the same project record.
+**[Launch RenovAgent](https://renovagent-production.up.railway.app)** · [Architecture](docs/architecture/README.md) · [Development status](PROGRESS.md)
 
-The website stays simple: a prompt, a home selector, and project tools when you need them. The durable project is the product; chat is one way to use it.
+![RenovAgent example projects and studio entry](docs/media/demo.png)
 
-## What works today
+## What you can do
 
-This is an early development project. The current local working tree includes:
+### 1. Select real surfaces with SAM 3.1
 
-- Persistent projects, source evidence, versioned artifacts, and saved drafts.
-- A prompt-first workspace with house, plan, history, and evidence tools.
-- Shared deterministic planning calculations and downstream invalidation when facts change.
-- A connected MongoDB/API workspace with bounded Muse photo-analysis jobs; API and MCP share the configured Atlas cluster.
-- An authenticated MCP connector, tested in the consumer Muse Mac app: discover projects, start a separate project and save/read its proposed brief.
-- Optional Google/Meta sign-in with per-owner workspaces (needs your OAuth clients; see the accounts doc).
-- A demo commerce catalog with tiered purchase plans and contractor review (example prices only).
-- **Hosted** at https://renovagent-production.up.railway.app: listing examples and your own photos in a paint and floor studio (SAM 3.1 walls, Muse Image floors and restyles, 3D rooms), inspiration photos turned into items, paints and store searches, one-click guests, and `/mcp` for your own agent.
+Upload a room photograph and identify walls and other design elements with Meta's Segment Anything technology. Experiment with paint colors on the actual room instead of a generic template.
 
-General messages in the website are saved notes; the tested consumer Muse connection uses the shared MCP tools. Both local stdio and authenticated Streamable HTTP expose owner-scoped reads and proposals. Live supplier pricing, contractor verification, purchasing and billing remain open. The older MCP demo uses a different project model.
+- SAM 3.1-powered wall segmentation and masks
+- Interactive paint selection and previews
+- Segmentation of inspiration-image elements
 
-See [current implementation and limits](docs/architecture/connected-muse-and-mongo.md), [Atlas migration](docs/architecture/atlas-migration.md) and [consumer Muse connection evidence](docs/architecture/remote-mcp-connector.md).
+![Paint preview applied to SAM 3.1 wall outlines](docs/media/sam-segmentation.png)
+
+### 2. Reimagine your room with Muse Image
+
+Explore new flooring and room styles using AI-generated visualizations grounded in your original photo. Apply inspiration from another room while aiming to preserve the layout and recognizable features of your own space.
+
+- AI-generated flooring variations
+- Inspiration-guided room restyling
+- Before-and-after comparisons
+- Suggested paints and related material searches
+
+*Generated visualizations illustrate design possibilities; they are not measured construction documents.*
+
+![Before-and-after room restyle in the studio](docs/media/muse-before-after.png)
+
+### 3. Explore interactive 3D room mockups
+
+Move beyond a flat photograph with an interactive 3D room representation. Explore layout and furniture possibilities, and produce rendered views of the modeled space.
+
+- Interactive 3D room scenes
+- Furniture and layout exploration
+- Photorealistic render options
+- Blender-based high-quality rendering workflow
+
+**AR placement is a future direction**, not a verified feature of the current public demo.
+
+![Blender HD render of a modeled room](docs/media/3d-room.jpg)
+
+### 4. Turn inspiration into design choices
+
+Upload a reference image you like. RenovAgent analyzes its visual elements, identifies relevant colors and items, suggests nearby paint matches, and helps translate that style into your room.
+
+- Muse Spark analyzes the inspiration and room context
+- SAM 3.1 identifies visual elements
+- Paint suggestions use color-distance matching
+- Shopping suggestions link to store searches, not unverified inventory
+- Muse Image can generate an inspiration-guided restyle
+
+![Bedroom restyled from an inspiration photo](docs/media/inspiration.png)
+
+### 5. Save, share, and collaborate with an AI agent
+
+RenovAgent is designed around a **persistent renovation project**, not a disposable chat session.
+
+Create a personal workspace, retain your uploaded room photos, and let an external AI agent work with the same project through an authenticated MCP connection.
+
+- Guest access and optional Google sign-in
+- Owner-scoped project data and uploaded photos
+- Agent-generated plans and shareable plan links
+- Inspiration links and photos contributed through MCP
+- Saved project briefs, evidence, drafts, and design decisions
+
+**Current sharing scope:** agent-to-owner plan links and project collaboration through authenticated tools. Public project galleries and unrestricted collaborative editing are not claimed as shipped.
+
+![Persistent project workspace](docs/media/project-sharing.png)
+
+## How Meta AI powers RenovAgent
+
+| Technology | Role |
+| --- | --- |
+| **SAM 3.1** | Segments walls and identifies elements in room and inspiration images |
+| **Muse Spark** | Analyzes rooms, interprets design instructions, and translates inspiration into structured choices |
+| **Muse Image** | Generates flooring edits, inspiration-guided restyles, and photorealistic room imagery |
+| **Model Context Protocol (MCP)** | Connects external AI agents to persistent renovation projects and bounded proposal tools |
+
+Supporting technologies include React, TypeScript, Three.js, MongoDB, and Blender. The hosted application runs on Railway.
+
+## From a photo to a project
+
+```text
+Real room photos + inspiration
+              |
+     SAM 3.1 + Muse Spark
+              |
+    Surface and design choices
+              |
+       Muse Image edits
+              |
+   Interactive 3D mockups
+              |
+   Persistent project record
+              |
+   Owner + connected AI agent
+              |
+   Plans, references and handoff
+```
+
+The visual studio helps you explore what a space could become. The project workspace is intended to carry those ideas toward practical renovation decisions.
+
+## Try it
+
+**[Open the live demo](https://renovagent-production.up.railway.app)**
+
+You can explore prepared listing examples or start with your own room photos. The hosted experience includes guest access and a connection flow for compatible MCP clients.
+
+For agent connections, use the application's **Connect** flow to create a scoped access key. The MCP endpoint is:
+
+```text
+https://renovagent-production.up.railway.app/mcp
+```
+
+Do not put access keys in repository files or public screenshots.
 
 ## Run locally
+
+Requires Node.js and npm.
 
 ```bash
 npm install
 npm run dev
 ```
 
-Open [the workspace](http://127.0.0.1:8741/) or [the landing page](http://127.0.0.1:8741/landing.html). The default workspace uses this browser's IndexedDB; no account is required.
+Open the local workspace at `http://127.0.0.1:8741/` or the landing page at `http://127.0.0.1:8741/landing.html`.
 
-For the connected workspace (API and frontend still run locally):
+The default local workspace uses browser storage. To run the connected API, database, and MCP services:
 
 ```bash
 npm run dev:connected
 ```
 
-Follow the [connected setup guide](docs/architecture/connected-muse-and-mongo.md) for MongoDB, server-only credentials, explicit data transfer, and current limits. The static website cannot run these local services.
+See the [connected setup guide](docs/architecture/connected-muse-and-mongo.md) for environment configuration, database selection, credentials, and limitations.
 
-The connected launcher uses the configured `MONGODB_URI` cluster by default. See [database selection](docs/architecture/remote-mcp-connector.md#database-selection) for explicit local mode; selecting a database does not synchronize or merge it with another copy.
+## Development and testing
 
-## How it fits together
+| Command | Purpose |
+| --- | --- |
+| `npm test` | Run contract, domain, legacy, and integration tests |
+| `npm run test:connected` | Run connected integration tests against local MongoDB |
+| `npm run build` | Type-check, validate boundaries, and build |
+| `npm run build:pages` | Produce a static GitHub Pages package |
 
-```text
-Web workspace       External agents (local MCP)
-       \                    /
-        Shared application services
-                    |
-          Validated domain commands
-                    |
-       Versioned project + evidence
-```
+### Repository structure
 
-Models propose changes. Shared domain code validates units, revisions, dependencies, and release rules. Reported facts, assumptions, retrieved sources, and verified evidence stay distinguishable. A proposal cannot approve itself or release construction work.
+- `apps/web/` — web application and design studio
+- `apps/api/` — connected API, model calls, and MCP services
+- `packages/contracts/` — shared schemas and commands
+- `packages/core/` — planning logic and domain rules
+- `tests/` — automated verification
+- `docs/architecture/` — architecture and implementation notes
 
-## Development
+## Project status and roadmap
 
-| Command                  | Purpose                                              |
-| ------------------------ | ---------------------------------------------------- |
-| `npm test`               | Legacy, contract, domain, and integration suites     |
-| `npm run test:connected` | Integration checks against local test MongoDB        |
-| `npm run build`          | Types, dependency boundaries, and production builds  |
-| `npm run build:pages`    | Build a static GitHub Pages package in `pages-dist/` |
+RenovAgent is an active prototype. Its visual studio, selected 3D rendering workflows, project persistence, and MCP integrations are implemented, with functionality varying by environment and configuration.
 
-The Pages package puts the landing page at the root and the prototype at `workspace.html`. It does not publish anything. See [publication notes](docs/design/github-pages.md).
+**Planned or incomplete capabilities** include camera-based AR placement, broader sharing and collaboration, verified live supplier prices, contractor verification, purchasing, and billing.
 
-## Repository
+Example material prices are illustrative rather than live offers. AI-generated designs are conceptual; physical dimensions, material suitability, code requirements, and contractor decisions require separate verification.
 
-- `apps/web/` — React workspace and browser adapters
-- `apps/api/` — optional local workspace API and bounded Muse jobs
-- `packages/contracts/` — runtime schemas and commands
-- `packages/core/` — domain logic, calculations, and repository ports
-- `landing.html`, `src/landing.css` — public landing page
-- `tests/` — behavior and integration verification
-- `docs/architecture/` — target architecture and implemented-slice evidence
-- `legacy.html`, `server/` — earlier demo, retained during migration
+For detailed implementation status and limitations, see [PROGRESS.md](PROGRESS.md) and [HANDOFF.md](HANDOFF.md).
 
-The half bath is the first reference scenario, not the limit of the product. The name does not mean skipping permits: required professional reviews, permits, and inspections remain part of the workflow.
+---
+
+**RenovAgent — from the room you have to the home you imagine.**

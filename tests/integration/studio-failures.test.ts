@@ -55,3 +55,53 @@ test('room analysis cannot silently drop an uploaded photo or open an empty proj
     /did not return every room photo/,
   );
 });
+test('provider failures keep a machine signal in the server log but never leak response text', async () => {
+  const warnings: string[] = [];
+  const warn = console.warn;
+  console.warn = (...args: unknown[]) => {
+    warnings.push(args.map(String).join(' '));
+  };
+  try {
+    const failing = (failure: unknown) =>
+      studioRoutes({
+        images,
+        spend: () => {},
+        providers: {
+          ...providers,
+          read: async () => {
+            throw failure;
+          },
+        },
+      });
+    const input = { sha256, brief: '', keep: '' };
+    const upstream = Error('Meta Model API 503: upstream exploded with secret-token');
+    (upstream as unknown as { status: number }).status = 503;
+    await assert.rejects(
+      () => failing(upstream)('/studio/ideas', 'owner', input),
+      (error: unknown) => {
+        assert.ok(error instanceof DomainError);
+        assert.equal(error.code, 'STORAGE');
+        assert.match(error.message, /Room ideas.*service unavailable/);
+        assert.doesNotMatch(error.message, /exploded|secret-token/);
+        return true;
+      },
+    );
+    assert.match(warnings.join('\n'), /\/studio\/ideas: service unavailable \(upstream 503\)/);
+
+    const limited = Error('Meta Model API 429: Rate limit exceeded, retry shortly');
+    (limited as unknown as { status: number }).status = 429;
+    await assert.rejects(() => failing(limited)('/studio/ideas', 'owner', input), /provider busy/);
+
+    const cut = Error('Meta Model API unreachable');
+    (cut as unknown as { code: string }).code = 'ENOTFOUND';
+    await assert.rejects(() => failing(cut)('/studio/ideas', 'owner', input), /provider unreachable/);
+    assert.match(warnings.join('\n'), /\(ENOTFOUND\)/);
+
+    await assert.rejects(
+      () => failing(Error('Muse did not complete this job: failed'))('/studio/ideas', 'owner', input),
+      /unexpected provider result/,
+    );
+  } finally {
+    console.warn = warn;
+  }
+});

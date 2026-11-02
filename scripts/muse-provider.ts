@@ -114,7 +114,13 @@ async function metaRequest(path: string, body: unknown, timeoutMs: number) {
     if (scope?.signal.aborted) throw Error('Muse analysis cancelled');
     if (error instanceof Error && error.name === 'TimeoutError')
       throw Error('Muse job timed out; no result imported');
-    throw Error('Meta Model API unreachable');
+    const failure = Error('Meta Model API unreachable');
+    // Machine codes only (ENOTFOUND, ECONNREFUSED, ...): safe to log, unlike messages.
+    const code =
+      (error as { cause?: { code?: unknown } } | null)?.cause?.code ??
+      (error as { code?: unknown } | null)?.code;
+    if (typeof code === 'string' && code) (failure as unknown as { code: string }).code = code;
+    throw failure;
   }
   const text = await response.text();
   if (!response.ok) {
@@ -122,9 +128,12 @@ async function metaRequest(path: string, body: unknown, timeoutMs: number) {
     try {
       detail = JSON.parse(text)?.error?.message ?? '';
     } catch {}
-    throw Error(
+    const failure = Error(
       `Meta Model API ${response.status}${detail ? `: ${detail.split(key).join('[REDACTED]').slice(0, 300)}` : ''}`,
     );
+    // The HTTP status carries no response content, so the server may log it.
+    (failure as unknown as { status: number }).status = response.status;
+    throw failure;
   }
   return JSON.parse(text) as Record<string, unknown>;
 }

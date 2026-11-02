@@ -30,7 +30,6 @@ export function Landing({
   onPrompt,
   photos,
   onPhotos,
-  onExample,
   onOwnProject,
   onExamples,
   onDirection,
@@ -40,7 +39,6 @@ export function Landing({
   onPrompt: (text: string) => void;
   photos: File[];
   onPhotos: (files: File[]) => void;
-  onExample: () => void;
   onOwnProject: (idea?: string) => void;
   onExamples: () => void;
   onDirection: (id: string) => void;
@@ -137,7 +135,7 @@ export function Landing({
         </div>
       </section>
 
-      <StudioPreview onOpen={onExample} busy={busy} />
+      <StudioPreview onOpen={onExamples} busy={busy} />
       <StudioStory onOwnProject={onOwnProject} onDirection={onDirection} busy={busy} />
       <AgentConnection />
       <Comparison />

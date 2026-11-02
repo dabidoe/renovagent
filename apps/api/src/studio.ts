@@ -740,17 +740,29 @@ export function studioRoutes(deps: {
           );
       }
       const detail = error instanceof Error ? error.message : '';
-      const reason = /not configured|401|403/.test(detail)
+      const reason = /not configured|401|403/i.test(detail)
         ? 'service configuration'
-        : /429|limit reached/.test(detail)
+        : /429|rate limit|limit reached|overloaded|capacity/i.test(detail)
           ? 'provider busy'
-          : /timed out|TimeoutError/.test(detail)
+          : /timed out|timeout/i.test(detail)
             ? 'provider timeout'
-            : error instanceof z.ZodError
-              ? 'unexpected provider result'
-              : 'service unavailable';
+            : /unreachable|ENOTFOUND|ECONNREFUSED|EAI_AGAIN|fetch failed/i.test(detail)
+              ? 'provider unreachable'
+              : error instanceof z.ZodError ||
+                  /did not complete|exceeded limit|budget exhausted/i.test(detail)
+                ? 'unexpected provider result'
+                : 'service unavailable';
       // Never log upstream response text: it may contain private image data or credentials.
-      console.warn(`[studio] ${path}: ${reason}`);
+      // Machine signals (an HTTP status, a Node error code) carry no content and may be logged.
+      const status = (error as { status?: unknown } | null)?.status;
+      const code = (error as { code?: unknown } | null)?.code;
+      const signal =
+        typeof status === 'number'
+          ? ` (upstream ${status})`
+          : typeof code === 'string' && code
+            ? ` (${code})`
+            : '';
+      console.warn(`[studio] ${path}: ${reason}${signal}`);
       throw new DomainError(
         'STORAGE',
         `${labels[path] || 'Studio request'} could not complete (${reason}). Please retry.${path === '/studio/read' ? ' You can also open the studio without analysis and enter measurements yourself.' : ''}`,
