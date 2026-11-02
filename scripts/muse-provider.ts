@@ -106,6 +106,64 @@ export async function museModelAvailability() {
   return { configured: true, models };
 }
 
+export const museKeyFingerprint = (key: string) =>
+  key.length <= 8 ? 'short-key' : `${key.slice(0, 4)}…${key.slice(-4)}`;
+
+export async function museKeySource(): Promise<'environment' | 'project file' | 'none'> {
+  if (process.env.MUSE_API_KEY?.trim()) return 'environment';
+  const { vars } = await projectEnvFiles({}, fileURLToPath(new URL('..', import.meta.url)));
+  return vars.MUSE_API_KEY?.trim() ? 'project file' : 'none';
+}
+
+export type MuseAvailability = {
+  configured: boolean;
+  models: { model: string; status: number | null; available: boolean }[];
+};
+
+// Restyle needs the vision read and the image edit; SAM only feeds outlines.
+// 401/403/404 prove misconfiguration and never heal on retry, so they fail a
+// boot that depends on them. Anything else (network, 5xx) is transient: warn.
+export function assessMuseAvailability(result: MuseAvailability): {
+  fatal: string | null;
+  warnings: string[];
+} {
+  if (!result.configured) return { fatal: null, warnings: [] };
+  const fatal: string[] = [];
+  const warnings: string[] = [];
+  for (const m of result.models) {
+    if (m.available) continue;
+    const restyleCritical = m.model === MUSE_VISION_MODEL || m.model === MUSE_IMAGE_MODEL;
+    if (m.status === 401 || m.status === 403 || m.status === 404) {
+      (restyleCritical ? fatal : warnings).push(
+        `${m.model} is not usable with this key (catalog ${m.status})`,
+      );
+    } else {
+      warnings.push(`${m.model} could not be confirmed (catalog ${m.status ?? 'unreachable'})`);
+    }
+  }
+  return { fatal: fatal.length ? fatal.join('; ') : null, warnings };
+}
+
+// Startup gate for the API server: log the resolved provider config (key
+// redacted) and refuse to boot with a key that cannot serve restyle.
+export async function checkMuseModelsOrThrow(): Promise<void> {
+  const key = await configuredMuseKey();
+  if (!key) {
+    console.log('[muse] no API key configured; studio provider calls will report service configuration');
+    return;
+  }
+  const source = await museKeySource();
+  console.log(
+    `[muse] restyle via POST ${META_API}/responses model=${MUSE_VISION_MODEL}, ` +
+      `POST ${META_API}/images/edits model=${MUSE_IMAGE_MODEL}, ` +
+      `outlines via POST ${META_API}/responses model=${SAM_MODEL}; ` +
+      `key=${museKeyFingerprint(key)} (${source}); commit=${process.env.RAILWAY_GIT_COMMIT_SHA || 'unknown'}`,
+  );
+  const { fatal, warnings } = assessMuseAvailability(await museModelAvailability());
+  for (const w of warnings) console.warn(`[muse] warning: ${w}`);
+  if (fatal) throw new Error(`[muse] provider misconfigured: ${fatal}`);
+}
+
 // Only documented machine codes may reach logs; never log upstream message text.
 const META_ERROR_CODES = new Set([
   'invalid_api_key',

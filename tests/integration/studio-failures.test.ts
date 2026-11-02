@@ -143,3 +143,59 @@ test('provider failures keep a machine signal in the server log but never leak r
     console.warn = warn;
   }
 });
+test('an upstream 404 names the model, endpoint and code instead of asking for a retry', async () => {
+  const restyleInput = {
+    sha256,
+    brief: 'a calmer room',
+    items: [],
+    mode: 'refresh',
+    keep: '',
+    preserveFloor: false,
+  };
+  const notFound = Error('Meta Model API 404: no such model');
+  Object.assign(notFound, {
+    status: 404,
+    endpoint: '/responses',
+    model: 'muse-spark-1.3',
+    providerCode: 'model_not_found',
+  });
+  const failing = studioRoutes({
+    images,
+    spend: () => {},
+    providers: {
+      ...providers,
+      read: async () => {
+        throw notFound;
+      },
+    },
+  });
+  await assert.rejects(
+    () => failing('/studio/restyle', 'owner', restyleInput),
+    (error: unknown) => {
+      assert.ok(error instanceof DomainError);
+      assert.equal(error.code, 'STORAGE');
+      assert.match(error.message, /Room rendering could not complete/);
+      assert.match(error.message, /model_not_found/);
+      assert.match(error.message, /muse-spark-1\.3/);
+      assert.match(error.message, /\/responses/);
+      assert.match(error.message, /will not succeed on retry/);
+      assert.doesNotMatch(error.message, /Please retry/);
+      return true;
+    },
+  );
+  // A transient upstream failure keeps the retry wording.
+  const transient = studioRoutes({
+    images,
+    spend: () => {},
+    providers: {
+      ...providers,
+      read: async () => {
+        throw Error('Meta Model API 503: upstream exploded');
+      },
+    },
+  });
+  await assert.rejects(
+    () => transient('/studio/restyle', 'owner', restyleInput),
+    /Please retry/,
+  );
+});

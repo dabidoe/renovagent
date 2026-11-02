@@ -817,9 +817,23 @@ export function studioRoutes(deps: {
         .filter(Boolean)
         .join(' ');
       console.warn(`[studio] ${path}: ${reason}${signal}${context ? ` ${context}` : ''}`);
+      // A dead key or model never heals on retry: say exactly what failed and
+      // point at configuration instead of asking the user to try again.
+      const configFailure =
+        status === 401 ||
+        status === 404 ||
+        ['model_not_found', 'invalid_api_key', 'billing_not_configured'].includes(
+          String(upstream?.providerCode),
+        );
+      const readFallback =
+        path === '/studio/read'
+          ? ' You can also open the studio without analysis and enter measurements yourself.'
+          : '';
       throw new DomainError(
         'STORAGE',
-        `${labels[path] || 'Studio request'} could not complete (${reason}). Please retry.${path === '/studio/read' ? ' You can also open the studio without analysis and enter measurements yourself.' : ''}`,
+        configFailure
+          ? `${labels[path] || 'Studio request'} could not complete (${reason})${context ? `: ${context}` : ''}. Check the service configuration; this will not succeed on retry.${readFallback}`
+          : `${labels[path] || 'Studio request'} could not complete (${reason}). Please retry.${readFallback}`,
         context ? { studioDiagnostic: context } : {},
       );
     }
