@@ -52,3 +52,30 @@ Live model success, production relay behavior and measured product fit are unver
 - Evidence: `phase-3-before-restyle.png`, `phase-3-after-restyle.png`,
   `phase-3-options-open.png`, companion default captures, and another full-error
   disclosure capture (`phase-3-error-details.png`).
+
+## Phase 4 — recoverable photo detection failures
+
+- SAM outlines and JEV photo reads now use the same friendly summary and full
+  Details disclosure; raw failures no longer become developer-server instructions
+  or truncated strings. Their existing rejection paths restore the controls and
+  preserve the source photo.
+- Restyle progress/errors sit beside the primary action. A rejected floor preview
+  no longer leaves Restyle waiting for a floor job that already stopped. Explicit
+  floor retries clear the previous error. The remaining header price-tier label
+  is hidden; tier/sheens are confined to Plan & budget and the shopping list.
+- Playwright injected rejected Restyle, SAM and JEV calls, checked busy-state
+  recovery and full >600-character diagnostics, then verified paint selection
+  and furniture placement still worked. Successful fixture retries restored a
+  SAM outline and JEV carpet observations without leaving an error or spinner.
+- `npm test`: **329 passed** (15 legacy + 314 TypeScript), **52 skipped**, zero failures.
+- `npm run build`: passed types, boundaries and both builds; existing bundle-size
+  advisory remains. Final four-tab viewport and optional-tools checks also passed.
+- Evidence: `phase-4-before-restyle.png`, `phase-4-after-restyle.png`,
+  `phase-4-sam-error.png`, `phase-4-jev-error.png`,
+  `phase-4-detections-recovered.png`, `phase-4-error-details.png` and
+  `phase-4-options-open.png`.
+
+All four phases are UI/display-only local commits. No module renames, domain/API/
+provider changes, dependencies or pushes were made. Browser tests use fixtures;
+live model success, production relay behavior, connected database cases and real
+product dimensions remain unverified.

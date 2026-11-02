@@ -1,3 +1,4 @@
+import { StudioError } from '../house-example/studio-error.js';
 import { useEffect, useRef, useState } from 'react';
 import type { ScopeDraft, Workspace } from '@renovagent/contracts';
 import { photoNotes, photoPins, type PhotoRead } from '@renovagent/core';
@@ -175,9 +176,7 @@ export function OwnerPhotos({
         ...r,
         [id]: {
           status: 'error',
-          message: /unavailable|Failed to fetch/i.test(message)
-            ? 'Reading photos with Jev needs the Renovagent server (npm run dev:connected).'
-            : message.slice(0, 200),
+          message,
         },
       }));
     }
@@ -262,9 +261,7 @@ export function OwnerPhotos({
           )}
           <OutlineControls state={outline} />
           {reading?.status === 'error' && (
-            <p role="alert" className="small-note">
-              {reading.message}
-            </p>
+            <StudioError message={reading.message} className="small-note" />
           )}
           {read ? (
             <>

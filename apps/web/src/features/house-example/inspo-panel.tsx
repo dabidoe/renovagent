@@ -478,6 +478,21 @@ export function InspoPanel({
         </small>
       </div>
 
+      {status.busy && (
+        <p className="pf-inspo-status">
+          <span className="pf-spinner" aria-hidden="true" /> {status.busy}
+        </p>
+      )}
+      {status.error && (
+        <div>
+          <StudioError message={status.error} />
+          {signIn && (
+            <div className="pf-inspo-signin">
+              <SignInChoices />
+            </div>
+          )}
+        </div>
+      )}
       <section className="pf-room-ideas" aria-label="Ideas for your room">
         <div className="pf-ideas-prompt">
           <h4>What would look good here?</h4>
@@ -625,21 +640,6 @@ export function InspoPanel({
           ? 'Borrow furniture and lighting from a room you love. Keep your room’s architecture.'
           : 'Borrow colours and textures while keeping your furniture in place.'}
       </p>
-      {status.busy && (
-        <p className="pf-inspo-status">
-          <span className="pf-spinner" aria-hidden="true" /> {status.busy}
-        </p>
-      )}
-      {status.error && (
-        <div>
-          <StudioError message={status.error} />
-          {signIn && (
-            <div className="pf-inspo-signin">
-              <SignInChoices />
-            </div>
-          )}
-        </div>
-      )}
       {inspo && (
         <>
           <figure className="pf-inspo-photo">

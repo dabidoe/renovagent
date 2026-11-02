@@ -1,3 +1,4 @@
+import { StudioError } from './studio-error.js';
 import { useEffect, useState } from 'react';
 import { workspaceRequest } from '../../adapters/http/project-repository.js';
 import { imageUrl } from './own-project.js';
@@ -132,11 +133,7 @@ export function InspoBoard({
           Add a link
         </button>
       )}
-      {error && (
-        <p className="pf-intake-error" role="alert">
-          {error}
-        </p>
-      )}
+      {error && <StudioError message={error} />}
     </details>
   );
 }

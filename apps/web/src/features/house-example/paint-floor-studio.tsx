@@ -1369,6 +1369,7 @@ export function PaintFloorStudio({
   useEffect(() => {
     if (!room || !missing || !renderFloor || working[workKey]) return;
     const label = (FLOOR_STYLES.find((f) => f.id === missing)?.label ?? 'the floor').toLowerCase();
+    setFloorErrors((all) => ({ ...all, [workKey]: '' }));
     setWorking((w) => ({ ...w, [workKey]: `Laying ${label}…` }));
     renderFloor(room.id, missing)
       .then(() => setWorking((w) => ({ ...w, [workKey]: '' })))
@@ -1439,7 +1440,7 @@ export function PaintFloorStudio({
             <strong>{money(houseTotal + itemBudget.allowanceMinor)}</strong>
             <span>Demo finishes + your allowances</span>
             <small>
-              {itemBudget.unpriced ? `${itemBudget.unpriced} items to price` : TIER_LABELS[tier]}
+              {itemBudget.unpriced ? `${itemBudget.unpriced} items to price` : 'Example prices'}
             </small>
           </div>
         </div>
@@ -1704,7 +1705,7 @@ export function PaintFloorStudio({
               initialBrief={project.idea}
               currentColor={pick.color}
               basePhotoSrc={shownImage?.src || room.photo.src}
-              floorPending={!!missing && !!renderFloor}
+              floorPending={!!pending}
               onDesignItems={(names) => addDesignItems(room.id, names)}
               onIdeaLayout={(ids) =>
                 addAssets(

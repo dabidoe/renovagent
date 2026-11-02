@@ -3,7 +3,7 @@ export function studioErrorSummary(message: string) {
   if (/sign in|signed out|unauthorized/i.test(message)) return 'Please sign in to continue.';
   if (/fetch|network|connection|unreachable/i.test(message))
     return 'Could not connect. Please try again.';
-  if (/provider|service|endpoint|model|upstream|timeout|timed out/i.test(message))
+  if (/provider|service|endpoint|model|upstream|timeout|timed out|not configured/i.test(message))
     return 'The preview service is unavailable right now.';
   return 'This action could not be completed.';
 }

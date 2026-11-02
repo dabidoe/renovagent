@@ -1,3 +1,4 @@
+import { StudioError } from '../house-example/studio-error.js';
 import { useEffect, useState } from 'react';
 import { workspaceRequest } from '../../adapters/http/project-repository.js';
 
@@ -40,6 +41,7 @@ export function usePhotoOutline(blobId: string | undefined) {
   const [outline, setOutline] = useState<Outline | null>(null);
   const [working, setWorking] = useState<string | null>(null);
   const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
   const [tint, setTint] = useState<{ color: string; name: string } | null>(null);
   const [render, setRender] = useState<Render | null>(null);
   const [rendering, setRendering] = useState(false);
@@ -49,20 +51,17 @@ export function usePhotoOutline(blobId: string | undefined) {
     setTint(null);
     setRender(null);
     setMessage('');
+    setError('');
   }, [blobId]);
   useEffect(() => () => void (render && URL.revokeObjectURL(render.url)), [render]);
   const failed = (e: unknown) => {
-    const text = e instanceof Error ? e.message : String(e);
-    setMessage(
-      /unavailable|Failed to fetch/i.test(text)
-        ? 'Outlines need the Renovagent server (npm run dev:connected).'
-        : text.slice(0, 200),
-    );
+    setError(e instanceof Error ? e.message : String(e));
   };
   const outlineOf = async (phrase: string) => {
     if (!blobId) return;
     setWorking(phrase);
     setMessage('');
+    setError('');
     setRender(null);
     try {
       const result = (await workspaceRequest('/photos/segment', { blobId, phrase })) as Outline;
@@ -78,6 +77,7 @@ export function usePhotoOutline(blobId: string | undefined) {
     if (!blobId || !outline || !tint) return;
     setRendering(true);
     setMessage('');
+    setError('');
     try {
       const finish = tint.name === tint.color ? tint.color : `${tint.name} (${tint.color})`;
       const result = (await workspaceRequest('/photos/repaint', {
@@ -102,6 +102,7 @@ export function usePhotoOutline(blobId: string | undefined) {
     outline,
     working,
     message,
+    error,
     tint,
     setTint,
     render,
@@ -147,7 +148,7 @@ export function OutlineOverlay({
 
 export function OutlineControls({ state }: { state: ReturnType<typeof usePhotoOutline> }) {
   const [custom, setCustom] = useState('');
-  const { outline, working, message, tint, render, rendering } = state;
+  const { outline, working, message, error, tint, render, rendering } = state;
   return (
     <div className="outline-controls">
       <p className="small-note">
@@ -180,6 +181,7 @@ export function OutlineControls({ state }: { state: ReturnType<typeof usePhotoOu
           />
         </form>
       </div>
+      {error && <StudioError message={error} className="small-note" />}
       {message && (
         <p role="status" className="small-note">
           {message}
