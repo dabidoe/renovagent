@@ -59,18 +59,18 @@ export function StudioPreview({ onOpen, busy }: { onOpen: () => void; busy: bool
   return (
     <section
       className="landing-block studio-preview"
-      id="how-it-works"
+      id="product-proof"
       aria-labelledby="studio-preview-title"
       ref={host}
     >
       <div className="studio-preview-heading">
         <div>
-          <p className="studio-preview-eyebrow">A room. Your choices.</p>
+          <p className="studio-preview-eyebrow">Your room. A fresh start.</p>
           <h2 id="studio-preview-title">
             Try the <em>studio.</em>
           </h2>
         </div>
-        <p>Change the finishes, compare before and after, then turn the room in 3D.</p>
+        <p>“Keep the character. Try sage walls and lighter floors.” Make it happen here.</p>
       </div>
       <div className="studio-preview-shell">
         <div className="studio-preview-toolbar">

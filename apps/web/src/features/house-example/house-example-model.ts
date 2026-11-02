@@ -1,3 +1,4 @@
+import { EXAMPLE_PRIVACY_NOTE } from './example-privacy.js';
 import type { PhotoReview, PropertyResearch, Workspace } from '@renovagent/contracts';
 import type { WorkspaceController } from '../../app/workspace-controller.js';
 import { propertyAddress } from '@renovagent/core';
@@ -223,16 +224,16 @@ export const housePhases = [
 export function houseBrief(corpus: HouseCorpus, choices: HouseChoices) {
   const areas = houseAreas.filter((area) => !choices.excluded.includes(area.id));
   return [
-    '# Hutchinson — whole-house concept plan',
+    '# Hutchens — whole-house concept plan',
     '',
-    corpus.address,
+    `${corpus.address} · ${EXAMPLE_PRIVACY_NOTE}`,
     '',
     `Direction: whole-house refresh${choices.halfBath ? ' + investigate a new living-room half bath' : ''}.`,
     'Status: proposed concept scope. Listing evidence and saved model observations are reference inputs, not current measurements or a construction release.',
     '',
     '## Source pack',
-    `- Owner-supplied listing: ${corpus.suppliedListing}`,
-    `- Source video tour: ${corpus.suppliedVideo}`,
+    `- Public source notes: ${corpus.suppliedListing}`,
+    ...(corpus.suppliedVideo ? [`- Source video tour: ${corpus.suppliedVideo}`] : []),
     `- ${corpus.photos.length} reviewed source files, including four listing-plan images.`,
     `- Saved Muse review: ${corpus.reviewedAt}; manifest SHA-256 ${corpus.manifestHash}.`,
     `- ${corpus.inventory.items.length} historical per-photo region proposals; not a count of distinct physical assets.`,
@@ -306,7 +307,7 @@ export async function saveHouseCase(
   const id =
     projectId ??
     (await controller.createProject({
-      name: 'Hutchinson · whole-house refresh',
+      name: 'Hutchens · whole-house refresh',
       goal: HOUSE_GOAL,
       propertyName: corpus.address,
       propertyId: existingProperty,

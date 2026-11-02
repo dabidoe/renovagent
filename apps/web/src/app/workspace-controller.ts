@@ -225,6 +225,26 @@ export class WorkspaceController {
     this.queue = work.catch(() => {});
     return work;
   }
+  // Resume an explicit sign-in without importing unrelated browser records or
+  // reloading away File objects selected for the photo studio.
+  async resumeSession() {
+    await this.queue;
+    const remote = await HttpProjectRepository.open();
+    const state = await remote.read();
+    this.repository.close();
+    this.repository = remote;
+    setStoredMode('mongo');
+    this.emit({
+      workspace: state,
+      error: null,
+      auth: {
+        required: false,
+        email: remote.session.user?.email ?? null,
+        guest: Boolean(remote.session.user?.guest),
+        providers: remote.session.providers ?? [],
+      },
+    });
+  }
   photoUrl(url: string, sha256?: string) {
     if (this.connected && sha256) return `/api/workspace/photo-assets/${sha256}`;
     if (!this.connected || !isLocalUploadUrl(url)) return url;

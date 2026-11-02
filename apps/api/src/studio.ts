@@ -1,5 +1,10 @@
 import { z } from 'zod';
-import { DomainError } from '@renovagent/contracts';
+import {
+  DomainError,
+  studioAssetIds,
+  studioIdeasSchema,
+  studioPlacementSchema,
+} from '@renovagent/contracts';
 import { readFile } from 'node:fs/promises';
 import {
   FLOOR_STYLES,
@@ -8,6 +13,7 @@ import {
   nearestPaint,
   type FloorStyle,
   type PaintColor,
+  studioAsset,
 } from '@renovagent/core';
 import {
   imageMediaType,
@@ -30,6 +36,34 @@ import { parseSegmentation, type PhotoSegmentation } from './segmentation.js';
 export const floorPrompt = (style: FloorStyle) =>
   `Edit the first image, a photo of a room. Replace only the floor covering of this room with the flooring shown in the second image, ${style.description}: the same tone, board width and straight lay, in the room's perspective, meeting the existing baseboards. Remove the existing room carpet or floor covering only. Keep everything else exactly as it is: the same camera, framing and perspective, walls and wall color, ceiling, windows, doors, closets, radiators, stairs, furniture and lighting. Photorealistic.`;
 const STYLE_IDS = FLOOR_STYLES.map((f) => f.id) as [string, ...string[]];
+
+export const roomIdeasSchema = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['observations', 'directions'],
+  properties: {
+    observations: { type: 'array', items: { type: 'string' } },
+    directions: {
+      type: 'array',
+      items: {
+        type: 'object',
+        additionalProperties: false,
+        required: ['id', 'title', 'description', 'why', 'brief', 'palette', 'assets'],
+        properties: {
+          id: { type: 'string' },
+          title: { type: 'string' },
+          description: { type: 'string' },
+          why: { type: 'string' },
+          brief: { type: 'string' },
+          palette: { type: 'array', items: { type: 'string' } },
+          assets: { type: 'array', items: { type: 'string', enum: [...studioAssetIds] } },
+        },
+      },
+    },
+  },
+} as const;
+export const roomIdeasPrompt = (brief: string, keep: string) =>
+  `You are a thoughtful interior designer looking at the owner's actual room photo. Suggest exactly three distinct, achievable design directions in the form "you know what would look good here". Ground each why in visible room features. Observations are tentative visual readings, never measurements. Do not invent unseen furniture, room dimensions, prices, stock, structural feasibility or verified fit. Keep the architecture, openings, stairs and camera. Work with the existing floor unless the owner asks otherwise. Respect these owner instructions: brief=${JSON.stringify(brief)}; keep unchanged=${JSON.stringify(keep)}. Offer different palettes and furniture/decor approaches, not three synonyms. Each direction needs a short title (60 chars max), description (180 max), why (240 max), an actionable editable image-design brief (1000 max) which states what to add/change and preserve, 3–5 hex palette colors, and 1–6 matching library asset IDs from ${studioAssetIds.join(', ')}. IDs unique. Return at most four concise observations. No purchasing or construction approval.`;
 const swatches = new Map<string, Promise<Uint8Array>>();
 export const floorSwatch = (id: string) => {
   let found = swatches.get(id);
@@ -312,14 +346,25 @@ export const restyleMapSchema = {
   },
 } as const;
 type Paint = { name: string; code: string; hex: string };
+type Styling = {
+  mode?: 'refresh' | 'furnish';
+  keep?: string;
+  preserveFloor?: boolean;
+  brief?: string;
+  hasReference?: boolean;
+};
+const stylingRules = ({ mode = 'refresh', keep = '', preserveFloor = false }: Styling) =>
+  `${mode === 'furnish' ? 'Furniture and lighting may be replaced, and selected furniture or decor may be added where there is visible space. Keep doors, windows, stairs and circulation clear. Do not change the architecture or camera. Do not claim that sizes, fit or electrical installation have been verified.' : 'Only change surfaces and objects clearly visible in the first photo, and map the borrowed look onto them: bedding, pillows, throws, rugs, curtains, lampshades, upholstery, wall paint. A rug, throw or pillows may be added; never add, remove or move furniture. Skip a borrowed item when the first photo has nothing it can apply to.'}${preserveFloor ? ' Keep the first photo’s flooring unchanged; only selected rugs may overlay it.' : ''}${keep ? ` The owner requires these existing items to remain unchanged and in place: ${JSON.stringify(keep)}. This takes priority over the inspiration selections.` : ''}`;
 const paintName = (paint: Paint) =>
   `${JSON.stringify(`${paint.name} ${paint.code}`.trim())} (${paint.hex.toLowerCase()})`;
-export const restyleMapPrompt = (items: string[], paint?: Paint) =>
-  `The first photo is someone's own room. The second photo is a room they like. They want to borrow these from the second photo: ${items
+export const restyleMapPrompt = (items: string[], paint?: Paint, styling: Styling = {}) =>
+  `The first photo is someone's own room. ${styling.hasReference === false ? 'There is no reference photo. Design from the owner’s brief and the actual room.' : 'The second photo is a room they like.'} They want these design elements: ${items
     .map((i) => JSON.stringify(i))
-    .join(', ')}.${paint ? ` They chose the wall paint ${paintName(paint)}.` : ''}
-List the changes to make to the FIRST photo, at most six, the largest first. Only change surfaces and objects clearly visible in the first photo, and map the borrowed look onto them: bedding, pillows, throws, rugs, curtains, lampshades, upholstery, wall paint. A rug, throw or pillows may be added; never add, remove or move furniture. Skip a borrowed item when the first photo has nothing it can apply to.${paint ? ' Include the walls, becoming the chosen paint.' : ''}
-target: the thing as it appears in the first photo, at most six words (for example "plaid duvet", "light blue pillow", "white walls", "jute rug"). becomes: what it turns into, in the second photo's colours and materials, at most twelve words.`;
+    .join(
+      ', ',
+    )}.${styling.brief ? ` Owner’s design brief: ${JSON.stringify(styling.brief)}.` : ''}${paint ? ` They chose the wall paint ${paintName(paint)}.` : ''}
+List the changes to make to the FIRST photo, at most six, the largest first. ${stylingRules(styling)}${paint ? ' Include the walls, becoming the chosen paint.' : ''}
+target: the thing or available space as it appears in the first photo, at most six words (for example "plaid duvet", "open floor by left wall", "white walls", "jute rug"). becomes: one specific proposed object or finish per entry, at most twelve words. Give a coffee table and a rug separate entries so the owner can budget each. A protected item not visible in the photo must not be invented or claimed to be verified.`;
 const restyleMapResult = z.object({
   changes: z.array(z.object({ target: z.string(), becomes: z.string() })).max(12),
 });
@@ -334,8 +379,12 @@ export function restyleChanges(raw: unknown) {
     .slice(0, 6);
 }
 // The owner's room keeps its frame and objects; only the mapped finishes change.
-export const restylePrompt = (changes: { target: string; becomes: string }[], paint?: Paint) =>
-  `Edit the first photo. Keep it exactly as framed: the same camera, room shape, windows, doors, furniture, plants and every object in its place. Make only these changes, taking colour and texture from the second photo: ${changes
+export const restylePrompt = (
+  changes: { target: string; becomes: string }[],
+  paint?: Paint,
+  styling: Styling = {},
+) =>
+  `Edit the first photo. Keep it exactly as framed: the same camera, room shape, windows, doors${styling.mode === 'furnish' ? ' and stairs' : ', furniture, plants and every object in its place'}. ${stylingRules(styling)} Make only these changes, ${styling.hasReference === false ? 'following the owner’s brief' : 'taking colour and texture from the second photo'}: ${changes
     .map((c) => `the ${c.target} becomes ${c.becomes}`)
     .join(
       '; ',
@@ -364,11 +413,30 @@ const requests = {
     .object({ photos: z.array(sha).min(1).max(12), plans: z.array(sha).max(2).default([]) })
     .strict(),
   inspo: z.object({ sha256: sha }).strict(),
+  ideas: z
+    .object({
+      sha256: sha,
+      brief: z.string().trim().max(1000).default(''),
+      keep: z.string().trim().max(300).default(''),
+    })
+    .strict(),
+  modelRender: z
+    .object({
+      image: z.string().min(1).max(8_000_000),
+      wall: z.string().trim().min(1).max(80),
+      floor: z.string().trim().min(1).max(80),
+      placements: z.array(studioPlacementSchema).max(60),
+    })
+    .strict(),
   restyle: z
     .object({
       sha256: sha,
-      inspo: sha,
-      items: z.array(z.string().trim().min(2).max(80)).min(1).max(6),
+      inspo: sha.optional(),
+      items: z.array(z.string().trim().min(2).max(240)).max(12).default([]),
+      brief: z.string().trim().max(1000).default(''),
+      mode: z.enum(['refresh', 'furnish']).default('refresh'),
+      keep: z.string().trim().max(300).default(''),
+      preserveFloor: z.boolean().default(false),
       paint: z
         .object({
           name: z.string().trim().max(60),
@@ -423,6 +491,36 @@ export function studioRoutes(deps: {
     return found;
   };
   return async (path: string, ownerId: string, raw: unknown): Promise<unknown> => {
+    if (path === '/studio/ideas') {
+      const input = requests.ideas.parse(raw);
+      const photo = await stored(ownerId, input.sha256);
+      deps.spend(ownerId, 'read');
+      const answer = await deps.providers.read({
+        schema: roomIdeasSchema,
+        images: [{ bytes: photo.bytes, mediaType: imageMediaType(photo.bytes) }],
+        prompt: roomIdeasPrompt(input.brief, input.keep),
+      });
+      return studioIdeasSchema.parse(answer.result);
+    }
+    if (path === '/studio/model-render') {
+      const input = requests.modelRender.parse(raw);
+      const image = await normalizeImage(new Uint8Array(Buffer.from(input.image, 'base64')));
+      deps.spend(ownerId, 'repaint');
+      const objects = input.placements
+        .map((p) => `${studioAsset(p.assetId).name}, color ${p.color}`)
+        .join('; ');
+      const result = await deps.providers.repaint({
+        image: { bytes: image.bytes, mediaType: imageMediaType(image.bytes) },
+        prompt: `Turn this 3D layout view into a photorealistic interior concept of the same furnished room. Keep the same camera, room shape, wall positions, ceiling height, openings, and every furniture object's location, orientation, silhouette and relative size. The illustrative furniture in the input is: ${objects || 'none; keep the room empty'}. Walls: ${JSON.stringify(input.wall)}. Floor: ${JSON.stringify(input.floor)}. Improve materials, soft daylight, fabric, wood grain and realistic shadows. Do not add or remove furniture, windows, doors or architectural features. This is an unverified concept layout, not measured furniture or verified products.`,
+      });
+      const normalized = await normalizeImage(result.bytes);
+      const record = await deps.images.put(ownerId, normalized);
+      return {
+        sha256: record.sha256,
+        model: result.model,
+        note: 'Generated from your proposed 3D layout. Check dimensions and fit before buying.',
+      };
+    }
     if (path === '/studio/photo') {
       const input = requests.photo.parse(raw);
       const original = new Uint8Array(Buffer.from(input.data, 'base64'));
@@ -529,17 +627,19 @@ export function studioRoutes(deps: {
     if (path === '/studio/restyle') {
       const input = requests.restyle.parse(raw);
       const room = await stored(ownerId, input.sha256);
-      const inspo = await stored(ownerId, input.inspo);
+      if (!input.inspo && !input.brief && !input.items.length)
+        throw new DomainError('VALIDATION', 'Describe the room you want or add inspiration first');
+      const inspo = input.inspo ? await stored(ownerId, input.inspo) : null;
       deps.spend(ownerId, 'read');
       deps.spend(ownerId, 'repaint');
       const photos = [
         { bytes: room.bytes, mediaType: imageMediaType(room.bytes) },
-        { bytes: inspo.bytes, mediaType: imageMediaType(inspo.bytes) },
+        ...(inspo ? [{ bytes: inspo.bytes, mediaType: imageMediaType(inspo.bytes) }] : []),
       ];
       const mapped = await deps.providers.read({
         schema: restyleMapSchema,
         images: photos,
-        prompt: restyleMapPrompt(input.items, input.paint),
+        prompt: restyleMapPrompt(input.items, input.paint, { ...input, hasReference: !!inspo }),
       });
       const changes = restyleChanges(mapped.result);
       if (!changes.length && !input.paint)
@@ -549,8 +649,8 @@ export function studioRoutes(deps: {
         );
       const edit = await deps.providers.repaint({
         image: photos[0]!,
-        references: [photos[1]!],
-        prompt: restylePrompt(changes, input.paint),
+        references: photos.slice(1),
+        prompt: restylePrompt(changes, input.paint, { ...input, hasReference: !!inspo }),
       });
       const fitted = await fitImage(edit.bytes, room.record.width, room.record.height);
       const image = await deps.images.put(ownerId, fitted);
@@ -560,6 +660,8 @@ export function studioRoutes(deps: {
         changes,
         sourceSha256: input.sha256,
         inspoSha256: input.inspo,
+        mode: input.mode,
+        keep: input.keep,
       };
     }
     if (path === '/studio/read') {

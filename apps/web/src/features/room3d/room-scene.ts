@@ -3,6 +3,9 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { CSS2DObject, CSS2DRenderer } from 'three/examples/jsm/renderers/CSS2DRenderer.js';
 import { GLTFExporter } from 'three/examples/jsm/exporters/GLTFExporter.js';
 import { attachPhotoreal } from './photoreal.js';
+import { furnitureObject, positionFurniture, disposeFurniture } from './furniture-assets.js';
+import type { StudioPlacement } from '@renovagent/contracts';
+import type { StudioModelRenderContext } from './photoreal.js';
 import {
   dimensionLabel,
   floorFinishKind,
@@ -37,6 +40,8 @@ export type RoomScene = {
   exportGlb(): Promise<ArrayBuffer>;
   // An eye-level JPEG of the room for image models (see photoreal.ts).
   captureEyeLevel(): Promise<Blob>;
+  setPlacements(placements: StudioPlacement[]): void;
+  selectPlacement(id: string | null): void;
   dispose(): void;
 };
 
@@ -150,7 +155,16 @@ export function mountRoomScene(
   surfaces: RoomSurface[],
   look: RoomLook,
   onSelect: (surfaceId: string | null) => void,
-  meta: { sourceEvidenceId: string | null; title: string; renderActions?: boolean },
+  meta: {
+    sourceEvidenceId: string | null;
+    title: string;
+    renderActions?: boolean;
+    placements?: StudioPlacement[];
+    onPlacementSelect?: (id: string | null) => void;
+    onPlacementMove?: (id: string, xM: number, zM: number) => void;
+    modelRender?: StudioModelRenderContext;
+    onFurnitureError?: (message: string) => void;
+  },
   pins: RoomAnnotation[] = [],
   onPin: (annotationId: string) => void = () => {},
   formatCost: (pin: RoomAnnotation) => string = () => '',
@@ -182,6 +196,87 @@ export function mountRoomScene(
     },
   };
   scene.add(room);
+  const furnishings = new THREE.Group();
+  furnishings.name = 'Proposed furniture · concept sizes';
+  room.add(furnishings);
+  let disposed = false;
+  let placements = meta.placements ?? [];
+  const objects = new Map<string, { group: THREE.Group; color: string; assetId: string }>();
+  const loading = new Map<string, Promise<void>>();
+  let selectedPlacement: string | null = null;
+  let furnitureOutline: THREE.BoxHelper | null = null;
+  const selectPlacement = (id: string | null) => {
+    selectedPlacement = id;
+    if (furnitureOutline) {
+      scene.remove(furnitureOutline);
+      furnitureOutline.geometry.dispose();
+      (furnitureOutline.material as THREE.Material).dispose();
+      furnitureOutline = null;
+    }
+    const selected = id && objects.get(id);
+    if (selected) {
+      furnitureOutline = new THREE.BoxHelper(selected.group, '#3858ed');
+      scene.add(furnitureOutline);
+    }
+  };
+  const readyFurniture = async () => {
+    const ids = new Set(placements.map((p) => p.id));
+    for (const [id, entry] of objects)
+      if (!ids.has(id)) {
+        furnishings.remove(entry.group);
+        disposeFurniture(entry.group);
+        objects.delete(id);
+      }
+    await Promise.all(
+      placements.map(async (p) => {
+        let entry = objects.get(p.id);
+        if (entry && (entry.color !== p.color || entry.assetId !== p.assetId)) {
+          furnishings.remove(entry.group);
+          disposeFurniture(entry.group);
+          objects.delete(p.id);
+          entry = undefined;
+        }
+        if (entry) {
+          positionFurniture(entry.group, p);
+          return;
+        }
+        const pending = loading.get(p.id);
+        if (pending) {
+          await pending;
+          if (!disposed && !objects.has(p.id) && placements.some((n) => n.id === p.id))
+            await readyFurniture();
+          return;
+        }
+        const task = (async () => {
+          try {
+            const group = await furnitureObject(p);
+            const current = placements.find((n) => n.id === p.id);
+            if (
+              disposed ||
+              !current ||
+              current.color !== p.color ||
+              current.assetId !== p.assetId
+            ) {
+              disposeFurniture(group);
+              return;
+            }
+            positionFurniture(group, current);
+            furnishings.add(group);
+            objects.set(p.id, { group, color: p.color, assetId: p.assetId });
+          } catch {
+            meta.onFurnitureError?.('A furniture model could not load. Retry by reopening 3D.');
+            throw new Error('A furniture model could not load. Reopen 3D and try again.');
+          } finally {
+            loading.delete(p.id);
+          }
+        })();
+        loading.set(p.id, task);
+        await task;
+      }),
+    );
+    selectPlacement(selectedPlacement);
+  };
+  void readyFurniture().catch(() => {});
   const bySurface = new Map(surfaces.map((s) => [s.id, s]));
   const pickable: THREE.Mesh[] = [];
   const tag = (mesh: THREE.Mesh, surfaceId: string, extra: Record<string, unknown> = {}) => {
@@ -353,6 +448,67 @@ export function mountRoomScene(
   controls.enableDamping = true;
   controls.maxPolarAngle = Math.PI * 0.49;
   controls.update();
+  const furnitureRay = new THREE.Raycaster();
+  const floorPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+  let dragging: { id: string; offset: THREE.Vector3; pointer: number } | null = null;
+  const pointRay = (e: PointerEvent) => {
+    const rect = renderer.domElement.getBoundingClientRect();
+    furnitureRay.setFromCamera(
+      new THREE.Vector2(
+        ((e.clientX - rect.left) / rect.width) * 2 - 1,
+        (-(e.clientY - rect.top) / rect.height) * 2 + 1,
+      ),
+      camera,
+    );
+  };
+  renderer.domElement.addEventListener(
+    'pointerdown',
+    (e) => {
+      if (!meta.onPlacementMove || e.button !== 0) return;
+      pointRay(e);
+      let hit: THREE.Object3D | undefined = furnitureRay.intersectObjects(
+        [...objects.values()].map((v) => v.group),
+        true,
+      )[0]?.object;
+      while (hit && !hit.userData.placementId) hit = hit.parent ?? undefined;
+      if (!hit) return;
+      const at = furnitureRay.ray.intersectPlane(floorPlane, new THREE.Vector3());
+      if (!at) return;
+      const id = hit.userData.placementId as string;
+      selectPlacement(id);
+      meta.onPlacementSelect?.(id);
+      dragging = { id, offset: at.sub(hit.position), pointer: e.pointerId };
+      controls.enabled = false;
+      renderer.domElement.setPointerCapture(e.pointerId);
+    },
+    true,
+  );
+  renderer.domElement.addEventListener('pointermove', (e) => {
+    if (!dragging) return;
+    pointRay(e);
+    const at = furnitureRay.ray.intersectPlane(floorPlane, new THREE.Vector3());
+    const group = objects.get(dragging.id)?.group;
+    if (at && group) {
+      at.sub(dragging.offset);
+      group.position.x = at.x;
+      group.position.z = at.z;
+      furnitureOutline?.update();
+    }
+  });
+  const finishDrag = () => {
+    if (!dragging) return;
+    const group = objects.get(dragging.id)?.group;
+    if (group)
+      meta.onPlacementMove?.(
+        dragging.id,
+        Math.round(group.position.x * 100) / 100,
+        Math.round(group.position.z * 100) / 100,
+      );
+    dragging = null;
+    controls.enabled = true;
+  };
+  renderer.domElement.addEventListener('pointerup', finishDrag);
+  renderer.domElement.addEventListener('pointercancel', finishDrag);
 
   // Callouts sit on their surfaces' measured geometry: the middle of the
   // longest wall (just inside the room), above the floor or fixture, or under
@@ -450,6 +606,9 @@ export function mountRoomScene(
   // solid, a ceiling and a room light: a photo-like still that image models
   // can keep the geometry of. Rendered offscreen; the live view is untouched.
   const captureEyeLevel = async (width = 1536, height = 1024) => {
+    await readyFurniture();
+    if (objects.size !== placements.length)
+      throw new Error('Some furniture has not loaded. Reopen 3D and try again.');
     const shot = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
     shot.setSize(width, height, false);
     shot.outputColorSpace = renderer.outputColorSpace;
@@ -481,6 +640,7 @@ export function mountRoomScene(
     const background = scene.background;
     scene.background = new THREE.Color('#ffffff');
     scene.add(ceiling, lamp);
+    if (furnitureOutline) furnitureOutline.visible = false;
     try {
       shot.render(scene, eye);
       return await new Promise<Blob>((ok, fail) =>
@@ -500,6 +660,7 @@ export function mountRoomScene(
         c.mat.needsUpdate = true;
       });
       highlight(reselect);
+      if (furnitureOutline) furnitureOutline.visible = true;
       shot.dispose();
     }
   };
@@ -507,7 +668,7 @@ export function mountRoomScene(
   const photoreal =
     meta.renderActions === false
       ? null
-      : attachPhotoreal(host, captureEyeLevel, () => currentLook, model);
+      : attachPhotoreal(host, captureEyeLevel, () => currentLook, model, meta.modelRender);
 
   const resize = () => {
     const { clientWidth: w, clientHeight: h } = host;
@@ -564,13 +725,27 @@ export function mountRoomScene(
       room.userData.renovagent.look = next;
       currentLook = next;
       highlight(reselect);
+      photoreal?.invalidate();
+    },
+    setPlacements(next) {
+      placements = next;
+      void readyFurniture().catch(() => {});
+      photoreal?.invalidate();
+    },
+    selectPlacement(id) {
+      selectPlacement(id);
+      if (id) photoreal?.show3d();
     },
     captureEyeLevel: () => captureEyeLevel(),
     async exportGlb() {
+      await readyFurniture();
       const result = await new GLTFExporter().parseAsync(room, { binary: true, onlyVisible: true });
       return result as ArrayBuffer;
     },
     dispose() {
+      disposed = true;
+      selectPlacement(null);
+      for (const entry of objects.values()) disposeFurniture(entry.group);
       cancelAnimationFrame(frame);
       observer.disconnect();
       controls.dispose();

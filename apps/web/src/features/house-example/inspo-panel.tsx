@@ -1,4 +1,12 @@
+import { studioStylingSignature } from './studio-signatures.js';
 import { useEffect, useRef, useState } from 'react';
+import {
+  studioStylingDraftSchema,
+  type StudioStylingDraft,
+  type StudioItem,
+  type StudioIdeas,
+  type StudioAssetId,
+} from '@renovagent/contracts';
 import { workspaceRequest } from '../../adapters/http/project-repository.js';
 import { Glyph } from '../../components/glyph.js';
 import { SignInChoices } from '../connect/sign-in.js';
@@ -6,6 +14,8 @@ import { imageUrl } from './own-project.js';
 import type { StudioRoom, WallColor } from './paint-floor.js';
 import { AMAZON_DISCLOSURE, shopLinks } from './shop-links.js';
 import { InspoBoard } from './inspo-board.js';
+import { AssetThumb } from './furniture-panel.js';
+import { studioAsset } from '@renovagent/core';
 
 // "Use an inspiration photo": Muse Spark names what makes the look, SAM 3.1
 // outlines each item, the colours are read from those outlines here, the walls
@@ -22,6 +32,21 @@ type Inspo = { sha256: string; width: number; height: number; items: Item[] };
 type Change = { target: string; becomes: string };
 type Match = WallColor & { deltaE: number };
 type Nearest = { hex: string; close: boolean; matches: Match[] };
+export type StylingDraft = StudioStylingDraft;
+type DesignVersion = NonNullable<StylingDraft['versions']>[number];
+export function stylingDraft(projectId: string, room: StudioRoom) {
+  return readDraft(`renovagent.styling.${projectId}.${room.id}.v1`, room.photo.src);
+}
+function readDraft(key: string, source: string): StylingDraft | null {
+  try {
+    const parsed = studioStylingDraftSchema.safeParse(
+      JSON.parse(localStorage.getItem(key) || 'null'),
+    );
+    return parsed.success && parsed.data.source === source ? parsed.data : null;
+  } catch {
+    return null;
+  }
+}
 
 const SHA = /\/design-images\/([a-f0-9]{64})/;
 async function upload(blob: Blob, name: string, origin: 'owner' | 'listing-example') {
@@ -95,23 +120,150 @@ async function itemColours(inspo: Inspo): Promise<string[]> {
 
 export function InspoPanel({
   room,
+  projectId,
+  initialDraft,
+  onStale,
+  finishSignature,
+  onDraftChange,
+  onDesignItems,
+  currentColor,
+  basePhotoSrc,
+  floorPending,
+  designItems = [],
+  initialBrief,
+  onIdeaLayout,
   onPaint,
   onRestyled,
 }: {
   room: StudioRoom;
+  projectId: string;
+  initialDraft?: StylingDraft | null;
+  onStale?: (roomId: string, stale: boolean) => void;
+  finishSignature?: string;
+  onDraftChange?: (roomId: string, draft: StylingDraft) => void;
+  onDesignItems?: (items: string[]) => void;
+  currentColor?: WallColor | null;
+  basePhotoSrc?: string;
+  floorPending?: boolean;
+  designItems?: StudioItem[];
+  initialBrief?: string;
+  onIdeaLayout?: (assets: StudioAssetId[]) => void;
   onPaint: (color: WallColor) => void;
-  onRestyled: (src: string) => void;
+  onRestyled: (src: string, finishSignature?: string) => void;
 }) {
-  const [inspo, setInspo] = useState<Inspo | null>(null);
-  const [colours, setColours] = useState<string[]>([]);
+  const storageKey = `renovagent.styling.${projectId}.${room.id}.v1`;
+  const [draft] = useState(() =>
+    initialDraft === undefined ? readDraft(storageKey, room.photo.src) : initialDraft,
+  );
+  const [inspo, setInspo] = useState<Inspo | null>(draft?.inspo ?? null);
+  const [colours, setColours] = useState<string[]>(draft?.colours ?? []);
   const [paints, setPaints] = useState<Nearest | null>(null);
-  const [paint, setPaint] = useState<Match | null>(null);
-  const [borrow, setBorrow] = useState<Set<string>>(new Set());
+  const [paint, setPaint] = useState<Match | null>(draft?.paint ?? null);
+  const [borrow, setBorrow] = useState<Set<string>>(new Set(draft?.borrow ?? []));
+  const [mode, setMode] = useState<'refresh' | 'furnish'>(draft?.mode ?? 'furnish');
+  const [keep, setKeep] = useState(draft?.keep ?? '');
+  const [brief, setBrief] = useState(draft?.brief ?? initialBrief ?? '');
+  const [ideas, setIdeas] = useState<StudioIdeas | undefined>(draft?.ideas);
+  const [versions, setVersions] = useState<DesignVersion[]>(draft?.versions ?? []);
+  const [selectedVersionId, setSelectedVersionId] = useState(draft?.selectedVersionId ?? '');
+  const [resultSignature, setResultSignature] = useState(draft?.resultSignature ?? '');
+  const [storageFailed, setStorageFailed] = useState(false);
   const [hover, setHover] = useState<string | null>(null);
   const [status, setStatus] = useState<{ busy: string; error: string }>({ busy: '', error: '' });
   const [amazonTag, setAmazonTag] = useState<string | undefined>();
-  const [changes, setChanges] = useState<Change[]>([]);
+  const [changes, setChanges] = useState<Change[]>(draft?.changes ?? []);
   const file = useRef<HTMLInputElement>(null);
+  const briefInput = useRef<HTMLTextAreaElement>(null);
+  const signature = studioStylingSignature({
+    inspo,
+    borrow: [...borrow],
+    paint,
+    mode,
+    keep,
+    finishSignature,
+    brief,
+    items: designItems,
+  });
+  const stale = !!resultSignature && resultSignature !== signature;
+  useEffect(() => {
+    onStale?.(room.id, stale);
+  }, [room.id, stale, onStale]);
+  const draftJson = JSON.stringify({
+    source: room.photo.src,
+    inspo,
+    colours,
+    paint,
+    borrow: [...borrow],
+    changes,
+    mode,
+    keep,
+    resultSignature,
+    brief,
+    versions,
+    selectedVersionId,
+    ideas,
+  } satisfies StylingDraft);
+  useEffect(() => {
+    onDraftChange?.(room.id, JSON.parse(draftJson) as StylingDraft);
+  }, [room.id, draftJson, onDraftChange]);
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        storageKey,
+        JSON.stringify({
+          source: room.photo.src,
+          inspo,
+          colours,
+          paint,
+          borrow: [...borrow],
+          changes,
+          mode,
+          keep,
+          resultSignature,
+          brief,
+          versions,
+          selectedVersionId,
+          ideas,
+        } satisfies StylingDraft),
+      );
+      setStorageFailed(false);
+    } catch {
+      setStorageFailed(true);
+    }
+  }, [
+    storageKey,
+    room.photo.src,
+    inspo,
+    colours,
+    paint,
+    borrow,
+    changes,
+    mode,
+    keep,
+    resultSignature,
+    brief,
+    versions,
+    selectedVersionId,
+    ideas,
+  ]);
+  useEffect(() => {
+    let live = true;
+    setPaints(null);
+    const wall = inspo?.items.findIndex((i) => i.kind === 'walls') ?? -1;
+    if (wall >= 0 && colours[wall])
+      void (
+        workspaceRequest(
+          `/paint/nearest?hex=${encodeURIComponent(colours[wall]!)}`,
+        ) as Promise<Nearest>
+      )
+        .then((nearest) => {
+          if (live) setPaints(nearest);
+        })
+        .catch(() => {});
+    return () => {
+      live = false;
+    };
+  }, [inspo, colours]);
   useEffect(() => {
     void (workspaceRequest('/session') as Promise<{ amazonTag?: string }>)
       .then((s) => setAmazonTag(s.amazonTag))
@@ -128,7 +280,6 @@ export function InspoPanel({
     setInspo(null);
     setPaints(null);
     setPaint(null);
-    setChanges([]);
     try {
       // A photo from the board is already stored; a picked file is uploaded.
       const sha256 =
@@ -136,57 +287,292 @@ export function InspoPanel({
       setStatus({ busy: 'Finding what makes the look…', error: '' });
       const found = (await workspaceRequest('/studio/inspo', { sha256 })) as Inspo;
       setInspo(found);
-      setBorrow(new Set(found.items.filter((i) => i.segments.length).map((i) => i.phrase)));
+      setBorrow(
+        new Set(
+          found.items
+            .filter((i) => i.segments.length && (i.kind !== 'floor' || /rug|mat/i.test(i.phrase)))
+            .map((i) => i.phrase),
+        ),
+      );
       const read = await itemColours(found);
       setColours(read);
-      const wall = found.items.findIndex((i) => i.kind === 'walls');
-      if (wall >= 0 && read[wall])
-        setPaints(
-          (await workspaceRequest(
-            `/paint/nearest?hex=${encodeURIComponent(read[wall]!)}`,
-          )) as Nearest,
-        );
+      setStatus({ busy: '', error: '' });
+    } catch (e) {
+      fail(e);
+    }
+  };
+  const suggest = async () => {
+    setStatus({ busy: 'Finding three directions for your room…', error: '' });
+    try {
+      const sha256 = await roomSha(room.photo.src);
+      const protectedItems = [
+        keep.trim(),
+        ...designItems.filter((i) => i.action === 'keep').map((i) => i.name),
+      ]
+        .filter(Boolean)
+        .join('; ');
+      if (protectedItems.length > 300)
+        throw new Error('Shorten the keep instructions to 300 characters before asking for ideas.');
+      const result = (await workspaceRequest('/studio/ideas', {
+        sha256,
+        brief: brief.trim(),
+        keep: protectedItems,
+      })) as StudioIdeas;
+      setIdeas(result);
       setStatus({ busy: '', error: '' });
     } catch (e) {
       fail(e);
     }
   };
   const restyle = async () => {
-    if (!inspo || !room.photo.src) return;
-    const items = inspo.items
-      .filter((i) => borrow.has(i.phrase) && i.kind !== 'walls')
+    if (!room.photo.src) return;
+    const borrowed = (inspo?.items ?? [])
+      .filter(
+        (i) =>
+          borrow.has(i.phrase) &&
+          i.kind !== 'walls' &&
+          (i.kind !== 'floor' || /rug|mat/i.test(i.phrase)),
+      )
       .map((i) => i.name);
-    if (!items.length && !paint) return;
-    setStatus({ busy: 'Restyling your room… about 30 seconds', error: '' });
-    setChanges([]);
+    const items = [
+      ...new Set([
+        ...borrowed,
+        ...designItems
+          .filter((i) => i.action !== 'keep')
+          .map((i) => `${i.quantity ?? ''} ${i.name}`.trim()),
+      ]),
+    ];
+    const selectedPaint = currentColor === undefined ? paint : currentColor;
+    if (!items.length && !selectedPaint && !brief.trim()) return;
+    setStatus({ busy: 'Creating your room design…', error: '' });
     try {
-      const sha256 = await roomSha(room.photo.src);
+      if (items.length > 12)
+        throw new Error('Choose up to 12 items for one design. Keep the rest in your room list.');
+      const protectedItems = [
+        keep.trim(),
+        ...designItems.filter((i) => i.action === 'keep').map((i) => i.name),
+      ]
+        .filter(Boolean)
+        .join('; ');
+      if (protectedItems.length > 300)
+        throw new Error(
+          'Shorten the keep instructions to 300 characters before creating the design.',
+        );
+      const sha256 = await roomSha(basePhotoSrc || room.photo.src);
       const done = (await workspaceRequest('/studio/restyle', {
         sha256,
-        inspo: inspo.sha256,
-        items: items.length ? items : ['wall paint'],
-        ...(paint ? { paint: { name: paint.name, code: paint.code, hex: paint.hex } } : {}),
+        ...(inspo ? { inspo: inspo.sha256 } : {}),
+        items,
+        brief: brief.trim(),
+        mode,
+        keep: protectedItems,
+        preserveFloor: true,
+        ...(selectedPaint
+          ? {
+              paint: { name: selectedPaint.name, code: selectedPaint.code, hex: selectedPaint.hex },
+            }
+          : {}),
       })) as { sha256: string; changes?: Change[] };
       setChanges(done.changes ?? []);
-      onRestyled(imageUrl(done.sha256));
+      const proposalNames = borrowed.length
+        ? borrowed
+        : (done.changes ?? [])
+            .map((c) => c.becomes)
+            .filter((name) => !/\b(walls?|flooring|ceiling|paint)\b/i.test(name));
+      const known = new Set(designItems.map((i) => i.name.trim().toLowerCase()));
+      const resultItems = [
+        ...designItems.map((i) => ({ name: i.name, action: i.action, quantity: i.quantity })),
+        ...proposalNames
+          .filter(
+            (name) => !known.has(name.trim().toLowerCase()) && known.add(name.trim().toLowerCase()),
+          )
+          .map((name) => ({ name, action: 'add', quantity: null })),
+      ];
+      const completedSignature = JSON.stringify({
+        ...JSON.parse(signature),
+        roomItems: resultItems,
+      });
+      setResultSignature(completedSignature);
+      const src = imageUrl(done.sha256);
+      const version: DesignVersion = {
+        id: crypto.randomUUID(),
+        image: src,
+        title:
+          brief.trim().slice(0, 70) || (mode === 'furnish' ? 'Furnished room' : 'Finish refresh'),
+        createdAt: new Date().toISOString(),
+        signature: completedSignature,
+        finishSignature: finishSignature ?? '',
+        changes: done.changes ?? [],
+      };
+      setVersions((current) => [...current, version].slice(-12));
+      setSelectedVersionId(version.id);
+      onDesignItems?.(proposalNames);
+      onRestyled(src, finishSignature);
       setStatus({ busy: '', error: '' });
     } catch (e) {
       fail(e);
     }
   };
   const signIn = /^Sign in/.test(status.error);
-  const borrowsItems = !!inspo?.items.some((i) => borrow.has(i.phrase) && i.kind !== 'walls');
+  const borrowsItems = !!inspo?.items.some(
+    (i) =>
+      borrow.has(i.phrase) &&
+      i.kind !== 'walls' &&
+      (i.kind !== 'floor' || /rug|mat/i.test(i.phrase)),
+  );
   const usesAmazon = Boolean(amazonTag && inspo);
   return (
     <div className="pf-inspo">
       <div className="pf-group-head">
-        <h3>Inspiration</h3>
+        <h3>Make it your room.</h3>
         {inspo && (
-          <button type="button" className="pf-inspo-again" onClick={() => file.current?.click()}>
+          <button
+            type="button"
+            disabled={!!status.busy}
+            className="pf-inspo-again"
+            onClick={() => file.current?.click()}
+          >
             Another photo
           </button>
         )}
       </div>
+      <section className="pf-room-ideas" aria-label="Ideas for your room">
+        <div className="pf-ideas-intro">
+          <span>A fresh pair of eyes</span>
+          <h4>You know what would look good here?</h4>
+          <p>Three directions, based on your photo. Pick one and make it yours.</p>
+        </div>
+        <button
+          className="pf-suggest-button"
+          type="button"
+          disabled={!!status.busy || !room.photo.src}
+          onClick={() => void suggest()}
+        >
+          {ideas ? 'Find three new ideas' : 'What would look good here?'}
+        </button>
+        {ideas && (
+          <>
+            <div className="pf-direction-cards">
+              {ideas.directions.map((idea, index) => (
+                <article key={idea.id} className={`pf-direction-card pf-direction-${index}`}>
+                  <div
+                    className="pf-direction-art"
+                    style={{
+                      background: `linear-gradient(135deg,${idea.palette[0]},${idea.palette[1]})`,
+                    }}
+                  >
+                    <span className="pf-direction-number">0{index + 1}</span>
+                    <div>
+                      {idea.assets.slice(0, 3).map((id) => (
+                        <AssetThumb key={id} id={id} />
+                      ))}
+                    </div>
+                    <div className="pf-direction-palette" aria-label="Proposed colour palette">
+                      {idea.palette.map((c, i) => (
+                        <i key={`${c}:${i}`} title={c} style={{ background: c }} />
+                      ))}
+                    </div>
+                  </div>
+                  <div className="pf-direction-copy">
+                    <h4>{idea.title}</h4>
+                    <p>{idea.description}</p>
+                    <small>{idea.why}</small>
+                    <div>
+                      <button
+                        type="button"
+                        disabled={!!status.busy}
+                        aria-pressed={brief === idea.brief}
+                        onClick={() => {
+                          setBrief(idea.brief);
+                          setMode('furnish');
+                          briefInput.current?.focus();
+                        }}
+                      >
+                        {brief === idea.brief ? 'In your brief ✓' : 'Use this idea'}
+                      </button>
+                      {onIdeaLayout && (
+                        <button
+                          type="button"
+                          disabled={!!status.busy}
+                          onClick={() => {
+                            setBrief(idea.brief);
+                            setMode('furnish');
+                            onIdeaLayout(idea.assets);
+                          }}
+                        >
+                          Try in 3D ↗
+                        </button>
+                      )}
+                    </div>
+                    <span>{idea.assets.map((id) => studioAsset(id).name).join(' · ')}</span>
+                  </div>
+                </article>
+              ))}
+            </div>
+            {!!ideas.observations.length && (
+              <details className="pf-idea-observations">
+                <summary>What the photo suggests</summary>
+                <ul>
+                  {ideas.observations.map((o) => (
+                    <li key={o}>{o}</li>
+                  ))}
+                </ul>
+                <small>
+                  Visual observations to check, not measured facts. The card artwork shows library
+                  furniture; generate a design to see it in your room.
+                </small>
+              </details>
+            )}
+          </>
+        )}
+      </section>
+      <div className="pf-styling-modes" role="group" aria-label="Room design approach">
+        <button
+          type="button"
+          aria-pressed={mode === 'refresh'}
+          disabled={!!status.busy}
+          onClick={() => setMode('refresh')}
+        >
+          <b>Refresh finishes</b>
+          <small>Keep the furniture</small>
+        </button>
+        <button
+          type="button"
+          aria-pressed={mode === 'furnish'}
+          disabled={!!status.busy}
+          onClick={() => setMode('furnish')}
+        >
+          <b>Furnish the room</b>
+          <small>Furniture, lighting & décor</small>
+        </button>
+      </div>
+      <p className="pf-inspo-note">
+        {mode === 'furnish'
+          ? 'Borrow furniture and lighting from a room you love. Keep your room’s architecture.'
+          : 'Borrow colours and textures while keeping your furniture in place.'}
+      </p>
+      <label className="pf-design-brief">
+        Your design brief
+        <textarea
+          ref={briefInput}
+          value={brief}
+          maxLength={1000}
+          disabled={!!status.busy}
+          onChange={(e) => setBrief(e.target.value)}
+          placeholder="A cream sofa, walnut coffee table and a large striped rug. Keep the stairs clear. Warm and lived-in."
+        />
+      </label>
+      <label className="pf-styling-keep">
+        Keep unchanged
+        <input
+          type="text"
+          maxLength={300}
+          disabled={!!status.busy}
+          value={keep}
+          placeholder="e.g. my sofa, the piano and the fireplace"
+          onChange={(e) => setKeep(e.target.value)}
+        />
+      </label>
       <input
         ref={file}
         type="file"
@@ -203,7 +589,7 @@ export function InspoPanel({
           <Glyph name="photo" />
           <span>
             <b>Use an inspiration photo</b>
-            <small>A saved Pinterest pin, a screenshot, a room you love</small>
+            <small>Optional · a screenshot or a room you love</small>
           </span>
         </button>
       )}
@@ -251,8 +637,13 @@ export function InspoPanel({
                 <label>
                   <input
                     type="checkbox"
-                    checked={borrow.has(item.phrase)}
-                    disabled={!item.segments.length}
+                    checked={
+                      borrow.has(item.phrase) &&
+                      (item.kind !== 'floor' || /rug|mat/i.test(item.phrase))
+                    }
+                    disabled={
+                      !!status.busy || (item.kind === 'floor' && !/rug|mat/i.test(item.phrase))
+                    }
                     onChange={(e) =>
                       setBorrow((b) => {
                         const next = new Set(b);
@@ -266,7 +657,11 @@ export function InspoPanel({
                   <span>
                     {item.name}
                     <small>
-                      {item.segments.length ? item.kind : `${item.kind} · not outlined`}
+                      {item.kind === 'floor' && !/rug|mat/i.test(item.phrase)
+                        ? 'Use floor controls below'
+                        : item.segments.length
+                          ? item.kind
+                          : `${item.kind} · not outlined`}
                     </small>
                   </span>
                 </label>
@@ -308,39 +703,93 @@ export function InspoPanel({
               </li>
             ))}
           </ul>
-          {room.photo.src ? (
-            <button
-              type="button"
-              className="pf-inspo-go"
-              disabled={!!status.busy || (!paint && !borrowsItems)}
-              onClick={() => void restyle()}
-            >
-              Restyle the {room.title.toLowerCase()} with this look
-            </button>
-          ) : (
-            <p className="pf-inspo-note">
-              This room has no photo to restyle; the paint applies in 3D.
-            </p>
-          )}
-          {changes.length > 0 && (
-            <div className="pf-inspo-changes">
-              <h4>What Muse changed in your room</h4>
-              <ul>
-                {changes.map((c) => (
-                  <li key={c.target}>
-                    <s>{c.target}</s> → {c.becomes}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
           <p className="pf-inspo-note">
-            Colours are read from the photo, so its lighting shows in them. Store links are
-            searches, not picked products.
+            Furniture and lighting are visual concepts; fit, products and installation are not
+            verified or included in the paint-and-floor total. Colours are read from the photo, so
+            its lighting shows in them. Store links are searches, not picked products.
             {usesAmazon ? ` ${AMAZON_DISCLOSURE}` : ''}
           </p>
         </>
       )}
+      {changes.length > 0 && (
+        <div className="pf-inspo-changes">
+          <h4>Last design · proposed changes</h4>
+          {resultSignature !== signature && (
+            <p className="pf-styling-stale" role="status">
+              Choices changed. Generate a new design to see them applied.
+            </p>
+          )}
+          <ul>
+            {changes.map((c) => (
+              <li key={c.target}>
+                <s>{c.target}</s> → {c.becomes}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      <div className="pf-design-action">
+        <button
+          type="button"
+          className="pf-inspo-go"
+          disabled={
+            !!status.busy ||
+            !!floorPending ||
+            !room.photo.src ||
+            (!brief.trim() &&
+              !borrowsItems &&
+              !designItems.some((i) => i.action !== 'keep') &&
+              !(currentColor === undefined ? paint : currentColor))
+          }
+          onClick={() => void restyle()}
+        >
+          {status.busy
+            ? 'Creating…'
+            : resultSignature
+              ? 'Update room design'
+              : 'Create room design'}{' '}
+          <Glyph name="right" />
+        </button>
+        <small>
+          {floorPending
+            ? 'Waiting for the selected floor preview…'
+            : 'Generated concept · your room, your choices'}
+        </small>
+      </div>
+      {versions.length > 0 && (
+        <div className="pf-design-history">
+          <h4>
+            Your designs <span>{versions.length}</span>
+          </h4>
+          <div role="group" aria-label="Previous room designs">
+            {versions.map((v, index) => (
+              <button
+                key={v.id}
+                type="button"
+                aria-pressed={v.id === selectedVersionId}
+                disabled={!!status.busy}
+                onClick={() => {
+                  setSelectedVersionId(v.id);
+                  setResultSignature(v.signature);
+                  setChanges(v.changes);
+                  onRestyled(v.image, v.finishSignature);
+                }}
+              >
+                <img src={v.image} alt={`Design ${index + 1}`} />
+                <span>
+                  {index + 1}. {v.title}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+      <p className="pf-inspo-note">
+        {storageFailed
+          ? 'Choices could not be saved in this browser.'
+          : 'Save project to keep this design in your workspace.'}
+      </p>
     </div>
   );
 }
@@ -349,7 +798,7 @@ export function InspoPanel({
 export function InspiredView({
   before,
   after,
-  caption = 'Muse Image restyle from your inspiration photo; a picture, not a plan.',
+  caption = 'Generated room concept · check dimensions and product fit before buying.',
 }: {
   before: string;
   after: string;
@@ -359,21 +808,28 @@ export function InspiredView({
   return (
     <figure className="pf-inspired">
       <div className="pf-inspired-stage" style={{ ['--split' as string]: `${split}%` }}>
-        <img src={after} alt="Your room restyled from the inspiration photo" />
+        <img src={after} alt="Your generated room design" />
         <img className="pf-inspired-before" src={before} alt="Your room before" />
         <span className="pf-inspired-divider" aria-hidden="true" />
         <span className="pf-inspired-label is-before">Before</span>
-        <span className="pf-inspired-label is-after">Inspired</span>
+        <span className="pf-inspired-label is-after">Your design</span>
         <input
           type="range"
           min={0}
           max={100}
           value={split}
-          aria-label="Compare before and inspired"
+          aria-label="Compare before and room design"
           onChange={(e) => setSplit(Number(e.target.value))}
         />
       </div>
       <figcaption>{caption}</figcaption>
+      <a
+        className="pf-design-download"
+        href={after}
+        download="renovagent-generated-room-design.jpg"
+      >
+        Download room design
+      </a>
     </figure>
   );
 }

@@ -441,6 +441,7 @@
 .footer-signature nav {
   margin-left: auto;
   display: flex;
+  flex-wrap: wrap;
   gap: 24px;
 }
 .footer-signature nav a {

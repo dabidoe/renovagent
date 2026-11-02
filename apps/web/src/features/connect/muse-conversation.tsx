@@ -5,29 +5,24 @@ import './muse-conversation.css';
 
 const museIcon = new URL('../../assets/brand/muse-app-icon.png', import.meta.url).href;
 const EXAMPLES = [
-  {
-    id: 'connect',
-    label: 'Connect',
-    user: 'Connect to my Renovagent workspace.',
-    reply:
-      'Share your Renovagent connection address. I’ll ask for your access key in a secure field.',
-  },
+  { id: 'connect', label: 'Connect', prompt: 'Connect to Renovagent.', request: '' },
   {
     id: 'plan',
     label: 'Plan a room',
-    user: 'Plan sage walls and oak-look floors for my 13 by 23 foot living room. Save the plan so I can open it.',
-    reply: 'I can put the paint and floor choices into a plan for you to review in Renovagent.',
+    prompt: 'Warm white walls. Dark walnut floors.',
+    request:
+      'Plan warm white walls and dark walnut floors for the room in my photo. Ask me for measurements before pricing, then save the plan and give me the link.',
   },
   {
     id: 'board',
     label: 'Save a find',
-    user: 'Find a rust velvet pillow and add the link to my Renovagent board.',
-    reply: 'I can save a link and a note to your board. You can review it in the studio.',
+    prompt: 'Save this look to my board.',
+    request: 'Save this inspiration photo to my Renovagent board.',
   },
 ] as const;
 
-// An illustrated walkthrough, not a screenshot or transcript of a real session.
-// Result cards describe supported outcomes without inventing products or prices.
+// Actual committed Muse previews, with an illustrated request and result overlay.
+// These are example outcomes, not a real chat transcript or an active connection.
 export function MuseConversation({
   initialExample = 'connect',
 }: {
@@ -36,87 +31,94 @@ export function MuseConversation({
   const [selected, setSelected] = useState(initialExample);
   const example = EXAMPLES.find((e) => e.id === selected)!;
   return (
-    <figure className="muse-conversation" aria-label="Example Muse conversation">
-      <div className="muse-conversation-window">
-        <div className="muse-conversation-bar">
-          <span>
-            <img src={museIcon} alt="" width={34} height={34} />
-            <b>Muse</b>
-          </span>
-          <span className="muse-conversation-app">
-            <Glyph name="connection" />
-            Renovagent
-          </span>
-        </div>
-        <div
-          className="muse-conversation-tabs"
-          role="group"
-          aria-label="Muse conversation examples"
-        >
-          {EXAMPLES.map((e) => (
-            <button
-              key={e.id}
-              type="button"
-              aria-pressed={e.id === selected}
-              onClick={() => setSelected(e.id)}
-            >
-              {e.label}
-            </button>
-          ))}
-        </div>
-        <div className="muse-conversation-messages" aria-live="polite">
-          <p className="muse-conversation-user">{example.user}</p>
-          <div className="muse-conversation-reply">
-            <img src={museIcon} alt="Muse" width={24} height={24} />
-            <p>{example.reply}</p>
+    <figure className="muse-conversation" aria-label="Muse and Renovagent demo">
+      <div className="muse-demo-stage">
+        <img
+          className="muse-demo-photo"
+          src={
+            selected === 'board'
+              ? './examples/bedroom-refresh/after.jpg'
+              : './examples/oakland/image-01-walnut.jpg'
+          }
+          alt={
+            selected === 'board'
+              ? 'Muse-generated bedroom restyle'
+              : 'Listing room with a Muse-generated walnut floor preview'
+          }
+          loading="lazy"
+        />
+        <div className="muse-demo-shade" />
+        <div className="muse-demo-top">
+          <div className="muse-demo-brand">
+            <img src={museIcon} alt="" width={28} height={28} />
+            <b>With Muse</b>
+            <span>Example</span>
           </div>
-          {selected === 'connect' ? (
-            <div className="muse-conversation-result is-credential">
-              <div>
-                <Glyph name="connection" />
-                <b>A private connection</b>
-              </div>
-              <span>Renovagent access key</span>
-              <div
-                className="muse-conversation-secret"
-                aria-label="Illustrated secure credential field"
+          <div className="muse-conversation-tabs" role="group" aria-label="Muse workflow examples">
+            {EXAMPLES.map((e) => (
+              <button
+                key={e.id}
+                type="button"
+                aria-pressed={e.id === selected}
+                onClick={() => setSelected(e.id)}
               >
-                •••• •••• •••• ••••
-                <Glyph name="check" />
-              </div>
-              <small>The key goes in a secure field, outside the conversation.</small>
-            </div>
-          ) : selected === 'plan' ? (
-            <div className="muse-conversation-result is-plan">
-              <img
-                src="./example-room/done-sage-lvp.jpg"
-                alt="Illustrative 3D-rendered living room"
-                loading="lazy"
-              />
-              <div>
-                <span>Plan to review</span>
-                <b>Living room refresh</b>
-                <small>Paint, flooring and a materials list</small>
-              </div>
-            </div>
-          ) : (
-            <div className="muse-conversation-result is-find">
-              <Glyph name="source" />
-              <div>
-                <span>Your board</span>
-                <b>A find to review</b>
+                {e.label}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="muse-demo-overlay" aria-live="polite">
+          <p className="muse-demo-prompt">
+            <Glyph name="chat" />
+            {example.prompt}
+          </p>
+          <div className="muse-demo-result">
+            {selected === 'connect' ? (
+              <>
+                <div className="muse-demo-result-title">
+                  <b>Renovagent</b>
+                  <span>Private access · 7 days</span>
+                </div>
+                <div className="muse-demo-secure">
+                  <span>•••• •••• ••••</span>
+                  <small>Muse’s secure field</small>
+                </div>
+              </>
+            ) : selected === 'plan' ? (
+              <>
+                <div className="muse-demo-result-title">
+                  <b>A plan to review</b>
+                  <Glyph name="right" />
+                </div>
+                <div className="muse-demo-finishes">
+                  <span>
+                    <i style={{ background: '#edeae0' }} />
+                    Warm white
+                  </span>
+                  <span>
+                    <img src="./finishes/walnut.jpg" alt="" />
+                    Dark walnut
+                  </span>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="muse-demo-result-title">
+                  <b>Your inspiration board</b>
+                  <Glyph name="source" />
+                </div>
                 <small>Found by Muse · not checked</small>
-              </div>
-            </div>
+              </>
+            )}
+          </div>
+          {example.request && (
+            <Copy value={example.request} label="Copy this request" className="muse-copy" />
           )}
         </div>
-        {selected !== 'connect' && (
-          <div className="muse-conversation-copy">
-            <Copy value={example.user} label="Copy this request" className="muse-copy" />
-          </div>
-        )}
       </div>
-      <figcaption>Illustrated conversation · wording in Muse may vary</figcaption>
+      <figcaption>
+        Muse-generated {selected === 'board' ? 'restyle' : 'floor preview'} · illustrated workflow
+      </figcaption>
     </figure>
   );
 }

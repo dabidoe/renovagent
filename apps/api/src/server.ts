@@ -56,6 +56,7 @@ import {
 import { renderExample } from './example-render.js';
 import { studioProviders, studioRoutes, type StudioProviders } from './studio.js';
 import { StudioPlanStore } from './studio-plans.js';
+import { saveStudioDesign, readStudioDesign, prepareStudioHandoff } from './studio-designs.js';
 import { studioProject } from './mcp-studio.js';
 import { McpAccessStore } from './mcp-access.js';
 import { mcpEndpoint } from './mcp-http.js';
@@ -626,6 +627,26 @@ export async function createWorkspaceServer(
       }
       // A plan an owner's agent saved; only that owner can open it.
       const savedPlan = path.match(/^\/studio-plans\/([^/]+)$/);
+      if (path === '/studio-designs' && req.method === 'POST') {
+        json(200, await saveStudioDesign(activeRepo, design?.images, await body(req)));
+        return;
+      }
+      if (path === '/studio-designs/prepare-scope' && req.method === 'POST') {
+        json(200, await prepareStudioHandoff(activeRepo, catalog, await body(req)));
+        return;
+      }
+      const savedDesign = path.match(/^\/studio-designs\/([^/]+)(?:\/([1-9][0-9]*))?$/);
+      if (savedDesign && req.method === 'GET') {
+        json(
+          200,
+          await readStudioDesign(
+            activeRepo,
+            decodeURIComponent(savedDesign[1]!),
+            savedDesign[2] ? Number(savedDesign[2]) : undefined,
+          ),
+        );
+        return;
+      }
       if (savedPlan && req.method === 'GET') {
         const plan = plans ? await plans.get(activeRepo.ownerId, savedPlan[1]!) : null;
         if (!plan) throw new DomainError('NOT_FOUND', 'No such plan in this account');
@@ -1340,7 +1361,7 @@ export async function createWorkspaceServer(
         spendRepaintCall(activeRepo.ownerId);
         const result = await repaint({
           image: { bytes, mediaType },
-          prompt: `Turn this plain 3D model view into a photorealistic interior photograph of the same empty room. Keep exactly the same camera position, room shape, wall positions, proportions, ceiling height and any window or door openings. Walls painted ${input.wall}, white baseboards and ceiling, floor: ${input.floor}. Soft natural daylight. Do not add, move or remove windows, doors, furniture or fixtures.`,
+          prompt: `Turn this plain 3D model view into a photorealistic interior photograph of the same room. Keep exactly the same camera position, room shape, wall positions, proportions, ceiling height and any window or door openings. Walls painted ${input.wall}, white baseboards and ceiling, floor: ${input.floor}. Soft natural daylight. Do not add, move or remove windows, doors, furniture or fixtures.`,
         });
         json(200, {
           model: result.model,

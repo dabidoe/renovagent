@@ -277,7 +277,8 @@ export function createWorkspaceMcpServer(
     { name: MCP_SERVER_NAME, version: MCP_SERVER_VERSION },
     {
       instructions:
-        "Renovagent keeps durable home-improvement projects. For paint and floors from an owner's words or photos, choose with list_floor_styles and find_paint_color, then price with plan_paint_and_floor. Start with list_homes/list_projects or start_project for a new user request. Use list_project_files to discover saved work, then get_artifact to inspect exact revisions. Develop useful proposed work from project evidence. Keep unknown facts and prices explicit. Project creation stores intent only; it does not analyze photos or produce an estimate. Never claim a proposal is professional approval or a passed inspection.",
+        "Renovagent keeps durable home-improvement projects. For paint and floors from an owner's words or photos, choose with list_floor_styles and find_paint_color, then price with plan_paint_and_floor. Start with list_homes/list_projects or start_project for a new user request. Use list_project_files to discover saved work, then get_artifact to inspect exact revisions. Develop useful proposed work from project evidence. Keep unknown facts and prices explicit. Project creation stores intent only; it does not analyze photos or produce an estimate. Never claim a proposal is professional approval or a passed inspection. Chat attachments are not automatically uploaded to Renovagent. build_design_options needs the server's stored normalized image hash, not a locally computed original-file hash. There is no dedicated MCP design-photo upload tool. " +
+        `Never reuse dimensions from another room or photo without owner confirmation. For a plan the owner asks to save, use save_plan and return its link; it does not require an existing project. Guest accounts support this through their own connection key. Website Save project creates a canonical studio-design artifact; discover it with list_projects/list_project_files and read its exact revision with get_artifact. Furniture remains unpriced design intent unless separately sourced. Read ${options.plans?.origin ?? 'https://renovagent-production.up.railway.app'}/agent-guide.md for photo, Markdown brief and inspiration workflows.`,
     },
   );
 
@@ -501,7 +502,18 @@ export function createWorkspaceMcpServer(
           'Stable unique request identifier, reused only for identical retries',
         ),
         projectId: id,
-        recipeId: z.enum(['bathroom-refresh']),
+        recipeId: z
+          .enum(['bathroom-refresh', 'living-room-refresh'])
+          .describe(
+            'Living-room refresh covers paint, carpet removal and floating floors; furniture purchasing and electrical installation are not in this recipe.',
+          ),
+        sourceDesignRef: z
+          .object({ kind: z.literal('artifact'), id, revision: z.number().int().positive() })
+          .strict()
+          .optional()
+          .describe(
+            'Current studio-design artifact returned by list_project_files. Links the scope to that design revision so later design changes mark it stale.',
+          ),
         packageIds: z
           .array(
             z.enum([
@@ -512,11 +524,17 @@ export function createWorkspaceMcpServer(
               'exhaust-fan',
               'service-work',
               'removal-protection',
+              'wall-paint',
+              'carpet-removal',
+              'hardwood-floor',
+              'lvp-floor',
             ]),
           )
           .min(1)
-          .max(7)
-          .describe('Work the person asked for; removal and protection are added automatically'),
+          .max(11)
+          .describe(
+            'Choose packages belonging to the recipe. Living-room: removal-protection, wall-paint, carpet-removal, hardwood-floor or lvp-floor. Bathroom: vanity, toilet, floor-tile, paint, exhaust-fan, service-work, removal-protection.',
+          ),
         request: z.string().trim().min(1).max(2000).describe('The request, relayed verbatim'),
         reported: z
           .array(
@@ -552,7 +570,7 @@ export function createWorkspaceMcpServer(
   if (canPropose)
     server.tool(
       'build_design_options',
-      'Show two or three visual options for one photographed room, each with its own scope and cost range. Uses a room photo already uploaded to the project (sourcePhotoSha256). Pass only measurements the person gave (amount null for "I don\'t know"). Reuse requestId for retries.',
+      'Show two or three visual options for one photographed room, each with its own scope and cost range. sourcePhotoSha256 must be the server-stored normalized source image hash from an upload or existing design-options artifact; hashing a chat attachment does not upload it and may produce a different hash. No dedicated MCP design-photo upload tool exists. Pass only measurements the person gave (amount null for "I don\'t know"). Reuse requestId for retries.',
       {
         requestId: id,
         projectId: id,

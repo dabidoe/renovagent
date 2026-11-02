@@ -1,3 +1,4 @@
+import { EXAMPLE_PRIVACY_NOTE } from './example-privacy.js';
 import { HUTCHINSON } from './hutchinson-project.js';
 import { PaintFloorStudio } from './paint-floor-studio.js';
 
@@ -5,16 +6,13 @@ export function HutchinsonStudio({ onRoomExample }: { onRoomExample?: () => void
   return (
     <PaintFloorStudio
       project={HUTCHINSON}
-      kicker="Example from a real listing · your changes stay in this browser"
+      kicker="Listing example · address changed for privacy"
       sources={
         <>
           <ul>
             <li>
-              Photos and floor plans:{' '}
-              <a href={HUTCHINSON.listing} target="_blank" rel="noreferrer">
-                the public listing
-              </a>{' '}
-              (Bright MLS photos; CubiCasa plans, “deemed highly reliable but not guaranteed”).
+              Photos and floor plans: owner-supplied listing (Bright MLS photos; CubiCasa plans,
+              “deemed highly reliable but not guaranteed”). {EXAMPLE_PRIVACY_NOTE}
             </li>
             <li>Ceiling height 9′: reported by the owner.</li>
             <li>

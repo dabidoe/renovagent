@@ -275,7 +275,8 @@ export const money = (minor: number) =>
   new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
-    maximumFractionDigits: 0,
+    minimumFractionDigits: minor % 100 === 0 ? 0 : 2,
+    maximumFractionDigits: 2,
   }).format(minor / 100);
 
 export const feetInches = (feet: number) => {

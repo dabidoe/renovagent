@@ -69,6 +69,8 @@ test('the packaged site is served with cache rules, and never outside its folder
   const dir = await mkdtemp(join(tmpdir(), 'renovagent-site-'));
   await mkdir(join(dir, 'assets'));
   await writeFile(join(dir, 'index.html'), '<h1>Landing</h1>');
+  await writeFile(join(dir, 'agent-guide.md'), '# Agent guide\nUse stored image hashes.');
+  await writeFile(join(dir, 'chair.glb'), Buffer.from('glTF-fixture'));
   await writeFile(join(dir, 'assets', 'app-abc.js'), 'export {}');
   await writeFile(join(dir, '404.html'), '<h1>Missing</h1>');
   await writeFile(join(dir, '..', 'renovagent-secret.txt'), 'secret').catch(() => {});
@@ -85,6 +87,15 @@ test('the packaged site is served with cache rules, and never outside its folder
     assert.equal(home.status, 200);
     assert.equal(home.headers.get('cache-control'), 'no-cache');
     assert.equal(await home.text(), '<h1>Landing</h1>');
+    const guide = await fetch(`${base}/agent-guide.md`);
+    assert.equal(guide.status, 200);
+    assert.match(guide.headers.get('content-type')!, /text\/markdown/);
+    assert.equal(guide.headers.get('cache-control'), 'no-cache');
+    assert.equal(await guide.text(), '# Agent guide\nUse stored image hashes.');
+    const model = await fetch(`${base}/chair.glb`);
+    assert.equal(model.status, 200);
+    assert.equal(model.headers.get('content-type'), 'model/gltf-binary');
+    assert.equal(await model.text(), 'glTF-fixture');
     const asset = await fetch(`${base}/assets/app-abc.js`);
     assert.match(asset.headers.get('content-type')!, /javascript/);
     assert.match(asset.headers.get('cache-control')!, /immutable/);

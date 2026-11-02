@@ -1,4 +1,7 @@
-import { useEffect, useState } from 'react';
+import { studioDirection } from './studio-directions.js';
+import { directionDesign } from './direction-design.js';
+import { EXAMPLE_ADDRESS } from './example-privacy.js';
+import { useEffect, useMemo, useState } from 'react';
 import { Glyph } from '../../components/glyph.js';
 import { PaintFloorStudio } from './paint-floor-studio.js';
 import type { HouseProject, StudioRoom } from './paint-floor.js';
@@ -15,7 +18,7 @@ type ExampleCard = {
 export const EXAMPLES: ExampleCard[] = [
   {
     route: '#example-house',
-    address: '2440 S Hutchinson St',
+    address: EXAMPLE_ADDRESS,
     place: 'Philadelphia rowhouse',
     cover: './examples/hutchinson/rooms/photo-04-lvp.jpg',
     rooms: 5,
@@ -58,7 +61,7 @@ export function ListingStudio({ id, onBack }: { id: string; onBack: () => void }
   const [edits, setEdits] = useState<Edits>(() => loadEdits(id));
   useEffect(() => {
     let live = true;
-    fetch(`./examples/${id}/project.json`)
+    fetch(`./examples/${studioDirection(id) ? 'oakland' : id}/project.json`)
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error('This example is not available.'))))
       .then((p) => live && setProject(p))
       .catch((e) => live && setError(e instanceof Error ? e.message : String(e)));
@@ -74,26 +77,38 @@ export function ListingStudio({ id, onBack }: { id: string; onBack: () => void }
       // The edit still applies for this visit.
     }
   };
+  const direction = studioDirection(id);
+  const seed = useMemo(
+    () => (project && direction ? directionDesign(project, direction) : undefined),
+    [project, direction],
+  );
   if (error) return <p className="pf-empty">{error}</p>;
   if (!project) return null;
   // The viewer may fill in what the listing does not say.
+  const base = seed?.project ?? project;
   const shown: HouseProject = {
-    ...project,
-    ceilingFt: edits.ceilingFt ?? project.ceilingFt ?? null,
+    ...base,
+    ceilingFt: edits.ceilingFt ?? base.ceilingFt ?? null,
     ...(edits.ceilingFt
       ? { ceilingNote: undefined }
       : project.ceilingNote
         ? { ceilingNote: project.ceilingNote }
         : {}),
-    rooms: project.rooms.map((r): StudioRoom => {
-      const size = r.size ?? edits.sizes?.[r.id];
-      return size ? { ...r, size } : r;
+    rooms: base.rooms.map((r): StudioRoom => {
+      const reported = edits.sizes?.[r.id];
+      const size = reported ?? r.size;
+      return size ? { ...r, size, ...(reported ? { sizeNote: undefined } : {}) } : r;
     }),
   };
   return (
     <PaintFloorStudio
       project={shown}
-      kicker="Example from a real listing · your changes stay in this browser"
+      initialDesign={seed}
+      kicker={
+        direction
+          ? 'Muse photo concept · editable 3D starter · changes stay in this browser'
+          : 'Example from a real listing · your changes stay in this browser'
+      }
       onEditRoom={(roomId, patch) =>
         patch.size && save({ ...edits, sizes: { ...edits.sizes, [roomId]: patch.size } })
       }
@@ -105,6 +120,13 @@ export function ListingStudio({ id, onBack }: { id: string; onBack: () => void }
       }
       sources={
         <ul>
+          {direction && (
+            <li>
+              Prepared Muse Image photo concept. The 3D view is an editable starter arrangement, not
+              a reconstruction of the photograph. Furniture is illustrative; dimensions, fit and
+              products need confirming.
+            </li>
+          )}
           <li>
             Photos{project.listing ? ' and plans' : ''}:{' '}
             {project.listing ? (
@@ -119,7 +141,11 @@ export function ListingStudio({ id, onBack }: { id: string; onBack: () => void }
           <li>
             Rooms and printed plan sizes: read by Muse Spark. Wall outlines: SAM 3.1. New floors:
             Muse Image edits of each photo (receipts in{' '}
-            <a href={`./examples/${id}/project.json`} target="_blank" rel="noreferrer">
+            <a
+              href={`./examples/${direction ? 'oakland' : id}/project.json`}
+              target="_blank"
+              rel="noreferrer"
+            >
               project.json
             </a>
             ).

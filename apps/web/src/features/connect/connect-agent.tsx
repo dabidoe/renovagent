@@ -12,6 +12,19 @@ import './connect-agent.css';
 
 type Key = { id: string; name: string; access: 'read' | 'propose'; expiresAt: string };
 const PLACEHOLDER = 'reno_YOUR_KEY';
+const STARTERS = [
+  {
+    title: 'Save a plan',
+    request:
+      'Make a paint-and-floor plan for my room. Ask for missing measurements, then save it and give me the link.',
+  },
+  { title: 'Save inspiration', request: 'Save this photo to my Renovagent inspiration board.' },
+  {
+    title: 'Use a brief',
+    request:
+      'Read this Markdown brief and start a Renovagent project. Keep unknown measurements unknown.',
+  },
+];
 
 export function ConnectAgent() {
   const [endpoint, setEndpoint] = useState('');
@@ -63,7 +76,8 @@ export function ConnectAgent() {
   const address = endpoint || new URL('/mcp', window.location.origin).href;
   const local = /^http:\/\/(127\.0\.0\.1|localhost)[:/]/.test(address);
   const introduction = `Connect to my Renovagent workspace at ${address}. Ask me for the connection key in your secure credentials field.`;
-  const ask = `${introduction}\n\nConnection details: Streamable HTTP MCP. Send the key in the Authorization header as a Bearer token.`;
+  const guideUrl = new URL('/agent-guide.md', window.location.origin).href;
+  const ask = `${introduction}\n\nRead ${guideUrl} for tool, photo and brief instructions. Connection details: Streamable HTTP MCP. Send the key in the Authorization header as a Bearer token.`;
   const config = JSON.stringify(
     {
       mcpServers: {
@@ -87,9 +101,7 @@ export function ConnectAgent() {
       <header className="ca-heading">
         <p className="ca-kicker">Your project, in the conversation</p>
         <h1>Bring Muse into your project.</h1>
-        <p className="ca-sub">
-          Ask for a plan, find finishes, and come back here to review what your agent saved.
-        </p>
+        <p className="ca-sub">Plan with Muse. Review the results in your studio.</p>
       </header>
       <div className="ca-guide-layout">
         <div className="ca-guide">
@@ -100,7 +112,7 @@ export function ConnectAgent() {
             <div className="ca-step-body">
               <h2 id="ca-ask-title">Start a conversation in Muse.</h2>
               <p className="ca-note">
-                Copy this message and send it to Muse. It includes the connection details.
+                Paste this message into Muse. Connection details are included.
               </p>
               <div className="ca-prompt">
                 <p>{introduction}</p>
@@ -134,7 +146,7 @@ export function ConnectAgent() {
               ) : signedOut ? (
                 <>
                   <p className="ca-note">
-                    Sign in, or try a private workspace as a guest, to create your connection key.
+                    Continue as a guest to try it. Google sign-in is optional.
                   </p>
                   <div className="ca-make">
                     <SignInChoices className="ca-primary" />
@@ -143,8 +155,8 @@ export function ConnectAgent() {
               ) : (
                 <>
                   <p className="ca-note">
-                    Create a private connection key. It lets Muse read your projects and save plans
-                    and finds. You keep control of approvals and purchases.
+                    Muse can read your projects and save plans and finds. You control approvals and
+                    purchases.
                   </p>
                   {!fresh && (
                     <form
@@ -164,9 +176,7 @@ export function ConnectAgent() {
                       </button>
                     </form>
                   )}
-                  <p className="ca-note">
-                    Access lasts seven days. You can remove it below at any time.
-                  </p>
+                  <p className="ca-note">Access lasts seven days. Remove it below at any time.</p>
                 </>
               )}
               {fresh && (
@@ -196,16 +206,14 @@ export function ConnectAgent() {
             <div className="ca-step-body">
               <h2 id="ca-finish-title">Finish in Muse, then try it.</h2>
               <p className="ca-note">
-                When Muse asks, paste the key into its secure field. Then send this message to check
-                that it can see your workspace.
+                Paste the key in Muse’s secure field. Send this to check the connection:
               </p>
               <div className="ca-prompt">
                 <p>Show me my Renovagent projects.</p>
                 <Copy value="Show me my Renovagent projects." label="Copy first request" />
               </div>
               <p className="ca-note">
-                If Muse asks you to post the key in the conversation, ask it to use its secure
-                credentials field instead.
+                Keep the key out of chat. Use Muse’s secure credentials field.
               </p>
             </div>
           </section>
@@ -217,12 +225,40 @@ export function ConnectAgent() {
         </div>
         <aside className="ca-example" aria-label="What you can ask Muse">
           <MuseConversation />
-          <p className="ca-example-note">
-            Try the examples above to see what you can ask next. Saved plans open in the studio;
-            saved finds appear on Your board.
-          </p>
+          <p className="ca-example-note">Plans open in the studio. Finds go to Your board.</p>
         </aside>
       </div>
+      <section className="ca-card ca-say" aria-labelledby="ca-say-title">
+        <h2 id="ca-say-title">What to say</h2>
+        <div className="ca-starters">
+          {STARTERS.map((s) => (
+            <div key={s.title}>
+              <h3>{s.title}</h3>
+              <p>{s.request}</p>
+              <Copy value={s.request} label={`Copy: ${s.title.toLowerCase()}`} />
+            </div>
+          ))}
+        </div>
+        <p className="ca-note">
+          Attach the photo or brief in Muse. For a room preview,{' '}
+          <a href="#your-project">upload your photo in the studio</a>.
+        </p>
+      </section>
+      <details className="ca-card ca-dev">
+        <summary>Photos, briefs & agent instructions</summary>
+        <p>
+          Chat attachments aren’t automatically uploaded to Renovagent. The agent guide explains the
+          supported paths.
+        </p>
+        <div className="ca-guide-links">
+          <a href="/agent-guide.md" target="_blank" rel="noreferrer">
+            Read agent guide (.md) ↗
+          </a>
+          <a href="/project-brief.md" download>
+            Brief template ↓
+          </a>
+        </div>
+      </details>
       {keys.length > 0 && (
         <details className="ca-card ca-manage">
           <summary>

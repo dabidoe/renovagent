@@ -165,6 +165,29 @@ test('an inspiration read keeps six plain segmenter phrases, never repeats', asy
   assert.match(restyleMapPrompt(['rust velvet ottoman']), /never add, remove or move furniture/);
 });
 
+test('furnishing is opt-in and protects owner-kept objects in both model stages', async () => {
+  const { restyleMapPrompt, restylePrompt } = await import('../../apps/api/src/studio.js');
+  const styling = { mode: 'furnish' as const, keep: 'my sofa and piano', preserveFloor: true };
+  const mapping = restyleMapPrompt(['walnut coffee table', 'brass floor lamp'], undefined, styling);
+  const image = restylePrompt(
+    [{ target: 'coffee table', becomes: 'walnut coffee table' }],
+    undefined,
+    styling,
+  );
+  for (const prompt of [mapping, image]) {
+    assert.match(prompt, /Furniture and lighting may be replaced/);
+    assert.match(prompt, /my sofa and piano/);
+    assert.match(prompt, /This takes priority over the inspiration selections/);
+    assert.match(prompt, /Do not change the architecture or camera/);
+    assert.match(prompt, /flooring unchanged; only selected rugs may overlay it/);
+    assert.doesNotMatch(prompt, /never add, remove or move furniture/);
+  }
+  assert.match(
+    restylePrompt([{ target: 'rug', becomes: 'cream rug' }]),
+    /never add, remove or move furniture/,
+  );
+});
+
 test('an imagined room keeps only the choices the studio prices', async () => {
   const { imagined } = await import('../../apps/api/src/studio.js');
   const tile = imagined(

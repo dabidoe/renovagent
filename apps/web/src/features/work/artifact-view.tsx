@@ -9,6 +9,7 @@ import { ScopeDraftView } from '../scope/scope-draft-view.js';
 import { DesignOptionsView } from '../design/design-options-view.js';
 import { type Workspace, type Artifact } from '@renovagent/contracts';
 export const artifactTitles: Record<Artifact['payload']['kind'], string> = {
+  'studio-design': 'Saved room design',
   'conversation-plan': 'Conversation planning proposal',
   'photo-inventory': 'Visual home inventory',
   'inventory-direction': 'Your element direction',
@@ -464,6 +465,19 @@ export function ArtifactView({
       return <CheckoutReviewView review={p} />;
     case 'scope-draft':
       return <ScopeDraftView draft={p} />;
+    case 'studio-design':
+      return (
+        <div>
+          <h3>{p.project.address}</h3>
+          <p>
+            Saved studio proposal, revision {artifact.revision}. Furniture and lighting remain
+            unpriced unless separately sourced.
+          </p>
+          <a href={`#design/${encodeURIComponent(artifact.projectId)}/${artifact.revision}`}>
+            Open this room design
+          </a>
+        </div>
+      );
     case 'design-options':
       return (
         <DesignOptionsView

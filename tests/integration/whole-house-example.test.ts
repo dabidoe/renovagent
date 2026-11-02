@@ -5,6 +5,11 @@ import { createHash } from 'node:crypto';
 import { IDBFactory } from 'fake-indexeddb';
 import { WorkspaceController } from '../../apps/web/src/app/workspace-controller.js';
 import { IndexedDbProjectRepository } from '../../apps/web/src/adapters/indexeddb/project-repository.js';
+import { HUTCHINSON } from '../../apps/web/src/features/house-example/hutchinson-project.js';
+import {
+  EXAMPLE_ADDRESS,
+  EXAMPLE_PRIVACY_NOTE,
+} from '../../apps/web/src/features/house-example/example-privacy.js';
 import { hutchinsonCorpus as corpus } from '../../apps/web/src/features/house-example/hutchinson-corpus.js';
 import {
   houseAreas,
@@ -20,6 +25,24 @@ import {
 const source = (name: string) => readFileSync(`public/examples/hutchinson/${name}`);
 const hash = (bytes: Uint8Array) => createHash('sha256').update(bytes).digest('hex');
 const json = (name: string) => JSON.parse(source(name).toString());
+
+test('the public house example uses a privacy alias and withholds identifying listing links', () => {
+  const provenance = json('source-provenance.json');
+  assert.equal(corpus.address, EXAMPLE_ADDRESS);
+  assert.equal(HUTCHINSON.address, EXAMPLE_ADDRESS);
+  assert.equal(provenance.address, EXAMPLE_ADDRESS);
+  assert.equal(HUTCHINSON.listing, undefined);
+  assert.equal(corpus.suppliedVideo, '');
+  assert.ok(provenance.privacyNote.includes('privacy'));
+  assert.ok(houseBrief(corpus, { excluded: [], halfBath: false }).includes(EXAMPLE_PRIVACY_NOTE));
+  // Identifying property links must not survive inside the downloaded source packet.
+  const serialized = JSON.stringify([corpus, HUTCHINSON, provenance]);
+  assert.doesNotMatch(
+    serialized,
+    /2440[ -]+S[ -]+Hutchinson|PAPH2657784|1MRIT4_pid|992qkvp3rpcfl/i,
+  );
+  assert.ok(corpus.sources.every((source) => source.url.endsWith('/source-provenance.json')));
+});
 
 test('the source pack retains the actual inspected pixels, model provenance and uncertain views', () => {
   assert.equal(corpus.photos.length, 22);

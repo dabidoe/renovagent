@@ -67,8 +67,20 @@ async function resolveColor(
 
 const roomInput = z.object({
   name: z.string().trim().min(1).max(60),
-  widthFt: z.number().min(3).max(60),
-  lengthFt: z.number().min(3).max(60),
+  widthFt: z
+    .number()
+    .min(3)
+    .max(60)
+    .describe(
+      'Owner-reported width of this room. Confirm before reusing dimensions from another room or photo.',
+    ),
+  lengthFt: z
+    .number()
+    .min(3)
+    .max(60)
+    .describe(
+      'Owner-reported length of this room. Confirm before reusing dimensions from another room or photo.',
+    ),
   existingFloor: z.enum(['carpet', 'hardwood', 'vinyl plank', 'tile', 'other']).default('other'),
   paint: colorQuery.nullable().default(null),
   paintLine: z.enum(['builder', 'mid', 'high']).optional(),
@@ -80,7 +92,13 @@ const roomInput = z.object({
   floorMaterial: z.enum(['lvp', 'hardwood']).default('lvp'),
 });
 const planInput = {
-  ceilingFt: z.number().min(7).max(14),
+  ceilingFt: z
+    .number()
+    .min(7)
+    .max(14)
+    .describe(
+      'Owner-reported ceiling height for these rooms. Ask if missing; do not invent a default.',
+    ),
   tier: z.enum(['builder', 'mid', 'high']).default('mid'),
   rooms: z.array(roomInput).min(1).max(12),
 };

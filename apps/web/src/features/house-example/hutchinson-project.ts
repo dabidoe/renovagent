@@ -1,7 +1,8 @@
+import { EXAMPLE_ADDRESS } from './example-privacy.js';
 import type { HouseProject, RoomPick, StudioRoom, TracedPlan } from './paint-floor.js';
 import { PRESET_COLORS } from './paint-floor.js';
 
-// 2440 S Hutchinson St, Philadelphia: the owner's house, from its public
+// Philadelphia rowhouse, shown under a privacy alias, from its public
 // listing. Five rooms, each with a hero listing photo, its SAM 3.1 wall
 // masks and Muse Image floor variants (scripts/hutchinson-rooms.ts), and its
 // outline traced from the listing floor plans (CubiCasa, "deemed highly
@@ -154,10 +155,8 @@ const starting: Record<string, RoomPick> = {
 
 export const HUTCHINSON: HouseProject = {
   id: 'hutchinson',
-  address: '2440 S Hutchinson St',
+  address: EXAMPLE_ADDRESS,
   place: 'Philadelphia rowhouse',
-  listing:
-    'https://www.southphillyrealestateteam.com/post/solid-bones-serious-upside-2440-s-hutchinson-st-philadelphia-pa-19148',
   ceilingFt: 9,
   starting,
   rooms: ROOMS.map(({ photoId, ...room }) => ({

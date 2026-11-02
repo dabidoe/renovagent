@@ -16,7 +16,10 @@ export function SavedPlan({ id }: { id: string }) {
   const [problem, setProblem] = useState<{ signIn: string[] } | { message: string } | null>(null);
   useEffect(() => {
     let live = true;
-    (workspaceRequest(`/studio-plans/${id}`) as Promise<Loaded>)
+    setPlan(null);
+    setProblem(null);
+    workspaceRequest('/session')
+      .then(() => workspaceRequest(`/studio-plans/${id}`) as Promise<Loaded>)
       .then((p) => live && setPlan(p))
       .catch(async (e: { code?: string; message?: string }) => {
         if (!live) return;

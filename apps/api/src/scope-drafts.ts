@@ -39,6 +39,8 @@ export async function draftProjectScope(
   input: DraftProjectScope,
 ) {
   const payload = {
+    ...(input.direction ? { direction: input.direction } : {}),
+    ...(input.sourceDesignRef ? { sourceDesignRef: input.sourceDesignRef } : {}),
     recipeId: input.recipeId,
     packageIds: input.packageIds,
     request: input.request,

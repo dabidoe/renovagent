@@ -134,6 +134,7 @@ export type ScopeDraft = z.infer<typeof scopeDraftSchema>;
 
 export const draftScopePayloadSchema = z
   .object({
+    sourceDesignRef: ref.optional(),
     recipeId: z.string().min(1).max(80),
     packageIds: z.array(id).min(1).max(20),
     request: z.string().trim().min(1).max(2000),

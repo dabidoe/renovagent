@@ -211,6 +211,33 @@
 /* Before/after: the listing photo underneath, the repainted image on top,
    clipped at the handle. Both share one box at the photo's own ratio so the
    SAM masks stay registered to the pixels they were made from. */
+.pf-preview-export {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding-top: 12px;
+  font-size: 12px;
+  color: #64748b;
+}
+.pf-preview-export button {
+  min-height: 44px;
+  padding: 8px 16px;
+  border: 1px solid #dce4ed;
+  border-radius: 999px;
+  background: white;
+  color: #142038;
+  font: inherit;
+  cursor: pointer;
+}
+.pf-preview-export button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.pf-preview-export button:focus-visible {
+  outline: 2px solid #315cff;
+  outline-offset: 3px;
+}
 .pf-compare {
   position: relative;
   aspect-ratio: 3 / 2;
@@ -1103,6 +1130,101 @@
 }
 
 /* Inspiration: a photo someone loves, read into finishes for this room. */
+.pf-styling-modes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.pf-styling-modes button {
+  display: grid;
+  align-content: start;
+  gap: 4px;
+  min-width: 0;
+  min-height: 72px;
+  padding: 12px;
+  border: 1px solid var(--pf-line);
+  border-radius: 12px;
+  background: var(--pf-card);
+  color: var(--pf-ink);
+  text-align: left;
+  font: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+.pf-styling-modes button[aria-pressed='true'] {
+  border-color: var(--pf-accent);
+  background: var(--pf-soft);
+}
+.pf-styling-modes small {
+  color: #64748b;
+  line-height: 1.4;
+}
+.pf-styling-modes button:focus-visible,
+.pf-styling-keep input:focus-visible,
+.pf-design-download:focus-visible {
+  outline: 2px solid var(--pf-accent);
+  outline-offset: 3px;
+}
+.pf-styling-keep {
+  display: grid;
+  gap: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+.pf-styling-keep input {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid var(--pf-line);
+  border-radius: 8px;
+  background: var(--pf-card);
+  color: var(--pf-ink);
+  font: inherit;
+  font-weight: 400;
+}
+.pf-styling-stale {
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #fff7df;
+  color: #765014;
+  line-height: 1.5;
+}
+.pf-save-status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 18px;
+  margin: 0 0 18px;
+  padding: 12px 16px;
+  border: 1px solid var(--pf-line);
+  border-radius: 12px;
+  background: var(--pf-soft);
+  color: var(--pf-ink);
+  font-size: 0.8rem;
+  overflow-wrap: anywhere;
+}
+.pf-save-status a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--pf-accent);
+}
+.pf-save-status small {
+  color: #64748b;
+}
+.pf-design-download {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 8px 14px;
+  margin-top: 10px;
+  border: 1px solid var(--pf-line);
+  border-radius: 999px;
+  color: var(--pf-accent);
+  font-size: 0.85rem;
+  text-decoration: none;
+}
 .pf-inspo {
   display: grid;
   gap: 10px;
@@ -1525,4 +1647,966 @@
 }
 .pf-board-new {
   margin-top: 10px;
+}
+
+/* A working room studio: one canvas and a focused inspector. */
+.pf-studio {
+  --pf-accent: #3858ed;
+  --pf-soft: #f2f4fb;
+}
+.pf-head {
+  padding-bottom: 12px;
+}
+.pf-head h1 {
+  letter-spacing: -0.045em;
+}
+.pf-total small {
+  display: block;
+  margin-top: 4px;
+  opacity: 0.65;
+  font-size: 10px;
+}
+.pf-head-side > .pf-reset:first-child {
+  background: var(--pf-accent);
+  border-color: var(--pf-accent);
+  color: white;
+}
+.pf-save-status {
+  background: transparent;
+  padding: 0 2px;
+  border: 0;
+  margin-bottom: 12px;
+  font-size: 11px;
+}
+.pf-save-status small {
+  margin-left: auto;
+  max-width: 40%;
+}
+.pf-rooms {
+  gap: 8px;
+  padding-block: 6px 14px;
+  margin-bottom: 10px;
+}
+.pf-rooms > button {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  column-gap: 10px;
+  align-content: center;
+  min-width: 176px;
+  padding: 8px;
+  border-radius: 14px;
+}
+.pf-rooms > button > img,
+.pf-rooms > button > .pf-look {
+  grid-row: 1 / 3;
+  width: 52px;
+  height: 52px;
+  border-radius: 9px;
+}
+.pf-room-name {
+  align-self: end;
+  text-align: left;
+  line-height: 1.35;
+  font-size: 12px;
+}
+.pf-room-meta {
+  align-self: start;
+  font-size: 11px;
+  margin-top: 4px;
+}
+.pf-body {
+  grid-template-columns: minmax(0, 1fr) 390px;
+  gap: 22px;
+}
+.pf-stage {
+  position: sticky;
+  top: 86px;
+  align-self: start;
+}
+.pf-panel {
+  padding: 0;
+  overflow: clip;
+  border-radius: 20px;
+  box-shadow: 0 8px 28px #14203805;
+}
+.pf-panel [hidden] {
+  display: none !important;
+}
+.pf-panel > div:not(.pf-inspector-tabs) {
+  padding: 20px;
+}
+.pf-inspector-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 3px;
+  padding: 8px;
+  background: #f4f5fa;
+  border-bottom: 1px solid var(--pf-line);
+}
+.pf-inspector-tabs button {
+  min-height: 44px;
+  border: 0;
+  border-radius: 11px;
+  background: transparent;
+  color: #728096;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.pf-inspector-tabs button[aria-selected='true'] {
+  background: white;
+  color: #1d2b45;
+  box-shadow: 0 2px 8px #1420380d;
+}
+.pf-inspo {
+  gap: 14px;
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+.pf-inspo h3 {
+  font-size: 22px;
+  letter-spacing: -0.035em;
+}
+.pf-styling-modes button {
+  min-height: 65px;
+  padding: 10px;
+}
+.pf-design-brief {
+  display: grid;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.pf-design-brief textarea {
+  resize: vertical;
+  min-height: 124px;
+  width: 100%;
+  padding: 14px;
+  border: 1px solid #dce2ed;
+  border-radius: 12px;
+  background: #fafbfe;
+  color: #1d2b45;
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.65;
+  font-weight: 400;
+}
+.pf-design-brief textarea::placeholder {
+  color: #94a0b2;
+}
+.pf-design-brief textarea:focus-visible,
+.pf-room-plan input:focus-visible,
+.pf-room-plan button:focus-visible,
+.pf-inspector-tabs button:focus-visible {
+  outline: 2px solid var(--pf-accent);
+  outline-offset: 3px;
+}
+.pf-inspo-add {
+  min-height: 64px;
+  border-style: solid;
+  border-color: #e0e5f2;
+  background: #f8f9fd;
+}
+.pf-inspo-add small {
+  font-size: 10px;
+}
+.pf-design-action {
+  display: grid;
+  gap: 8px;
+}
+.pf-design-action .pf-inspo-go {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 48px;
+  border-radius: 12px;
+  box-shadow: 0 5px 16px #3858ed24;
+}
+.pf-design-action small {
+  font-size: 10px;
+  text-align: center;
+  color: #8390a3;
+}
+.pf-design-history h4 {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  margin: 6px 0 10px;
+}
+.pf-design-history h4 span {
+  color: #8290a4;
+}
+.pf-design-history > div {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 3px 1px 8px;
+}
+.pf-design-history button {
+  width: 110px;
+  flex: 0 0 110px;
+  padding: 4px;
+  border: 1px solid #e1e6ef;
+  border-radius: 10px;
+  background: white;
+  text-align: left;
+  cursor: pointer;
+}
+.pf-design-history button[aria-pressed='true'] {
+  border-color: var(--pf-accent);
+  box-shadow: 0 0 0 1px var(--pf-accent);
+}
+.pf-design-history img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: 6px;
+}
+.pf-design-history button span {
+  display: block;
+  padding: 5px 3px;
+  font-size: 10px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #43516a;
+}
+.pf-room-plan {
+  display: grid;
+  gap: 18px;
+}
+.pf-budget-card {
+  padding: 20px;
+  border-radius: 15px;
+  background: #17243e;
+  color: white;
+}
+.pf-budget-card p {
+  margin: 0 0 5px;
+  font-size: 11px;
+  color: #c0c9dd;
+}
+.pf-budget-card > strong {
+  display: block;
+  font-size: 34px;
+  font-weight: 600;
+  letter-spacing: -0.04em;
+}
+.pf-budget-card dl {
+  margin: 18px 0 12px;
+  display: grid;
+  gap: 9px;
+}
+.pf-budget-card dl > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 11px;
+}
+.pf-budget-card dd {
+  margin: 0;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.pf-budget-card small {
+  color: #abb8d2;
+  font-size: 10px;
+}
+.pf-add-item {
+  display: flex;
+  gap: 8px;
+}
+.pf-room-plan input {
+  min-width: 0;
+  width: 100%;
+  min-height: 42px;
+  padding: 9px 10px;
+  border: 1px solid #dfe4ee;
+  border-radius: 8px;
+  background: white;
+  color: #25334b;
+  font: inherit;
+  font-size: 12px;
+}
+.pf-add-item > input {
+  flex: 1;
+}
+.pf-add-item > button {
+  min-height: 44px;
+  padding: 8px 14px;
+  border: 0;
+  border-radius: 9px;
+  background: var(--pf-accent);
+  color: white;
+  cursor: pointer;
+}
+.pf-plan-empty {
+  margin: 0;
+  font-size: 12px;
+  color: #8290a4;
+  line-height: 1.6;
+}
+.pf-room-items {
+  display: grid;
+  gap: 12px;
+}
+.pf-room-item {
+  padding: 13px;
+  border: 1px solid #e2e7f0;
+  border-radius: 12px;
+  background: #fdfdff;
+}
+.pf-item-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.pf-item-title > input {
+  border: 0;
+  padding: 0;
+  min-height: 30px;
+  background: transparent;
+  font-weight: 600;
+}
+.pf-item-title > button {
+  min-width: 36px;
+  min-height: 36px;
+  border: 0;
+  background: transparent;
+  color: #94a0b2;
+  font-size: 22px;
+  cursor: pointer;
+}
+.pf-item-actions {
+  display: flex;
+  gap: 4px;
+  margin-top: 8px;
+}
+.pf-item-actions button {
+  flex: 1;
+  min-height: 36px;
+  border: 1px solid #e1e6ef;
+  border-radius: 7px;
+  background: white;
+  color: #8793a5;
+  font: inherit;
+  font-size: 10px;
+  cursor: pointer;
+}
+.pf-item-actions button[aria-pressed='true'] {
+  color: #3858ed;
+  background: #f0f3ff;
+  border-color: #c3cdf9;
+}
+.pf-item-numbers {
+  display: grid;
+  grid-template-columns: 70px minmax(0, 1fr) 64px;
+  align-items: end;
+  gap: 9px;
+  margin-top: 14px;
+}
+.pf-item-numbers label {
+  display: grid;
+  gap: 5px;
+  font-size: 10px;
+  color: #8290a4;
+}
+.pf-item-numbers strong {
+  font-size: 12px;
+  text-align: right;
+  padding-bottom: 4px;
+}
+.pf-item-numbers strong small {
+  display: block;
+  font-size: 9px;
+  font-weight: 400;
+  color: #8c98aa;
+  margin-top: 4px;
+}
+.pf-item-source {
+  margin-top: 12px;
+  font-size: 10px;
+  color: #8290a4;
+}
+.pf-item-source summary {
+  cursor: pointer;
+  min-height: 30px;
+  display: list-item;
+  padding-top: 6px;
+}
+.pf-item-source > input {
+  margin-top: 8px;
+}
+.pf-item-source > a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+}
+.pf-item-shops {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.pf-item-shops a {
+  display: inline-flex;
+  min-height: 36px;
+  align-items: center;
+  color: #3858ed;
+}
+.pf-work-plan {
+  border-top: 1px solid #e2e7f0;
+  padding-top: 20px;
+}
+.pf-work-plan p,
+.pf-work-plan li {
+  font-size: 12px;
+  color: #6e7c92;
+  line-height: 1.7;
+}
+.pf-work-plan pre {
+  white-space: pre-wrap;
+  font-size: 10px;
+  line-height: 1.6;
+  max-height: 420px;
+  overflow: auto;
+  padding: 12px;
+  background: #f4f6fb;
+  overflow-wrap: anywhere;
+}
+.pf-work-plan summary {
+  min-height: 44px;
+  padding-top: 12px;
+  cursor: pointer;
+  font-size: 12px;
+}
+.pf-error-inline {
+  color: #b54437 !important;
+}
+@media (max-width: 1000px) {
+  .pf-body {
+    grid-template-columns: minmax(0, 1fr) 340px;
+    gap: 16px;
+  }
+  .pf-panel > div:not(.pf-inspector-tabs) {
+    padding: 16px;
+  }
+}
+@media (max-width: 760px) {
+  .pf-body {
+    display: flex;
+    flex-direction: column;
+  }
+  .pf-stage {
+    position: static;
+    width: 100%;
+  }
+  .pf-panel {
+    width: 100%;
+  }
+  .pf-head h1 {
+    font-size: 24px;
+  }
+  .pf-save-status small {
+    max-width: 100%;
+    margin-left: 0;
+  }
+  .pf-rooms > button {
+    min-width: 158px;
+  }
+  .pf-rooms {
+    margin-inline: -4px;
+  }
+  .pf-inspector-tabs {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+  }
+  .pf-item-actions button,
+  .pf-item-title > button,
+  .pf-item-source summary {
+    min-height: 44px;
+  }
+  .pf-room-plan input {
+    min-height: 44px;
+  }
+}
+.pf-panel {
+  gap: 0;
+}
+.pf-panel > div:not(.pf-inspector-tabs) {
+  display: grid;
+  gap: 22px;
+}
+@media (min-width: 761px) {
+  .pf-studio {
+    gap: 10px;
+  }
+  .pf-studio > .pf-head {
+    padding-block: 8px 2px;
+    align-items: center;
+  }
+  .pf-save-status {
+    margin-bottom: 0;
+  }
+  .pf-save-status a {
+    min-height: 32px;
+  }
+  .pf-rooms {
+    padding-block: 4px 8px;
+    margin-bottom: 0;
+  }
+  .pf-rooms > button {
+    grid-template-columns: 40px minmax(0, 1fr);
+  }
+  .pf-rooms > button > img,
+  .pf-rooms > button > .pf-look {
+    width: 40px;
+    height: 40px;
+  }
+}
+
+/* Photo-led directions and editable 3D furniture. */
+.pf-inspector-tabs {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.pf-inspector-tabs button {
+  padding-inline: 5px;
+  font-size: 11px;
+}
+.pf-room-ideas {
+  padding: 17px;
+  border: 1px solid #dde4ef;
+  border-radius: 14px;
+  background: linear-gradient(145deg, #f0f3ff, #faf7f0);
+}
+.pf-ideas-intro > span {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #7c88a1;
+}
+.pf-ideas-intro h4 {
+  margin: 7px 0;
+  font-size: 19px;
+  line-height: 1.25;
+  letter-spacing: -0.035em;
+}
+.pf-ideas-intro p {
+  font-size: 12px;
+  color: #77849a;
+  line-height: 1.5;
+  margin: 0 0 14px;
+}
+.pf-suggest-button {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px;
+  border: 1px solid #c6d0f5;
+  border-radius: 9px;
+  background: white;
+  color: #3858ed;
+  font-size: 12px !important;
+}
+.pf-direction-cards {
+  display: grid;
+  gap: 14px;
+  margin-top: 16px;
+}
+.pf-direction-card {
+  overflow: hidden;
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e2e6ed;
+}
+.pf-direction-art {
+  position: relative;
+  height: 142px;
+  overflow: hidden;
+}
+.pf-direction-number {
+  position: absolute;
+  top: 12px;
+  left: 14px;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: #273143;
+  opacity: 0.65;
+}
+.pf-direction-art > div:not(.pf-direction-palette) {
+  display: flex;
+  align-items: end;
+  justify-content: center;
+  height: 135px;
+  padding: 10px;
+}
+.pf-direction-art img {
+  width: 40%;
+  max-height: 110px;
+  object-fit: contain;
+  margin-inline: -8px;
+  filter: drop-shadow(0 9px 5px #0002);
+}
+.pf-direction-art img:nth-child(2) {
+  transform: translateY(13px);
+  z-index: 1;
+}
+.pf-direction-palette {
+  position: absolute;
+  display: flex;
+  gap: 4px;
+  top: 12px;
+  right: 12px;
+}
+.pf-direction-palette i {
+  display: block;
+  width: 15px;
+  height: 15px;
+  border: 1px solid #ffffffb0;
+  border-radius: 50%;
+  box-shadow: 0 2px 3px #0001;
+}
+.pf-direction-copy {
+  padding: 14px;
+}
+.pf-direction-copy h4 {
+  margin: 0 0 6px;
+  font-size: 16px;
+  letter-spacing: -0.025em;
+}
+.pf-direction-copy p {
+  font-size: 12px;
+  line-height: 1.5;
+  margin: 0 0 8px;
+}
+.pf-direction-copy > small {
+  display: block;
+  font-size: 11px;
+  line-height: 1.6;
+  color: #7a879c;
+}
+.pf-direction-copy > div {
+  display: flex;
+  gap: 8px;
+  margin: 12px 0 8px;
+}
+.pf-direction-copy button {
+  flex: 1;
+  min-height: 44px;
+  border: 1px solid #dde3ef;
+  border-radius: 8px;
+  color: #3858ed;
+  background: white;
+  font-size: 11px !important;
+}
+.pf-direction-copy button:first-child {
+  color: white;
+  background: #3858ed;
+  border-color: #3858ed;
+}
+.pf-direction-copy > span {
+  font-size: 9px;
+  color: #929daf;
+  line-height: 1.5;
+}
+.pf-idea-observations {
+  font-size: 11px;
+  color: #7b879c;
+  margin-top: 14px;
+  line-height: 1.6;
+}
+.pf-idea-observations summary {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+.pf-idea-observations ul {
+  padding-left: 16px;
+}
+.pf-furniture-panel {
+  display: grid;
+  gap: 15px;
+}
+.pf-furniture-panel > p {
+  font-size: 12px;
+  color: #7c889d;
+  line-height: 1.6;
+  margin: 0;
+}
+.pf-asset-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.pf-asset-grid button {
+  position: relative;
+  min-width: 0;
+  display: grid;
+  justify-items: center;
+  padding: 8px 4px;
+  border: 1px solid #e1e6ef;
+  background: linear-gradient(150deg, #fafbfe, #f0f2f8);
+  border-radius: 11px;
+  color: #536179;
+}
+.pf-asset-grid button:hover {
+  border-color: #aab9f7;
+  background: #f2f4ff;
+}
+.pf-asset-grid img {
+  width: 100%;
+  aspect-ratio: 4/3;
+  object-fit: contain;
+}
+.pf-asset-grid span {
+  font-size: 9px;
+  line-height: 1.3;
+}
+.pf-asset-grid b {
+  position: absolute;
+  right: 6px;
+  top: 2px;
+  color: #8998bb;
+  font-size: 17px;
+  font-weight: 400;
+}
+.pf-asset-placeholder {
+  display: grid;
+  place-items: center;
+  min-height: 55px;
+  color: #bac4da;
+}
+.pf-placement-list {
+  display: grid;
+  gap: 5px;
+}
+.pf-placement-list button {
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+  align-items: center;
+  text-align: left;
+  min-height: 44px;
+  padding: 9px 11px;
+  border: 1px solid #e1e6f0;
+  border-radius: 8px;
+  background: white;
+  color: #64728b;
+  font-size: 11px !important;
+}
+.pf-placement-list button[aria-pressed='true'] {
+  border-color: #b2bff5;
+  background: #f1f4ff;
+  color: #3858ed;
+}
+.pf-placement-list small {
+  font-size: 9px;
+  color: #97a2b4;
+}
+.pf-placement-editor {
+  padding: 14px;
+  border: 1px solid #dce3f4;
+  border-radius: 12px;
+  background: #f8faff;
+  display: grid;
+  gap: 14px;
+}
+.pf-placement-editor h4 {
+  margin: 0;
+  font-size: 14px;
+}
+.pf-placement-editor .pf-group-head button {
+  color: #8a6870;
+  border: 0;
+  background: transparent;
+  min-height: 44px;
+  font-size: 10px;
+}
+.pf-placement-editor label {
+  display: grid;
+  gap: 6px;
+  font-size: 10px;
+  color: #7b89a0;
+}
+.pf-placement-editor input,
+.pf-placement-editor select {
+  min-width: 0;
+  width: 100%;
+  min-height: 44px;
+  padding: 8px;
+  background: white;
+  border: 1px solid #dce3ef;
+  border-radius: 7px;
+  color: #465670;
+  font: inherit;
+  font-size: 12px;
+}
+.pf-placement-editor input[type='range'] {
+  padding: 0;
+  accent-color: #3858ed;
+}
+.pf-placement-fields {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.pf-placement-editor small {
+  font-size: 10px;
+  line-height: 1.6;
+  color: #8a96aa;
+}
+.pf-layout-warnings {
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #fff5e7;
+  color: #987239;
+  font-size: 11px;
+  line-height: 1.6;
+}
+.pf-layout-warnings p {
+  margin: 3px 0;
+}
+.pf-furniture-note {
+  font-size: 10px !important;
+}
+.pf-furniture-note a {
+  color: #6c7c9d;
+}
+.room3d-render-download {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  margin: 4px 10px 10px;
+  font-size: 12px;
+  color: #3858ed;
+}
+.pf-3d-host .room3d-photoreal-status {
+  max-width: 100%;
+  line-height: 1.5;
+}
+.pf-3d-basis {
+  margin: 10px 0 0;
+  font-size: 11px;
+  color: #8490a4;
+  line-height: 1.6;
+}
+.pf-3d-host .room3d-muse {
+  min-height: 44px;
+  padding: 8px 13px;
+  border-radius: 9px;
+  background: #3858ed;
+  border: 1px solid #3858ed;
+  color: white;
+  font-size: 12px;
+  box-shadow: 0 3px 9px #3858ed20;
+  cursor: pointer;
+}
+.pf-3d-host .room3d-photoreal-switch button {
+  min-height: 40px;
+}
+.room3d-render-download {
+  position: absolute;
+  bottom: 48px;
+  left: 8px;
+  z-index: 4;
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: #fffffff0;
+  text-decoration: none;
+}
+@media (max-width: 760px) {
+  .pf-studio {
+    gap: 10px;
+  }
+  .pf-head {
+    padding-bottom: 0;
+    gap: 10px;
+  }
+  .pf-total {
+    grid-template-columns: minmax(0, 1fr) auto;
+    width: 100%;
+    align-items: center;
+    column-gap: 12px;
+    padding: 10px 13px;
+  }
+  .pf-total > strong {
+    grid-column: 2;
+    grid-row: 1 / 3;
+    font-size: 24px;
+  }
+  .pf-total > span,
+  .pf-total > small {
+    justify-self: start;
+  }
+  .pf-total > span {
+    font-size: 10px;
+  }
+  .pf-total > small {
+    margin-top: 2px;
+    font-size: 9px;
+  }
+  .pf-save-status {
+    margin-bottom: 0;
+    gap: 4px 12px;
+  }
+  .pf-save-status small {
+    display: none;
+  }
+  .pf-rooms {
+    padding-block: 4px 8px;
+    margin-bottom: 0;
+  }
+  .pf-rooms > button {
+    grid-template-columns: 40px minmax(0, 1fr);
+    min-width: 144px;
+  }
+  .pf-rooms > button > img,
+  .pf-rooms > button > .pf-look {
+    width: 40px;
+    height: 40px;
+  }
+  .pf-3d-host.is-photoreal {
+    aspect-ratio: auto;
+  }
+  .pf-3d-host.is-photoreal > canvas,
+  .pf-3d-host.is-photoreal > .room3d-labels {
+    display: none !important;
+  }
+  .pf-3d-host.is-photoreal .room3d-photoreal-view {
+    position: relative;
+    inset: auto;
+    margin: 0;
+    background: white;
+  }
+  .pf-3d-host.is-photoreal .room3d-photoreal-view img {
+    height: auto;
+    aspect-ratio: 3/2;
+    object-fit: contain;
+    background: #e9e8e4;
+  }
+  .pf-3d-host.is-photoreal .room3d-photoreal-view figcaption {
+    position: static;
+    margin: 6px 8px;
+    color: #7b8799;
+    background: transparent;
+    font-size: 10px;
+    line-height: 1.5;
+  }
+  .pf-3d-host.is-photoreal .room3d-render-download {
+    position: static;
+    margin: 4px 8px;
+    background: #f0f3ff;
+  }
+  .pf-3d-host.is-photoreal .room3d-photoreal {
+    position: relative;
+    inset: auto;
+    max-width: 100%;
+    padding: 8px;
+    justify-content: start;
+  }
 }

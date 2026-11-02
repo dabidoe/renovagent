@@ -17,6 +17,7 @@ import { ExamplesGallery, ListingStudio } from '../features/house-example/listin
 import { InspoExample } from '../features/house-example/inspo-example.js';
 import { rememberReturn, SignInChoices, takeReturn } from '../features/connect/sign-in.js';
 import { SavedPlan } from '../features/house-example/saved-plan.js';
+import { SavedDesign } from '../features/house-example/saved-design.js';
 import { isHouseCase } from '../features/house-example/house-example-model.js';
 import '../features/house-example/house-example.css';
 import '../features/house-example/paint-floor.css';
@@ -59,6 +60,13 @@ if (!window.location.hash) {
   if (to) window.history.replaceState(null, '', to);
 }
 
+const landingAnchors = new Set([
+  '#product-proof',
+  '#studio-possibilities',
+  '#agent-connection',
+  '#compare-tools',
+]);
+
 export function App({ controller }: { controller: WorkspaceController }) {
   const {
     workspace: state,
@@ -69,13 +77,15 @@ export function App({ controller }: { controller: WorkspaceController }) {
   const active = state.activeProjectId || Object.keys(state.projects)[0] || '';
   const project = state.projects[active];
   const view = state.views[active] || defaultView;
-  const [landingVisible, setLandingVisible] = useState(false);
+  const [landingVisible, setLandingVisible] = useState(() =>
+    landingAnchors.has(window.location.hash),
+  );
   const [houseExampleOpen, setHouseExampleOpen] = useState(
     () => window.location.hash === '#example-house',
   );
   // Paint & floor studio pages: your own project, the examples, one example.
   const studioHash = () =>
-    /^#(your-project|examples|connect|example\/[a-z0-9-]+|plan\/[A-Za-z0-9_-]{22})$/.test(
+    /^#(your-project|examples|connect|example\/[a-z0-9-]+|plan\/[A-Za-z0-9_-]{22}|design\/[A-Za-z0-9_:%-]+\/[1-9][0-9]*)$/.test(
       window.location.hash,
     )
       ? window.location.hash
@@ -87,6 +97,7 @@ export function App({ controller }: { controller: WorkspaceController }) {
       setStudioRoute(studioHash());
       // A link to a studio page (e.g. #connect) leaves the landing.
       if (studioHash()) setLandingVisible(false);
+      else if (landingAnchors.has(window.location.hash)) setLandingVisible(true);
     };
     window.addEventListener('hashchange', sync);
     return () => window.removeEventListener('hashchange', sync);
@@ -95,6 +106,14 @@ export function App({ controller }: { controller: WorkspaceController }) {
   const showOwn = !!studioRoute && !landingVisible;
   const showHouse = (houseExampleOpen || wholeHouseProject) && !landingVisible && !showOwn;
   const isLanding = (!project || landingVisible) && !houseExampleOpen && !showOwn;
+  useEffect(() => {
+    if (!isLanding || !landingAnchors.has(window.location.hash)) return;
+    // The app mounts after repository bootstrap, after the browser's first fragment jump.
+    const frame = requestAnimationFrame(() =>
+      document.getElementById(window.location.hash.slice(1))?.scrollIntoView({ block: 'start' }),
+    );
+    return () => cancelAnimationFrame(frame);
+  }, [isLanding]);
   const scope = state.artifacts[scopeDraftId(active)]?.at(-1)?.payload;
   const exampleStudio =
     !isLanding &&
@@ -187,8 +206,12 @@ export function App({ controller }: { controller: WorkspaceController }) {
     workOpen,
   ]);
   const logEnd = useRef<HTMLDivElement>(null);
+  const previousActive = useRef(active);
   useEffect(() => {
-    setLandingVisible(false);
+    if (previousActive.current !== active) {
+      previousActive.current = active;
+      setLandingVisible(false);
+    }
     setWorkOpen(false);
     setShowRecent(false);
     setShowQuestions(false);
@@ -399,8 +422,7 @@ export function App({ controller }: { controller: WorkspaceController }) {
         </button>
         {isLanding ? (
           <nav className="landing-nav" aria-label="Main navigation">
-            <a href="#how-it-works">The plan</a>
-            <a href="#product-proof">See it work</a>
+            <a href="#product-proof">Studio</a>
             <a href="#connect">Connect your agent</a>
             <details className="landing-mobile-menu">
               <summary aria-label="Navigation menu">
@@ -412,8 +434,7 @@ export function App({ controller }: { controller: WorkspaceController }) {
                     event.currentTarget.closest('details')?.removeAttribute('open');
                 }}
               >
-                <a href="#how-it-works">The plan</a>
-                <a href="#product-proof">See it work</a>
+                <a href="#product-proof">Studio</a>
                 <a href="#connect">Connect your agent</a>
                 <button type="button" onClick={() => setModal('projects')}>
                   Open workspace
@@ -427,7 +448,7 @@ export function App({ controller }: { controller: WorkspaceController }) {
         ) : (
           <button
             className="prompt-project-picker"
-            aria-label={`Switch project: ${showHouse ? 'Hutchinson whole-house plan' : (project?.name ?? 'Projects')}`}
+            aria-label={`Switch project: ${showHouse ? 'Hutchens whole-house plan' : (project?.name ?? 'Projects')}`}
             onClick={() => setModal('projects')}
           >
             <span>
@@ -438,7 +459,7 @@ export function App({ controller }: { controller: WorkspaceController }) {
                     ? 'Connect your agent'
                     : 'Examples'
                 : showHouse
-                  ? 'Hutchinson · whole-house plan'
+                  ? 'Hutchens · whole-house plan'
                   : exampleStudio
                     ? 'Living room refresh'
                     : project && state.properties[project.propertyId].name.split(',')[0]}
@@ -471,12 +492,13 @@ export function App({ controller }: { controller: WorkspaceController }) {
             onPhotos={setStartPhotos}
             onStart={() => setModal('new')}
             onExample={() => safe(openExample())}
-            onOwnProject={() => {
+            onOwnProject={(idea) => {
               // The words and photos typed on the home page carry into the studio.
-              setOwnStart({ idea: startPrompt.trim(), photos: startPhotos });
+              setOwnStart({ idea: idea ?? startPrompt.trim(), photos: startPhotos });
               openStudio('#your-project');
             }}
             onExamples={() => openStudio('#examples')}
+            onDirection={(id) => openStudio(`#example/${id}`)}
             busy={busy}
           />
         </main>
@@ -485,9 +507,19 @@ export function App({ controller }: { controller: WorkspaceController }) {
           {studioRoute === '#connect' ? (
             <ConnectAgent />
           ) : studioRoute === '#your-project' ? (
-            <OwnStudio key={ownStart ? 'start' : 'own'} start={ownStart} />
+            <OwnStudio
+              key={ownStart ? 'start' : 'own'}
+              start={ownStart}
+              onSignedIn={() => controller.resumeSession()}
+            />
           ) : studioRoute!.startsWith('#plan/') ? (
             <SavedPlan key={studioRoute} id={studioRoute!.slice('#plan/'.length)} />
+          ) : studioRoute!.startsWith('#design/') ? (
+            <SavedDesign
+              key={studioRoute}
+              projectId={decodeURIComponent(studioRoute!.split('/')[1]!)}
+              revision={Number(studioRoute!.split('/')[2])}
+            />
           ) : studioRoute === '#examples' ? (
             <ExamplesGallery
               onOpen={(route) =>

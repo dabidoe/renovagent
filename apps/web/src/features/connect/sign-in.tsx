@@ -28,9 +28,11 @@ export function takeReturn() {
 export function SignInChoices({
   providers,
   className = 'link-button',
+  onSignedIn,
 }: {
   providers?: string[];
   className?: string;
+  onSignedIn?: () => void | Promise<void>;
 }) {
   const [session, setSession] = useState<{ providers: string[]; guests: boolean } | null>(null);
   const [busy, setBusy] = useState(false);
@@ -50,7 +52,10 @@ export function SignInChoices({
     setError('');
     try {
       await workspaceRequest('/auth/guest', {});
-      window.location.reload();
+      if (onSignedIn) {
+        await onSignedIn();
+        setBusy(false);
+      } else window.location.reload();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Guest sign-in failed');
       setBusy(false);

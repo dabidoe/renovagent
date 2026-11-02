@@ -21,3 +21,5 @@ export * from './catalog.js';
 export * from './scope-draft.js';
 export * from './design-options.js';
 export * from './room-dimensions.js';
+export * from './studio-design.js';
+export * from './studio-furniture.js';

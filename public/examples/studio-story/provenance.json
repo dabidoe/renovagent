@@ -1,0 +1,17 @@
+{
+  "source": "../oakland/image-01-lvp.jpg",
+  "result": "furnished-room.jpg",
+  "model": "muse-image-1.0",
+  "generatedAt": "2026-11-02",
+  "description": "Actual studio photo-edit result from local verification. Furniture is a visual concept, not matched retail products or measured fit.",
+  "changes": [
+    "Alabaster SW 7008 walls",
+    "Cream sofa",
+    "Tan lounge chair",
+    "Striped rug",
+    "Walnut coffee table",
+    "Brass floor lamp"
+  ],
+  "inputSha256": "eab332a90d0f03ae6e2277b1c1f68dbe53b3a3894e7de3172ae71f2aa8e4057e",
+  "outputSha256": "3fba66ab8a4a4f34edb7e342ce276f6d6e41eb9b1f97de506b78e02c105e6875"
+}

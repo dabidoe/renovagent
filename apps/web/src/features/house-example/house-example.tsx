@@ -1,3 +1,4 @@
+import { EXAMPLE_ADDRESS } from './example-privacy.js';
 import { useEffect, useRef, useState } from 'react';
 import type { Workspace } from '@renovagent/contracts';
 import { Glyph } from '../../components/glyph.js';
@@ -279,7 +280,7 @@ export function HouseExample({
     );
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'Hutchinson - whole-house concept.md';
+    a.download = 'Hutchens - whole-house concept.md';
     a.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   };
@@ -351,7 +352,7 @@ export function HouseExample({
             }
             alt={
               stage === 'look'
-                ? 'Muse-generated concept of the Hutchinson ground floor'
+                ? 'Muse-generated concept of the example ground floor'
                 : stage === 'plan'
                   ? `${area.title}: original listing floor plan`
                   : `${area.title}: ${photo.observations[0]}`
@@ -438,7 +439,7 @@ export function HouseExample({
       <div className="house-scene-caption">
         <span>{stageCaption}</span>
         <a href={corpus.suppliedListing} target="_blank" rel="noopener noreferrer">
-          Listing source ↗
+          Source notes ↗
         </a>
       </div>
       {(stage === 'photo' || stage === 'outline') && area.photoIds.length > 1 && (
@@ -500,11 +501,11 @@ export function HouseExample({
     </>
   );
   return (
-    <section className="house-example" aria-label="Hutchinson whole-house concept">
+    <section className="house-example" aria-label="Hutchens whole-house concept">
       <header className="house-heading">
         <div>
-          <p className="house-project-label">CONCEPT PLAN</p>
-          <h1>2440 S Hutchinson St</h1>
+          <p className="house-project-label">CONCEPT PLAN · ADDRESS CHANGED FOR PRIVACY</p>
+          <h1>{EXAMPLE_ADDRESS}</h1>
           <p className="house-address">
             Whole-house refresh <span>Philadelphia, PA</span>
           </p>
@@ -680,7 +681,7 @@ export function HouseExample({
         </aside>
       </div>
       <footer className="house-footer">
-        <span>18 photos · 4 listing plans</span>
+        <span>18 photos · 4 listing plans · address changed for privacy</span>
         <button type="button" onClick={() => setPanel('sources')}>
           <Glyph name="source" />
           Sources & process
@@ -858,13 +859,15 @@ export function HouseExample({
               </summary>
               <div className="house-source-files">
                 <a href={corpus.suppliedListing} target="_blank" rel="noopener noreferrer">
-                  Original listing
+                  Source notes · listing withheld
                   <Glyph name="right" />
                 </a>
-                <a href={corpus.suppliedVideo} target="_blank" rel="noopener noreferrer">
-                  Listing video tour
-                  <Glyph name="right" />
-                </a>
+                {corpus.suppliedVideo && (
+                  <a href={corpus.suppliedVideo} target="_blank" rel="noopener noreferrer">
+                    Listing video tour
+                    <Glyph name="right" />
+                  </a>
+                )}
                 <a href={asset('sam-floor.json')} target="_blank" rel="noopener noreferrer">
                   SAM segmentation receipt
                   <Glyph name="right" />

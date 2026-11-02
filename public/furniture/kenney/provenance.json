@@ -1,0 +1,60 @@
+{
+  "source": "https://kenney.nl/assets/furniture-kit",
+  "mirror": "https://github.com/laanlabs/openPlan3D",
+  "revision": "98f9cb467e4045c6abc5d9880ada1f03dff50c68",
+  "license": "CC0-1.0",
+  "files": {
+    "loungeSofa.glb": {
+      "sha256": "1886b811c0d3ad0d8525a4fd43adf4112c497c8e0ed906f06877ca3517f4c7dd",
+      "bytes": 9644
+    },
+    "loungeChair.glb": {
+      "sha256": "ddfe6bc4b3451bca61666d7b614552d6ed2a03d82fc76244b72ae3155874dc6c",
+      "bytes": 9648
+    },
+    "tableCoffee.glb": {
+      "sha256": "e38bea760fbd514efbb75528d09b4752c91af44677bbb97e6d4386c263525179",
+      "bytes": 8256
+    },
+    "rugRectangle.glb": {
+      "sha256": "a989d2d59c04e3071e0c90388b113a9a8f339ce1814ef984c51cb6dcd7c8e0eb",
+      "bytes": 3188
+    },
+    "lampRoundFloor.glb": {
+      "sha256": "50fe1b5b588edf15bfa9cc880f71a02a4fda6036350b24733d0ef4de5cc5e908",
+      "bytes": 6600
+    },
+    "pottedPlant.glb": {
+      "sha256": "5b760eda2766f75fda36b2c5df652a1662f82981ef64cd8fa7fe7bcd386b3a15",
+      "bytes": 7576
+    },
+    "bedDouble.glb": {
+      "sha256": "c49b33e7d797d2ba1111895587dba7ff63b17a712eb9b4ceeb40a598f73e476c",
+      "bytes": 23368
+    },
+    "desk.glb": {
+      "sha256": "0164fe828f028b321730fb8c74502e353583f751be74da1682d42fff7d3c5a42",
+      "bytes": 15048
+    },
+    "bookcaseOpen.glb": {
+      "sha256": "750702218d68c062b15dfef6ab06a4014d1cfa8bd05f02e57c53b7e13bec157c",
+      "bytes": 18020
+    },
+    "tableRound.glb": {
+      "sha256": "f8daea9124a542a00b7bdacfddac82dc468573d43e44d7b54dd6316e9695754b",
+      "bytes": 6444
+    },
+    "chairCushion.glb": {
+      "sha256": "33544228984857f2cb502b58452fed72157335f9b1caf29e96da5c9094c53fdc",
+      "bytes": 12588
+    },
+    "cabinetTelevision.glb": {
+      "sha256": "811719593d676ff76f7b5904d52c845ce0396af2bc9a6a2636c4818ead320b99",
+      "bytes": 10524
+    },
+    "furniture-kit-License.txt": {
+      "sha256": "78c8043c884b33abee06000a32e11530f25957c5210be8ae2573244f14ba9bbc",
+      "bytes": 572
+    }
+  }
+}

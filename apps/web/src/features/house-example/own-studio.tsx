@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { workspaceRequest } from '../../adapters/http/project-repository.js';
 import { Glyph } from '../../components/glyph.js';
-import { PaintFloorStudio, parseFeet } from './paint-floor-studio.js';
+import { SignInChoices } from '../connect/sign-in.js';
+import { PaintFloorStudio, parseFeet, type SavedStudioDesign } from './paint-floor-studio.js';
 import { imageUrl, ownProject, photoSha, type PlanRoom, type ReadPhoto } from './own-project.js';
 import type { HouseProject, Masks, StudioRoom } from './paint-floor.js';
 
@@ -45,7 +46,15 @@ const MAX_PHOTOS = 8;
 // What the home page handed over: the owner's words and room photos.
 export type OwnStart = { idea: string; photos: File[] };
 
-function Intake({ start, onBuilt }: { start?: OwnStart | null; onBuilt: (saved: Saved) => void }) {
+function Intake({
+  start,
+  onBuilt,
+  onSignedIn,
+}: {
+  start?: OwnStart | null;
+  onBuilt: (saved: Saved) => void;
+  onSignedIn?: () => Promise<void>;
+}) {
   const [where, setWhere] = useState('');
   const [ceiling, setCeiling] = useState('');
   const [idea, setIdea] = useState(start?.idea ?? '');
@@ -53,6 +62,7 @@ function Intake({ start, onBuilt }: { start?: OwnStart | null; onBuilt: (saved: 
   const [plans, setPlans] = useState<File[]>([]);
   const [steps, setSteps] = useState<Step[] | null>(null);
   const [error, setError] = useState('');
+  const [needsAccess, setNeedsAccess] = useState(false);
   const photoInput = useRef<HTMLInputElement>(null);
   const planInput = useRef<HTMLInputElement>(null);
   const build = async () => {
@@ -68,6 +78,12 @@ function Intake({ start, onBuilt }: { start?: OwnStart | null; onBuilt: (saved: 
       );
     advance(0);
     try {
+      const session = (await workspaceRequest('/session')) as { mode?: string; signedIn?: boolean };
+      if (session.mode === 'account' && !session.signedIn) {
+        setSteps(null);
+        setNeedsAccess(true);
+        return;
+      }
       const photoShas = await Promise.all(photos.map(upload));
       const planShas = await Promise.all(plans.map(upload));
       advance(1);
@@ -206,25 +222,56 @@ function Intake({ start, onBuilt }: { start?: OwnStart | null; onBuilt: (saved: 
         <button
           type="button"
           className="pf-build"
-          disabled={!photos.length}
+          disabled={!photos.length || needsAccess}
           onClick={() => void build()}
         >
           Build my plan <Glyph name="right" />
         </button>
       )}
       {error && <p className="pf-intake-error">{error}</p>}
+      {needsAccess && (
+        <div className="pf-studio-access">
+          <h3>Keep this studio yours.</h3>
+          <p>Continue as a guest to start. Your selected photos are ready.</p>
+          <SignInChoices
+            className="pf-build"
+            onSignedIn={async () => {
+              await onSignedIn?.();
+              setNeedsAccess(false);
+              await build();
+            }}
+          />
+        </div>
+      )}
     </section>
   );
 }
 
-export function OwnStudio({ start }: { start?: OwnStart | null }) {
+export function OwnStudio({
+  start,
+  initialDesign,
+  onSignedIn,
+}: {
+  start?: OwnStart | null;
+  initialDesign?: SavedStudioDesign;
+  onSignedIn?: () => Promise<void>;
+}) {
   // A new start from the home page replaces the project kept in the browser.
-  const [saved, setSaved] = useState<Saved | null>(() => (start?.photos.length ? null : load()));
+  const [saved, setSaved] = useState<Saved | null>(() =>
+    initialDesign
+      ? { project: initialDesign.snapshot.project, plans: [] }
+      : start?.photos.length
+        ? null
+        : load(),
+  );
+  const keepLocal = (next: Saved | null) => {
+    if (!initialDesign) keep(next);
+  };
   const commit = (next: Saved | null) => {
     setSaved(next);
-    keep(next);
+    keepLocal(next);
   };
-  if (!saved) return <Intake start={start} onBuilt={commit} />;
+  if (!saved) return <Intake start={start} onBuilt={commit} onSignedIn={onSignedIn} />;
   const { project, plans } = saved;
   const editRoom = (roomId: string, patch: Partial<StudioRoom>) =>
     setSaved((current) => {
@@ -236,7 +283,7 @@ export function OwnStudio({ start }: { start?: OwnStart | null }) {
           rooms: current.project.rooms.map((r) => (r.id === roomId ? { ...r, ...patch } : r)),
         },
       };
-      keep(next);
+      keepLocal(next);
       return next;
     });
   const renderFloor = async (roomId: string, style: string) => {
@@ -262,7 +309,7 @@ export function OwnStudio({ start }: { start?: OwnStart | null }) {
           ),
         },
       };
-      keep(next);
+      keepLocal(next);
       return next;
     });
   };
@@ -270,7 +317,12 @@ export function OwnStudio({ start }: { start?: OwnStart | null }) {
     <PaintFloorStudio
       key={project.id}
       project={project}
-      kicker="Your project"
+      savedDesign={initialDesign}
+      kicker={
+        initialDesign?.snapshot.basis === 'listing-example'
+          ? 'Saved listing example · proposed design'
+          : 'Your project'
+      }
       renderFloor={renderFloor}
       onEditRoom={editRoom}
       onCeiling={(ceilingFt) => {
@@ -282,7 +334,7 @@ export function OwnStudio({ start }: { start?: OwnStart | null }) {
           if (!current?.project.idea) return current;
           const { idea: _used, ...rest } = current.project;
           const next = { ...current, project: rest };
-          keep(next);
+          keepLocal(next);
           return next;
         })
       }

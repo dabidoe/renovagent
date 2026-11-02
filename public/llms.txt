@@ -1,0 +1,9 @@
+# Renovagent
+
+Home-improvement planning with owner-controlled projects, proposed paint and floor plans, and inspiration boards.
+
+- [Agent guide](/agent-guide.md): tool workflows, photo-upload boundaries, source-image hashes, authority and limits.
+- [Project brief template](/project-brief.md): a Markdown intake template for the owner.
+- [Connect](/#connect): owner sign-in and seven-day private connection keys.
+
+MCP endpoint: /mcp (Streamable HTTP). Use the connected site's origin. Photos attached in an agent's chat are not automatically uploaded to Renovagent. Read the agent guide before promising photo-based design options.

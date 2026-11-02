@@ -1,10 +1,26 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { nearestPaint, roomSurfaces } from '@renovagent/core';
+import { studioFinishSignature as lookSignature } from './studio-signatures.js';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import {
+  studioDesignSchema,
+  studioItemSchema,
+  type StudioDesign,
+  type StudioItem,
+} from '@renovagent/contracts';
+import { nearestPaint, roomSurfaces, studioItemBudget } from '@renovagent/core';
 import { workspaceRequest } from '../../adapters/http/project-repository.js';
 import { Glyph } from '../../components/glyph.js';
 import { mountRoomScene, type RoomScene } from '../room3d/room-scene.js';
 import { PaintPicker, brandColorLink } from '../room3d/photo-outlines.js';
-import { InspiredView, InspoPanel } from './inspo-panel.js';
+import { InspiredView, InspoPanel, stylingDraft, type StylingDraft } from './inspo-panel.js';
+import { RoomPlan, type StudioHandoff } from './room-plan.js';
+import { FurniturePanel } from './furniture-panel.js';
+import {
+  studioPlacementSchema,
+  type StudioPlacement,
+  type StudioAssetId,
+} from '@renovagent/contracts';
+import { studioAsset, studioPlacementStart } from '@renovagent/core';
+import type { StudioModelRenderContext } from '../room3d/photoreal.js';
 import {
   DEFAULT_PICK,
   DEFAULT_SHEEN,
@@ -35,6 +51,7 @@ import {
 } from './paint-floor.js';
 
 const pickStore = (projectId: string) => `renovagent.studio.${projectId}.picks.v1`;
+export type SavedStudioDesign = { projectId: string; revision: number; snapshot: StudioDesign };
 function loadPicks(project: HouseProject): Record<string, RoomPick> {
   const starting = project.starting ?? {};
   try {
@@ -141,16 +158,62 @@ export function BeforeAfter({
   room,
   pick,
   pending,
+  allowDownload = false,
 }: {
   room: StudioRoom;
   pick: RoomPick;
   pending: string | null;
+  allowDownload?: boolean;
 }) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const [split, setSplit] = useState(50);
   const [ratio, setRatio] = useState<string>('3 / 2');
   const [ready, setReady] = useState(false);
   const [error, setError] = useState('');
+  const [downloadError, setDownloadError] = useState('');
+  const download = () => {
+    if (!canvas.current || !ready || pending) return;
+    setDownloadError('');
+    try {
+      const source = canvas.current;
+      const output = document.createElement('canvas');
+      output.width = source.width;
+      const labelHeight = Math.max(52, Math.round(source.width / 22));
+      output.height = source.height + labelHeight;
+      const ctx = output.getContext('2d')!;
+      ctx.drawImage(source, 0, 0);
+      ctx.fillStyle = '#142038';
+      ctx.fillRect(0, source.height, output.width, labelHeight);
+      ctx.fillStyle = '#fff';
+      ctx.font = `${Math.max(12, Math.round(labelHeight / 3))}px sans-serif`;
+      ctx.textBaseline = 'middle';
+      ctx.fillText(
+        'Renovagent · generated finish preview · concept only',
+        16,
+        source.height + labelHeight / 2,
+        output.width - 32,
+      );
+      output.toBlob((blob) => {
+        if (!blob) {
+          setDownloadError('Could not export this preview. Please try again.');
+          return;
+        }
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `renovagent-${
+          room.title
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-|-$/g, '') || 'room'
+        }-preview.png`;
+        link.click();
+        setTimeout(() => URL.revokeObjectURL(url), 60_000);
+      }, 'image/png');
+    } catch {
+      setDownloadError('Could not export this preview. Please try again.');
+    }
+  };
   // The chosen floor's image once it exists; the photo until then.
   const style = styleOf(pick);
   const shown = (style && floorImage(room, style)) || room.photo;
@@ -172,34 +235,48 @@ export function BeforeAfter({
     };
   }, [shown.src, shown.walls, hex]);
   return (
-    <div className="pf-compare" style={{ ['--split' as string]: `${split}%`, aspectRatio: ratio }}>
-      <img className="pf-before" src={room.photo.src} alt={`${room.title} as it is`} />
-      <canvas
-        ref={canvas}
-        className={`pf-after${ready ? ' is-ready' : ''}`}
-        role="img"
-        aria-label={`${room.title} with the chosen paint and floor`}
-      />
-      <span className="pf-tag pf-tag-before">Before</span>
-      <span className="pf-tag pf-tag-after">After</span>
-      <span className="pf-handle" aria-hidden="true" />
-      <input
-        className="pf-slider"
-        type="range"
-        min={0}
-        max={100}
-        value={split}
-        aria-label="Drag to compare before and after"
-        onChange={(e) => setSplit(Number(e.target.value))}
-      />
-      {pending && (
-        <p className="pf-working" role="status">
-          <span className="pf-spinner" aria-hidden="true" />
-          {pending}
-        </p>
+    <>
+      <div
+        className="pf-compare"
+        style={{ ['--split' as string]: `${split}%`, aspectRatio: ratio }}
+      >
+        <img className="pf-before" src={room.photo.src} alt={`${room.title} as it is`} />
+        <canvas
+          ref={canvas}
+          className={`pf-after${ready ? ' is-ready' : ''}`}
+          role="img"
+          aria-label={`${room.title} with the chosen paint and floor`}
+        />
+        <span className="pf-tag pf-tag-before">Before</span>
+        <span className="pf-tag pf-tag-after">After</span>
+        <span className="pf-handle" aria-hidden="true" />
+        <input
+          className="pf-slider"
+          type="range"
+          min={0}
+          max={100}
+          value={split}
+          aria-label="Drag to compare before and after"
+          onChange={(e) => setSplit(Number(e.target.value))}
+        />
+        {pending && (
+          <p className="pf-working" role="status">
+            <span className="pf-spinner" aria-hidden="true" />
+            {pending}
+          </p>
+        )}
+        {error && <p className="pf-error">{error}</p>}
+      </div>
+      {allowDownload && (
+        <div className="pf-preview-export">
+          <button type="button" disabled={!ready || !!pending || !!error} onClick={download}>
+            Download preview
+          </button>
+          <span>Edited photo · PNG</span>
+          {downloadError && <p role="alert">{downloadError}</p>}
+        </div>
       )}
-      {error && <p className="pf-error">{error}</p>}
-    </div>
+    </>
   );
 }
 
@@ -223,15 +300,27 @@ export function Room3D({
   ceilingFt,
   pick,
   renderActions = true,
+  placements = [],
+  selectedPlacement,
+  onPlacementSelect,
+  onPlacementMove,
+  modelRender,
 }: {
   room: StudioRoom;
   ceilingFt: number | null;
   pick: RoomPick;
   renderActions?: boolean;
+  placements?: StudioPlacement[];
+  selectedPlacement?: string | null;
+  onPlacementSelect?: (id: string | null) => void;
+  onPlacementMove?: (id: string, xM: number, zM: number) => void;
+  modelRender?: StudioModelRenderContext;
 }) {
   const host = useRef<HTMLDivElement>(null);
   const scene = useRef<RoomScene | null>(null);
   const [error, setError] = useState('');
+  const live = useRef({ onPlacementSelect, onPlacementMove, modelRender });
+  live.current = { onPlacementSelect, onPlacementMove, modelRender };
   const look = {
     wallColor: pick.color?.hex ?? '#d9cfbf',
     floorFinish: floorFinish(room, pick),
@@ -249,7 +338,22 @@ export function Room3D({
         roomSurfaces(model, null),
         look,
         () => {},
-        { sourceEvidenceId: null, title: room.title, renderActions },
+        {
+          sourceEvidenceId: null,
+          title: room.title,
+          renderActions,
+          placements,
+          onPlacementSelect: (id) => live.current.onPlacementSelect?.(id),
+          onPlacementMove: (id, x, z) => live.current.onPlacementMove?.(id, x, z),
+          modelRender: modelRender
+            ? {
+                current: () => live.current.modelRender!.current(),
+                initial: modelRender.initial,
+                onRendered: modelRender.onRendered,
+              }
+            : undefined,
+          onFurnitureError: setError,
+        },
       );
       setError('');
     } catch (e) {
@@ -265,9 +369,21 @@ export function Room3D({
     scene.current?.setLook(look);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [look.wallColor, look.floorFinish, look.floorTexture]);
+  useEffect(() => {
+    scene.current?.setPlacements(placements);
+  }, [placements]);
+  useEffect(() => {
+    scene.current?.selectPlacement(selectedPlacement ?? null);
+  }, [selectedPlacement]);
   return (
     <div className="pf-3d">
       <div ref={host} className="pf-3d-host" />
+      <p className="pf-3d-basis">
+        {room.sizeNote
+          ? 'Room shell uses an estimated size.'
+          : 'Room shell uses the entered dimensions.'}{' '}
+        Furniture sizes and positions are editable concepts; openings and fit need checking.
+      </p>
       {error && <p className="pf-error">{error}</p>}
     </div>
   );
@@ -421,7 +537,7 @@ function Imagine({
         if (text.trim().length >= 3) onImagine(text.trim());
       }}
     >
-      <label htmlFor="pf-imagine-text">Imagine the {room.title.toLowerCase()}</label>
+      <label htmlFor="pf-imagine-text">Paint & floors · {room.title}</label>
       <div>
         <input
           id="pf-imagine-text"
@@ -443,17 +559,35 @@ function Imagine({
 function ShoppingSheet({
   project,
   picks,
+  items,
   takeoffs,
   tier,
   onClose,
 }: {
   project: HouseProject;
   picks: Record<string, RoomPick>;
+  items: Record<string, StudioItem[]>;
   takeoffs: Record<string, ReturnType<typeof roomTakeoff>>;
   tier: TierKey;
   onClose: () => void;
 }) {
-  const list = shoppingList(project, picks, takeoffs);
+  const list = shoppingList(
+    project,
+    Object.fromEntries(Object.entries(picks).map(([id, pick]) => [id, { ...pick, ideas: [] }])),
+    takeoffs,
+  );
+  const itemRooms = project.rooms.filter(
+    (r) => (picks[r.id] ?? DEFAULT_PICK).included && items[r.id]?.length,
+  );
+  const itemText = itemRooms
+    .map(
+      (r) =>
+        `${r.title} · furniture & decor\n${items[r.id]!.map((item) => {
+          const total = studioItemBudget([item]).lines[0]!.totalMinor;
+          return `- ${item.name}: ${item.action === 'keep' ? 'Keep mine' : `${item.quantity ?? '?'} × ${item.unitAllowanceMinor == null ? 'not priced' : money(item.unitAllowanceMinor)} · ${total == null ? 'not priced' : `${money(total)} owner allowance`}`}${item.url ? ` · ${item.url}` : ''}`;
+        }).join('\n')}`,
+    )
+    .join('\n\n');
   const [copied, setCopied] = useState(false);
   return (
     <div className="pf-list-backdrop" role="presentation" onClick={onClose}>
@@ -469,7 +603,8 @@ function ShoppingSheet({
             <p className="pf-kicker">Shopping list</p>
             <h2>{project.address}</h2>
             <p className="pf-sub">
-              Materials, {TIER_LABELS[tier].toLowerCase()} · <b>{money(list.totalMinor)}</b>
+              Paint & floor materials, {TIER_LABELS[tier].toLowerCase()} ·{' '}
+              <b>{money(list.totalMinor)}</b>
             </p>
           </div>
           <div className="pf-list-actions">
@@ -477,7 +612,9 @@ function ShoppingSheet({
               type="button"
               onClick={() =>
                 void navigator.clipboard
-                  ?.writeText(shoppingText(project, list, tier))
+                  ?.writeText(
+                    `${shoppingText(project, list, tier)}\n\n${itemText}\nOwner allowances are not retailer prices. Confirm products, dimensions and fit.`,
+                  )
                   .then(() => setCopied(true))
               }
             >
@@ -530,6 +667,52 @@ function ShoppingSheet({
               ? 'Add each room’s size to price it, then the list fills in.'
               : 'Pick a colour or a floor for a room to start the list.'}
           </p>
+        )}
+        {!!itemRooms.length && (
+          <>
+            <h3>Furniture & décor · your allowances</h3>
+            {itemRooms.map((r) => (
+              <div key={r.id}>
+                <h4>{r.title}</h4>
+                <ul className="pf-lines">
+                  {items[r.id]!.map((item) => {
+                    const total = studioItemBudget([item]).lines[0]!.totalMinor;
+                    return (
+                      <li key={item.id}>
+                        <span>
+                          {item.name}
+                          <small>
+                            {item.action === 'keep'
+                              ? 'Keep mine'
+                              : `${item.quantity ?? '?'} × ${item.unitAllowanceMinor == null ? 'not priced' : money(item.unitAllowanceMinor)}`}
+                            {item.url && (
+                              <>
+                                {' '}
+                                ·{' '}
+                                <a href={item.url} target="_blank" rel="noreferrer">
+                                  Product link ↗
+                                </a>
+                              </>
+                            )}
+                          </small>
+                        </span>
+                        <b>
+                          {item.action === 'keep'
+                            ? 'Keeping'
+                            : total == null
+                              ? 'Not priced'
+                              : money(total)}
+                        </b>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            ))}
+            <p className="pf-fine">
+              Owner allowances, not retailer quotes. Confirm products, dimensions and fit.
+            </p>
+          </>
         )}
         <p className="pf-fine">
           Example prices for this demo, not live offers. Quantities: 2 coats plus 10% paint, rounded
@@ -623,6 +806,8 @@ export function PaintFloorStudio({
   onCeiling,
   roomTools,
   onIdeaUsed,
+  savedDesign,
+  initialDesign,
 }: {
   project: HouseProject;
   kicker: string;
@@ -636,7 +821,13 @@ export function PaintFloorStudio({
   roomTools?: (room: StudioRoom) => ReactNode;
   // Called once the project's own description has been applied.
   onIdeaUsed?: () => void;
+  savedDesign?: SavedStudioDesign;
+  // Validated bundled proposal, used only when this example has no browser draft.
+  initialDesign?: StudioDesign;
 }) {
+  const localScope = savedDesign
+    ? `${project.id}.saved.${savedDesign.projectId}.${savedDesign.revision}`
+    : project.id;
   const [roomId, setRoomIdState] = useState(project.rooms[0]?.id ?? '');
   const setRoomId = (id: string) => {
     setApplied(false);
@@ -645,15 +836,26 @@ export function PaintFloorStudio({
   };
   // A room with no photo (a plan an agent saved) is shown in 3D.
   const [view, setView] = useState<'photo' | '3d' | 'inspired'>(
-    project.rooms[0]?.photo.src ? 'photo' : '3d',
+    savedDesign?.snapshot.modelRenders?.[project.rooms[0]?.id ?? '']
+      ? '3d'
+      : savedDesign?.snapshot.inspired[project.rooms[0]?.id ?? '']
+        ? 'inspired'
+        : initialDesign?.inspired[project.rooms[0]?.id ?? '']
+          ? 'inspired'
+          : project.rooms[0]?.photo.src
+            ? 'photo'
+            : '3d',
   );
   // A room restyled from an inspiration photo, kept in this browser.
-  const inspiredStore = `renovagent.studio.${project.id}.inspired.v1`;
+  const inspiredStore = `renovagent.studio.${localScope}.inspired.v1`;
   const [inspired, setInspired] = useState<Record<string, string>>(() => {
+    if (savedDesign) return savedDesign.snapshot.inspired;
     try {
-      return JSON.parse(localStorage.getItem(inspiredStore) || '{}') as Record<string, string>;
+      return (JSON.parse(localStorage.getItem(inspiredStore) || 'null') ??
+        initialDesign?.inspired ??
+        {}) as Record<string, string>;
     } catch {
-      return {};
+      return initialDesign?.inspired ?? {};
     }
   });
   const keepInspired = (id: string, src: string) =>
@@ -666,11 +868,331 @@ export function PaintFloorStudio({
       }
       return next;
     });
-  const [tier, setTier] = useState<TierKey>(project.tier ?? 'mid');
+  const [tier, setTier] = useState<TierKey>(() => {
+    if (savedDesign) return savedDesign.snapshot.tier;
+    try {
+      const saved = localStorage.getItem(`renovagent.studio.${localScope}.tier.v1`);
+      if (saved === 'builder' || saved === 'mid' || saved === 'high') return saved;
+    } catch {
+      /* Defaults work when storage is unavailable. */
+    }
+    return project.tier ?? 'mid';
+  });
+  useEffect(() => {
+    try {
+      localStorage.setItem(`renovagent.studio.${localScope}.tier.v1`, tier);
+    } catch {
+      /* Kept for this visit. */
+    }
+  }, [project.id, tier]);
   // Any style shows on a photo-less room (as the 3D floor); a photo needs its image.
   const canShow = (r: StudioRoom, style: string) =>
     !r.photo.src || !!floorImage(r, style) || !!renderFloor;
-  const [picks, setPicks] = useState<Record<string, RoomPick>>(() => loadPicks(project));
+  const [picks, setPicks] = useState<Record<string, RoomPick>>(
+    () => savedDesign?.snapshot.picks ?? loadPicks({ ...project, id: localScope }),
+  );
+  const itemStore = `renovagent.studio.${localScope}.items.v1`;
+  const [items, setItems] = useState<Record<string, StudioItem[]>>(() => {
+    if (savedDesign?.snapshot.items) return savedDesign.snapshot.items;
+    try {
+      const stored = JSON.parse(localStorage.getItem(itemStore) || '{}');
+      return Object.fromEntries(
+        project.rooms.map((r) => [
+          r.id,
+          Array.isArray(stored[r.id])
+            ? stored[r.id].flatMap((i: unknown) => {
+                const p = studioItemSchema.safeParse(i);
+                return p.success ? [p.data] : [];
+              })
+            : (initialDesign?.items?.[r.id] ??
+              (picks[r.id]?.ideas ?? []).map((name) => ({
+                id: crypto.randomUUID(),
+                name,
+                category: 'other' as const,
+                action: 'add' as const,
+                quantity: null,
+                unitAllowanceMinor: null,
+              }))),
+        ]),
+      );
+    } catch {
+      return initialDesign?.items ?? {};
+    }
+  });
+  useEffect(() => {
+    try {
+      localStorage.setItem(itemStore, JSON.stringify(items));
+    } catch {
+      /* Visible for this visit. */
+    }
+  }, [itemStore, items]);
+  const addDesignItems = (id: string, names: string[]) =>
+    setItems((current) => {
+      const existing = current[id] ?? [];
+      const seen = new Set(existing.map((i) => i.name.trim().toLowerCase()));
+      const added = names
+        .filter(
+          (name) =>
+            name.trim() &&
+            !seen.has(name.trim().toLowerCase()) &&
+            seen.add(name.trim().toLowerCase()),
+        )
+        .map(
+          (name): StudioItem => ({
+            id: crypto.randomUUID(),
+            name: name.trim().slice(0, 200),
+            category: /lamp|pendant|sconce|light|chandelier/i.test(name)
+              ? 'lighting'
+              : /rug|throw|curtain|plant|pillow|cushion|artwork/i.test(name)
+                ? 'decor'
+                : 'furniture',
+            action: 'add',
+            quantity: null,
+            unitAllowanceMinor: null,
+          }),
+        );
+      return added.length ? { ...current, [id]: [...existing, ...added].slice(0, 100) } : current;
+    });
+  const effectivePicks = Object.fromEntries(
+    project.rooms.map((r) => [
+      r.id,
+      {
+        ...(picks[r.id] ?? DEFAULT_PICK),
+        ideas: (items[r.id] ?? []).filter((i) => i.action !== 'keep').map((i) => i.name),
+      },
+    ]),
+  );
+  const placementStore = `renovagent.studio.${localScope}.placements.v1`;
+  const [placements, setPlacements] = useState<Record<string, StudioPlacement[]>>(() => {
+    if (savedDesign) return savedDesign.snapshot.placements ?? {};
+    try {
+      const raw = JSON.parse(localStorage.getItem(placementStore) || '{}');
+      return Object.fromEntries(
+        project.rooms.map((r) => [
+          r.id,
+          Array.isArray(raw[r.id])
+            ? raw[r.id].flatMap((p: unknown) => {
+                const parsed = studioPlacementSchema.safeParse(p);
+                return parsed.success ? [parsed.data] : [];
+              })
+            : (initialDesign?.placements?.[r.id] ?? []),
+        ]),
+      );
+    } catch {
+      return initialDesign?.placements ?? {};
+    }
+  });
+  useEffect(() => {
+    try {
+      localStorage.setItem(placementStore, JSON.stringify(placements));
+    } catch {
+      /* Saved project remains available. */
+    }
+  }, [placementStore, placements]);
+  const renderStore = `renovagent.studio.${localScope}.model-renders.v1`;
+  const [modelRenders, setModelRenders] = useState<
+    Record<string, { image: string; signature: string }>
+  >(() => {
+    if (savedDesign) return savedDesign.snapshot.modelRenders ?? {};
+    try {
+      const raw = JSON.parse(localStorage.getItem(renderStore) || '{}');
+      return studioDesignSchema.shape.modelRenders.parse(raw) ?? {};
+    } catch {
+      return {};
+    }
+  });
+  useEffect(() => {
+    try {
+      localStorage.setItem(renderStore, JSON.stringify(modelRenders));
+    } catch {
+      /* Saved project remains available. */
+    }
+  }, [renderStore, modelRenders]);
+  const [selectedPlacement, setSelectedPlacement] = useState<string | null>(null);
+  const [inspector, setInspector] = useState<'design' | 'layout' | 'finishes' | 'plan'>('design');
+  const addAssets = (target: StudioRoom, ids: StudioAssetId[]) => {
+    const model = roomModel(target, project.ceilingFt);
+    if (!model) return;
+    const existing = placements[target.id] ?? [];
+    const nextItems = [...(items[target.id] ?? [])];
+    const next = [...existing];
+    for (const assetId of ids) {
+      if (next.length >= 60 || nextItems.length >= 100) break;
+      const asset = studioAsset(assetId);
+      let item = nextItems.find(
+        (i) =>
+          !next.some((p) => p.itemId === i.id) &&
+          assetId.split('-').every((word) => i.name.toLowerCase().includes(word)),
+      );
+      if (!item) {
+        item = {
+          id: crypto.randomUUID(),
+          name: asset.name,
+          category: asset.category,
+          action: 'add',
+          quantity: 1,
+          unitAllowanceMinor: null,
+        };
+        nextItems.push(item);
+      }
+      next.push({
+        id: crypto.randomUUID(),
+        itemId: item.id,
+        assetId,
+        ...studioPlacementStart(assetId, model),
+      });
+    }
+    setItems((current) => ({ ...current, [target.id]: nextItems }));
+    setPlacements((current) => ({ ...current, [target.id]: next }));
+    setSelectedPlacement(next.at(-1)?.id ?? null);
+    setView('3d');
+    setInspector('layout');
+  };
+  const [styling, setStyling] = useState<Record<string, StylingDraft>>(
+    () =>
+      savedDesign?.snapshot.styling ??
+      Object.fromEntries(
+        project.rooms.flatMap((r) => {
+          const d = stylingDraft(localScope, r) ?? initialDesign?.styling[r.id];
+          return d ? [[r.id, d]] : [];
+        }),
+      ),
+  );
+  const onStylingChange = useCallback(
+    (id: string, draft: StylingDraft) =>
+      setStyling((current) =>
+        (!current[id] &&
+          !draft.inspo &&
+          !draft.paint &&
+          !draft.keep.trim() &&
+          !draft.brief?.trim() &&
+          !draft.versions?.length &&
+          !draft.ideas &&
+          !draft.changes.length &&
+          !draft.resultSignature) ||
+        JSON.stringify(current[id]) === JSON.stringify(draft)
+          ? current
+          : { ...current, [id]: draft },
+      ),
+    [],
+  );
+  const [stylingStale, setStylingStale] = useState<Record<string, boolean>>({});
+  const onStylingStale = useCallback(
+    (id: string, stale: boolean) =>
+      setStylingStale((current) => (current[id] === stale ? current : { ...current, [id]: stale })),
+    [],
+  );
+  const [renderSignatures, setRenderSignatures] = useState<Record<string, string>>(() => {
+    if (savedDesign) return savedDesign.snapshot.renderSignatures;
+    try {
+      return (JSON.parse(localStorage.getItem(`${inspiredStore}.looks`) || 'null') ??
+        initialDesign?.renderSignatures ??
+        {}) as Record<string, string>;
+    } catch {
+      return initialDesign?.renderSignatures ?? {};
+    }
+  });
+  useEffect(() => {
+    try {
+      localStorage.setItem(`${inspiredStore}.looks`, JSON.stringify(renderSignatures));
+    } catch {
+      /* Kept for this visit. */
+    }
+  }, [inspiredStore, renderSignatures]);
+  const saveKey = `renovagent.studio.${localScope}.saved.v1`;
+  const [saveMeta, setSaveMeta] = useState<{ projectId: string; revision: number } | null>(() => {
+    if (savedDesign) return { projectId: savedDesign.projectId, revision: savedDesign.revision };
+    try {
+      const m = JSON.parse(localStorage.getItem(saveKey) || 'null');
+      return typeof m?.projectId === 'string' && Number.isInteger(m.revision) && m.revision > 0
+        ? m
+        : null;
+    } catch {
+      return null;
+    }
+  });
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState('');
+  const requestId = useRef(crypto.randomUUID());
+  const snapshot = {
+    kind: 'studio-design' as const,
+    basis:
+      savedDesign?.snapshot.basis ??
+      initialDesign?.basis ??
+      (/example/i.test(kicker) ? ('listing-example' as const) : ('owner-studio' as const)),
+    project: {
+      id: project.id,
+      address: project.address,
+      place: project.place,
+      listing: project.listing,
+      ceilingFt: project.ceilingFt,
+      ceilingNote: project.ceilingNote,
+      rooms: project.rooms.map((r) => ({
+        id: r.id,
+        title: r.title,
+        existingFloor: r.existingFloor,
+        photo: { src: r.photo.src, walls: r.photo.walls },
+        floors: Object.fromEntries(
+          Object.entries(r.floors).flatMap(([style, f]) =>
+            f ? [[style, { src: f.src, walls: f.walls }]] : [],
+          ),
+        ),
+        size: r.size,
+        sizeNote: r.sizeNote,
+        plan: r.plan,
+      })),
+    },
+    picks: effectivePicks,
+    tier,
+    inspired,
+    renderSignatures,
+    styling,
+    items,
+    placements,
+    modelRenders,
+  };
+  const snapshotJson = JSON.stringify(snapshot);
+  const [savedJson, setSavedJson] = useState(
+    savedDesign ? JSON.stringify(savedDesign.snapshot) : '',
+  );
+  const save = async () => {
+    if (saveMeta && savedJson === snapshotJson) return saveMeta;
+    setSaving(true);
+    setSaveError('');
+    try {
+      const parsed = studioDesignSchema.safeParse(snapshot);
+      if (!parsed.success)
+        throw new Error(
+          `This design cannot be saved: ${parsed.error.issues[0]?.path.join('.')} ${parsed.error.issues[0]?.message}`,
+        );
+      const result = (await workspaceRequest('/studio-designs', {
+        requestId: requestId.current,
+        ...(saveMeta ? { projectId: saveMeta.projectId } : {}),
+        expectedRevision: saveMeta?.revision ?? 0,
+        snapshot: parsed.data,
+      })) as SavedStudioDesign;
+      const meta = { projectId: result.projectId, revision: result.revision };
+      setSaveMeta(meta);
+      setSavedJson(snapshotJson);
+      requestId.current = crypto.randomUUID();
+      window.history.replaceState(
+        null,
+        '',
+        `#design/${encodeURIComponent(meta.projectId)}/${meta.revision}`,
+      );
+      try {
+        localStorage.setItem(saveKey, JSON.stringify(meta));
+      } catch {
+        /* The saved link remains available. */
+      }
+      return meta;
+    } catch (e) {
+      setSaveError(e instanceof Error ? e.message : 'Could not save the project');
+      return null;
+    } finally {
+      setSaving(false);
+    }
+  };
   const [working, setWorking] = useState<Record<string, string>>({});
   const [editCeiling, setEditCeiling] = useState(false);
   const [editSize, setEditSize] = useState(false);
@@ -682,7 +1204,7 @@ export function PaintFloorStudio({
     setPicks((current) => {
       const all = { ...current, [id]: { ...(current[id] ?? DEFAULT_PICK), ...next } };
       try {
-        localStorage.setItem(pickStore(project.id), JSON.stringify(all));
+        localStorage.setItem(pickStore(localScope), JSON.stringify(all));
       } catch {
         // Picks still apply for this visit.
       }
@@ -715,7 +1237,7 @@ export function PaintFloorStudio({
         }),
       );
       try {
-        localStorage.setItem(pickStore(project.id), JSON.stringify(all));
+        localStorage.setItem(pickStore(localScope), JSON.stringify(all));
       } catch {
         // Picks still apply for this visit.
       }
@@ -742,8 +1264,9 @@ export function PaintFloorStudio({
         ...(color ? { color } : {}),
         ...(idea.sheen ? { sheen: idea.sheen } : {}),
         ...(style ? { floorStyle: style, floor: material } : {}),
-        ideas: idea.extras,
+        ideas: [...new Set([...(current.ideas ?? []), ...idea.extras])],
       });
+      addDesignItems(target.id, idea.extras);
       setImagining({ busy: false, error: '' });
       return true;
     } catch (e) {
@@ -798,6 +1321,7 @@ export function PaintFloorStudio({
   const takeoff = takeoffs[room.id]!;
   const included = project.rooms.filter((r) => (picks[r.id] ?? DEFAULT_PICK).included);
   const houseTotal = included.reduce((sum, r) => sum + takeoffs[r.id]!.totalMinor, 0);
+  const itemBudget = studioItemBudget(included.flatMap((r) => items[r.id] ?? []));
   const has3d = !!roomModel(room, ceilingFt);
   const photoless = !room.photo.src;
   const needsSize = !room.size || !ceilingFt;
@@ -806,7 +1330,7 @@ export function PaintFloorStudio({
     (workKey && working[workKey]) ||
     (shownImage && !shownImage.walls && pick.color ? 'Finding the walls…' : null);
   return (
-    <section className="pf-studio" aria-label={`${project.address} paint and floor plan`}>
+    <section className="pf-studio" aria-label={`${project.address} room studio`}>
       <header className="pf-head">
         <div>
           <p className="pf-kicker">{kicker}</p>
@@ -829,19 +1353,43 @@ export function PaintFloorStudio({
           )}
         </div>
         <div className="pf-head-side">
+          <button type="button" className="pf-reset" disabled={saving} onClick={() => void save()}>
+            {saving ? 'Saving…' : 'Save project'}
+          </button>
           <button type="button" className="pf-reset" onClick={() => setListOpen(true)}>
             Shopping list
           </button>
           {actions}
           <div className="pf-total" aria-live="polite">
             <span>
-              Whole house · {included.length} room{included.length === 1 ? '' : 's'}
+              Budget so far · {included.length} room{included.length === 1 ? '' : 's'}
             </span>
-            <strong>{money(houseTotal)}</strong>
-            <span>materials, {TIER_LABELS[tier].toLowerCase()}</span>
+            <strong>{money(houseTotal + itemBudget.allowanceMinor)}</strong>
+            <span>Demo finishes + your allowances</span>
+            <small>
+              {itemBudget.unpriced ? `${itemBudget.unpriced} items to price` : TIER_LABELS[tier]}
+            </small>
           </div>
         </div>
       </header>
+      {(saveMeta || saveError) && (
+        <div className="pf-save-status" role="status">
+          {saveError ? (
+            saveError
+          ) : (
+            <>
+              <span>
+                {savedJson === snapshotJson ? 'Saved' : 'Unsaved changes'} · revision{' '}
+                {saveMeta!.revision}
+              </span>
+              <a href={`#design/${encodeURIComponent(saveMeta!.projectId)}/${saveMeta!.revision}`}>
+                Open saved revision
+              </a>
+              <small>Project {saveMeta!.projectId} · private to your account</small>
+            </>
+          )}
+        </div>
+      )}
 
       <nav className="pf-rooms" aria-label="Rooms">
         {project.rooms.map((r) => {
@@ -862,7 +1410,12 @@ export function PaintFloorStudio({
               <span className="pf-room-name">{r.title}</span>
               <span className="pf-room-meta">
                 <i style={{ background: p.color?.hex ?? 'transparent' }} />
-                {p.included ? money(takeoffs[r.id]!.totalMinor) : 'Deferred'}
+                {p.included
+                  ? money(
+                      takeoffs[r.id]!.totalMinor +
+                        studioItemBudget(items[r.id] ?? []).allowanceMinor,
+                    )
+                  : 'Deferred'}
               </span>
             </button>
           );
@@ -876,14 +1429,16 @@ export function PaintFloorStudio({
               <strong>{room.title}</strong>
               {room.size && (
                 <span>
-                  {room.sizeNote && onEditRoom ? (
+                  {onEditRoom ? (
                     <button
                       type="button"
                       className="pf-ceiling"
-                      title={room.sizeNote}
+                      title={room.sizeNote ?? 'Change room measurements'}
+                      aria-label="Edit room measurements"
                       onClick={() => setEditSize(true)}
                     >
-                      ≈{feetInches(room.size.xFt)} × {feetInches(room.size.yFt)}
+                      {room.sizeNote ? '≈' : ''}
+                      {feetInches(room.size.xFt)} × {feetInches(room.size.yFt)} · Edit
                     </button>
                   ) : (
                     `${feetInches(room.size.xFt)} × ${feetInches(room.size.yFt)}`
@@ -932,194 +1487,328 @@ export function PaintFloorStudio({
                     aria-selected={view === 'inspired'}
                     onClick={() => setView('inspired')}
                   >
-                    <Glyph name="paint" /> Inspired
+                    <Glyph name="paint" /> Room design
                   </button>
                 )}
               </div>
             )}
           </div>
           {view === 'inspired' && inspired[room.id] && room.photo.src ? (
-            <InspiredView before={room.photo.src} after={inspired[room.id]!} />
+            <div>
+              {(stylingStale[room.id] || renderSignatures[room.id] !== lookSignature(pick)) && (
+                <p className="pf-styling-stale" role="status">
+                  Previous design — choices have changed. Generate a new room design to apply them.
+                </p>
+              )}
+              <InspiredView before={room.photo.src} after={inspired[room.id]!} />
+            </div>
           ) : (view === '3d' || photoless) && has3d ? (
-            <Room3D room={room} ceilingFt={ceilingFt} pick={pick} />
+            <Room3D
+              room={room}
+              ceilingFt={ceilingFt}
+              pick={pick}
+              placements={(placements[room.id] ?? []).filter((p) =>
+                (items[room.id] ?? []).some((i) => i.id === p.itemId),
+              )}
+              selectedPlacement={selectedPlacement}
+              onPlacementSelect={(id) => {
+                setSelectedPlacement(id);
+                if (id) setInspector('layout');
+              }}
+              onPlacementMove={(id, xM, zM) =>
+                setPlacements((all) => ({
+                  ...all,
+                  [room.id]: (all[room.id] ?? []).map((p) => (p.id === id ? { ...p, xM, zM } : p)),
+                }))
+              }
+              modelRender={{
+                current: () => ({
+                  placements: (placements[room.id] ?? []).filter((p) =>
+                    (items[room.id] ?? []).some((i) => i.id === p.itemId),
+                  ),
+                  signature: JSON.stringify({
+                    model: roomModel(room, ceilingFt),
+                    look: lookSignature(pick),
+                    placements: placements[room.id] ?? [],
+                  }),
+                }),
+                initial: modelRenders[room.id],
+                onRendered: (image, signature) =>
+                  setModelRenders((all) => ({ ...all, [room.id]: { image, signature } })),
+              }}
+            />
           ) : (
-            <BeforeAfter room={room} pick={pick} pending={pending || null} />
+            <BeforeAfter room={room} pick={pick} pending={pending || null} allowDownload />
           )}
         </div>
 
         <aside className="pf-panel" aria-label="Choices and materials">
-          <Imagine
-            key={room.id}
-            room={room}
-            busy={imagining.busy}
-            error={imagining.error}
-            onImagine={(text) => void imagine(text, room)}
-          />
-          <InspoPanel
-            room={room}
-            onPaint={(color) => update({ color })}
-            onRestyled={(src) => {
-              keepInspired(room.id, src);
-              setView('inspired');
-            }}
-          />
-          {roomTools?.(room)}
-          {((needsSize && onEditRoom) || editCeiling || editSize) && (
-            <SizeEntry
+          <div className="pf-inspector-tabs" role="tablist" aria-label="Studio tools">
+            {(
+              [
+                { id: 'design', label: 'Design' },
+                { id: 'layout', label: '3D layout' },
+                { id: 'finishes', label: 'Finishes' },
+                { id: 'plan', label: 'Plan & budget' },
+              ] as const
+            ).map((tab) => (
+              <button
+                key={tab.id}
+                type="button"
+                role="tab"
+                aria-selected={inspector === tab.id}
+                onClick={() => {
+                  setInspector(tab.id);
+                  if (tab.id === 'layout' && has3d) setView('3d');
+                }}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+          <div hidden={inspector !== 'design'}>
+            <InspoPanel
+              key={`${project.id}:${room.id}`}
+              projectId={localScope}
+              initialDraft={styling[room.id] ?? (savedDesign ? null : undefined)}
+              finishSignature={lookSignature(pick)}
+              onStale={onStylingStale}
+              onDraftChange={onStylingChange}
+              designItems={items[room.id] ?? []}
+              initialBrief={project.idea}
+              currentColor={pick.color}
+              basePhotoSrc={shownImage?.src || room.photo.src}
+              floorPending={!!missing && !!renderFloor}
+              onDesignItems={(names) => addDesignItems(room.id, names)}
+              onIdeaLayout={(ids) =>
+                addAssets(
+                  room,
+                  ids.filter((id) => !(placements[room.id] ?? []).some((p) => p.assetId === id)),
+                )
+              }
+              room={room}
+              onPaint={(color) => update({ color })}
+              onRestyled={(src, sourceFinishSignature) => {
+                keepInspired(room.id, src);
+                setRenderSignatures((current) => ({
+                  ...current,
+                  [room.id]: sourceFinishSignature ?? lookSignature(pick),
+                }));
+                setView('inspired');
+              }}
+            />
+          </div>
+          <div hidden={inspector !== 'layout'}>
+            <FurniturePanel
+              model={roomModel(room, ceilingFt)}
+              placements={placements[room.id] ?? []}
+              items={items[room.id] ?? []}
+              selected={selectedPlacement}
+              onSelect={(id) => {
+                setSelectedPlacement(id);
+                setView('3d');
+              }}
+              onChange={(next) => setPlacements((all) => ({ ...all, [room.id]: next }))}
+              onAdd={(id) => addAssets(room, [id])}
+            />
+          </div>
+          <div hidden={inspector !== 'finishes'}>
+            <Imagine
               key={room.id}
               room={room}
-              ceilingFt={editCeiling ? null : ceilingFt}
-              editSize={editSize}
-              onSize={(size) => {
-                // A typed size is the owner's, no longer an estimate.
-                onEditRoom?.(room.id, { size, sizeNote: undefined });
-                setEditSize(false);
-              }}
-              {...(onCeiling
-                ? {
-                    onCeiling: (ft: number) => {
-                      onCeiling(ft);
-                      setEditCeiling(false);
-                    },
-                  }
-                : {})}
+              busy={imagining.busy}
+              error={imagining.error}
+              onImagine={(text) => void imagine(text, room)}
             />
-          )}
-          <ColorChoice
-            pick={pick}
-            tier={tier}
-            onColor={(color) => update({ color })}
-            onPaint={(paint) => update(paint)}
-          />
-          <div className="pf-group">
-            <div className="pf-group-head">
-              <h3>Floor</h3>
-              <span>
-                {pickedStyle
-                  ? FLOOR_STYLES.find((f) => f.id === pickedStyle)?.label
-                  : `Current ${room.existingFloor}`}
-              </span>
+            {roomTools?.(room)}
+            {((needsSize && onEditRoom) || editCeiling || editSize) && (
+              <SizeEntry
+                key={room.id}
+                room={room}
+                ceilingFt={editCeiling ? null : ceilingFt}
+                editSize={editSize}
+                onSize={(size) => {
+                  // A typed size is the owner's, no longer an estimate.
+                  onEditRoom?.(room.id, { size, sizeNote: undefined });
+                  setEditSize(false);
+                }}
+                {...(onCeiling
+                  ? {
+                      onCeiling: (ft: number) => {
+                        onCeiling(ft);
+                        setEditCeiling(false);
+                      },
+                    }
+                  : {})}
+              />
+            )}
+            <ColorChoice
+              pick={pick}
+              tier={tier}
+              onColor={(color) => update({ color })}
+              onPaint={(paint) => update(paint)}
+            />
+            <div className="pf-group">
+              <div className="pf-group-head">
+                <h3>Floor</h3>
+                <span>
+                  {pickedStyle
+                    ? FLOOR_STYLES.find((f) => f.id === pickedStyle)?.label
+                    : `Current ${room.existingFloor}`}
+                </span>
+              </div>
+              <div className="pf-floor-styles" role="group" aria-label="Floor style">
+                <button
+                  type="button"
+                  className="pf-floor-style is-keep"
+                  aria-pressed={pick.floor === 'keep'}
+                  onClick={() => update({ floor: 'keep' })}
+                >
+                  {photoless ? (
+                    <span className="pf-look-none" />
+                  ) : (
+                    <img src={room.photo.src} alt="" />
+                  )}
+                  <span>Keep</span>
+                </button>
+                {FLOOR_STYLES.map((f) => (
+                  <button
+                    key={f.id}
+                    type="button"
+                    className="pf-floor-style"
+                    aria-pressed={pickedStyle === f.id}
+                    disabled={!canShow(room, f.id)}
+                    onClick={() =>
+                      update({
+                        floorStyle: f.id,
+                        floor: pick.floor === 'keep' ? 'lvp' : pick.floor,
+                      })
+                    }
+                  >
+                    <img src={swatchUrl(f.id)} alt="" loading="lazy" />
+                    <span>{f.label}</span>
+                  </button>
+                ))}
+              </div>
+              {pick.floor !== 'keep' && (
+                <div className="pf-chips" role="group" aria-label="Floor material">
+                  {FLOOR_CHOICES.filter((f) => f.key !== 'keep').map((f) => (
+                    <button
+                      key={f.key}
+                      type="button"
+                      aria-pressed={pick.floor === f.key}
+                      onClick={() => update({ floor: f.key, floorStyle: pickedStyle! })}
+                    >
+                      {f.label}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
-            <div className="pf-floor-styles" role="group" aria-label="Floor style">
+
+            <div className="pf-group">
+              <div className="pf-group-head">
+                <h3>
+                  Paint & floor <span className="pf-badge">Demo prices</span>
+                </h3>
+                <div className="pf-tiers" role="group" aria-label="Price tier">
+                  {(Object.keys(TIER_LABELS) as TierKey[]).map((t) => (
+                    <button
+                      key={t}
+                      type="button"
+                      aria-pressed={tier === t}
+                      onClick={() => setTier(t)}
+                    >
+                      {TIER_LABELS[t]}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              {takeoff.lines.length ? (
+                <ul className="pf-lines">
+                  {takeoff.lines.map((line) => (
+                    <li key={line.bomItemId}>
+                      <span>
+                        {line.productName}
+                        <small>
+                          {line.purchaseUnits} × {money(line.unitPriceMinor)}
+                        </small>
+                      </span>
+                      <b>{money(line.lineTotalMinor)}</b>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="pf-empty">
+                  {needsSize ? 'Add the room size to price it.' : 'Pick a colour or a floor.'}
+                </p>
+              )}
+              {effectivePicks[room.id]?.ideas?.length ? (
+                <p className="pf-ideas">
+                  <span>In your room list · allowances in Plan & budget</span>
+                  {effectivePicks[room.id]!.ideas!.join(' · ')}
+                </p>
+              ) : null}
+              <div className="pf-subtotal">
+                <span>Paint & floor materials</span>
+                <b>{money(takeoff.totalMinor)}</b>
+              </div>
+            </div>
+
+            {project.rooms.length > 1 && (pick.color || pick.floor !== 'keep') && (
               <button
                 type="button"
-                className="pf-floor-style is-keep"
-                aria-pressed={pick.floor === 'keep'}
-                onClick={() => update({ floor: 'keep' })}
+                className="pf-apply-all"
+                disabled={applied}
+                onClick={() => applyEverywhere(room)}
               >
-                {photoless ? (
-                  <span className="pf-look-none" />
-                ) : (
-                  <img src={room.photo.src} alt="" />
-                )}
-                <span>Keep</span>
+                {applied ? 'Every room has this look' : 'Use this look in every room'}
               </button>
-              {FLOOR_STYLES.map((f) => (
-                <button
-                  key={f.id}
-                  type="button"
-                  className="pf-floor-style"
-                  aria-pressed={pickedStyle === f.id}
-                  disabled={!canShow(room, f.id)}
-                  onClick={() =>
-                    update({ floorStyle: f.id, floor: pick.floor === 'keep' ? 'lvp' : pick.floor })
-                  }
-                >
-                  <img src={swatchUrl(f.id)} alt="" loading="lazy" />
-                  <span>{f.label}</span>
-                </button>
-              ))}
-            </div>
-            {pick.floor !== 'keep' && (
-              <div className="pf-chips" role="group" aria-label="Floor material">
-                {FLOOR_CHOICES.filter((f) => f.key !== 'keep').map((f) => (
-                  <button
-                    key={f.key}
-                    type="button"
-                    aria-pressed={pick.floor === f.key}
-                    onClick={() => update({ floor: f.key, floorStyle: pickedStyle! })}
-                  >
-                    {f.label}
-                  </button>
-                ))}
-              </div>
             )}
+            <label className="pf-include">
+              <input
+                type="checkbox"
+                checked={pick.included}
+                onChange={(e) => update({ included: e.target.checked })}
+              />
+              Include in the whole-house total
+            </label>
           </div>
-
-          <div className="pf-group">
-            <div className="pf-group-head">
-              <h3>
-                Materials <span className="pf-badge">Demo prices</span>
-              </h3>
-              <div className="pf-tiers" role="group" aria-label="Price tier">
-                {(Object.keys(TIER_LABELS) as TierKey[]).map((t) => (
-                  <button
-                    key={t}
-                    type="button"
-                    aria-pressed={tier === t}
-                    onClick={() => setTier(t)}
-                  >
-                    {TIER_LABELS[t]}
-                  </button>
-                ))}
-              </div>
-            </div>
-            {takeoff.lines.length ? (
-              <ul className="pf-lines">
-                {takeoff.lines.map((line) => (
-                  <li key={line.bomItemId}>
-                    <span>
-                      {line.productName}
-                      <small>
-                        {line.purchaseUnits} × {money(line.unitPriceMinor)}
-                      </small>
-                    </span>
-                    <b>{money(line.lineTotalMinor)}</b>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="pf-empty">
-                {needsSize ? 'Add the room size to price it.' : 'Pick a colour or a floor.'}
-              </p>
-            )}
-            {pick.ideas?.length ? (
-              <p className="pf-ideas">
-                <span>Not priced</span>
-                {pick.ideas.join(' · ')}
-              </p>
-            ) : null}
-            <div className="pf-subtotal">
-              <span>Room materials</span>
-              <b>{money(takeoff.totalMinor)}</b>
-            </div>
-          </div>
-
-          {project.rooms.length > 1 && (pick.color || pick.floor !== 'keep') && (
-            <button
-              type="button"
-              className="pf-apply-all"
-              disabled={applied}
-              onClick={() => applyEverywhere(room)}
-            >
-              {applied ? 'Every room has this look' : 'Use this look in every room'}
-            </button>
-          )}
-          <label className="pf-include">
-            <input
-              type="checkbox"
-              checked={pick.included}
-              onChange={(e) => update({ included: e.target.checked })}
+          <div hidden={inspector !== 'plan'}>
+            <RoomPlan
+              key={room.id}
+              items={items[room.id] ?? []}
+              onChange={(next) => {
+                setItems((current) => ({ ...current, [room.id]: next }));
+                setPlacements((current) => ({
+                  ...current,
+                  [room.id]: (current[room.id] ?? []).filter((p) =>
+                    next.some((i) => i.id === p.itemId),
+                  ),
+                }));
+              }}
+              finishesMinor={takeoff.totalMinor}
+              finishesIncomplete={needsSize && !!(pick.color || pick.floor)}
+              versionKey={snapshotJson}
+              onPrepare={async () => {
+                const meta = await save();
+                if (!meta) throw new Error('Save the project before preparing its work plan.');
+                return (await workspaceRequest('/studio-designs/prepare-scope', {
+                  ...meta,
+                  roomId: room.id,
+                  requestId: crypto.randomUUID(),
+                })) as StudioHandoff;
+              }}
             />
-            Include in the whole-house total
-          </label>
+          </div>
         </aside>
       </div>
 
       {listOpen && (
         <ShoppingSheet
           project={project}
-          picks={picks}
+          picks={effectivePicks}
+          items={items}
           takeoffs={takeoffs}
           tier={tier}
           onClose={() => setListOpen(false)}

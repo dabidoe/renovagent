@@ -1,166 +1,196 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
+import { STUDIO_DIRECTIONS, DIRECTION_ORIGINAL } from '../house-example/studio-directions.js';
+import { Copy } from '../connect/copy-button.js';
 import { Glyph } from '../../components/glyph.js';
 import { MuseConversation } from '../connect/muse-conversation.js';
-import { exampleScan } from './landing-example.js';
 import './landing-story.css';
+import './studio-story.css';
 const museIcon = new URL('../../assets/brand/muse-app-icon.png', import.meta.url).href;
 
-export function ContractorHandoff({ onExample, busy }: { onExample: () => void; busy: boolean }) {
-  const [view, setView] = useState<'room' | 'quote'>('room');
-  // Bundled with the app: docs/ is not part of the deployed build.
-  const roomCapture = new URL('../../assets/previews/room-photo-home.jpg', import.meta.url).href;
-  const quoteCapture = new URL('../../assets/previews/room-quote-itemized.jpg', import.meta.url)
-    .href;
+export function StudioStory({
+  onOwnProject,
+  onDirection,
+  busy,
+}: {
+  onOwnProject: (brief?: string) => void;
+  onDirection: (id: string) => void;
+  busy: boolean;
+}) {
+  const [index, setIndex] = useState(0);
+  const [original, setOriginal] = useState(false);
+  const touch = useRef<{ x: number; y: number } | null>(null);
+  const direction = STUDIO_DIRECTIONS[index]!;
+  const choose = (next: number) => {
+    setIndex((next + STUDIO_DIRECTIONS.length) % STUDIO_DIRECTIONS.length);
+    setOriginal(false);
+  };
   return (
     <section
-      className="landing-block handoff-section"
-      id="contractor-handoff"
-      aria-labelledby="handoff-title"
+      className="landing-block studio-story"
+      id="studio-possibilities"
+      aria-labelledby="studio-story-title"
     >
-      <div className="handoff-copy">
-        <h2 id="handoff-title">
-          The room. <br />
-          The work. <br />
-          <em>The price.</em>
-        </h2>
+      <div className="studio-story-heading">
+        <div>
+          <p className="studio-story-eyebrow">What would look good here?</p>
+          <h2 id="studio-story-title">
+            One room.
+            <br />
+            <em>Three ways to live.</em>
+          </h2>
+        </div>
         <p>
-          Every job pinned where it happens. See what it takes to do it yourself—or what a pro
-          quoted.
+          Lounge, work or host. Pick a direction. <br />
+          Then make it yours.
         </p>
-        <div className="handoff-view-switch" role="group" aria-label="Explore the room product">
-          <button aria-pressed={view === 'room'} onClick={() => setView('room')}>
-            <Glyph name="home" /> Your room
-          </button>
-          <button aria-pressed={view === 'quote'} onClick={() => setView('quote')}>
-            <Glyph name="file" /> Itemized quote
-          </button>
-        </div>
-        <button className="prompt-example" onClick={onExample} disabled={busy}>
-          Explore the whole-house project <Glyph name="right" />
-        </button>
       </div>
-      <figure className="room-product-proof">
-        <div className={`room-product-crop is-${view}`}>
-          <img
-            src={view === 'room' ? roomCapture : quoteCapture}
-            alt={
-              view === 'room'
-                ? 'Renovagent room with work pinned in place, finish choices, DIY costs and example contractor quotes'
-                : 'Renovagent contractor quote broken down into materials and labor for each step; example contractor and review'
-            }
-            width={1440}
-            height={1000}
-            loading="lazy"
-          />
-        </div>
-        <figcaption>
-          {view === 'room'
-            ? 'Change a finish. The room and the price change with it.'
-            : 'Materials and labor, broken down by the work.'}
-        </figcaption>
-      </figure>
-    </section>
-  );
-}
-
-export function MeasurementProof({ onExample, busy }: { onExample: () => void; busy: boolean }) {
-  return (
-    <div className="measurement-proof">
-      <div className="scan-plan">
-        <span className="scan-file">
-          <Glyph name="plan" /> roomplan.json
-        </span>
-        <svg
-          viewBox="0 0 640 470"
-          role="img"
-          aria-label="Synthetic six by four metre room plan, twenty-four square metres"
-        >
-          <defs>
-            <pattern id="scan-grid" width="24" height="24" patternUnits="userSpaceOnUse">
-              <path d="M24 0H0V24" fill="none" stroke="#dce9fa" strokeWidth="1" />
-            </pattern>
-          </defs>
-          <rect width="640" height="470" fill="url(#scan-grid)" />
-          <path d="M100 100H540V370H100Z" fill="#edf5ff" stroke="#142038" strokeWidth="9" />
-          <path d="M100 100H540" stroke="#0866ff" strokeWidth="9" />
-          <path
-            d="M100 65H540M100 55V75M540 55V75M575 100V370M565 100H585M565 370H585"
-            fill="none"
-            stroke="#0866ff"
-            strokeWidth="2"
-          />
-          <text x="320" y="51" textAnchor="middle" fill="#0866ff" fontSize="17">
-            6.00 m
-          </text>
-          <text
-            x="595"
-            y="240"
-            textAnchor="middle"
-            fill="#0866ff"
-            fontSize="17"
-            transform="rotate(90 595 240)"
+      <div
+        className="direction-carousel"
+        role="region"
+        aria-roledescription="carousel"
+        aria-label="Room design directions"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+            e.preventDefault();
+            choose(index + (e.key === 'ArrowRight' ? 1 : -1));
+          }
+        }}
+      >
+        <div className="direction-stage">
+          <div
+            className="direction-photo"
+            onTouchStart={(e) => {
+              const t = e.touches[0];
+              touch.current = t ? { x: t.clientX, y: t.clientY } : null;
+            }}
+            onTouchEnd={(e) => {
+              const t = e.changedTouches[0],
+                start = touch.current;
+              touch.current = null;
+              if (!t || !start) return;
+              const dx = t.clientX - start.x,
+                dy = t.clientY - start.y;
+              if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy) * 1.3)
+                choose(index + (dx < 0 ? 1 : -1));
+            }}
           >
-            4.00 m
-          </text>
-          <text x="320" y="230" textAnchor="middle" fill="#142038" fontSize="42" fontWeight="600">
-            {exampleScan.floorAreaM2} m²
-          </text>
-          <text x="320" y="260" textAnchor="middle" fill="#64748b" fontSize="15">
-            Floor area
-          </text>
-          {[
-            [100, 100],
-            [540, 100],
-            [540, 370],
-            [100, 370],
-          ].map(([cx, cy]) => (
-            <circle
-              key={`${cx}-${cy}`}
-              cx={cx}
-              cy={cy}
-              r="7"
-              fill="#fff"
-              stroke="#0866ff"
-              strokeWidth="3"
+            <img
+              key={original ? 'original' : direction.id}
+              src={original ? DIRECTION_ORIGINAL : direction.image}
+              alt={
+                original
+                  ? 'The original empty Oakland bay-window room before the floor and furnishing concepts'
+                  : `Muse concept: ${direction.title}. ${direction.description}`
+              }
+              width={1600}
+              height={1066}
+              loading="lazy"
             />
-          ))}
-        </svg>
+            <div className="direction-photo-top">
+              <span>{original ? 'Original listing photo' : 'Rendered with Muse'}</span>
+              <button type="button" aria-pressed={original} onClick={() => setOriginal(!original)}>
+                <Glyph name="photo" />
+                {original ? 'Back to the idea' : 'See original'}
+              </button>
+            </div>
+            <div className="direction-photo-bottom" aria-hidden="true">
+              <span>Same windows. A new way to use the room.</span>
+              <b>
+                {String(index + 1).padStart(2, '0')}
+                <i> / 03</i>
+              </b>
+            </div>
+          </div>
+          <div className="direction-details">
+            <p className="direction-mood">{direction.mood}</p>
+            <h3 aria-live="polite">{direction.title}</h3>
+            <div className="direction-palette" aria-label="Suggested palette">
+              {direction.palette.map((hex) => (
+                <span key={hex} style={{ background: hex }} title={hex} />
+              ))}
+              <small>Suggested palette</small>
+            </div>
+            <div className="direction-pieces">
+              <p>In this direction</p>
+              <ul>
+                {direction.pieces.map((p) => (
+                  <li key={p.asset}>
+                    <span>{p.name}</span>
+                    <b>{p.count > 1 ? `× ${p.count}` : '01'}</b>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="direction-request">
+              <div>
+                <span>What to say</span>
+                <Copy value={direction.request} label="Copy request" className="direction-copy" />
+              </div>
+              <blockquote>“{direction.request}”</blockquote>
+            </div>
+            <button
+              className="direction-open"
+              type="button"
+              disabled={busy}
+              onClick={() => onDirection(direction.id)}
+            >
+              Open in studio <Glyph name="right" />
+            </button>
+            <button
+              className="direction-own"
+              type="button"
+              disabled={busy}
+              onClick={() => onOwnProject(direction.ownBrief)}
+            >
+              Try this with my photo <Glyph name="right" />
+            </button>
+          </div>
+        </div>
+        <div className="direction-navigation">
+          <div className="direction-options" role="group" aria-label="Choose a room direction">
+            {STUDIO_DIRECTIONS.map((d, i) => (
+              <button
+                key={d.id}
+                type="button"
+                aria-pressed={i === index}
+                aria-label={`Show ${d.title}`}
+                onClick={() => choose(i)}
+              >
+                <img src={d.image} alt="" width={120} height={80} loading="lazy" />
+                <span>
+                  <small>
+                    {String(i + 1).padStart(2, '0')} / {d.mood}
+                  </small>
+                  <b>{d.title}</b>
+                </span>
+                <i aria-hidden="true">↗</i>
+              </button>
+            ))}
+          </div>
+          <div className="direction-arrows">
+            <button
+              type="button"
+              aria-label="Previous room direction"
+              onClick={() => choose(index - 1)}
+            >
+              <Glyph name="right" />
+            </button>
+            <button
+              type="button"
+              aria-label="Next room direction"
+              onClick={() => choose(index + 1)}
+            >
+              <Glyph name="right" />
+            </button>
+          </div>
+        </div>
       </div>
-      <div className="measurement-proof-copy">
-        <h3>
-          Bring your scan
-          <br />
-          into the plan.
-        </h3>
-        <p>Import RoomPlan or OpenPlan3D. Review and save your measurements.</p>
-        <dl>
-          <div>
-            <dt>Floor area</dt>
-            <dd>{exampleScan.floorAreaM2} m²</dd>
-          </div>
-          <div>
-            <dt>Perimeter</dt>
-            <dd>{exampleScan.perimeterM} m</dd>
-          </div>
-          <div>
-            <dt>Ceiling height</dt>
-            <dd>{exampleScan.ceilingHeightM} m</dd>
-          </div>
-        </dl>
-
-        <button className="prompt-example" onClick={onExample} disabled={busy}>
-          Explore the whole-house project <Glyph name="right" />
-        </button>
-        <a
-          className="scan-source"
-          href="https://github.com/laanlabs/openPlan3D"
-          target="_blank"
-          rel="noreferrer"
-        >
-          OpenPlan3D · MIT ↗
-        </a>
-      </div>
-    </div>
+      <p className="direction-note">
+        Prepared Muse concepts of one Oakland room. In the studio, 3D starts with an editable
+        arrangement; products, dimensions and fit need confirming.
+      </p>
+    </section>
   );
 }
 

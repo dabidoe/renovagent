@@ -238,6 +238,22 @@ export function compileScopeDraft(
     projectId,
     payload.reported,
   );
+  if (payload.sourceDesignRef) {
+    const ref = payload.sourceDesignRef;
+    const source = ref.kind === 'artifact' ? state.artifacts[ref.id]?.at(-1) : undefined;
+    if (
+      !source ||
+      source.projectId !== projectId ||
+      source.revision !== ref.revision ||
+      source.payload.kind !== 'studio-design' ||
+      source.freshness !== 'current'
+    )
+      throw new DomainError('VALIDATION', 'Choose the current saved studio design in this project');
+    inputRefs.push(ref);
+    limits.push(
+      'Based on a saved studio proposal. Furniture, lighting and photo estimates are not verified site measurements or priced construction scope.',
+    );
+  }
   const requirements = recipeRequirements(recipe.id, payload.packageIds, values, payload.direction);
   const declared = new Set(requirements.map((r) => r.packageId));
   const notAsked = new Set(inputs.filter((i) => i.source === 'not-provided').map((i) => i.key));

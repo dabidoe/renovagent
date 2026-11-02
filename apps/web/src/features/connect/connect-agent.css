@@ -305,6 +305,49 @@
   color: var(--ca-muted);
   max-width: 300px;
 }
+.ca-guide-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+}
+.ca-guide-links a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--ca-accent);
+  font-size: 13px;
+  text-underline-offset: 4px;
+}
+.ca-starters {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+.ca-starters > div {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  min-width: 0;
+}
+.ca-starters h3 {
+  margin: 0;
+  font-size: 13px;
+}
+.ca-starters p {
+  margin: 0;
+  color: var(--ca-muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+.ca-starters .ca-copy {
+  justify-self: start;
+  align-self: end;
+}
+@media (max-width: 640px) {
+  .ca-starters {
+    grid-template-columns: 1fr;
+  }
+}
 .ca-connection-name input {
   min-height: 44px;
   min-width: 0;

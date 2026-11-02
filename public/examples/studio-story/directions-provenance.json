@@ -1,0 +1,73 @@
+{
+  "preparedAt": "2026-11-02T13:58:16.786Z",
+  "generated": true,
+  "note": "Prepared Muse photo concepts. Editable 3D starters use illustrative CC0 assets, not photo reconstruction or exact products.",
+  "receipts": [
+    {
+      "id": "studio-office",
+      "model": "muse-image-1.0",
+      "input": "/examples/oakland/image-01-lvp.jpg",
+      "inputSha256": "eab332a90d0f03ae6e2277b1c1f68dbe53b3a3894e7de3172ae71f2aa8e4057e",
+      "output": "./examples/studio-story/office.jpg",
+      "outputSha256": "34abf34a4b7fdbee53ec965c66602ebd1521f2ad9eb405c5608329a2130c473c",
+      "prompt": "Edit the first photo. Keep it exactly as framed: the same camera, room shape, windows, doors and stairs. Furniture and lighting may be replaced, and selected furniture or decor may be added where there is visible space. Keep doors, windows, stairs and circulation clear. Do not change the architecture or camera. Do not claim that sizes, fit or electrical installation have been verified. Keep the first photo’s flooring unchanged; only selected rugs may overlay it. The owner requires these existing items to remain unchanged and in place: \"Exact camera, room shape, all three bay windows, original pendant, trim and doorway.\". This takes priority over the inspiration selections. Make only these changes, following the owner’s brief: the open space in window bay becomes compact oak writing desk facing center window; the floor in front of desk becomes one upholstered blue desk chair facing desk; the blank wall on right becomes low oak bookcase with books; the bare center floor becomes soft blue-gray area rug; the empty right corner becomes brass floor lamp; the bay corner floor becomes potted plant. Paint the walls \"Alabaster SW 7008\" (#edeae0), matte to eggshell. Leave everything else exactly as it is. Natural daylight. Photorealistic.",
+      "changes": [
+        {
+          "target": "open space in window bay",
+          "becomes": "compact oak writing desk facing center window"
+        },
+        {
+          "target": "floor in front of desk",
+          "becomes": "one upholstered blue desk chair facing desk"
+        },
+        {
+          "target": "blank wall on right",
+          "becomes": "low oak bookcase with books"
+        },
+        {
+          "target": "bare center floor",
+          "becomes": "soft blue-gray area rug"
+        },
+        {
+          "target": "empty right corner",
+          "becomes": "brass floor lamp"
+        },
+        {
+          "target": "bay corner floor",
+          "becomes": "potted plant"
+        }
+      ]
+    },
+    {
+      "id": "studio-dining",
+      "model": "muse-image-1.0",
+      "input": "/examples/oakland/image-01-lvp.jpg",
+      "inputSha256": "eab332a90d0f03ae6e2277b1c1f68dbe53b3a3894e7de3172ae71f2aa8e4057e",
+      "output": "./examples/studio-story/dining.jpg",
+      "outputSha256": "beb5b10a72b3bdfe4f6eccecfb1de0e450d9182f60126711f74852997be338cc",
+      "prompt": "Edit the first photo. Keep it exactly as framed: the same camera, room shape, windows, doors and stairs. Furniture and lighting may be replaced, and selected furniture or decor may be added where there is visible space. Keep doors, windows, stairs and circulation clear. Do not change the architecture or camera. Do not claim that sizes, fit or electrical installation have been verified. Keep the first photo’s flooring unchanged; only selected rugs may overlay it. The owner requires these existing items to remain unchanged and in place: \"Exact camera, room shape, all three bay windows, original pendant, trim and doorway.\". This takes priority over the inspiration selections. Make only these changes, following the owner’s brief: the open space under pendant becomes round walnut dining table; the space surrounding table becomes four rust upholstered dining chairs facing table; the blank wall on right becomes low walnut sideboard; the bare center floor becomes cream rug with muted terracotta pattern; the bay corner floor becomes potted plant. Paint the walls \"Alabaster SW 7008\" (#edeae0), matte to eggshell. Leave everything else exactly as it is. Natural daylight. Photorealistic.",
+      "changes": [
+        {
+          "target": "open space under pendant",
+          "becomes": "round walnut dining table"
+        },
+        {
+          "target": "space surrounding table",
+          "becomes": "four rust upholstered dining chairs facing table"
+        },
+        {
+          "target": "blank wall on right",
+          "becomes": "low walnut sideboard"
+        },
+        {
+          "target": "bare center floor",
+          "becomes": "cream rug with muted terracotta pattern"
+        },
+        {
+          "target": "bay corner floor",
+          "becomes": "potted plant"
+        }
+      ]
+    }
+  ]
+}

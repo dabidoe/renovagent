@@ -85,6 +85,8 @@ test(
   { skip: !uri },
   () =>
     withClient(async (mcp) => {
+      assert.match(mcp.getInstructions()!, /agent-guide\.md/);
+      assert.match(mcp.getInstructions()!, /stored normalized image hash/);
       const homes = JSON.parse((await call(mcp, 'list_homes', {})).text);
       assert.equal(homes.length, 1);
       assert.equal(homes[0].name, 'Test property');
@@ -672,7 +674,7 @@ test(
       assert.equal(plan.rooms[1].paint, 'Alabaster (SW 7008)');
       assert.equal(plan.rooms[1].floor, null);
       assert.ok(plan.toBuy.some((b: { item: string }) => /— Naval$/.test(b.item)));
-      assert.match(plan.total, /^\$[\d,]+$/);
+      assert.match(plan.total, /^\$[\d,]+(?:\.\d{1,2})?$/);
       assert.match(plan.note, /not live offers/);
       const bad = await mcp.callTool({
         name: 'plan_paint_and_floor',
