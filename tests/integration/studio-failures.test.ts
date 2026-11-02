@@ -158,6 +158,7 @@ test('an upstream 404 names the model, endpoint and code instead of asking for a
     endpoint: '/responses',
     model: 'muse-spark-1.3',
     providerCode: 'model_not_found',
+    keyFingerprint: 'synt…test',
   });
   const failing = studioRoutes({
     images,
@@ -169,20 +170,30 @@ test('an upstream 404 names the model, endpoint and code instead of asking for a
       },
     },
   });
-  await assert.rejects(
-    () => failing('/studio/restyle', 'owner', restyleInput),
-    (error: unknown) => {
-      assert.ok(error instanceof DomainError);
-      assert.equal(error.code, 'STORAGE');
-      assert.match(error.message, /Room rendering could not complete/);
-      assert.match(error.message, /model_not_found/);
-      assert.match(error.message, /muse-spark-1\.3/);
-      assert.match(error.message, /\/responses/);
-      assert.match(error.message, /will not succeed on retry/);
-      assert.doesNotMatch(error.message, /Please retry/);
-      return true;
-    },
-  );
+  const warnings: string[] = [];
+  const warn = console.warn;
+  console.warn = (...args: unknown[]) => void warnings.push(args.map(String).join(' '));
+  try {
+    await assert.rejects(
+      () => failing('/studio/restyle', 'owner', restyleInput),
+      (error: unknown) => {
+        assert.ok(error instanceof DomainError);
+        assert.equal(error.code, 'STORAGE');
+        assert.match(error.message, /Room rendering could not complete/);
+        assert.match(error.message, /model_not_found/);
+        assert.match(error.message, /muse-spark-1\.3/);
+        assert.match(error.message, /\/responses/);
+        assert.match(error.message, /will not succeed on retry/);
+        assert.doesNotMatch(error.message, /Please retry/);
+        assert.doesNotMatch(error.message, /synt…test/);
+        assert.doesNotMatch(JSON.stringify(error.details), /synt…test/);
+        return true;
+      },
+    );
+  } finally {
+    console.warn = warn;
+  }
+  assert.match(warnings.join('\n'), /key=synt…test/);
   // A transient upstream failure keeps the retry wording.
   const transient = studioRoutes({
     images,

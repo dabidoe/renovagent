@@ -764,6 +764,7 @@ export function studioRoutes(deps: {
         providerCode?: unknown;
         endpoint?: unknown;
         model?: unknown;
+        keyFingerprint?: unknown;
       } | null;
       const status = upstream?.status;
       const reason =
@@ -816,7 +817,15 @@ export function studioRoutes(deps: {
       ]
         .filter(Boolean)
         .join(' ');
-      console.warn(`[studio] ${path}: ${reason}${signal}${context ? ` ${context}` : ''}`);
+      // Key fingerprint is server-log-only: it never enters the message or details below.
+      const fingerprint =
+        typeof upstream?.keyFingerprint === 'string' &&
+        /^[\w+./=-]{1,8}…[\w+./=-]{1,8}$|^short-key$/.test(upstream.keyFingerprint)
+          ? ` key=${upstream.keyFingerprint}`
+          : '';
+      console.warn(
+        `[studio] ${path}: ${reason}${signal}${context ? ` ${context}` : ''}${fingerprint}`,
+      );
       // A dead key or model never heals on retry: say exactly what failed and
       // point at configuration instead of asking the user to try again.
       const configFailure =

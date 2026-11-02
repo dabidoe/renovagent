@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
   assessMuseAvailability,
-  checkMuseModelsOrThrow,
+  checkMuseModels,
   runMuse,
   withMuseBudget,
 } from '../../scripts/muse-provider.js';
@@ -46,9 +46,9 @@ test('Muse credentials use stdin, never argv, and are redacted from provider out
     await rm(directory, { recursive: true, force: true });
   }
 });
-test('model availability fails boot on proof of misconfiguration, warns on transient failures', () => {
+test('model availability marks proof of misconfiguration blocking, transient failures warn', () => {
   assert.deepEqual(assessMuseAvailability({ configured: false, models: [] }), {
-    fatal: null,
+    blocking: null,
     warnings: [],
   });
   const ok = [
@@ -57,7 +57,7 @@ test('model availability fails boot on proof of misconfiguration, warns on trans
     { model: 'sam-3.1', status: 200, available: true },
   ];
   assert.deepEqual(assessMuseAvailability({ configured: true, models: ok }), {
-    fatal: null,
+    blocking: null,
     warnings: [],
   });
   const missingVision = assessMuseAvailability({
@@ -68,9 +68,9 @@ test('model availability fails boot on proof of misconfiguration, warns on trans
       { model: 'sam-3.1', status: 200, available: true },
     ],
   });
-  assert.match(missingVision.fatal ?? '', /muse-spark-1\.3.*catalog 404/);
+  assert.match(missingVision.blocking ?? '', /muse-spark-1\.3.*catalog 404/);
   assert.deepEqual(missingVision.warnings, []);
-  // SAM alone never fails the boot: restyle does not need outlines.
+  // SAM alone is never blocking: restyle does not need outlines.
   const missingSam = assessMuseAvailability({
     configured: true,
     models: [
@@ -79,7 +79,7 @@ test('model availability fails boot on proof of misconfiguration, warns on trans
       { model: 'sam-3.1', status: 404, available: false },
     ],
   });
-  assert.equal(missingSam.fatal, null);
+  assert.equal(missingSam.blocking, null);
   assert.equal(missingSam.warnings.length, 1);
   // Outages and network failures warn but keep the site up.
   const outage = assessMuseAvailability({
@@ -90,15 +90,17 @@ test('model availability fails boot on proof of misconfiguration, warns on trans
       { model: 'sam-3.1', status: 200, available: true },
     ],
   });
-  assert.equal(outage.fatal, null);
+  assert.equal(outage.blocking, null);
   assert.equal(outage.warnings.length, 2);
 });
-test('startup check logs the resolved config with a redacted key and fails on a dead model', async () => {
+test('startup check logs redacted config, warns by default, fails only when required', async () => {
   const previousKey = process.env.MUSE_API_KEY;
   const previousSha = process.env.RAILWAY_GIT_COMMIT_SHA;
+  const previousRequire = process.env.REQUIRE_MUSE_MODELS;
   const previousFetch = globalThis.fetch;
   const previousLog = console.log;
   const previousWarn = console.warn;
+  const previousError = console.error;
   const lines: string[] = [];
   const fakeKey = 'synthetic-startup-key-12345678';
   const stubFetch = (status: number) => {
@@ -111,23 +113,32 @@ test('startup check logs the resolved config with a redacted key and fails on a 
   try {
     process.env.MUSE_API_KEY = fakeKey;
     process.env.RAILWAY_GIT_COMMIT_SHA = 'testsha1234';
+    delete process.env.REQUIRE_MUSE_MODELS;
     console.log = (...args: unknown[]) => void lines.push(args.map(String).join(' '));
     console.warn = (...args: unknown[]) => void lines.push(args.map(String).join(' '));
+    console.error = (...args: unknown[]) => void lines.push(args.map(String).join(' '));
     stubFetch(404);
-    await assert.rejects(checkMuseModelsOrThrow(), /provider misconfigured: muse-spark-1\.3/);
+    await checkMuseModels();
+    process.env.REQUIRE_MUSE_MODELS = '1';
+    await assert.rejects(checkMuseModels(), /provider misconfigured: muse-spark-1\.3/);
+    delete process.env.REQUIRE_MUSE_MODELS;
     stubFetch(500);
-    await checkMuseModelsOrThrow();
+    await checkMuseModels();
     const output = lines.join('\n');
     assert.match(output, /POST https:\/\/api\.meta\.ai\/v1\/responses model=muse-spark-1\.3/);
     assert.match(output, /key=synt…5678 \(environment\); commit=testsha1234/);
+    assert.match(output, /provider misconfigured: muse-spark-1\.3/);
     assert.doesNotMatch(output, new RegExp(fakeKey));
   } finally {
     if (previousKey === undefined) delete process.env.MUSE_API_KEY;
     else process.env.MUSE_API_KEY = previousKey;
     if (previousSha === undefined) delete process.env.RAILWAY_GIT_COMMIT_SHA;
     else process.env.RAILWAY_GIT_COMMIT_SHA = previousSha;
+    if (previousRequire === undefined) delete process.env.REQUIRE_MUSE_MODELS;
+    else process.env.REQUIRE_MUSE_MODELS = previousRequire;
     globalThis.fetch = previousFetch;
     console.log = previousLog;
     console.warn = previousWarn;
+    console.error = previousError;
   }
 });

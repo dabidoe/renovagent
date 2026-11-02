@@ -15,7 +15,7 @@ import {
   type OAuthProvider,
 } from './accounts.js';
 import {
-  checkMuseModelsOrThrow,
+  checkMuseModels,
   configuredMuseKey,
   imageMediaType,
   museEditImage,
@@ -1514,7 +1514,7 @@ if (process.argv[1]?.endsWith('/apps/api/src/server.ts')) {
     token = randomBytes(32).toString('hex');
     await writeFile('.local/api-session', token, { mode: 0o600, flag: 'wx' });
   }
-  await checkMuseModelsOrThrow();
+  await checkMuseModels();
   const database = await workspaceMongoConfig();
   const { repository, client } = await MongoWorkspaceRepository.connect(database.uri);
   const hosting = hostingConfigFromEnv();

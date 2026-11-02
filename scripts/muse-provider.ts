@@ -106,8 +106,11 @@ export async function museModelAvailability() {
   return { configured: true, models };
 }
 
-export const museKeyFingerprint = (key: string) =>
-  key.length <= 8 ? 'short-key' : `${key.slice(0, 4)}…${key.slice(-4)}`;
+export const museKeyFingerprint = (key: string) => {
+  // Keep only key-alphabet characters so a hostile value cannot inject log lines.
+  const clean = key.replace(/[^A-Za-z0-9_+\/=.-]/g, '');
+  return clean.length <= 8 ? 'short-key' : `${clean.slice(0, 4)}…${clean.slice(-4)}`;
+};
 
 export async function museKeySource(): Promise<'environment' | 'project file' | 'none'> {
   if (process.env.MUSE_API_KEY?.trim()) return 'environment';
@@ -121,32 +124,34 @@ export type MuseAvailability = {
 };
 
 // Restyle needs the vision read and the image edit; SAM only feeds outlines.
-// 401/403/404 prove misconfiguration and never heal on retry, so they fail a
-// boot that depends on them. Anything else (network, 5xx) is transient: warn.
+// 401/403/404 prove misconfiguration and never heal on retry. Anything else
+// (network, 5xx) is transient: warn.
 export function assessMuseAvailability(result: MuseAvailability): {
-  fatal: string | null;
+  blocking: string | null;
   warnings: string[];
 } {
-  if (!result.configured) return { fatal: null, warnings: [] };
-  const fatal: string[] = [];
+  if (!result.configured) return { blocking: null, warnings: [] };
+  const blocking: string[] = [];
   const warnings: string[] = [];
   for (const m of result.models) {
     if (m.available) continue;
     const restyleCritical = m.model === MUSE_VISION_MODEL || m.model === MUSE_IMAGE_MODEL;
     if (m.status === 401 || m.status === 403 || m.status === 404) {
-      (restyleCritical ? fatal : warnings).push(
+      (restyleCritical ? blocking : warnings).push(
         `${m.model} is not usable with this key (catalog ${m.status})`,
       );
     } else {
       warnings.push(`${m.model} could not be confirmed (catalog ${m.status ?? 'unreachable'})`);
     }
   }
-  return { fatal: fatal.length ? fatal.join('; ') : null, warnings };
+  return { blocking: blocking.length ? blocking.join('; ') : null, warnings };
 }
 
-// Startup gate for the API server: log the resolved provider config (key
-// redacted) and refuse to boot with a key that cannot serve restyle.
-export async function checkMuseModelsOrThrow(): Promise<void> {
+// Startup check for the API server: log the resolved provider config (key
+// redacted) and report model availability. Warn-only by default so a provider
+// problem can never take the whole site down; REQUIRE_MUSE_MODELS=1 restores
+// fail-fast for deploys that must prove provider health before serving.
+export async function checkMuseModels(): Promise<void> {
   const key = await configuredMuseKey();
   if (!key) {
     console.log('[muse] no API key configured; studio provider calls will report service configuration');
@@ -159,9 +164,13 @@ export async function checkMuseModelsOrThrow(): Promise<void> {
       `outlines via POST ${META_API}/responses model=${SAM_MODEL}; ` +
       `key=${museKeyFingerprint(key)} (${source}); commit=${process.env.RAILWAY_GIT_COMMIT_SHA || 'unknown'}`,
   );
-  const { fatal, warnings } = assessMuseAvailability(await museModelAvailability());
+  const { blocking, warnings } = assessMuseAvailability(await museModelAvailability());
   for (const w of warnings) console.warn(`[muse] warning: ${w}`);
-  if (fatal) throw new Error(`[muse] provider misconfigured: ${fatal}`);
+  if (blocking) {
+    const message = `[muse] provider misconfigured: ${blocking}`;
+    if (process.env.REQUIRE_MUSE_MODELS === '1') throw new Error(message);
+    console.error(`${message} (continuing: set REQUIRE_MUSE_MODELS=1 to fail boot instead)`);
+  }
 }
 
 // Only documented machine codes may reach logs; never log upstream message text.
@@ -229,10 +238,13 @@ async function metaRequest(path: string, body: unknown, timeoutMs: number) {
       `Meta Model API ${response.status}${detail ? `: ${detail.split(key).join('[REDACTED]').slice(0, 300)}` : ''}`,
     );
     // The HTTP status carries no response content, so the server may log it.
+    // The key fingerprint proves which credential each failing request used;
+    // it is server-log-only and must never reach the client.
     Object.assign(failure, {
       status: response.status,
       endpoint: path,
       providerCode,
+      keyFingerprint: museKeyFingerprint(key),
       model: [MUSE_VISION_MODEL, MUSE_IMAGE_MODEL, SAM_MODEL].includes(
         (body as { model: string }).model,
       )
