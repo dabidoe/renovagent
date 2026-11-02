@@ -1,5 +1,11 @@
 # Project status — Renovagent
 
+Studio intake and save recovery (November 2; pushed to main, Railway redeploys automatically): fixed the Philadelphia example's plan-image save failure (rooms stored a bare `photo-20` id; the design schema requires a studio or bundled-example image, so saves now carry `./examples/hutchinson/photo-20.jpg`). The homepage prompt now opens the owner's studio with the typed brief and photos instead of the notes-workspace dialog. Photo upload posts the file bytes (up to 20 MB, including phone HEIC) instead of base64 JSON; studio failures report a labeled cause with retry wording and the intake offers opening the studio without analysis; intake drafts (including photo files) persist in the browser across reloads. Furniture extras from Imagine accumulate as deduplicated ideas and line items.
+
+Verification: types pass; full suite 292 pass / 0 fail / 52 skips; production /healthz returned 200 after the push. Browser walkthrough of the new intake/save flow not yet performed.
+
+Local review follow-up (November 2; not pushed): per-item store links are labeled searches to match the inspiration panel, and photo upload accepts media-type parameters (unsupported image formats still rejected). Connected studio tests 2/2 against local Mongo cover the parameterized content-type and the rejection case.
+
 Local mascot follow-up (November 2; not deployed): Connect now uses the owner's square sparkling-orb animation (full eight seconds, 384 × 384), converted from a 4.14 MB GIF to a silent 220 KB MP4. The homepage keeps the laptop. Removed play/pause controls at the owner's request: both clips loop while visible, pause offscreen/in a hidden document, avoid video preloading and retain posters for reduced motion or blocked autoplay. Original GIFs unchanged.
 
 Verification: build/types/boundaries pass. Isolated browser checks confirm both clips play without controls, offscreen playback pauses, square proportions persist and the 390 px page has no horizontal overflow. Reduced motion remains implemented but was not separately emulated.

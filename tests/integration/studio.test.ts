@@ -489,6 +489,24 @@ test(
       });
       assert.equal(binaryUpload.status, 200, await binaryUpload.clone().text());
       assert.match((await binaryUpload.json()).sha256, /^[a-f0-9]{64}$/);
+      // A client may send media-type parameters; only the type itself decides.
+      const paramUpload = await fetch(base + '/studio/photo', {
+        method: 'POST',
+        headers: {
+          ...auth,
+          'Content-Type': 'image/jpeg; charset=binary',
+          'X-File-Name': 'param-room.jpg',
+        },
+        body: photo,
+      });
+      assert.equal(paramUpload.status, 200, await paramUpload.clone().text());
+      assert.equal((await paramUpload.json()).sha256, uploaded.sha256);
+      const rejected = await fetch(base + '/studio/photo', {
+        method: 'POST',
+        headers: { ...auth, 'Content-Type': 'image/tiff', 'X-File-Name': 'scan.tiff' },
+        body: photo,
+      });
+      assert.equal(rejected.status, 400, 'unsupported photo formats stay rejected');
       const served = await fetch(`${base}/design-images/${uploaded.sha256}`, { headers: auth });
       assert.equal(served.headers.get('content-type'), 'image/jpeg');
 

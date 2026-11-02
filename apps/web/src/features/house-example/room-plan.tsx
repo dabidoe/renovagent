@@ -214,6 +214,7 @@ export function RoomPlan({
             <details className="pf-item-source">
               <summary>{item.url ? 'Your product link' : 'Find it / add a product link'}</summary>
               <div className="pf-item-shops">
+                Search:{' '}
                 {shopLinks(item.name).map((link) => (
                   <a key={link.store} href={link.href} target="_blank" rel="noreferrer">
                     {link.store} ↗

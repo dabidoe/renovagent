@@ -1244,8 +1244,9 @@ export async function createWorkspaceServer(
         if (!providerConfigured && path !== '/studio/photo')
           throw new DomainError('VALIDATION', 'Configure MUSE_API_KEY on the server first');
         let input: unknown;
-        if (path === '/studio/photo' && req.headers['content-type']?.startsWith('image/')) {
-          if (!STAGED_TYPES.has(req.headers['content-type']))
+        const mediaType = req.headers['content-type']?.split(';')[0]?.trim().toLowerCase();
+        if (path === '/studio/photo' && mediaType?.startsWith('image/')) {
+          if (!STAGED_TYPES.has(mediaType))
             throw new DomainError('VALIDATION', 'Unsupported photo format');
           const parts: Buffer[] = [];
           let bytes = 0;
