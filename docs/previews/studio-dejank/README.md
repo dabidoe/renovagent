@@ -38,3 +38,17 @@ Live model success, production relay behavior and measured product fit are unver
 - `npm run build`: passed; existing bundle-size advisory remains.
 - Before/after: `phase-2-before-furniture.png`, `phase-2-after-furniture.png`;
   companion default captures retain the opening paint/floor view.
+
+## Phase 3 — quieter Restyle
+
+- Brief → Keep unchanged → Create room design now leads the panel.
+- The suggestion card is one line plus a button. Photo upload, Your board and
+  Add a link live inside one closed More options disclosure. Design approach
+  controls remain available after the main flow.
+- Playwright verified the primary action above the fold, a <60 px suggestion
+  row, closed optional controls, then opened the disclosure, board and link form.
+- `npm test`: **329 passed** (15 legacy + 314 TypeScript), **52 skipped**, zero failures.
+- `npm run build`: passed; existing bundle-size advisory remains.
+- Evidence: `phase-3-before-restyle.png`, `phase-3-after-restyle.png`,
+  `phase-3-options-open.png`, companion default captures, and another full-error
+  disclosure capture (`phase-3-error-details.png`).

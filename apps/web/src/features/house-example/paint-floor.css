@@ -2656,9 +2656,6 @@
   display: flex;
   flex-direction: column;
 }
-.pf-design-action {
-  order: -1;
-}
 .pf-finish-details {
   font-size: 12px;
 }
@@ -2696,4 +2693,40 @@
 .pf-studio-error details > div {
   margin-top: 6px;
   white-space: pre-wrap;
+}
+
+/* Restyle starts with the brief; optional photo/board tools stay out of the way. */
+.pf-more-options {
+  border-top: 1px solid var(--pf-line);
+  padding-top: 8px;
+}
+.pf-more-options > summary {
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  padding-block: 8px;
+}
+.pf-more-options > .pf-inspo-add {
+  width: 100%;
+  margin-top: 10px;
+}
+.pf-room-ideas {
+  padding: 12px;
+}
+.pf-ideas-prompt {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.pf-ideas-prompt h4 {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.4;
+}
+.pf-ideas-prompt .pf-suggest-button {
+  width: auto;
+  flex-shrink: 0;
+  padding: 7px 10px;
+  font-size: 11px;
 }

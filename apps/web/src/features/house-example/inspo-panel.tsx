@@ -426,31 +426,70 @@ export function InspoPanel({
     <div className="pf-inspo">
       <div className="pf-group-head">
         <h3>Make it your room.</h3>
-        {inspo && (
-          <button
-            type="button"
-            disabled={!!status.busy}
-            className="pf-inspo-again"
-            onClick={() => file.current?.click()}
-          >
-            Another photo
-          </button>
-        )}
       </div>
-      <section className="pf-room-ideas" aria-label="Ideas for your room">
-        <div className="pf-ideas-intro">
-          <span>A fresh pair of eyes</span>
-          <h4>You know what would look good here?</h4>
-          <p>Three directions, based on your photo. Pick one and make it yours.</p>
-        </div>
+      <label className="pf-design-brief">
+        Your design brief
+        <textarea
+          ref={briefInput}
+          value={brief}
+          maxLength={1000}
+          disabled={!!status.busy}
+          onChange={(e) => setBrief(e.target.value)}
+          placeholder="A cream sofa, walnut coffee table and a large striped rug. Keep the stairs clear. Warm and lived-in."
+        />
+      </label>
+      <label className="pf-styling-keep">
+        Keep unchanged
+        <input
+          type="text"
+          maxLength={300}
+          disabled={!!status.busy}
+          value={keep}
+          placeholder="e.g. my sofa, the piano and the fireplace"
+          onChange={(e) => setKeep(e.target.value)}
+        />
+      </label>
+      <div className="pf-design-action">
         <button
-          className="pf-suggest-button"
           type="button"
-          disabled={!!status.busy || !room.photo.src}
-          onClick={() => void suggest()}
+          className="pf-inspo-go"
+          disabled={
+            !!status.busy ||
+            !!floorPending ||
+            !room.photo.src ||
+            (!brief.trim() &&
+              !borrowsItems &&
+              !designItems.some((i) => i.action !== 'keep') &&
+              !(currentColor === undefined ? paint : currentColor))
+          }
+          onClick={() => void restyle()}
         >
-          {ideas ? 'Find three new ideas' : 'What would look good here?'}
+          {status.busy
+            ? 'Creating…'
+            : resultSignature
+              ? 'Update room design'
+              : 'Create room design'}{' '}
+          <Glyph name="right" />
         </button>
+        <small>
+          {floorPending
+            ? 'Waiting for the selected floor preview…'
+            : 'Generated concept · your room, your choices'}
+        </small>
+      </div>
+
+      <section className="pf-room-ideas" aria-label="Ideas for your room">
+        <div className="pf-ideas-prompt">
+          <h4>What would look good here?</h4>
+          <button
+            className="pf-suggest-button"
+            type="button"
+            disabled={!!status.busy || !room.photo.src}
+            onClick={() => void suggest()}
+          >
+            {ideas ? 'New ideas' : 'Suggest ideas'}
+          </button>
+        </div>
         {ideas && (
           <>
             <div className="pf-direction-cards">
@@ -527,6 +566,40 @@ export function InspoPanel({
           </>
         )}
       </section>
+      <details className="pf-more-options">
+        <summary>More options{inspo ? ' · inspiration photo added' : ''}</summary>
+        <input
+          ref={file}
+          type="file"
+          accept="image/*"
+          hidden
+          onChange={(e) => {
+            const picked = e.target.files?.[0];
+            e.target.value = '';
+            if (picked) void analyse(picked);
+          }}
+        />
+        {!inspo && !status.busy && (
+          <button type="button" className="pf-inspo-add" onClick={() => file.current?.click()}>
+            <Glyph name="photo" />
+            <span>
+              <b>Use an inspiration photo</b>
+              <small>Optional · a screenshot or a room you love</small>
+            </span>
+          </button>
+        )}
+        <InspoBoard onUsePhoto={(sha256) => void analyse(sha256)} busy={!!status.busy} />
+        {inspo && (
+          <button
+            type="button"
+            disabled={!!status.busy}
+            className="pf-inspo-again"
+            onClick={() => file.current?.click()}
+          >
+            Another photo
+          </button>
+        )}
+      </details>
       <div className="pf-styling-modes" role="group" aria-label="Room design approach">
         <button
           type="button"
@@ -552,49 +625,6 @@ export function InspoPanel({
           ? 'Borrow furniture and lighting from a room you love. Keep your room’s architecture.'
           : 'Borrow colours and textures while keeping your furniture in place.'}
       </p>
-      <label className="pf-design-brief">
-        Your design brief
-        <textarea
-          ref={briefInput}
-          value={brief}
-          maxLength={1000}
-          disabled={!!status.busy}
-          onChange={(e) => setBrief(e.target.value)}
-          placeholder="A cream sofa, walnut coffee table and a large striped rug. Keep the stairs clear. Warm and lived-in."
-        />
-      </label>
-      <label className="pf-styling-keep">
-        Keep unchanged
-        <input
-          type="text"
-          maxLength={300}
-          disabled={!!status.busy}
-          value={keep}
-          placeholder="e.g. my sofa, the piano and the fireplace"
-          onChange={(e) => setKeep(e.target.value)}
-        />
-      </label>
-      <input
-        ref={file}
-        type="file"
-        accept="image/*"
-        hidden
-        onChange={(e) => {
-          const picked = e.target.files?.[0];
-          e.target.value = '';
-          if (picked) void analyse(picked);
-        }}
-      />
-      {!inspo && !status.busy && (
-        <button type="button" className="pf-inspo-add" onClick={() => file.current?.click()}>
-          <Glyph name="photo" />
-          <span>
-            <b>Use an inspiration photo</b>
-            <small>Optional · a screenshot or a room you love</small>
-          </span>
-        </button>
-      )}
-      <InspoBoard onUsePhoto={(sha256) => void analyse(sha256)} busy={!!status.busy} />
       {status.busy && (
         <p className="pf-inspo-status">
           <span className="pf-spinner" aria-hidden="true" /> {status.busy}
@@ -659,7 +689,7 @@ export function InspoPanel({
                     {item.name}
                     <small>
                       {item.kind === 'floor' && !/rug|mat/i.test(item.phrase)
-                        ? 'Use floor controls below'
+                        ? 'Use Paint & floor controls'
                         : item.segments.length
                           ? item.kind
                           : `${item.kind} · not outlined`}
@@ -730,34 +760,6 @@ export function InspoPanel({
         </div>
       )}
 
-      <div className="pf-design-action">
-        <button
-          type="button"
-          className="pf-inspo-go"
-          disabled={
-            !!status.busy ||
-            !!floorPending ||
-            !room.photo.src ||
-            (!brief.trim() &&
-              !borrowsItems &&
-              !designItems.some((i) => i.action !== 'keep') &&
-              !(currentColor === undefined ? paint : currentColor))
-          }
-          onClick={() => void restyle()}
-        >
-          {status.busy
-            ? 'Creating…'
-            : resultSignature
-              ? 'Update room design'
-              : 'Create room design'}{' '}
-          <Glyph name="right" />
-        </button>
-        <small>
-          {floorPending
-            ? 'Waiting for the selected floor preview…'
-            : 'Generated concept · your room, your choices'}
-        </small>
-      </div>
       {versions.length > 0 && (
         <div className="pf-design-history">
           <h4>
