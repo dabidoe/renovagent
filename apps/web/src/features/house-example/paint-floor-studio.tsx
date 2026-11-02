@@ -1,4 +1,5 @@
 import { studioFinishSignature as lookSignature } from './studio-signatures.js';
+import { StudioError } from './studio-error.js';
 import { StudioSync, pendingStudioSave, type StudioSaveMeta } from './studio-sync.js';
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import {
@@ -282,7 +283,7 @@ export function BeforeAfter({
             {pending}
           </p>
         )}
-        {error && <p className="pf-error">{error}</p>}
+        {error && <StudioError message={error} className="pf-error" />}
       </div>
       {ready && hex && !paintAvailable && (
         <p className="pf-sub" role="status">
@@ -410,7 +411,7 @@ export function Room3D({
           : 'Room shell uses the entered dimensions.'}{' '}
         Furniture sizes and positions are editable concepts; openings and fit need checking.
       </p>
-      {error && <p className="pf-error">{error}</p>}
+      {error && <StudioError message={error} className="pf-error" />}
     </div>
   );
 }
@@ -431,14 +432,10 @@ function familyOf(hex: string) {
 
 function ColorChoice({
   pick,
-  tier,
   onColor,
-  onPaint,
 }: {
   pick: RoomPick;
-  tier: TierKey;
   onColor: (color: WallColor | null) => void;
-  onPaint: (paint: { paintLine?: TierKey; sheen?: Sheen }) => void;
 }) {
   const [browsing, setBrowsing] = useState(false);
   const link = pick.color
@@ -490,35 +487,6 @@ function ColorChoice({
           {browsing ? 'Close' : 'All colours'}
         </button>
       </div>
-      {pick.color && (
-        <div className="pf-paint">
-          <div className="pf-chips" role="group" aria-label="Paint line">
-            {PAINT_LINES.map((l) => (
-              <button
-                key={l.key}
-                type="button"
-                title={l.like}
-                aria-pressed={(pick.paintLine ?? tier) === l.key}
-                onClick={() => onPaint({ paintLine: l.key })}
-              >
-                {l.label}
-              </button>
-            ))}
-          </div>
-          <div className="pf-chips" role="group" aria-label="Finish">
-            {SHEENS.map((f) => (
-              <button
-                key={f.key}
-                type="button"
-                aria-pressed={(pick.sheen ?? DEFAULT_SHEEN) === f.key}
-                onClick={() => onPaint({ sheen: f.key })}
-              >
-                {f.label}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
       {browsing && (
         <PaintPicker
           selected={pick.color ? `${pick.color.brand} ${pick.color.name} ${pick.color.code}` : null}
@@ -577,7 +545,7 @@ function Imagine({
           {busy ? <span className="pf-spinner" aria-hidden="true" /> : <Glyph name="right" />}
         </button>
       </div>
-      {error && <p className="pf-intake-error">{error}</p>}
+      {error && <StudioError message={error} />}
     </form>
   );
 }
@@ -1061,7 +1029,7 @@ export function PaintFloorStudio({
     }
   }, [renderStore, modelRenders]);
   const [selectedPlacement, setSelectedPlacement] = useState<string | null>(null);
-  const [inspector, setInspector] = useState<'design' | 'layout' | 'finishes' | 'plan'>('design');
+  const [inspector, setInspector] = useState<'design' | 'layout' | 'finishes' | 'plan'>('finishes');
   const addAssets = (target: StudioRoom, ids: StudioAssetId[]) => {
     const model = roomModel(target, project.ceilingFt);
     if (!model) return;
@@ -1347,6 +1315,7 @@ export function PaintFloorStudio({
       setApplied(true);
       return all;
     });
+  const [floorErrors, setFloorErrors] = useState<Record<string, string>>({});
   const [imagining, setImagining] = useState<{ busy: boolean; error: string }>({
     busy: false,
     error: '',
@@ -1375,7 +1344,7 @@ export function PaintFloorStudio({
     } catch (e) {
       setImagining({
         busy: false,
-        error: e instanceof Error ? e.message.slice(0, 160) : 'That could not be read.',
+        error: e instanceof Error ? e.message : 'That could not be read.',
       });
       return false;
     }
@@ -1402,12 +1371,13 @@ export function PaintFloorStudio({
     setWorking((w) => ({ ...w, [workKey]: `Laying ${label}…` }));
     renderFloor(room.id, missing)
       .then(() => setWorking((w) => ({ ...w, [workKey]: '' })))
-      .catch((e) =>
-        setWorking((w) => ({
-          ...w,
-          [workKey]: e instanceof Error ? e.message.slice(0, 120) : 'The floor could not be made.',
-        })),
-      );
+      .catch((e) => {
+        setWorking((w) => ({ ...w, [workKey]: '' }));
+        setFloorErrors((all) => ({
+          ...all,
+          [workKey]: e instanceof Error ? e.message : 'The floor could not be made.',
+        }));
+      });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [workKey]);
   const takeoffs = useMemo(
@@ -1700,9 +1670,9 @@ export function PaintFloorStudio({
           <div className="pf-inspector-tabs" role="tablist" aria-label="Studio tools">
             {(
               [
-                { id: 'design', label: 'Design' },
-                { id: 'layout', label: '3D layout' },
-                { id: 'finishes', label: 'Finishes' },
+                { id: 'finishes', label: 'Paint & floor' },
+                { id: 'layout', label: 'Furniture' },
+                { id: 'design', label: 'Restyle' },
                 { id: 'plan', label: 'Plan & budget' },
               ] as const
             ).map((tab) => (
@@ -1714,6 +1684,7 @@ export function PaintFloorStudio({
                 onClick={() => {
                   setInspector(tab.id);
                   if (tab.id === 'layout' && has3d) setView('3d');
+                  if (tab.id === 'finishes' && !photoless) setView('photo');
                 }}
               >
                 {tab.label}
@@ -1774,6 +1745,7 @@ export function PaintFloorStudio({
               error={imagining.error}
               onImagine={(text) => void imagine(text, room)}
             />
+            {workKey && floorErrors[workKey] && <StudioError message={floorErrors[workKey]!} />}
             {roomTools?.(room)}
             {((needsSize && onEditRoom) || editCeiling || editSize) && (
               <SizeEntry
@@ -1796,12 +1768,7 @@ export function PaintFloorStudio({
                   : {})}
               />
             )}
-            <ColorChoice
-              pick={pick}
-              tier={tier}
-              onColor={(color) => update({ color })}
-              onPaint={(paint) => update(paint)}
-            />
+            <ColorChoice pick={pick} onColor={(color) => update({ color })} />
             <div className="pf-group">
               <div className="pf-group-head">
                 <h3>Floor</h3>
@@ -1860,6 +1827,84 @@ export function PaintFloorStudio({
               )}
             </div>
 
+            {project.rooms.length > 1 && (pick.color || pick.floor !== 'keep') && (
+              <button
+                type="button"
+                className="pf-apply-all"
+                disabled={applied}
+                onClick={() => applyEverywhere(room)}
+              >
+                {applied ? 'Every room has this look' : 'Use this look in every room'}
+              </button>
+            )}
+            <label className="pf-include">
+              <input
+                type="checkbox"
+                checked={pick.included}
+                onChange={(e) => update({ included: e.target.checked })}
+              />
+              Include in the whole-house total
+            </label>
+          </div>
+          <div hidden={inspector !== 'plan'}>
+            <RoomPlan
+              key={room.id}
+              items={items[room.id] ?? []}
+              onChange={(next) => {
+                setItems((current) => ({ ...current, [room.id]: next }));
+                setPlacements((current) => ({
+                  ...current,
+                  [room.id]: (current[room.id] ?? []).filter((p) =>
+                    next.some((i) => i.id === p.itemId),
+                  ),
+                }));
+              }}
+              finishesMinor={takeoff.totalMinor}
+              finishesIncomplete={needsSize && !!(pick.color || pick.floor)}
+              versionKey={snapshotJson}
+              onPrepare={async () => {
+                const meta = await save();
+                if (!meta) throw new Error('Save the project before preparing its work plan.');
+                return (await workspaceRequest('/studio-designs/prepare-scope', {
+                  ...meta,
+                  roomId: room.id,
+                  requestId: crypto.randomUUID(),
+                })) as StudioHandoff;
+              }}
+            />
+            {pick.color && (
+              <details className="pf-finish-details" open>
+                <summary>Wall paint · line-item details</summary>
+                <label>
+                  Paint line
+                  <select
+                    aria-label="Paint line"
+                    value={pick.paintLine ?? tier}
+                    onChange={(e) => update({ paintLine: e.target.value as TierKey })}
+                  >
+                    {PAINT_LINES.map((line) => (
+                      <option key={line.key} value={line.key}>
+                        {line.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  Sheen
+                  <select
+                    aria-label="Paint sheen"
+                    value={pick.sheen ?? DEFAULT_SHEEN}
+                    onChange={(e) => update({ sheen: e.target.value as Sheen })}
+                  >
+                    {SHEENS.map((sheen) => (
+                      <option key={sheen.key} value={sheen.key}>
+                        {sheen.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </details>
+            )}
             <div className="pf-group">
               <div className="pf-group-head">
                 <h3>
@@ -1908,52 +1953,6 @@ export function PaintFloorStudio({
                 <b>{money(takeoff.totalMinor)}</b>
               </div>
             </div>
-
-            {project.rooms.length > 1 && (pick.color || pick.floor !== 'keep') && (
-              <button
-                type="button"
-                className="pf-apply-all"
-                disabled={applied}
-                onClick={() => applyEverywhere(room)}
-              >
-                {applied ? 'Every room has this look' : 'Use this look in every room'}
-              </button>
-            )}
-            <label className="pf-include">
-              <input
-                type="checkbox"
-                checked={pick.included}
-                onChange={(e) => update({ included: e.target.checked })}
-              />
-              Include in the whole-house total
-            </label>
-          </div>
-          <div hidden={inspector !== 'plan'}>
-            <RoomPlan
-              key={room.id}
-              items={items[room.id] ?? []}
-              onChange={(next) => {
-                setItems((current) => ({ ...current, [room.id]: next }));
-                setPlacements((current) => ({
-                  ...current,
-                  [room.id]: (current[room.id] ?? []).filter((p) =>
-                    next.some((i) => i.id === p.itemId),
-                  ),
-                }));
-              }}
-              finishesMinor={takeoff.totalMinor}
-              finishesIncomplete={needsSize && !!(pick.color || pick.floor)}
-              versionKey={snapshotJson}
-              onPrepare={async () => {
-                const meta = await save();
-                if (!meta) throw new Error('Save the project before preparing its work plan.');
-                return (await workspaceRequest('/studio-designs/prepare-scope', {
-                  ...meta,
-                  roomId: room.id,
-                  requestId: crypto.randomUUID(),
-                })) as StudioHandoff;
-              }}
-            />
           </div>
         </aside>
       </div>

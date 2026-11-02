@@ -1,3 +1,4 @@
+import { studioErrorSummary } from '../house-example/studio-error.js';
 import { workspaceRequest, type SessionInfo } from '../../adapters/http/project-repository.js';
 import type { RoomModel } from '@renovagent/core';
 import type { RoomLook } from './room-scene.js';
@@ -21,7 +22,7 @@ export function renderFailureMessage(error: unknown): string {
     return 'The Renovagent service is unavailable. Please try again.';
   // The API supplies safe, specific errors for configuration, limits and outages.
   // Preserve those instead of treating every "unavailable" as a missing dev server.
-  return message.slice(0, 300);
+  return message;
 }
 
 // "Photoreal" for the 3D view: an eye-level still of the measured model goes
@@ -61,7 +62,7 @@ export function attachPhotoreal(
   asPhoto.type = 'button';
   asPhoto.textContent = 'Photoreal';
   switcher.append(as3d, asPhoto);
-  const status = document.createElement('span');
+  const status = document.createElement('div');
   status.className = 'room3d-photoreal-status';
   status.setAttribute('role', 'status');
   const hd = document.createElement('button');
@@ -124,7 +125,18 @@ export function attachPhotoreal(
   const fromBase64 = (data: string, type: string) =>
     new Blob([Uint8Array.from(atob(data), (c) => c.charCodeAt(0))], { type });
   const failed = (e: unknown) => {
-    status.textContent = renderFailureMessage(e);
+    const message = renderFailureMessage(e);
+    const summary = document.createElement('span');
+    summary.textContent = studioErrorSummary(message);
+    const details = document.createElement('details');
+    const toggle = document.createElement('summary');
+    toggle.textContent = 'Details';
+    const diagnostics = document.createElement('div');
+    diagnostics.textContent = message;
+    details.append(toggle, diagnostics);
+    status.classList.add('pf-studio-error');
+    status.setAttribute('role', 'alert');
+    status.replaceChildren(summary, details);
   };
   // Muse Image from a still: the 3D capture, or the Blender interior.
   const photoreal = async (still: Blob, source: string) => {

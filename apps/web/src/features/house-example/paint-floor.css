@@ -2650,3 +2650,50 @@
     justify-content: start;
   }
 }
+
+/* Keep the main action within the demo viewport; supporting choices follow it. */
+.pf-inspo {
+  display: flex;
+  flex-direction: column;
+}
+.pf-design-action {
+  order: -1;
+}
+.pf-finish-details {
+  font-size: 12px;
+}
+.pf-finish-details summary {
+  cursor: pointer;
+  padding-block: 8px;
+}
+.pf-finish-details label {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-block: 10px;
+}
+.pf-finish-details select {
+  max-width: 65%;
+  font: inherit;
+  padding: 6px;
+  border: 1px solid var(--pf-line);
+  border-radius: 8px;
+  background: white;
+}
+.pf-studio-error {
+  min-width: 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.pf-studio-error details {
+  margin-top: 4px;
+  font-size: 11px;
+}
+.pf-studio-error summary {
+  width: fit-content;
+  cursor: pointer;
+}
+.pf-studio-error details > div {
+  margin-top: 6px;
+  white-space: pre-wrap;
+}

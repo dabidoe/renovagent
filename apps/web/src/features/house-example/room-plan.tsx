@@ -1,3 +1,4 @@
+import { StudioError } from './studio-error.js';
 import { useState } from 'react';
 import { studioItemSchema, type StudioItem } from '@renovagent/contracts';
 import { studioItemBudget } from '@renovagent/core';
@@ -84,6 +85,50 @@ export function RoomPlan({
   };
   return (
     <div className="pf-room-plan">
+      <section className="pf-work-plan">
+        <div className="pf-group-head">
+          <h3>The work behind the room</h3>
+        </div>
+        <p>Prepare the paint-and-floor scope, checks and open questions from this saved design.</p>
+        <button
+          type="button"
+          className="pf-inspo-go"
+          disabled={busy}
+          onClick={() => void prepare()}
+        >
+          {busy ? 'Preparing…' : handoff ? 'Update work plan' : 'Save & prepare work plan'}
+        </button>
+        {error && <StudioError message={error} className="pf-error-inline" />}
+        {handoff && (
+          <div>
+            {handoff.version !== versionKey && (
+              <p className="pf-styling-stale">
+                Choices changed. Update this work plan before using it.
+              </p>
+            )}
+            <p className="pf-inspo-note">{handoff.data.coverage}</p>
+            {handoff.data.questions.length > 0 && (
+              <ul>
+                {handoff.data.questions.map((q) => (
+                  <li key={q}>{q}</li>
+                ))}
+              </ul>
+            )}
+            <button
+              type="button"
+              className="pf-reset"
+              disabled={handoff.version !== versionKey}
+              onClick={download}
+            >
+              Download work plan
+            </button>
+            <details>
+              <summary>Read the proposed handoff</summary>
+              <pre>{handoff.data.markdown}</pre>
+            </details>
+          </div>
+        )}
+      </section>
       <div className="pf-budget-card">
         <p>Budget so far</p>
         <strong>{money(finishesMinor + budget.allowanceMinor)}</strong>
@@ -250,54 +295,6 @@ export function RoomPlan({
           </article>
         ))}
       </div>
-      <section className="pf-work-plan">
-        <div className="pf-group-head">
-          <h3>The work behind the room</h3>
-        </div>
-        <p>Prepare the paint-and-floor scope, checks and open questions from this saved design.</p>
-        <button
-          type="button"
-          className="pf-inspo-go"
-          disabled={busy}
-          onClick={() => void prepare()}
-        >
-          {busy ? 'Preparing…' : handoff ? 'Update work plan' : 'Save & prepare work plan'}
-        </button>
-        {error && (
-          <p role="alert" className="pf-error-inline">
-            {error}
-          </p>
-        )}
-        {handoff && (
-          <div>
-            {handoff.version !== versionKey && (
-              <p className="pf-styling-stale">
-                Choices changed. Update this work plan before using it.
-              </p>
-            )}
-            <p className="pf-inspo-note">{handoff.data.coverage}</p>
-            {handoff.data.questions.length > 0 && (
-              <ul>
-                {handoff.data.questions.map((q) => (
-                  <li key={q}>{q}</li>
-                ))}
-              </ul>
-            )}
-            <button
-              type="button"
-              className="pf-reset"
-              disabled={handoff.version !== versionKey}
-              onClick={download}
-            >
-              Download work plan
-            </button>
-            <details>
-              <summary>Read the proposed handoff</summary>
-              <pre>{handoff.data.markdown}</pre>
-            </details>
-          </div>
-        )}
-      </section>
     </div>
   );
 }

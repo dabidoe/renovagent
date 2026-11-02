@@ -1,3 +1,4 @@
+import { StudioError } from './studio-error.js';
 import { studioStylingSignature } from './studio-signatures.js';
 import { useEffect, useRef, useState } from 'react';
 import {
@@ -272,7 +273,7 @@ export function InspoPanel({
   const fail = (e: unknown) =>
     setStatus({
       busy: '',
-      error: e instanceof Error ? e.message.slice(0, 160) : 'That did not work.',
+      error: e instanceof Error ? e.message : 'That did not work.',
     });
 
   const analyse = async (picked: File | string) => {
@@ -600,8 +601,8 @@ export function InspoPanel({
         </p>
       )}
       {status.error && (
-        <div className="pf-intake-error" role="alert">
-          {status.error}
+        <div>
+          <StudioError message={status.error} />
           {signIn && (
             <div className="pf-inspo-signin">
               <SignInChoices />
