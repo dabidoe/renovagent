@@ -1,6 +1,11 @@
 # Project status — Renovagent
 
+Studio navigation follow-up (November 2): public studios, the Philadelphia house, examples and Connect now share direct **Examples / Your project / Connect** links with a visible current page. A separate workspace menu preserves saved-project and account access. **New project** and the older session-brief bridge open photo intake instead of the notes-workspace dialog. The project menu skips empty lists and its redundant gallery link; its primary action uses the studio blue. Selecting a saved workspace project also clears the studio route so the selected project is actually shown.
+
+Verification: production build/types/boundaries and formatting pass; 15 legacy + 313 TypeScript tests pass (52 regular-suite skips), and all 60 local connected tests pass. A targeted offline browser run passes 52 navigation checks at 1440/390/320 px, including the Philadelphia card, intake recovery, browser back/forward, current-page states, 44 px navigation targets and no horizontal overflow; desktop and phone captures were visually reviewed in `.local/studio-nav-qa/`. The general UI guardrail passes 85/85 checks. Its self-started mode now intercepts API requests and accepts `CHROME_PATH` for an installed browser. Read-only Railway checks before this follow-up returned `/healthz` 200, cleanup assets `workspace-CtAdJkyU.js` / `workspace-C8WYafM8.css`, and `/landing.html` 404. These checks do not claim live sign-in, saves or model generation.
+
 CSS and image cleanup (November 3):
+
 - **CSS:** removed 780 selectors / 740 rules (3,875 lines) across 18 stylesheets whose class names appear nowhere in apps/, packages/, src/, public/ or the HTML entries. The rule is conservative: dynamic class prefixes count as live, selectors with :is/:where/:has are kept, and classes inside :not() don't count. Built CSS went from 312 KB / 59 KB gzip to 258 KB / 50 KB gzip, and public-route coverage from 24% to 28%; the remainder serves signed-in, modal, 3D and notes-workspace states.
 - **Dead code:** deleted the unimported landing `project-preview`, `cost-demo` and `landing-example` modules, orphaned when the homepage was refreshed. `house-example/house-example.tsx` (942 lines, `HouseExample`) is also unimported since October 31 but was left for the owner to decide.
 - **Hero image:** now a WebP copy (395 → 95 KB). `bath.jpg` stays as the source for `scripts/hero-segments.ts`. Example room photos are untouched because they carry provenance hashes and test fixtures.
@@ -8,6 +13,7 @@ CSS and image cleanup (November 3):
 Verification: full-page pixel comparison before and after the prune (9 routes × 1440/390/320 px, reduced motion, deterministic baseline confirmed) shows no change except 1–6 px of lazy-image resampling noise on one route, whose same images are byte-identical on `/`. Types, boundaries, format, build, 15 + 313 tests and 85/85 UI checks pass.
 
 Brand polish and weight (November 3):
+
 - **Fonts:** self-hosted Plus Jakarta Sans for every h1/h2 and Inter for text (`@fontsource-variable`, pinned), replacing the Google Fonts and Fontshare `@import`s. Headline tracking is set once for Jakarta. Jakarta's wide full stop is replaced in headlines by Inter's, via a `unicode-range` face over the Inter file the page already loads.
 - **Navigation:** removed "Open workspace" from the landing nav, desktop and mobile.
 - **Weight:**
@@ -24,6 +30,7 @@ Brand polish and weight (November 3):
 Verification: format, types, build, 15 + 313 tests and 85/85 UI checks pass. Fonts were confirmed in the browser (headings Plus Jakarta Sans, text Inter, no third-party font requests). Desktop and 390 px reviewed.
 
 Studio layout, motion and copy trim (November 3):
+
 - **Studio layout:**
   - On desktop (≥761 px), Plan & budget sits under the photo: a budget strip, then the room list beside the work plan.
   - The inspector drops to three tabs whose widths fill the bar, and the photo column no longer sticks, so both columns end at similar heights.
@@ -38,6 +45,7 @@ Studio layout, motion and copy trim (November 3):
 Verification: types, format, build, 15 + 313 tests and 85/85 UI checks pass. Browser sampling shows the landing allowance rolling $1,257.07 → $2,378.44 in about 0.45 s; the reduced-motion context shows the final value at once, and the screen-reader text is final throughout. Desktop, 1024 px and 390 px layouts checked; no console errors.
 
 UI consolidation, first increments (November 3):
+
 - **One accent blue in the studio:** removed the `.pf-studio` `#3858ed` accent override and its 12 hardcoded copies (now `var(--pf-accent, #0866ff)`), so the studio matches the landing, Connect and logo (`#0866ff`).
 - **Readable labels:** 8 px and 9 px text in the landing and studio CSS is raised to 10 px and 11 px. The older notes-workspace CSS is untouched.
 - **Overlaps fixed:**
@@ -49,11 +57,13 @@ Verification: the browser computes a single accent value (27 uses) in the Oaklan
 UI audit step 4 — guardrails (November 3): added `npm run ui:check` (`scripts/ui-check.ts`) plus a separate `ui` CI job that uploads its screenshots. Playwright 1.63.0 is now a pinned dev dependency.
 
 The script starts its own Vite server with no API (or checks `--base <url>`) and drives 8 public routes at 1440, 390 and 320 px. On every route it asserts:
+
 - no horizontal overflow;
 - every visible control has an accessible name;
 - no console or page errors (failed API requests excepted).
 
 Targeted assertions:
+
 - Brooklyn reads "Not priced yet" / "Needs size", and Oakland's totals are non-zero.
 - Intake fields have visible labels, the disabled "Build my plan" explains its photo requirement, the empty form shows no saved message, and a typed brief is saved and survives reload.
 - A disabled Connect key button explains why.
@@ -68,6 +78,7 @@ Verification: 85/85 checks pass locally (about 80 s). Re-introducing the `$0` he
 Landing light logo (November 3): the landing header now uses the owner's light lockup (`apps/web/src/assets/brand/renovagent-logo-light.webp`, same canvas as the original) directly on the hero photo with a soft shadow, replacing the white chip. Other pages keep the original dark lockup. The hero photo stays as is, per the owner. Browser checks at 1440 and 390 px; tests and build pass.
 
 UI audit step 3 — studio, intake and Connect layout (November 3):
+
 - Studio room tabs keep names on one line (ellipsis plus a title tooltip), so prices align.
 - The Plan-tab budget card is now a light breakdown under the header's dark total.
 - On phones the header actions share one row and wrap only at 320 px, inspector tabs no longer wrap, and the header menu sits at the right edge.
@@ -80,6 +91,7 @@ UI audit step 3 — studio, intake and Connect layout (November 3):
 Not changed: the Design/Restyle tab copy (main has since reorganized those tabs) and the dead space under the studio image on desktop.
 
 Verification: types and build pass; 15 legacy + 313 TypeScript tests pass. Browser interaction checks at 1440, 390 and 320 px:
+
 - each intake input has an accessible name from a visible label;
 - the empty form shows no status, typing shows the saved message, and the brief survives reload;
 - the Connect button's aria-describedby points at the visible reason;
@@ -87,6 +99,7 @@ Verification: types and build pass; 15 legacy + 313 TypeScript tests pass. Brows
 - no horizontal overflow and no console errors.
 
 UI audit step 2 — hero and landing (November 3):
+
 - The prompt placeholder now matches the bathroom hero photo.
 - Only the active SAM outline is drawn, so inactive ones no longer cross the headline; outlines are hidden on phones, where the card covers that part of the photo.
 - Removed "Try your room in the studio", which repeated the form's "Start a project". "See listing examples" and "Connect Muse or your agent" now share one row.
@@ -98,6 +111,7 @@ Open owner decisions: the hero photo is still a bathroom while the sections belo
 Verification: types pass; 15 legacy + 313 TypeScript tests pass. Browser checks at 1440, 1024, 390 and 320 px show no horizontal overflow, single-line card tabs and no console errors.
 
 UI audit step 1 — visible demo defects (November 3): fixes from `docs/audits/ui-audit-2026-11-03.md`, each contained to its own file.
+
 - Removed the stale `landing.html` (old brand, empty preview) from the build. `build:pages` now packages the site as-is.
 - Unsized rooms read **Needs size** and the header reads **Not priced yet · N rooms need a size** instead of `$0` (Brooklyn). No dimensions were invented.
 - Fixed duplicate React keys between the Imagine and SizeEntry siblings.

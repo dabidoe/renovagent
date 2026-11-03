@@ -1,4 +1,3 @@
-import { ProjectStart } from '../features/project-start/project-start.js';
 import { ReferenceBoard } from '../features/references/reference-board.js';
 import { ReferenceEditor } from '../features/references/reference-editor.js';
 import '../features/references/references.css';
@@ -122,7 +121,6 @@ export function App({ controller }: { controller: WorkspaceController }) {
     scope.recipe.id === 'living-room-refresh' &&
     scope.request.startsWith(EXAMPLE_TAG);
   const [modal, setModal] = useState<
-    | 'new'
     | 'import'
     | 'facts'
     | 'about'
@@ -154,8 +152,8 @@ export function App({ controller }: { controller: WorkspaceController }) {
       const brief = sessionStorage.getItem('renovagent.project-brief');
       if (brief) {
         sessionStorage.removeItem('renovagent.project-brief');
-        setStartPrompt(brief.slice(0, 300));
-        setModal('new');
+        setOwnStart({ idea: brief.slice(0, 300), photos: [] });
+        openStudio('#your-project');
       }
     } catch {
       // The normal workspace remains usable when session storage is unavailable.
@@ -305,7 +303,8 @@ export function App({ controller }: { controller: WorkspaceController }) {
               safe(controller.setView(p.id));
               setLandingVisible(false);
               setHouseExampleOpen(false);
-              if (window.location.hash === '#example-house')
+              setStudioRoute(null);
+              if (studioHash() || window.location.hash === '#example-house')
                 window.history.replaceState(
                   null,
                   '',
@@ -439,24 +438,41 @@ export function App({ controller }: { controller: WorkspaceController }) {
               </div>
             </details>
           </nav>
+        ) : showOwn || showHouse ? (
+          <nav className="prompt-studio-nav" aria-label="Studio navigation">
+            <a
+              href="#examples"
+              aria-current={
+                showHouse || studioRoute === '#examples' || studioRoute?.startsWith('#example/')
+                  ? 'page'
+                  : undefined
+              }
+            >
+              Examples
+            </a>
+            <a
+              href="#your-project"
+              aria-current={studioRoute === '#your-project' ? 'page' : undefined}
+            >
+              Your project
+            </a>
+            <a href="#connect" aria-current={studioRoute === '#connect' ? 'page' : undefined}>
+              Connect
+            </a>
+            <button type="button" aria-label="Open workspace" onClick={() => setModal('projects')}>
+              <Glyph name="menu" />
+            </button>
+          </nav>
         ) : (
           <button
             className="prompt-project-picker"
-            aria-label={`Switch project: ${showHouse ? 'Hutchens whole-house plan' : (project?.name ?? 'Projects')}`}
+            aria-label={`Switch project: ${project?.name ?? 'Projects'}`}
             onClick={() => setModal('projects')}
           >
             <span>
-              {showOwn
-                ? studioRoute === '#your-project'
-                  ? 'Your project'
-                  : studioRoute === '#connect'
-                    ? 'Connect your agent'
-                    : 'Examples'
-                : showHouse
-                  ? 'Hutchens · whole-house plan'
-                  : exampleStudio
-                    ? 'Living room refresh'
-                    : project && state.properties[project.propertyId].name.split(',')[0]}
+              {exampleStudio
+                ? 'Living room refresh'
+                : project && state.properties[project.propertyId].name.split(',')[0]}
             </span>
             <Glyph name="chevron" />
           </button>
@@ -1105,29 +1121,6 @@ export function App({ controller }: { controller: WorkspaceController }) {
           </div>
         </Modal>
       )}
-      {modal === 'new' && (
-        <Modal
-          title="Start your project"
-          className="project-start-dialog"
-          onClose={() => setModal(null)}
-        >
-          <ProjectStart
-            goal={startPrompt}
-            onGoal={setStartPrompt}
-            photos={startPhotos}
-            onPhotos={setStartPhotos}
-            properties={Object.values(state.properties)}
-            busy={busy}
-            onCancel={() => setModal(null)}
-            onCreate={async (input) => {
-              await controller.createProject(input);
-              setModal(null);
-              setStartPrompt('');
-              setStartPhotos([]);
-            }}
-          />
-        </Modal>
-      )}
       {modal === 'facts' && project && (
         <Modal
           error={error || localError}
@@ -1214,21 +1207,33 @@ export function App({ controller }: { controller: WorkspaceController }) {
         </Modal>
       )}
       {modal === 'projects' && (
-        <Modal title="Homes & projects" onClose={() => setModal(null)}>
-          {projectButtons()}
-          <button className="primary prompt-new-project" onClick={() => setModal('new')}>
+        <Modal
+          title="Homes & projects"
+          className="prompt-projects-dialog"
+          onClose={() => setModal(null)}
+        >
+          {Object.keys(state.projects).length > 0 && projectButtons()}
+          <button
+            className="primary prompt-new-project"
+            onClick={() => {
+              setOwnStart({ idea: '', photos: [] });
+              openStudio('#your-project');
+            }}
+          >
             <Glyph name="plus" />
             New project
           </button>
-          <button
-            className="secondary prompt-example-project"
-            disabled={busy}
-            onClick={() => openStudio('#examples')}
-          >
-            <Glyph name="paint" />
-            Explore the example projects
-            <Glyph name="right" />
-          </button>
+          {studioRoute !== '#examples' && (
+            <button
+              className="secondary prompt-example-project"
+              disabled={busy}
+              onClick={() => openStudio('#examples')}
+            >
+              <Glyph name="paint" />
+              Explore the example projects
+              <Glyph name="right" />
+            </button>
+          )}
           {auth.required && (
             <div className="prompt-modal-account">
               <SignInChoices providers={auth.providers} />

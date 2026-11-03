@@ -45,6 +45,16 @@ async function open(browser: Browser, base: string, route: string, vp: (typeof v
   // tsx keeps function names with a __name helper that page.evaluate callbacks reference.
   await context.addInitScript('window.__name = (fn) => fn');
   const page = await context.newPage();
+  if (!baseArg) {
+    // Keep the self-started check offline even when a connected API is running on 4000.
+    await page.route('**/api/**', (route) =>
+      route.fulfill({
+        status: 503,
+        contentType: 'application/json',
+        body: '{"error":"Offline UI check"}',
+      }),
+    );
+  }
   const errors: string[] = [];
   page.on('console', (m) => {
     if (m.type() === 'error' && !ignoredConsole.test(m.text())) errors.push(m.text().slice(0, 200));
@@ -252,7 +262,7 @@ try {
     base = (server.resolvedUrls?.local[0] ?? 'http://127.0.0.1:8799/').replace(/\/$/, '');
   }
   await mkdir(outDir, { recursive: true });
-  browser = await chromium.launch();
+  browser = await chromium.launch({ executablePath: process.env.CHROME_PATH || undefined });
   await generalChecks(browser, base);
   await budgetChecks(browser, base);
   await intakeChecks(browser, base);
