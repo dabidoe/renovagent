@@ -171,11 +171,18 @@ export function ConnectAgent() {
                         type="submit"
                         className="ca-primary"
                         disabled={busy || !endpoint || !name.trim()}
+                        aria-describedby={!endpoint ? 'ca-key-unavailable' : undefined}
                       >
                         {busy ? 'Creating…' : 'Create connection key'}
                         <Glyph name="right" />
                       </button>
                     </form>
+                  )}
+                  {!fresh && !endpoint && (
+                    <p className="ca-note" id="ca-key-unavailable">
+                      Keys can’t be created right now: the workspace service didn’t answer. Reload
+                      to try again.
+                    </p>
                   )}
                   <p className="ca-note">Access lasts seven days. Remove it below at any time.</p>
                 </>
@@ -228,7 +235,9 @@ export function ConnectAgent() {
           <div className="ca-muse-intro">
             <div>
               <h2>Muse + Renovagent</h2>
-              <p>Plans open in your studio. Finds go to Your board.</p>
+              <p>
+                Plans open in your studio. Finds go to <b>Your board</b>.
+              </p>
             </div>
             <MuseAnimation variant="connect" />
           </div>

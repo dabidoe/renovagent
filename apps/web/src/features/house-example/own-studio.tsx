@@ -70,17 +70,21 @@ function Intake({
   const [needsAccess, setNeedsAccess] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
   const planInput = useRef<HTMLInputElement>(null);
+  // Nothing typed or picked yet: still save (clears an old draft), but say nothing.
+  const hasDraft = !!(where || ceiling || idea || photos.length || plans.length);
   useEffect(() => {
     let live = true;
-    setRecovery('Saving draft in this browser…');
+    setRecovery(hasDraft ? 'Saving draft in this browser…' : '');
     void saveOwnIntake({ where, ceiling, idea, photos, plans }).then(
       () =>
         live &&
+        hasDraft &&
         setRecovery(
           'Photo files and brief saved in this browser. No project saved to your account yet.',
         ),
       () =>
         live &&
+        hasDraft &&
         setRecovery(
           'This browser could not save the draft. Keep this tab open to retain your photos and brief.',
         ),
@@ -88,7 +92,7 @@ function Intake({
     return () => {
       live = false;
     };
-  }, [where, ceiling, idea, photos, plans]);
+  }, [where, ceiling, idea, photos, plans, hasDraft]);
   const build = async () => {
     setError('');
     const list: Step[] = [
@@ -184,32 +188,38 @@ function Intake({
         />
       )}
       {!!photos.length && <p className="pf-sub">{photos.map((file) => file.name).join(' · ')}</p>}
-      <input
-        className="pf-intake-idea"
-        aria-label="What do you imagine?"
-        placeholder="What do you imagine? Dark green walls, light oak floors…"
-        value={idea}
-        disabled={busy}
-        maxLength={300}
-        onChange={(e) => setIdea(e.target.value)}
-      />
-      <div className="pf-intake-row">
+      <label className="pf-field">
+        <span>What do you imagine?</span>
         <input
-          aria-label="Address or listing link"
-          placeholder="Address or listing link"
-          value={where}
+          className="pf-intake-idea"
+          placeholder="Dark green walls, light oak floors…"
+          value={idea}
           disabled={busy}
           maxLength={300}
-          onChange={(e) => setWhere(e.target.value)}
+          onChange={(e) => setIdea(e.target.value)}
         />
-        <input
-          aria-label="Ceiling height"
-          placeholder="Ceiling (optional)"
-          value={ceiling}
-          disabled={busy}
-          inputMode="decimal"
-          onChange={(e) => setCeiling(e.target.value)}
-        />
+      </label>
+      <div className="pf-intake-row">
+        <label className="pf-field">
+          <span>Address or listing link</span>
+          <input
+            placeholder="Street address or listing URL"
+            value={where}
+            disabled={busy}
+            maxLength={300}
+            onChange={(e) => setWhere(e.target.value)}
+          />
+        </label>
+        <label className="pf-field">
+          <span>Ceiling height</span>
+          <input
+            placeholder="Optional, e.g. 9 ft"
+            value={ceiling}
+            disabled={busy}
+            inputMode="decimal"
+            onChange={(e) => setCeiling(e.target.value)}
+          />
+        </label>
       </div>
       {steps ? (
         <ol className="pf-steps" aria-live="polite">
@@ -221,14 +231,20 @@ function Intake({
           ))}
         </ol>
       ) : (
-        <button
-          type="button"
-          className="pf-build"
-          disabled={!photos.length || needsAccess}
-          onClick={() => void build()}
-        >
-          Build my plan <Glyph name="right" />
-        </button>
+        <div className="pf-build-row">
+          <button
+            type="button"
+            className="pf-build"
+            disabled={!photos.length || needsAccess}
+            aria-describedby={!photos.length ? 'pf-build-needs' : undefined}
+            onClick={() => void build()}
+          >
+            Build my plan <Glyph name="right" />
+          </button>
+          {!photos.length && (
+            <small id="pf-build-needs">Add at least one room photo to build your plan.</small>
+          )}
+        </div>
       )}
       {error && <StudioError message={error} />}
       <p className="pf-sub" role="status">

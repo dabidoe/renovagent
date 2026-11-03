@@ -1,5 +1,24 @@
 # Project status — Renovagent
 
+UI audit step 3 — studio, intake and Connect layout (November 3):
+- Studio room tabs keep names on one line (ellipsis plus a title tooltip), so prices align.
+- The Plan-tab budget card is now a light breakdown under the header's dark total.
+- On phones the header actions share one row and wrap only at 320 px, inspector tabs no longer wrap, and the header menu sits at the right edge.
+- Fixed a pre-existing 320 px overflow: the studio grid column sized to its content (325 px).
+- Intake fields have visible labels.
+- The disabled "Build my plan" says a room photo is needed.
+- The draft-saved message appears only once something is entered.
+- Connect explains why "Create connection key" is disabled when the workspace service is unreachable, and shows "Your board" as a named place.
+
+Not changed: the Design/Restyle tab copy (main has since reorganized those tabs) and the dead space under the studio image on desktop.
+
+Verification: types and build pass; 15 legacy + 313 TypeScript tests pass. Browser interaction checks at 1440, 390 and 320 px:
+- each intake input has an accessible name from a visible label;
+- the empty form shows no status, typing shows the saved message, and the brief survives reload;
+- the Connect button's aria-describedby points at the visible reason;
+- inspector tabs are a single row at 44 px;
+- no horizontal overflow and no console errors.
+
 UI audit step 2 — hero and landing (November 3):
 - The prompt placeholder now matches the bathroom hero photo.
 - Only the active SAM outline is drawn, so inactive ones no longer cross the headline; outlines are hidden on phones, where the card covers that part of the photo.

@@ -2670,3 +2670,67 @@
 .pf-model-details dd {
   margin: 0;
 }
+
+/* UI audit step 3 — studio layout (November 3). Kept together so it reviews as one change. */
+/* One column that never grows past the screen (it sized to content at 320 px). */
+.pf-studio {
+  grid-template-columns: minmax(0, 1fr);
+}
+.pf-room-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* The header holds the dark headline total; the Plan tab's card is its light breakdown. */
+.pf-panel .pf-budget-card {
+  border: 1px solid var(--pf-line);
+  background: var(--pf-soft, #f2f4fb);
+  color: var(--pf-ink);
+}
+.pf-panel .pf-budget-card p,
+.pf-panel .pf-budget-card small {
+  color: var(--pf-muted);
+}
+@media (max-width: 760px) {
+  .pf-head-side {
+    flex-wrap: wrap;
+    align-items: stretch;
+  }
+  .pf-head-side > button,
+  .pf-head-side > a {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding-inline: 8px;
+    white-space: nowrap;
+  }
+  .pf-head-side > .pf-total {
+    flex-basis: 100%;
+  }
+  .pf-inspector-tabs button {
+    padding-inline: 2px;
+    white-space: nowrap;
+  }
+}
+.pf-field {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+.pf-field > span {
+  color: var(--pf-ink, #142038);
+  font-size: 13px;
+  font-weight: 600;
+}
+.pf-field > input {
+  min-width: 0;
+}
+.pf-build-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+}
+.pf-build-row > small {
+  color: var(--pf-muted, #64748b);
+  font-size: 13px;
+}
