@@ -854,6 +854,8 @@ export function PaintFloorStudio({
   onIdeaUsed,
   savedDesign,
   initialDesign,
+  initialItems,
+  initialPlacements,
   autoImagine = true,
   autoSave = false,
   intake,
@@ -874,6 +876,10 @@ export function PaintFloorStudio({
   savedDesign?: SavedStudioDesign;
   // Validated bundled proposal, used only when this example has no browser draft.
   initialDesign?: StudioDesign;
+  // Staged room list / 3D pieces for an example, same no-draft rule. Applied
+  // once per browser: afterwards the owner's edits win, even "remove all".
+  initialItems?: Record<string, StudioItem[]>;
+  initialPlacements?: Record<string, StudioPlacement[]>;
   // Own photos open before analysis; defer automatic finish choices until sizes are ready.
   autoImagine?: boolean;
   autoSave?: boolean;
@@ -948,31 +954,88 @@ export function PaintFloorStudio({
     () => savedDesign?.snapshot.picks ?? loadPicks({ ...project, id: localScope }),
   );
   const itemStore = `renovagent.studio.${localScope}.items.v1`;
+  const placementStore = `renovagent.studio.${localScope}.placements.v1`;
+  // Staged example pieces apply once per browser, to rooms whose stored draft
+  // is missing or still empty (fresh and pre-staging visits alike). After
+  // that the owner's edits win, even "remove all".
+  const stagedRef = useRef<
+    { items?: Record<string, StudioItem[]>; placements?: Record<string, StudioPlacement[]> } | null | false
+  >(false);
+  const staged = (() => {
+    if (stagedRef.current !== false) return stagedRef.current;
+    if (savedDesign || (!initialItems && !initialPlacements)) {
+      stagedRef.current = null;
+      return null;
+    }
+    const seedStore = `renovagent.studio.${localScope}.seed.v1`;
+    const empty = (store: string, seed?: Record<string, unknown[]>) => {
+      if (!seed) return false;
+      let raw: Record<string, unknown> = {};
+      try {
+        raw = JSON.parse(localStorage.getItem(store) || '{}');
+      } catch {
+        return true;
+      }
+      return project.rooms.some((r) => {
+        const have = raw[r.id];
+        return seed[r.id]?.length && (!Array.isArray(have) || have.length === 0);
+      });
+    };
+    try {
+      if (localStorage.getItem(seedStore) === '1') {
+        stagedRef.current = null;
+        return null;
+      }
+    } catch {
+      stagedRef.current = null;
+      return null;
+    }
+    if (!empty(itemStore, initialItems) && !empty(placementStore, initialPlacements)) {
+      stagedRef.current = null;
+      return null;
+    }
+    try {
+      localStorage.setItem(seedStore, '1');
+    } catch {
+      /* Staged for this visit. */
+    }
+    stagedRef.current = { items: initialItems, placements: initialPlacements };
+    return stagedRef.current;
+  })();
   const [items, setItems] = useState<Record<string, StudioItem[]>>(() => {
     if (savedDesign?.snapshot.items) return savedDesign.snapshot.items;
     try {
       const stored = JSON.parse(localStorage.getItem(itemStore) || '{}');
       return Object.fromEntries(
-        project.rooms.map((r) => [
-          r.id,
-          Array.isArray(stored[r.id])
-            ? stored[r.id].flatMap((i: unknown) => {
+        project.rooms.map((r) => {
+          const seed = staged?.items?.[r.id];
+          const raw = stored[r.id];
+          if ((!Array.isArray(raw) || raw.length === 0) && seed?.length) return [r.id, seed];
+          if (Array.isArray(raw))
+            return [
+              r.id,
+              raw.flatMap((i: unknown) => {
                 const p = studioItemSchema.safeParse(i);
                 return p.success ? [p.data] : [];
-              })
-            : (initialDesign?.items?.[r.id] ??
-              (picks[r.id]?.ideas ?? []).map((name) => ({
+              }),
+            ];
+          return [
+            r.id,
+            (initialItems?.[r.id] ?? initialDesign?.items?.[r.id] ?? (picks[r.id]?.ideas ?? []).map(
+              (name) => ({
                 id: crypto.randomUUID(),
                 name,
                 category: 'other' as const,
                 action: 'add' as const,
                 quantity: null,
                 unitAllowanceMinor: null,
-              }))),
-        ]),
+              }),
+            )),
+          ];
+        }),
       );
     } catch {
-      return initialDesign?.items ?? {};
+      return staged?.items ?? initialItems ?? initialDesign?.items ?? {};
     }
   });
   useEffect(() => {
@@ -1018,24 +1081,29 @@ export function PaintFloorStudio({
       },
     ]),
   );
-  const placementStore = `renovagent.studio.${localScope}.placements.v1`;
   const [placements, setPlacements] = useState<Record<string, StudioPlacement[]>>(() => {
     if (savedDesign) return savedDesign.snapshot.placements ?? {};
     try {
       const raw = JSON.parse(localStorage.getItem(placementStore) || '{}');
       return Object.fromEntries(
-        project.rooms.map((r) => [
-          r.id,
-          Array.isArray(raw[r.id])
-            ? raw[r.id].flatMap((p: unknown) => {
+        project.rooms.map((r) => {
+          const seed = staged?.placements?.[r.id];
+          const stored = raw[r.id];
+          if ((!Array.isArray(stored) || stored.length === 0) && seed?.length)
+            return [r.id, seed];
+          if (Array.isArray(stored))
+            return [
+              r.id,
+              stored.flatMap((p: unknown) => {
                 const parsed = studioPlacementSchema.safeParse(p);
                 return parsed.success ? [parsed.data] : [];
-              })
-            : (initialDesign?.placements?.[r.id] ?? []),
-        ]),
+              }),
+            ];
+          return [r.id, initialPlacements?.[r.id] ?? initialDesign?.placements?.[r.id] ?? []];
+        }),
       );
     } catch {
-      return initialDesign?.placements ?? {};
+      return staged?.placements ?? initialPlacements ?? initialDesign?.placements ?? {};
     }
   });
   useEffect(() => {

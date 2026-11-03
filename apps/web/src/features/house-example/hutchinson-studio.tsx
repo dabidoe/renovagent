@@ -1,7 +1,10 @@
 import { emptyPlanningInputs } from '@renovagent/contracts';
 import { EXAMPLE_PRIVACY_NOTE } from './example-privacy.js';
+import { hutchinsonStagedFurnishings } from './hutchinson-furnishings.js';
 import { HUTCHINSON } from './hutchinson-project.js';
 import { PaintFloorStudio } from './paint-floor-studio.js';
+
+const staged = hutchinsonStagedFurnishings(HUTCHINSON);
 
 export function HutchinsonStudio({ onRoomExample }: { onRoomExample?: () => void }) {
   // Location from the owner-supplied Philadelphia listing, not the privacy alias
@@ -20,6 +23,8 @@ export function HutchinsonStudio({ onRoomExample }: { onRoomExample?: () => void
     <PaintFloorStudio
       project={HUTCHINSON}
       localCodeInputs={codeInputs}
+      initialItems={staged.items}
+      initialPlacements={staged.placements}
       kicker="Listing example · address changed for privacy"
       sources={
         <>
