@@ -416,3 +416,15 @@ a {
     gap: 8px 16px;
   }
 }
+
+/* A rolling total renders exactly as its parent; broad "parent span" rules must not restyle it. */
+.rolling-number {
+  display: inline !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  font: inherit !important;
+  color: inherit !important;
+  letter-spacing: inherit !important;
+  text-transform: none !important;
+  font-variant-numeric: tabular-nums;
+}

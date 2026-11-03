@@ -107,7 +107,7 @@ export function ListingStudio({ id, onBack }: { id: string; onBack: () => void }
       kicker={
         direction
           ? 'Muse photo concept · editable 3D starter · changes stay in this browser'
-          : 'Example from a real listing · your changes stay in this browser'
+          : 'Listing example · changes stay in this browser'
       }
       onEditRoom={(roomId, patch) =>
         patch.size && save({ ...edits, sizes: { ...edits.sizes, [roomId]: patch.size } })
@@ -163,11 +163,9 @@ export function ListingStudio({ id, onBack }: { id: string; onBack: () => void }
 export function ExamplesGallery({ onOpen }: { onOpen: (route: string) => void }) {
   return (
     <section className="pf-gallery" aria-label="Listing examples">
-      <p className="pf-kicker">Examples</p>
       <h1>From a listing to a plan.</h1>
       <p className="pf-sub">
-        Real listings, read room by room: before and after, paint and floors, and what it costs. And
-        a room restyled from a photo someone loved.
+        Real listings, priced room by room. Plus a room restyled from a saved pin.
       </p>
       <div className="pf-cards">
         <button type="button" className="pf-card is-own" onClick={() => onOpen('#your-project')}>

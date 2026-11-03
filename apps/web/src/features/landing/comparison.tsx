@@ -47,10 +47,7 @@ export function Comparison() {
           <br />
           <em>Not open wallet.</em>
         </h2>
-        <p>
-          Start with your room. <br />
-          Keep the monthly overhead at $0.
-        </p>
+        <p>Keep the monthly overhead at $0.</p>
       </div>
       <div className="comparison-price-panel">
         <ol className="price-ladder" aria-label="Selected monthly software prices in US dollars">
@@ -107,19 +104,7 @@ export function Comparison() {
         </div>
       </div>
       <p className="comparison-basis">
-        USD/mo · Selected plans, November 2, 2026 ·{' '}
-        <a href={jobtreadPricing} target="_blank" rel="noreferrer">
-          JobTread
-        </a>{' '}
-        ·{' '}
-        <a href={buildertrendPricing} target="_blank" rel="noreferrer">
-          Buildertrend
-        </a>{' '}
-        ·{' '}
-        <a href={handoffPricing} target="_blank" rel="noreferrer">
-          Handoff
-        </a>
-        . Buildertrend reference; current quotes vary.
+        USD/mo, selected plans, November 2, 2026. Buildertrend quotes vary.
       </p>
     </section>
   );

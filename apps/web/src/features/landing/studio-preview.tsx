@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { RollingNumber } from '../../components/rolling-number.js';
 import { Glyph } from '../../components/glyph.js';
 import { HUTCHINSON } from '../house-example/hutchinson-project.js';
 import { BeforeAfter, Room3D } from '../house-example/paint-floor-studio.js';
@@ -65,12 +66,11 @@ export function StudioPreview({ onOpen, busy }: { onOpen: () => void; busy: bool
     >
       <div className="studio-preview-heading">
         <div>
-          <p className="studio-preview-eyebrow">Your room. A fresh start.</p>
           <h2 id="studio-preview-title">
             Try the <em>studio.</em>
           </h2>
         </div>
-        <p>“Keep the character. Try sage walls and lighter floors.” Make it happen here.</p>
+        <p>“Keep the character. Try sage walls and lighter floors.”</p>
       </div>
       <div className="studio-preview-shell">
         <div className="studio-preview-toolbar">
@@ -122,9 +122,7 @@ export function StudioPreview({ onOpen, busy }: { onOpen: () => void; busy: bool
               </button>
             </div>
             <p className="studio-preview-hint">
-              {view === 'photo'
-                ? 'Drag the divider to see your changes'
-                : 'Drag to orbit · scroll to zoom'}
+              {view === 'photo' ? 'Drag to compare' : 'Drag to orbit · scroll to zoom'}
             </p>
           </div>
           <div className="studio-preview-controls">
@@ -191,7 +189,9 @@ export function StudioPreview({ onOpen, busy }: { onOpen: () => void; busy: bool
             <div className="studio-preview-cost" aria-live="polite">
               <div>
                 <span>Material allowance</span>
-                <strong>{money(takeoff.totalMinor)}</strong>
+                <strong>
+                  <RollingNumber value={takeoff.totalMinor} format={money} />
+                </strong>
               </div>
               <ul>
                 {takeoff.lines.map((line) => (

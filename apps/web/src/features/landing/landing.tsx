@@ -147,7 +147,6 @@ export function Landing({
           <a href="#" aria-label="Renovagent home">
             <BrandMark size={150} lockup />
           </a>
-          <span>Built for the home you’re imagining.</span>
           <nav aria-label="Footer navigation">
             <a href="#product-proof">Explore</a>
             <a href="#compare-tools">Compare</a>

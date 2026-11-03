@@ -6,7 +6,6 @@ import { Glyph } from '../../components/glyph.js';
 import { MuseConversation } from '../connect/muse-conversation.js';
 import './landing-story.css';
 import './studio-story.css';
-const museIcon = new URL('../../assets/brand/muse-app-icon.png', import.meta.url).href;
 
 export function StudioStory({
   onOwnProject,
@@ -33,16 +32,12 @@ export function StudioStory({
     >
       <div className="studio-story-heading">
         <div>
-          <p className="studio-story-eyebrow">What would look good here?</p>
           <h2 id="studio-story-title">
             <span className="direction-heading-line">One room.</span>
             <em className="direction-heading-line">Three ways.</em>
           </h2>
         </div>
-        <p>
-          Lounge, work or host. Pick a direction. <br />
-          Then make it yours.
-        </p>
+        <p>Lounge, work or host.</p>
       </div>
       <div
         className="direction-carousel"
@@ -94,13 +89,22 @@ export function StudioStory({
                 {original ? 'Back to the idea' : 'See original'}
               </button>
             </div>
-            <div className="direction-photo-bottom" aria-hidden="true">
-              <span>Same windows. A new way to use the room.</span>
-              <b>
-                {String(index + 1).padStart(2, '0')}
-                <i> / 03</i>
-              </b>
-            </div>
+            <button
+              type="button"
+              className="direction-arrow is-prev"
+              aria-label="Previous room direction"
+              onClick={() => choose(index - 1)}
+            >
+              <Glyph name="right" />
+            </button>
+            <button
+              type="button"
+              className="direction-arrow is-next"
+              aria-label="Next room direction"
+              onClick={() => choose(index + 1)}
+            >
+              <Glyph name="right" />
+            </button>
           </div>
           <div className="direction-details">
             <p className="direction-mood">{direction.mood}</p>
@@ -109,7 +113,7 @@ export function StudioStory({
               {direction.palette.map((hex) => (
                 <span key={hex} style={{ background: hex }} title={hex} />
               ))}
-              <small>Suggested palette</small>
+              <small>Palette</small>
             </div>
             <div className="direction-pieces">
               <p>In this direction</p>
@@ -117,7 +121,7 @@ export function StudioStory({
                 {direction.pieces.map((p) => (
                   <li key={p.asset}>
                     <span>{p.name}</span>
-                    <b>{p.count > 1 ? `× ${p.count}` : '01'}</b>
+                    {p.count > 1 && <b>× {p.count}</b>}
                   </li>
                 ))}
               </ul>
@@ -158,37 +162,14 @@ export function StudioStory({
                 onClick={() => choose(i)}
               >
                 <img src={d.image} alt="" width={120} height={80} loading="lazy" />
-                <span>
-                  <small>
-                    {String(i + 1).padStart(2, '0')} / {d.mood}
-                  </small>
-                  <b>{d.title}</b>
-                </span>
-                <i aria-hidden="true">↗</i>
+                <b>{d.title}</b>
               </button>
             ))}
-          </div>
-          <div className="direction-arrows">
-            <button
-              type="button"
-              aria-label="Previous room direction"
-              onClick={() => choose(index - 1)}
-            >
-              <Glyph name="right" />
-            </button>
-            <button
-              type="button"
-              aria-label="Next room direction"
-              onClick={() => choose(index + 1)}
-            >
-              <Glyph name="right" />
-            </button>
           </div>
         </div>
       </div>
       <p className="direction-note">
-        Prepared Muse concepts of one Oakland room. In the studio, 3D starts with an editable
-        arrangement; products, dimensions and fit need confirming.
+        Prepared Muse concepts of one Oakland room. Products, sizes and fit unconfirmed.
       </p>
     </section>
   );
@@ -210,16 +191,11 @@ export function AgentConnection() {
           </h2>
           <MuseAnimation variant="home" />
         </div>
-        <p>
-          Plan a room. Save your finds. Pick up in the studio with your choices ready to review.
-        </p>
+        <p>Plan a room in Muse. Review it in your studio.</p>
         <div className="agent-connection-links">
           <a className="landing-source-link" href="#connect">
             Connect Muse <Glyph name="right" />
           </a>
-          <span>
-            <img src={museIcon} alt="" width={20} height={20} /> Tested with Muse
-          </span>
         </div>
       </div>
       <MuseConversation initialExample="plan" />

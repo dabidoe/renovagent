@@ -100,9 +100,7 @@ export function ConnectAgent() {
   return (
     <section className="ca" aria-label="Connect Muse or your agent">
       <header className="ca-heading">
-        <p className="ca-kicker">Your project, in the conversation</p>
         <h1>Bring Muse into your project.</h1>
-        <p className="ca-sub">Plan with Muse. Review the results in your studio.</p>
       </header>
       <div className="ca-guide-layout">
         <div className="ca-guide">
@@ -112,9 +110,7 @@ export function ConnectAgent() {
             </span>
             <div className="ca-step-body">
               <h2 id="ca-ask-title">Start a conversation in Muse.</h2>
-              <p className="ca-note">
-                Paste this message into Muse. Connection details are included.
-              </p>
+              <p className="ca-note">Paste this into Muse.</p>
               <div className="ca-prompt">
                 <p>{introduction}</p>
                 <Copy value={ask} label="Copy connection message" />
@@ -214,15 +210,12 @@ export function ConnectAgent() {
             <div className="ca-step-body">
               <h2 id="ca-finish-title">Finish in Muse, then try it.</h2>
               <p className="ca-note">
-                Paste the key in Muse’s secure field. Send this to check the connection:
+                Paste the key into Muse’s secure field, never the chat. Then send:
               </p>
               <div className="ca-prompt">
                 <p>Show me my Renovagent projects.</p>
                 <Copy value="Show me my Renovagent projects." label="Copy first request" />
               </div>
-              <p className="ca-note">
-                Keep the key out of chat. Use Muse’s secure credentials field.
-              </p>
             </div>
           </section>
           {error && (

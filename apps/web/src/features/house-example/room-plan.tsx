@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { RollingNumber } from '../../components/rolling-number.js';
 import { studioItemSchema, type StudioItem } from '@renovagent/contracts';
 import { studioItemBudget } from '@renovagent/core';
 import { money } from './paint-floor.js';
@@ -86,7 +87,9 @@ export function RoomPlan({
     <div className="pf-room-plan">
       <div className="pf-budget-card">
         <p>Budget so far</p>
-        <strong>{money(finishesMinor + budget.allowanceMinor)}</strong>
+        <strong>
+          <RollingNumber value={finishesMinor + budget.allowanceMinor} format={money} />
+        </strong>
         <dl>
           <div>
             <dt>Paint & floor · demo materials</dt>
