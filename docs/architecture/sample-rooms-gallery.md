@@ -1,6 +1,6 @@
 # Sample rooms in photo intake
 
-November 2, 2026. UI and static assets only; local branch, not pushed/deployed.
+November 2, 2026. UI and static assets only; integrated against main for publication.
 Expanded in the owner-requested follow-up from two owner photos to eight rooms,
 with six attributed Unsplash photos and editable furniture prompts.
 
@@ -91,13 +91,14 @@ They are documentation placeholders; no empty, unlicensed cards appear to judges
 
 ## Verification
 
-- `npm test`: **15 legacy tests pass; 324 TypeScript tests pass; 52 skipped;
+- `npm test`: **15 legacy tests pass; 313 TypeScript tests pass; 52 skipped;
   0 failures**. Six gallery tests cover manifest/render filtering, asset sizes,
   identical sample/user request shape and exact bytes, static fetch failure,
   intake recovery with attribution/suggestions, and pinned source/asset provenance. Initial sandbox-only hosting
   failure (`listen EPERM`) passed on rerun with local loopback permission.
 - `npm run build`: typecheck, dependency boundaries and both production builds
   pass. The existing bundle-size warning remains.
+- `npm run test:connected`: **60 local MongoDB integration tests pass**.
 - `scripts/verify-sample-rooms.mjs`: **111 Playwright assertions pass** with a local
   Vite frontend and intercepted APIs only. It checks desktop landing → sample →
   guest → studio and phone intake → sample → guest → studio, raw bytes/headers,
@@ -137,5 +138,6 @@ Additional furniture-brief screenshots (before the normal generation action):
 **Unverified in this change:** live guest service/database persistence, SAM/Muse
 reads or generations, physical phone camera behavior, provider quotas/latency,
 and saved-link attribution on another browser (unsupported by this UI-only
-metadata). No live provider calls, Atlas writes, credential changes, deployment
-or push occurred. There are no API/provider/domain changes.
+metadata). Verification used no live provider calls, Atlas writes or credential
+changes. Publication to main triggers the normal deployment pipeline; deployment
+completion is separate from these local checks. There are no API/provider/domain changes.
