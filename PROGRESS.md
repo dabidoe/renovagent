@@ -1,5 +1,16 @@
 # Project status — Renovagent
 
+UI audit step 2 — hero and landing (November 3):
+- The prompt placeholder now matches the bathroom hero photo.
+- Only the active SAM outline is drawn, so inactive ones no longer cross the headline; outlines are hidden on phones, where the card covers that part of the photo.
+- Removed "Try your room in the studio", which repeated the form's "Start a project". "See listing examples" and "Connect Muse or your agent" now share one row.
+- Hero card tabs size to their labels, so "Shower tile" no longer wraps.
+- Dropped the unlabeled price bars; the prices and sources carry the comparison.
+
+Open owner decisions: the hero photo is still a bathroom while the sections below are living rooms, and the logo still sits on its light chip because the owner's lockup has no knockout version.
+
+Verification: types pass; 15 legacy + 313 TypeScript tests pass. Browser checks at 1440, 1024, 390 and 320 px show no horizontal overflow, single-line card tabs and no console errors.
+
 UI audit step 1 — visible demo defects (November 3): fixes from `docs/audits/ui-audit-2026-11-03.md`, each contained to its own file.
 - Removed the stale `landing.html` (old brand, empty preview) from the build. `build:pages` now packages the site as-is.
 - Unsized rooms read **Needs size** and the header reads **Not priced yet · N rooms need a size** instead of `$0` (Brooklyn). No dimensions were invented.

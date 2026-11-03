@@ -339,6 +339,7 @@
   display: none;
 }
 .hero-paint-line button,
+.hero-paint-line a,
 .hero-agent-line a {
   display: inline-flex;
   align-items: center;
@@ -353,11 +354,13 @@
   font-size: 14px;
 }
 .hero-paint-line button:hover,
+.hero-paint-line a:hover,
 .hero-agent-line a:hover {
   text-decoration: none;
   background: rgba(7, 19, 33, 0.78);
   border-color: #ffffff5c;
 }
+.hero-paint-line a > img,
 .hero-agent-line a > img {
   width: 22px;
   height: 22px;
@@ -366,8 +369,8 @@
 .hero-agent-line a > span {
   margin-left: 0;
 }
-.hero-paint-line button:first-child {
-  font-weight: 600;
+.hero-paint-line a {
+  text-decoration: none;
 }
 /* The owner's lockup is dark artwork; on the dark hero it sits on a light card. */
 .prompt-workspace.is-landing .prompt-header .brand-lockup {

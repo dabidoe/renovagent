@@ -85,7 +85,7 @@ export function Landing({
               rows={2}
               value={prompt}
               onChange={(event) => onPrompt(event.target.value)}
-              placeholder="Make my old living room feel brighter. Keep the character."
+              placeholder="Make my dated bathroom feel brighter. Keep the character."
             />
             <div>
               <PhotoPicker sampleRooms compact files={photos} onChange={onPhotos} disabled={busy} />
@@ -95,19 +95,11 @@ export function Landing({
               </button>
             </div>
           </form>
+          {/* "Start a project" opens the studio; these are the two other ways in. */}
           <p className="hero-paint-line">
-            <button type="button" onClick={() => onOwnProject()}>
-              {photos.length
-                ? `Imagine it on ${photos.length === 1 ? 'this photo' : `these ${photos.length} photos`}`
-                : 'Try your room in the studio'}{' '}
-              <span aria-hidden="true">→</span>
-            </button>
-            <span aria-hidden="true">·</span>
             <button type="button" onClick={onExamples}>
               See listing examples <span aria-hidden="true">→</span>
             </button>
-          </p>
-          <p className="hero-agent-line">
             <a href="#connect">
               <img
                 src={new URL('../../assets/brand/muse-app-icon.png', import.meta.url).href}
@@ -115,7 +107,7 @@ export function Landing({
                 width={20}
                 height={20}
               />
-              Connect with Muse or your agent <span aria-hidden="true">↗</span>
+              Connect Muse or your agent <span aria-hidden="true">↗</span>
             </a>
           </p>
           <div className="landing-starters" aria-label="Project idea starters">

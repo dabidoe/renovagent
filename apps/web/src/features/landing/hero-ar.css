@@ -36,7 +36,7 @@
   cursor: pointer;
   pointer-events: visiblePainted;
   fill: #ffffff05;
-  stroke: #d6e8ff73;
+  stroke: transparent;
   stroke-width: 1.5;
   vector-effect: non-scaling-stroke;
   fill-rule: evenodd;
@@ -105,14 +105,16 @@
 }
 .hero-ar-tabs {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  /* Columns size to their labels so "Shower tile" stays on one line. */
+  grid-template-columns: repeat(4, auto);
   gap: 4px;
   margin-bottom: 11px;
 }
 .hero-ar-tabs button {
   min-height: 36px;
-  padding: 4px 2px;
+  padding: 4px 6px;
   border: 1px solid #dfe7f2;
+  white-space: nowrap;
   border-radius: 5px;
   background: #fff;
   color: #334155;
@@ -214,6 +216,10 @@
   }
   .hero-ar-scene .hero-room-shade {
     background: linear-gradient(180deg, #07132166, #071321a6 25%, #07132140 62%, #0713211a);
+  }
+  /* The card covers the photo's lower half on phones; outlines would only show as stray edges. */
+  .hero-ar-outlines {
+    display: none;
   }
   .hero-ar-card {
     top: auto;
