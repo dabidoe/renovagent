@@ -1,4 +1,5 @@
 import { studioDirection } from './studio-directions.js';
+import { thumbnailUrl } from './ui-thumbnails.js';
 import { directionDesign } from './direction-design.js';
 import { EXAMPLE_ADDRESS } from './example-privacy.js';
 import { useEffect, useMemo, useState } from 'react';
@@ -177,7 +178,7 @@ export function ExamplesGallery({ onOpen }: { onOpen: (route: string) => void })
         </button>
         {EXAMPLES.map((e) => (
           <button key={e.route} type="button" className="pf-card" onClick={() => onOpen(e.route)}>
-            <img src={e.cover} alt="" loading="lazy" />
+            <img src={thumbnailUrl(e.cover)} alt="" loading="lazy" />
             <span>
               <b>{e.address}</b>
               <small>

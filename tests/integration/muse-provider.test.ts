@@ -6,6 +6,10 @@ import { join } from 'node:path';
 import {
   assessMuseAvailability,
   checkMuseModels,
+  museJson,
+  museEditImage,
+  metaAccessMode,
+  museModelAvailability,
   runMuse,
   withMuseBudget,
 } from '../../scripts/muse-provider.js';
@@ -140,5 +144,212 @@ test('startup check logs redacted config, warns by default, fails only when requ
     console.log = previousLog;
     console.warn = previousWarn;
     console.error = previousError;
+  }
+});
+const RELAY_BASE = 'https://relay.test';
+const RELAY_TOKEN = 'synthetic-relay-token-rrr';
+const META_KEY = 'synthetic-meta-key-bbb';
+
+function saveRelayEnv() {
+  return {
+    key: process.env.MUSE_API_KEY,
+    base: process.env.RENOVAGENT_META_BASE_URL,
+    token: process.env.RENOVAGENT_META_TOKEN,
+  };
+}
+
+function restoreRelayEnv(saved: ReturnType<typeof saveRelayEnv>) {
+  if (saved.key === undefined) delete process.env.MUSE_API_KEY;
+  else process.env.MUSE_API_KEY = saved.key;
+  if (saved.base === undefined) delete process.env.RENOVAGENT_META_BASE_URL;
+  else process.env.RENOVAGENT_META_BASE_URL = saved.base;
+  if (saved.token === undefined) delete process.env.RENOVAGENT_META_TOKEN;
+  else process.env.RENOVAGENT_META_TOKEN = saved.token;
+}
+
+type RecordedCall = { url: string; init: { headers?: unknown; body?: unknown } };
+function stubFetch(responses: { status: number; body: unknown }[]) {
+  const calls: RecordedCall[] = [];
+  let index = 0;
+  const previousFetch = globalThis.fetch;
+  globalThis.fetch = (async (url: unknown, init: unknown) => {
+    const next = responses[Math.min(index, responses.length - 1)]!;
+    index += 1;
+    calls.push({ url: String(url), init: (init ?? {}) as RecordedCall['init'] });
+    const text = JSON.stringify(next.body);
+    return {
+      status: next.status,
+      ok: next.status >= 200 && next.status < 300,
+      body: { cancel: async () => {} },
+      text: async () => text,
+      clone: () => ({ text: async () => text }),
+    };
+  }) as unknown as typeof fetch;
+  return { calls, restore: () => void (globalThis.fetch = previousFetch) };
+}
+
+const jsonSuccess = {
+  id: 'run-1',
+  model: 'muse-spark-1.3',
+  status: 'completed',
+  output: [{ content: [{ type: 'output_text', text: '{"ok":true}' }] }],
+};
+
+test('relay mode sends the relay token, never the Meta key', async () => {
+  const saved = saveRelayEnv();
+  const fetch = stubFetch([{ status: 200, body: jsonSuccess }]);
+  try {
+    process.env.MUSE_API_KEY = META_KEY;
+    process.env.RENOVAGENT_META_BASE_URL = RELAY_BASE;
+    process.env.RENOVAGENT_META_TOKEN = RELAY_TOKEN;
+    const out = await museJson({ prompt: 'x', schema: { type: 'object' } });
+    assert.deepEqual(out.result, { ok: true });
+    assert.equal(fetch.calls.length, 1);
+    const call = fetch.calls[0]!;
+    assert.equal(call.url, `${RELAY_BASE}/relay/responses`);
+    const headers = call.init.headers as Record<string, string>;
+    assert.equal(headers['X-Renovagent-Token'], RELAY_TOKEN);
+    assert.ok(!('Authorization' in headers));
+    assert.doesNotMatch(JSON.stringify(call), new RegExp(META_KEY));
+  } finally {
+    fetch.restore();
+    restoreRelayEnv(saved);
+  }
+});
+
+test('relay retries model_not_found once; direct never retries a 404', async () => {
+  const saved = saveRelayEnv();
+  const notFound = { status: 404, body: { error: { code: 'model_not_found', message: 'nf' } } };
+  const previousWarn = console.warn;
+  const warnings: string[] = [];
+  try {
+    process.env.MUSE_API_KEY = META_KEY;
+    process.env.RENOVAGENT_META_BASE_URL = RELAY_BASE;
+    process.env.RENOVAGENT_META_TOKEN = RELAY_TOKEN;
+    console.warn = (...args: unknown[]) => void warnings.push(args.map(String).join(' '));
+    const relayed = stubFetch([notFound, { status: 200, body: jsonSuccess }]);
+    try {
+      const out = await museJson({ prompt: 'x', schema: { type: 'object' } });
+      assert.deepEqual(out.result, { ok: true });
+      assert.equal(relayed.calls.length, 2);
+    } finally {
+      relayed.restore();
+    }
+    assert.match(warnings.join('\n'), /relay model_not_found, retrying once/);
+    delete process.env.RENOVAGENT_META_BASE_URL;
+    delete process.env.RENOVAGENT_META_TOKEN;
+    const direct = stubFetch([notFound, { status: 200, body: jsonSuccess }]);
+    try {
+      await assert.rejects(museJson({ prompt: 'x', schema: { type: 'object' } }), /404/);
+      assert.equal(direct.calls.length, 1);
+    } finally {
+      direct.restore();
+    }
+  } finally {
+    console.warn = previousWarn;
+    restoreRelayEnv(saved);
+  }
+});
+
+test('model availability follows the relay with the relay token', async () => {
+  const saved = saveRelayEnv();
+  const fetch = stubFetch([{ status: 200, body: {} }]);
+  try {
+    process.env.MUSE_API_KEY = META_KEY;
+    process.env.RENOVAGENT_META_BASE_URL = RELAY_BASE;
+    process.env.RENOVAGENT_META_TOKEN = RELAY_TOKEN;
+    const result = await museModelAvailability();
+    assert.equal(result.configured, true);
+    assert.ok(result.models.every((m) => m.available));
+    assert.equal(fetch.calls.length, 3);
+    for (const call of fetch.calls) {
+      assert.match(call.url, new RegExp(`^${RELAY_BASE}/relay/models/`));
+      const headers = call.init.headers as Record<string, string>;
+      assert.equal(headers['X-Renovagent-Token'], RELAY_TOKEN);
+      assert.ok(!('Authorization' in headers));
+    }
+    assert.doesNotMatch(JSON.stringify(fetch.calls), new RegExp(META_KEY));
+  } finally {
+    fetch.restore();
+    restoreRelayEnv(saved);
+  }
+});
+
+test('startup check works relay-only and logs the relay path', async () => {
+  const saved = saveRelayEnv();
+  const previousSha = process.env.RAILWAY_GIT_COMMIT_SHA;
+  const previousLog = console.log;
+  const previousWarn = console.warn;
+  const previousError = console.error;
+  const lines: string[] = [];
+  const fetch = stubFetch([{ status: 200, body: {} }]);
+  try {
+    delete process.env.MUSE_API_KEY;
+    process.env.RENOVAGENT_META_BASE_URL = RELAY_BASE;
+    process.env.RENOVAGENT_META_TOKEN = RELAY_TOKEN;
+    process.env.RAILWAY_GIT_COMMIT_SHA = 'testsha1234';
+    console.log = (...args: unknown[]) => void lines.push(args.map(String).join(' '));
+    console.warn = (...args: unknown[]) => void lines.push(args.map(String).join(' '));
+    console.error = (...args: unknown[]) => void lines.push(args.map(String).join(' '));
+    await checkMuseModels();
+    const output = lines.join('\n');
+    assert.match(output, new RegExp(`via relay POST ${RELAY_BASE}/relay/responses`));
+    assert.match(output, /relay authentication configured \(environment\); commit=testsha1234/);
+    assert.doesNotMatch(output, /synt…-rrr|synthetic-relay-token-rrr/);
+  } finally {
+    fetch.restore();
+    restoreRelayEnv(saved);
+    if (previousSha === undefined) delete process.env.RAILWAY_GIT_COMMIT_SHA;
+    else process.env.RAILWAY_GIT_COMMIT_SHA = previousSha;
+    console.log = previousLog;
+    console.warn = previousWarn;
+    console.error = previousError;
+  }
+});
+
+test('floor image edits use the configured relay without exposing a Meta key', async () => {
+  const saved = saveRelayEnv();
+  const bytes = new Uint8Array([255, 216, 255, 42]);
+  const fetch = stubFetch([
+    { status: 200, body: { data: [{ b64_json: Buffer.from(bytes).toString('base64') }] } },
+  ]);
+  try {
+    process.env.MUSE_API_KEY = META_KEY;
+    process.env.RENOVAGENT_META_BASE_URL = RELAY_BASE;
+    process.env.RENOVAGENT_META_TOKEN = RELAY_TOKEN;
+    assert.equal(await metaAccessMode(), 'relay');
+    const result = await museEditImage({
+      image: { bytes, mediaType: 'image/jpeg' },
+      prompt: 'new floor',
+    });
+    assert.deepEqual(result.bytes, bytes);
+    assert.equal(fetch.calls.length, 1);
+    const call = fetch.calls[0]!;
+    assert.equal(call.url, `${RELAY_BASE}/relay/images/edits`);
+    assert.equal((call.init.headers as Record<string, string>)['X-Renovagent-Token'], RELAY_TOKEN);
+    assert.doesNotMatch(JSON.stringify(call), new RegExp(META_KEY));
+    assert.equal(JSON.parse(call.init.body as string).model, 'muse-image-1.0');
+  } finally {
+    fetch.restore();
+    restoreRelayEnv(saved);
+  }
+});
+
+test('a relayed retry respects the surrounding provider-call budget', async () => {
+  const saved = saveRelayEnv();
+  const fetch = stubFetch([{ status: 404, body: { error: { code: 'model_not_found' } } }]);
+  try {
+    process.env.RENOVAGENT_META_BASE_URL = RELAY_BASE;
+    process.env.RENOVAGENT_META_TOKEN = RELAY_TOKEN;
+    await assert.rejects(
+      withMuseBudget(new AbortController().signal, 1, () =>
+        museJson({ prompt: 'x', schema: { type: 'object' } }),
+      ),
+      /budget exhausted/,
+    );
+    assert.equal(fetch.calls.length, 1);
+  } finally {
+    fetch.restore();
+    restoreRelayEnv(saved);
   }
 });

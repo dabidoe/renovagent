@@ -39,6 +39,8 @@ Any agent or person picking this up should read this file first, then [AGENTS.md
 
 All calls are server-side through `scripts/muse-provider.ts`, against `https://api.meta.ai/v1` with `MUSE_API_KEY`. Older workspace photo jobs still use the `muse` CLI.
 
+**November 2 relay follow-up:** main now supports the existing `modal/meta_relay.py` service. When both `RENOVAGENT_META_BASE_URL` and `RENOVAGENT_META_TOKEN` are set, Meta API calls and catalog checks use that relay instead of direct Railway egress; the actual Meta key stays in Modal. The owner confirms both Railway variables are already set. This code was previously stranded on `feat/meta-relay`, so environment variables alone did not activate it. `node --import tsx scripts/check-muse-models.ts` reports the selected mode and read-only catalog statuses without credentials. A healthy website does not establish that inference works.
+
 | Model                                           | Used for                                                                                                                              | Entry points                                                                                   |
 | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
 | **SAM 3.1** (`samSegmentText`)                  | Wall masks, hero outlines (counts 33 hex floor tiles), and outlining each inspiration item                                            | `/studio/walls`, `/studio/inspo`, `/photos/segment`; parsing in `apps/api/src/segmentation.ts` |

@@ -93,6 +93,16 @@ test('the packaged site is served with cache rules, and never outside its folder
     assert.match(guide.headers.get('content-type')!, /text\/markdown/);
     assert.equal(guide.headers.get('cache-control'), 'no-cache');
     assert.equal(await guide.text(), '# Agent guide\nUse stored image hashes.');
+    const etag = guide.headers.get('etag');
+    assert.ok(etag);
+    const unchanged = await fetch(`${base}/agent-guide.md`, { headers: { 'If-None-Match': etag } });
+    assert.equal(unchanged.status, 304);
+    assert.equal(await unchanged.text(), '');
+    await writeFile(join(dir, 'agent-guide.md'), '# Updated agent guide');
+    const changed = await fetch(`${base}/agent-guide.md`, { headers: { 'If-None-Match': etag } });
+    assert.equal(changed.status, 200);
+    assert.notEqual(changed.headers.get('etag'), etag);
+    assert.equal(await changed.text(), '# Updated agent guide');
     const model = await fetch(`${base}/chair.glb`);
     assert.equal(model.status, 200);
     assert.equal(model.headers.get('content-type'), 'model/gltf-binary');

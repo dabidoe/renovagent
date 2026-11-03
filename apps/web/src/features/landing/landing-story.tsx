@@ -1,4 +1,5 @@
 import { MuseAnimation } from '../connect/muse-animation.js';
+import { thumbnailUrl } from '../house-example/ui-thumbnails.js';
 import { useRef, useState } from 'react';
 import { STUDIO_DIRECTIONS, DIRECTION_ORIGINAL } from '../house-example/studio-directions.js';
 import { Copy } from '../connect/copy-button.js';
@@ -161,7 +162,7 @@ export function StudioStory({
                 aria-label={`Show ${d.title}`}
                 onClick={() => choose(i)}
               >
-                <img src={d.image} alt="" width={120} height={80} loading="lazy" />
+                <img src={thumbnailUrl(d.image)} alt="" width={120} height={80} loading="lazy" />
                 <b>{d.title}</b>
               </button>
             ))}

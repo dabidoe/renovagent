@@ -1,4 +1,5 @@
 import { readFile, stat } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { extname, join, normalize, resolve, sep } from 'node:path';
 
@@ -116,11 +117,27 @@ export async function serveStatic(dir: string, req: IncomingMessage, res: Server
   }
   const headers: Record<string, string | number> = {
     'Content-Type': type,
-    'Cache-Control': relative.startsWith('assets/')
-      ? 'public, max-age=31536000, immutable'
-      : 'no-cache',
+    'Cache-Control':
+      relative.startsWith('assets/') || /^ui-thumbnails\/[a-f0-9]{16}\.webp$/.test(relative)
+        ? 'public, max-age=31536000, immutable'
+        : 'no-cache',
     ...(body ? { 'Content-Length': body.length } : {}),
   };
+  if (body) {
+    const etag = `W/"${createHash('sha256').update(body).digest('hex')}"`;
+    headers.ETag = etag;
+    // Stable photo URLs can revalidate without downloading all their bytes again.
+    if (
+      !req.headers.range &&
+      req.headers['if-none-match']
+        ?.split(',')
+        .some((value) => value.trim() === etag || value.trim() === '*')
+    ) {
+      res.writeHead(304, { ETag: etag, 'Cache-Control': headers['Cache-Control'] });
+      res.end();
+      return true;
+    }
+  }
   // Safari and mobile players request individual byte ranges for MP4 playback.
   if (type === 'video/mp4' && body) {
     headers['Accept-Ranges'] = 'bytes';

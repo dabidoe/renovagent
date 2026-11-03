@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { RollingNumber } from '../../components/rolling-number.js';
 import { Glyph } from '../../components/glyph.js';
 import { HUTCHINSON } from '../house-example/hutchinson-project.js';
+import { thumbnailUrl } from '../house-example/ui-thumbnails.js';
 import { BeforeAfter, Room3D } from '../house-example/paint-floor-studio.js';
 import {
   FLOOR_STYLES,
@@ -160,7 +161,7 @@ export function StudioPreview({ onOpen, busy }: { onOpen: () => void; busy: bool
                     aria-pressed={pick.floorStyle === s.id}
                     onClick={() => setPick((p) => ({ ...p, floorStyle: s.id }))}
                   >
-                    <img src={swatchUrl(s.id)} alt="" loading="lazy" />
+                    <img src={thumbnailUrl(swatchUrl(s.id))} alt="" loading="lazy" />
                     <span>{s.label}</span>
                   </button>
                 ))}

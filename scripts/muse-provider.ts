@@ -86,16 +86,21 @@ export const MUSE_IMAGE_MODEL = 'muse-image-1.0';
 export const SAM_MODEL = 'sam-3.1';
 
 // Deployment diagnostics: authenticated catalog reads only, never inference.
+// Follows the relay when set so the boot line reflects the real path.
 export async function museModelAvailability() {
-  const key = await configuredMuseKey();
-  if (!key) return { configured: false, models: [] };
+  const relay = metaRelayConfig();
+  const key = relay ? undefined : await configuredMuseKey();
+  if (!relay && !key) return { configured: false, models: [] };
+  const headers: Record<string, string> = relay
+    ? { 'X-Renovagent-Token': relay.token }
+    : { Authorization: `Bearer ${key}` };
   const models = await Promise.all(
     [MUSE_VISION_MODEL, MUSE_IMAGE_MODEL, SAM_MODEL].map(async (model) => {
       try {
-        const response = await fetch(`${META_API}/models/${model}`, {
-          headers: { Authorization: `Bearer ${key}` },
-          signal: AbortSignal.timeout(15000),
-        });
+        const response = await fetch(
+          relay ? `${relay.base}/relay/models/${model}` : `${META_API}/models/${model}`,
+          { headers, signal: AbortSignal.timeout(15000) },
+        );
         await response.body?.cancel();
         return { model, status: response.status, available: response.ok };
       } catch {
@@ -116,6 +121,22 @@ export async function museKeySource(): Promise<'environment' | 'project file' | 
   if (process.env.MUSE_API_KEY?.trim()) return 'environment';
   const { vars } = await projectEnvFiles({}, fileURLToPath(new URL('..', import.meta.url)));
   return vars.MUSE_API_KEY?.trim() ? 'project file' : 'none';
+}
+
+export type MetaRelayConfig = { base: string; token: string };
+// The Modal relay (modal/meta_relay.py): same Meta calls, clean egress. When
+// set, the Meta key stays in Modal and this process authenticates to the relay
+// only. Relay wins over a local key so it can be verified anywhere.
+export function metaRelayConfig(env: NodeJS.ProcessEnv = process.env): MetaRelayConfig | null {
+  const base = env.RENOVAGENT_META_BASE_URL?.trim().replace(/\/+$/, '');
+  const token = env.RENOVAGENT_META_TOKEN?.trim();
+  return base && token ? { base, token } : null;
+}
+
+export type MetaAccessMode = 'direct' | 'relay' | 'none';
+export async function metaAccessMode(): Promise<MetaAccessMode> {
+  if (metaRelayConfig()) return 'relay';
+  return (await configuredMuseKey()) ? 'direct' : 'none';
 }
 
 export type MuseAvailability = {
@@ -152,18 +173,30 @@ export function assessMuseAvailability(result: MuseAvailability): {
 // problem can never take the whole site down; REQUIRE_MUSE_MODELS=1 restores
 // fail-fast for deploys that must prove provider health before serving.
 export async function checkMuseModels(): Promise<void> {
-  const key = await configuredMuseKey();
-  if (!key) {
-    console.log('[muse] no API key configured; studio provider calls will report service configuration');
+  const relay = metaRelayConfig();
+  const key = relay ? undefined : await configuredMuseKey();
+  if (!relay && !key) {
+    console.log(
+      '[muse] no API key configured; studio provider calls will report service configuration',
+    );
     return;
   }
-  const source = await museKeySource();
-  console.log(
-    `[muse] restyle via POST ${META_API}/responses model=${MUSE_VISION_MODEL}, ` +
-      `POST ${META_API}/images/edits model=${MUSE_IMAGE_MODEL}, ` +
-      `outlines via POST ${META_API}/responses model=${SAM_MODEL}; ` +
-      `key=${museKeyFingerprint(key)} (${source}); commit=${process.env.RAILWAY_GIT_COMMIT_SHA || 'unknown'}`,
-  );
+  if (relay) {
+    console.log(
+      `[muse] restyle via relay POST ${relay.base}/relay/responses model=${MUSE_VISION_MODEL}, ` +
+        `POST ${relay.base}/relay/images/edits model=${MUSE_IMAGE_MODEL}, ` +
+        `outlines via relay POST ${relay.base}/relay/responses model=${SAM_MODEL}; ` +
+        `relay authentication configured (environment); commit=${process.env.RAILWAY_GIT_COMMIT_SHA || 'unknown'}`,
+    );
+  } else {
+    const source = await museKeySource();
+    console.log(
+      `[muse] restyle via POST ${META_API}/responses model=${MUSE_VISION_MODEL}, ` +
+        `POST ${META_API}/images/edits model=${MUSE_IMAGE_MODEL}, ` +
+        `outlines via POST ${META_API}/responses model=${SAM_MODEL}; ` +
+        `key=${museKeyFingerprint(key!)} (${source}); commit=${process.env.RAILWAY_GIT_COMMIT_SHA || 'unknown'}`,
+    );
+  }
   const { blocking, warnings } = assessMuseAvailability(await museModelAvailability());
   for (const w of warnings) console.warn(`[muse] warning: ${w}`);
   if (blocking) {
@@ -202,19 +235,49 @@ export function imageMediaType(bytes: Uint8Array) {
 
 async function metaRequest(path: string, body: unknown, timeoutMs: number) {
   const scope = spendMuseCall();
-  const key = await configuredMuseKey();
-  if (!key) throw Error('MUSE_API_KEY is not configured for the Meta Model API');
+  const relay = metaRelayConfig();
+  const key = relay ? undefined : await configuredMuseKey();
+  if (!relay && !key)
+    throw Error(
+      'MUSE_API_KEY is not configured for the Meta Model API (or set RENOVAGENT_META_BASE_URL + RENOVAGENT_META_TOKEN for the relay)',
+    );
+  const url = relay ? `${relay.base}/relay${path}` : META_API + path;
+  const headers: Record<string, string> = relay
+    ? { 'X-Renovagent-Token': relay.token, 'Content-Type': 'application/json' }
+    : { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' };
   const signals = [AbortSignal.timeout(timeoutMs), ...(scope ? [scope.signal] : [])];
-  let response: Response;
-  try {
-    response = await fetch(META_API + path, {
+  const payload = JSON.stringify(body);
+  const attemptFetch = () =>
+    fetch(url, {
       method: 'POST',
-      headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
+      headers,
+      body: payload,
       signal: AbortSignal.any(signals),
     });
+  const readErrorCode = async (response: Response): Promise<string | undefined> => {
+    try {
+      const code = JSON.parse(await response.text())?.error?.code;
+      return META_ERROR_CODES.has(code) ? code : undefined;
+    } catch {
+      return undefined;
+    }
+  };
+  let response: Response;
+  try {
+    response = await attemptFetch();
+    // The relayed catalog flaps by region (8 vs 9 models); one retry on a
+    // relayed model_not_found is cheap. Direct calls never retry a 404.
+    if (relay && !response.ok) {
+      const code = await readErrorCode(response.clone()).catch(() => undefined);
+      if (code === 'model_not_found') {
+        spendMuseCall();
+        console.warn(`[muse] relay model_not_found, retrying once: POST ${path}`);
+        response = await attemptFetch();
+      }
+    }
   } catch (error) {
     if (scope?.signal.aborted) throw Error('Muse analysis cancelled');
+    if (error instanceof Error && error.message === 'Muse call budget exhausted') throw error;
     if (error instanceof Error && error.name === 'TimeoutError')
       throw Error('Muse job timed out; no result imported');
     const failure = Error('Meta Model API unreachable');
@@ -234,17 +297,20 @@ async function metaRequest(path: string, body: unknown, timeoutMs: number) {
       detail = typeof upstream?.message === 'string' ? upstream.message : '';
       if (META_ERROR_CODES.has(upstream?.code)) providerCode = upstream.code;
     } catch {}
+    // Relay mode never sends the Meta key upstream, so only scrub it when present.
+    const credential = relay?.token ?? key!;
+    const scrubbed = detail.split(credential).join('[REDACTED]');
     const failure = Error(
-      `Meta Model API ${response.status}${detail ? `: ${detail.split(key).join('[REDACTED]').slice(0, 300)}` : ''}`,
+      `Meta Model API ${response.status}${detail ? `: ${scrubbed.slice(0, 300)}` : ''}`,
     );
     // The HTTP status carries no response content, so the server may log it.
-    // The key fingerprint proves which credential each failing request used;
-    // it is server-log-only and must never reach the client.
+    // The credential fingerprint proves which credential each failing request
+    // used; it is server-log-only and must never reach the client.
     Object.assign(failure, {
       status: response.status,
       endpoint: path,
       providerCode,
-      keyFingerprint: museKeyFingerprint(key),
+      ...(!relay ? { keyFingerprint: museKeyFingerprint(key!) } : {}),
       model: [MUSE_VISION_MODEL, MUSE_IMAGE_MODEL, SAM_MODEL].includes(
         (body as { model: string }).model,
       )

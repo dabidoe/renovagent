@@ -1,4 +1,5 @@
 import { sampleForPhoto, type SampleRoom } from '../project-start/sample-rooms.js';
+import { thumbnailUrl } from './ui-thumbnails.js';
 import { StudioError } from './studio-error.js';
 import { studioFinishSignature as lookSignature } from './studio-signatures.js';
 import { StudioSync, pendingStudioSave, type StudioSaveMeta } from './studio-sync.js';
@@ -128,12 +129,15 @@ function paintWalls(
   img: HTMLImageElement,
   masks: Masks | null,
   hex: string | null,
+  maxEdge = Infinity,
 ) {
-  const { naturalWidth: w, naturalHeight: h } = img;
+  const scale = Math.min(1, maxEdge / Math.max(img.naturalWidth, img.naturalHeight));
+  const w = Math.max(1, Math.round(img.naturalWidth * scale));
+  const h = Math.max(1, Math.round(img.naturalHeight * scale));
   canvas.width = w;
   canvas.height = h;
   const ctx = canvas.getContext('2d', { willReadFrequently: true })!;
-  ctx.drawImage(img, 0, 0);
+  ctx.drawImage(img, 0, 0, w, h);
   if (!hex || !masks?.segments.length) return;
   const mask = document.createElement('canvas');
   mask.width = w;
@@ -179,15 +183,47 @@ function paintWalls(
   ctx.putImageData(frame, 0, 0);
 }
 
+// Interactive previews do not need camera-resolution pixel processing on every
+// room click. Keep a small, bounded cache; exports still render the original size.
+const paintedPreviews = new Map<
+  HTMLImageElement,
+  {
+    masks: Masks | null;
+    hex: string | null;
+    canvas: HTMLCanvasElement;
+  }
+>();
+function paintPreview(
+  canvas: HTMLCanvasElement,
+  img: HTMLImageElement,
+  masks: Masks | null,
+  hex: string | null,
+) {
+  let cached = paintedPreviews.get(img);
+  if (!cached || cached.masks !== masks || cached.hex !== hex) {
+    const preview = document.createElement('canvas');
+    paintWalls(preview, img, masks, hex, 1280);
+    cached = { masks, hex, canvas: preview };
+  }
+  paintedPreviews.delete(img);
+  paintedPreviews.set(img, cached);
+  if (paintedPreviews.size > 8) paintedPreviews.delete(paintedPreviews.keys().next().value!);
+  canvas.width = cached.canvas.width;
+  canvas.height = cached.canvas.height;
+  canvas.getContext('2d')!.drawImage(cached.canvas, 0, 0);
+}
+
 export function BeforeAfter({
   room,
   pick,
   pending,
+  floorUnavailable = false,
   allowDownload = false,
 }: {
   room: StudioRoom;
   pick: RoomPick;
   pending: string | null;
+  floorUnavailable?: boolean;
   allowDownload?: boolean;
 }) {
   const canvas = useRef<HTMLCanvasElement>(null);
@@ -197,11 +233,13 @@ export function BeforeAfter({
   const [error, setError] = useState('');
   const [downloadError, setDownloadError] = useState('');
   const [paintAvailable, setPaintAvailable] = useState(false);
-  const download = () => {
-    if (!canvas.current || !ready || pending) return;
+  const download = async () => {
+    if (!canvas.current || !ready || pending || floorUnavailable) return;
     setDownloadError('');
     try {
-      const source = canvas.current;
+      const [img, masks] = await Promise.all([loadImage(shown.src), loadMasks(shown.walls)]);
+      const source = document.createElement('canvas');
+      paintWalls(source, img, masks, pick.color?.hex ?? null);
       const output = document.createElement('canvas');
       output.width = source.width;
       const labelHeight = Math.max(52, Math.round(source.width / 22));
@@ -253,7 +291,7 @@ export function BeforeAfter({
       .then(([img, masks]) => {
         if (!live || !canvas.current) return;
         setRatio(`${img.naturalWidth} / ${img.naturalHeight}`);
-        paintWalls(canvas.current, img, masks, hex);
+        paintPreview(canvas.current, img, masks, hex);
         setPaintAvailable(!!masks?.segments.length);
         setReady(true);
         setError('');
@@ -275,14 +313,20 @@ export function BeforeAfter({
           className={`pf-after${ready ? ' is-ready' : ''}`}
           role="img"
           aria-label={
-            ready && hex && !paintAvailable
-              ? `${room.title} preview; wall color unavailable`
-              : `${room.title} with the chosen paint and floor`
+            floorUnavailable
+              ? `${room.title} preview with the original floor; chosen floor unavailable`
+              : ready && hex && !paintAvailable
+                ? `${room.title} preview; wall color unavailable`
+                : `${room.title} with the chosen paint and floor`
           }
         />
         <span className="pf-tag pf-tag-before">Before</span>
         <span className="pf-tag pf-tag-after">
-          {ready && hex && !paintAvailable ? 'Preview' : 'After'}
+          {floorUnavailable
+            ? 'Original floor'
+            : ready && hex && !paintAvailable
+              ? 'Preview'
+              : 'After'}
         </span>
         <span className="pf-handle" aria-hidden="true" />
         <input
@@ -309,7 +353,11 @@ export function BeforeAfter({
       )}
       {allowDownload && (
         <div className="pf-preview-export">
-          <button type="button" disabled={!ready || !!pending || !!error} onClick={download}>
+          <button
+            type="button"
+            disabled={!ready || !!pending || !!error || floorUnavailable}
+            onClick={download}
+          >
             Download preview
           </button>
           {downloadError && <p role="alert">{downloadError}</p>}
@@ -326,7 +374,7 @@ function LookThumb({ pick }: { pick: RoomPick }) {
     <span className="pf-look" aria-hidden="true">
       <i style={{ background: pick.color?.hex ?? '#e7e1d6' }} />
       {style ? (
-        <img src={swatchUrl(style)} alt="" loading="lazy" />
+        <img src={thumbnailUrl(swatchUrl(style))} alt="" loading="lazy" />
       ) : (
         <i className="pf-look-none" />
       )}
@@ -1118,6 +1166,10 @@ export function PaintFloorStudio({
   }, [renderStore, modelRenders]);
   const [selectedPlacement, setSelectedPlacement] = useState<string | null>(null);
   const [inspector, setInspector] = useState<'design' | 'layout' | 'finishes' | 'plan'>('finishes');
+  const [openedDesignRoom, setOpenedDesignRoom] = useState('');
+  useEffect(() => {
+    if (inspector === 'design') setOpenedDesignRoom(roomId);
+  }, [inspector, roomId]);
   const wide = useMediaQuery(WIDE_STUDIO);
   const planRef = useRef<HTMLElement>(null);
   // On desktop the plan is always visible under the photo, so it is not a tab.
@@ -1361,6 +1413,7 @@ export function PaintFloorStudio({
     return () => clearTimeout(timer);
   }, [autoSave, snapshotJson, savedJson, saving, saveAccess, saveError]);
   const [working, setWorking] = useState<Record<string, string>>({});
+  const [floorErrors, setFloorErrors] = useState<Record<string, string>>({});
   const [editCeiling, setEditCeiling] = useState(false);
   const [editSize, setEditSize] = useState(false);
   const [listOpen, setListOpen] = useState(false);
@@ -1461,17 +1514,18 @@ export function PaintFloorStudio({
     room?.photo.src && pickedStyle && !floorImage(room, pickedStyle) ? pickedStyle : null;
   const workKey = room && missing ? `${room.id}:${missing}` : '';
   useEffect(() => {
-    if (!room || !missing || !renderFloor || working[workKey]) return;
+    if (!room || !missing || !renderFloor || working[workKey] || floorErrors[workKey]) return;
     const label = (FLOOR_STYLES.find((f) => f.id === missing)?.label ?? 'the floor').toLowerCase();
     setWorking((w) => ({ ...w, [workKey]: `Laying ${label}…` }));
+    setFloorErrors((errors) => ({ ...errors, [workKey]: '' }));
     renderFloor(room.id, missing)
-      .then(() => setWorking((w) => ({ ...w, [workKey]: '' })))
       .catch((e) =>
-        setWorking((w) => ({
-          ...w,
-          [workKey]: e instanceof Error ? e.message.slice(0, 120) : 'The floor could not be made.',
+        setFloorErrors((errors) => ({
+          ...errors,
+          [workKey]: e instanceof Error ? e.message : 'The floor could not be made.',
         })),
-      );
+      )
+      .finally(() => setWorking((w) => ({ ...w, [workKey]: '' })));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [workKey]);
   const takeoffs = useMemo(
@@ -1665,7 +1719,7 @@ export function PaintFloorStudio({
               onClick={() => setRoomId(r.id)}
             >
               {r.photo.src ? (
-                <img src={r.photo.src} alt="" loading="lazy" />
+                <img src={thumbnailUrl(r.photo.src)} alt="" loading="lazy" decoding="async" />
               ) : (
                 <LookThumb pick={p} />
               )}
@@ -1822,8 +1876,15 @@ export function PaintFloorStudio({
               }}
             />
           ) : (
-            <BeforeAfter room={room} pick={pick} pending={pending || null} allowDownload />
+            <BeforeAfter
+              room={room}
+              pick={pick}
+              pending={pending || null}
+              floorUnavailable={!!(workKey && floorErrors[workKey])}
+              allowDownload
+            />
           )}
+          {workKey && floorErrors[workKey] && <StudioError message={floorErrors[workKey]} />}
           {wide && (
             <section className="pf-stage-plan" ref={planRef} aria-label="Plan and budget">
               {roomPlan}
@@ -1858,51 +1919,55 @@ export function PaintFloorStudio({
               ))}
           </div>
           <div hidden={shownTab !== 'design'}>
-            <InspoPanel
-              key={`${project.id}:${room.id}`}
-              projectId={localScope}
-              initialDraft={styling[room.id] ?? (savedDesign ? null : undefined)}
-              finishSignature={lookSignature(pick)}
-              onStale={onStylingStale}
-              onDraftChange={onStylingChange}
-              designItems={items[room.id] ?? []}
-              initialBrief={project.idea}
-              sampleRoom={sample}
-              currentColor={pick.color}
-              basePhotoSrc={shownImage?.src || room.photo.src}
-              floorPending={!!missing && !!renderFloor}
-              onDesignItems={(names) => addDesignItems(room.id, names)}
-              onIdeaLayout={(ids) =>
-                addAssets(
-                  room,
-                  ids.filter((id) => !(placements[room.id] ?? []).some((p) => p.assetId === id)),
-                )
-              }
-              room={room}
-              onPaint={(color) => update({ color })}
-              onRestyled={(src, sourceFinishSignature) => {
-                keepInspired(room.id, src);
-                setRenderSignatures((current) => ({
-                  ...current,
-                  [room.id]: sourceFinishSignature ?? lookSignature(pick),
-                }));
-                setView('inspired');
-              }}
-            />
+            {(shownTab === 'design' || openedDesignRoom === room.id) && (
+              <InspoPanel
+                key={`${project.id}:${room.id}`}
+                projectId={localScope}
+                initialDraft={styling[room.id] ?? (savedDesign ? null : undefined)}
+                finishSignature={lookSignature(pick)}
+                onStale={onStylingStale}
+                onDraftChange={onStylingChange}
+                designItems={items[room.id] ?? []}
+                initialBrief={project.idea}
+                sampleRoom={sample}
+                currentColor={pick.color}
+                basePhotoSrc={shownImage?.src || room.photo.src}
+                floorPending={!!missing && !!renderFloor}
+                onDesignItems={(names) => addDesignItems(room.id, names)}
+                onIdeaLayout={(ids) =>
+                  addAssets(
+                    room,
+                    ids.filter((id) => !(placements[room.id] ?? []).some((p) => p.assetId === id)),
+                  )
+                }
+                room={room}
+                onPaint={(color) => update({ color })}
+                onRestyled={(src, sourceFinishSignature) => {
+                  keepInspired(room.id, src);
+                  setRenderSignatures((current) => ({
+                    ...current,
+                    [room.id]: sourceFinishSignature ?? lookSignature(pick),
+                  }));
+                  setView('inspired');
+                }}
+              />
+            )}
           </div>
           <div hidden={shownTab !== 'layout'}>
-            <FurniturePanel
-              model={roomModel(room, ceilingFt)}
-              placements={placements[room.id] ?? []}
-              items={items[room.id] ?? []}
-              selected={selectedPlacement}
-              onSelect={(id) => {
-                setSelectedPlacement(id);
-                setView('3d');
-              }}
-              onChange={(next) => setPlacements((all) => ({ ...all, [room.id]: next }))}
-              onAdd={(id) => addAssets(room, [id])}
-            />
+            {shownTab === 'layout' && (
+              <FurniturePanel
+                model={roomModel(room, ceilingFt)}
+                placements={placements[room.id] ?? []}
+                items={items[room.id] ?? []}
+                selected={selectedPlacement}
+                onSelect={(id) => {
+                  setSelectedPlacement(id);
+                  setView('3d');
+                }}
+                onChange={(next) => setPlacements((all) => ({ ...all, [room.id]: next }))}
+                onAdd={(id) => addAssets(room, [id])}
+              />
+            )}
           </div>
           <div hidden={shownTab !== 'finishes'}>
             <Imagine
@@ -1961,7 +2026,7 @@ export function PaintFloorStudio({
                   {photoless ? (
                     <span className="pf-look-none" />
                   ) : (
-                    <img src={room.photo.src} alt="" />
+                    <img src={thumbnailUrl(room.photo.src)} alt="" />
                   )}
                   <span>Keep</span>
                 </button>
@@ -1979,7 +2044,7 @@ export function PaintFloorStudio({
                       })
                     }
                   >
-                    <img src={swatchUrl(f.id)} alt="" loading="lazy" />
+                    <img src={thumbnailUrl(swatchUrl(f.id))} alt="" loading="lazy" />
                     <span>{f.label}</span>
                   </button>
                 ))}
