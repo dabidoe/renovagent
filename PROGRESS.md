@@ -1,5 +1,14 @@
 # Project status — Renovagent
 
+UI consolidation, first increments (November 3):
+- **One accent blue in the studio:** removed the `.pf-studio` `#3858ed` accent override and its 12 hardcoded copies (now `var(--pf-accent, #0866ff)`), so the studio matches the landing, Connect and logo (`#0866ff`).
+- **Readable labels:** 8 px and 9 px text in the landing and studio CSS is raised to 10 px and 11 px. The older notes-workspace CSS is untouched.
+- **Overlaps fixed:**
+  - The carousel's "Rendered with Muse" / "See original" chips moved top-right, off the listing watermark.
+  - On phones the landing preview's Before/After chips now sit below the centred view toggle.
+
+Verification: the browser computes a single accent value (27 uses) in the Oakland studio. Screenshots reviewed for the carousel, studio preview, hero card and studio header at 1440 and 390 px. Format, types, build, 15 + 313 tests and 85/85 UI checks pass.
+
 UI audit step 4 — guardrails (November 3): added `npm run ui:check` (`scripts/ui-check.ts`) plus a separate `ui` CI job that uploads its screenshots. Playwright 1.63.0 is now a pinned dev dependency.
 
 The script starts its own Vite server with no API (or checks `--base <url>`) and drives 8 public routes at 1440, 390 and 320 px. On every route it asserts:

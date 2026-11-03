@@ -433,3 +433,9 @@
     gap: 8px;
   }
 }
+@media (max-width: 760px) {
+  /* Below the centred view toggle, which would otherwise cover the tags. */
+  .studio-preview .pf-tag {
+    top: 72px;
+  }
+}
