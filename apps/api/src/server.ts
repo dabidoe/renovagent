@@ -578,7 +578,6 @@ export async function createWorkspaceServer(
         )
           throw new DomainError('FORBIDDEN', 'Open the local workspace session first');
       }
-      const activeWorker = await workerFor(activeRepo);
       // Keys for the owner's own agents (Muse, Claude, any MCP client). A key is
       // shown once, at creation; only its hash is kept. Seven days, five at most.
       if (path.startsWith('/agent-keys')) {
@@ -1450,6 +1449,7 @@ export async function createWorkspaceServer(
       if (path === '/photo-jobs' && req.method === 'POST') {
         if (!providerConfigured)
           throw new DomainError('VALIDATION', 'Configure MUSE_API_KEY on the server first');
+        const activeWorker = await workerFor(activeRepo);
         const job = await requestPhotoJob(activeRepo, await body(req));
         json(202, publicJob(job));
         void activeWorker.tick();
@@ -1457,6 +1457,7 @@ export async function createWorkspaceServer(
       }
       const cancel = path.match(/^\/photo-jobs\/([a-f0-9-]{36})\/cancel$/);
       if (cancel && req.method === 'POST') {
+        const activeWorker = await workerFor(activeRepo);
         await activeWorker.cancel(cancel[1]);
         json(200, { cancelled: true });
         return;

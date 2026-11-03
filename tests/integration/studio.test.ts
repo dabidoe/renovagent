@@ -528,6 +528,11 @@ test(
       assert.equal(rejected.status, 400, 'unsupported photo formats stay rejected');
       const served = await fetch(`${base}/design-images/${uploaded.sha256}`, { headers: auth });
       assert.equal(served.headers.get('content-type'), 'image/jpeg');
+      assert.equal(served.headers.get('cache-control'), 'no-store');
+      const signedOutImage = await fetch(`${base}/design-images/${uploaded.sha256}`, {
+        headers: { ...headers, 'If-None-Match': `"${uploaded.sha256}"` },
+      });
+      assert.equal(signedOutImage.status, 403, 'a matching ETag never bypasses authentication');
 
       const walls = await (await post('/studio/walls', { sha256: uploaded.sha256 })).json();
       assert.ok(walls.segments.length > 0);

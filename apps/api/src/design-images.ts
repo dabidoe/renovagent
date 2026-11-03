@@ -99,8 +99,29 @@ async function toJpeg(
 // bounded workspace aggregate. Artifacts reference images by hash only.
 export class DesignImageStore {
   readonly collection: Collection<StoredDesignImage>;
-  constructor(db: Db) {
+  private readonly byteCache = new Map<string, Uint8Array>();
+  private cachedBytes = 0;
+  constructor(
+    db: Db,
+    private readonly cacheLimitBytes = 32 * 1024 * 1024,
+  ) {
     this.collection = db.collection<StoredDesignImage>('design_images');
+  }
+
+  private remember(key: string, bytes: Uint8Array) {
+    const previous = this.byteCache.get(key);
+    if (previous) {
+      this.cachedBytes -= previous.byteLength;
+      this.byteCache.delete(key);
+    }
+    if (bytes.byteLength > this.cacheLimitBytes) return;
+    this.byteCache.set(key, new Uint8Array(bytes));
+    this.cachedBytes += bytes.byteLength;
+    while (this.cachedBytes > this.cacheLimitBytes) {
+      const oldest = this.byteCache.keys().next().value!;
+      this.cachedBytes -= this.byteCache.get(oldest)!.byteLength;
+      this.byteCache.delete(oldest);
+    }
   }
 
   async put(
@@ -132,6 +153,9 @@ export class DesignImageStore {
       },
       { upsert: true },
     );
+    // The committed bytes are immutable by owner and hash. Avoid downloading
+    // them from Mongo immediately after an upload or generated preview.
+    this.remember(`${ownerId}:${sha256}`, image.bytes);
     return {
       sha256,
       mediaType: image.mediaType,
@@ -142,11 +166,23 @@ export class DesignImageStore {
   }
 
   async get(ownerId: string, sha256: string) {
-    const record = await this.collection.findOne({ _id: `${ownerId}:${sha256}`, ownerId });
+    const key = `${ownerId}:${sha256}`;
+    const cached = this.byteCache.get(key);
+    // Always check the owner-scoped record still exists. Cache hits transfer
+    // metadata only, preserving authoritative provenance without fetching bytes.
+    const record = await this.collection.findOne(
+      { _id: key, ownerId },
+      cached ? { projection: { data: 0 } } : {},
+    );
     if (!record) return null;
-    const bytes = new Uint8Array(record.data.buffer);
+    const bytes = cached ? new Uint8Array(cached) : new Uint8Array(record.data.buffer);
     if (sha256Of(bytes) !== sha256)
       throw new DomainError('STORAGE', 'Design image checksum mismatch');
-    return { bytes, mediaType: record.mediaType, record };
+    this.remember(key, bytes);
+    return {
+      bytes,
+      mediaType: record.mediaType,
+      record: { ...record, data: new Binary(Buffer.from(bytes)) },
+    };
   }
 }
