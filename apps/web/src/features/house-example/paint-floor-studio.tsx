@@ -3,6 +3,20 @@ import { StudioError } from './studio-error.js';
 import { studioFinishSignature as lookSignature } from './studio-signatures.js';
 import { StudioSync, pendingStudioSave, type StudioSaveMeta } from './studio-sync.js';
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+
+// Desktop puts Plan & budget under the photo; phones keep it as an inspector tab.
+const WIDE_STUDIO = '(min-width: 761px)';
+function useMediaQuery(query: string) {
+  const [matches, setMatches] = useState(() => window.matchMedia(query).matches);
+  useEffect(() => {
+    const list = window.matchMedia(query);
+    const sync = () => setMatches(list.matches);
+    sync();
+    list.addEventListener('change', sync);
+    return () => list.removeEventListener('change', sync);
+  }, [query]);
+  return matches;
+}
 import {
   DomainError,
   studioDesignSchema,
@@ -18,6 +32,7 @@ import { mountRoomScene, type RoomScene } from '../room3d/room-scene.js';
 import { PaintPicker, brandColorLink } from '../room3d/photo-outlines.js';
 import { InspiredView, InspoPanel, stylingDraft, type StylingDraft } from './inspo-panel.js';
 import { RoomPlan, type StudioHandoff } from './room-plan.js';
+import { RollingNumber } from '../../components/rolling-number.js';
 import { FurniturePanel } from './furniture-panel.js';
 import {
   studioPlacementSchema,
@@ -296,7 +311,6 @@ export function BeforeAfter({
           <button type="button" disabled={!ready || !!pending || !!error} onClick={download}>
             Download preview
           </button>
-          <span>Edited photo · PNG</span>
           {downloadError && <p role="alert">{downloadError}</p>}
         </div>
       )}
@@ -1090,6 +1104,14 @@ export function PaintFloorStudio({
   }, [renderStore, modelRenders]);
   const [selectedPlacement, setSelectedPlacement] = useState<string | null>(null);
   const [inspector, setInspector] = useState<'design' | 'layout' | 'finishes' | 'plan'>('finishes');
+  const wide = useMediaQuery(WIDE_STUDIO);
+  const planRef = useRef<HTMLElement>(null);
+  // On desktop the plan is always visible under the photo, so it is not a tab.
+  const shownTab = wide && inspector === 'plan' ? 'finishes' : inspector;
+  const showPlan = () => {
+    if (wide) planRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    else setInspector('plan');
+  };
   const addAssets = (target: StudioRoom, ids: StudioAssetId[]) => {
     const model = roomModel(target, project.ceilingFt);
     if (!model) return;
@@ -1462,6 +1484,31 @@ export function PaintFloorStudio({
   const needsSize = !room.size || !ceilingFt;
   const shownImage = pickedStyle ? floorImage(room, pickedStyle) : room.photo;
   const pending = (workKey && working[workKey]) || null;
+  const roomPlan = (
+    <RoomPlan
+      key={room.id}
+      items={items[room.id] ?? []}
+      onChange={(next) => {
+        setItems((current) => ({ ...current, [room.id]: next }));
+        setPlacements((current) => ({
+          ...current,
+          [room.id]: (current[room.id] ?? []).filter((p) => next.some((i) => i.id === p.itemId)),
+        }));
+      }}
+      finishesMinor={takeoff.totalMinor}
+      finishesIncomplete={needsSize && !!(pick.color || pick.floor)}
+      versionKey={snapshotJson}
+      onPrepare={async () => {
+        const meta = await save();
+        if (!meta) throw new Error('Save the project before preparing its work plan.');
+        return (await workspaceRequest('/studio-designs/prepare-scope', {
+          ...meta,
+          roomId: room.id,
+          requestId: crypto.randomUUID(),
+        })) as StudioHandoff;
+      }}
+    />
+  );
   return (
     <section className="pf-studio" aria-label={`${project.address} room studio`}>
       <header className="pf-head">
@@ -1520,8 +1567,14 @@ export function PaintFloorStudio({
             <span>
               Budget so far · {included.length} room{included.length === 1 ? '' : 's'}
             </span>
-            <strong>{headerTotal || !unsized ? money(headerTotal) : 'Not priced yet'}</strong>
-            <span>Demo finishes + your allowances</span>
+            <strong>
+              {headerTotal || !unsized ? (
+                <RollingNumber value={headerTotal} format={money} />
+              ) : (
+                'Not priced yet'
+              )}
+            </strong>
+            <span>Demo prices</span>
             <small>
               {unsized
                 ? `${unsized} room${unsized === 1 ? ' needs' : 's need'} a size`
@@ -1757,6 +1810,11 @@ export function PaintFloorStudio({
           ) : (
             <BeforeAfter room={room} pick={pick} pending={pending || null} allowDownload />
           )}
+          {wide && (
+            <section className="pf-stage-plan" ref={planRef} aria-label="Plan and budget">
+              {roomPlan}
+            </section>
+          )}
         </div>
 
         <aside className="pf-panel" aria-label="Choices and materials">
@@ -1768,22 +1826,24 @@ export function PaintFloorStudio({
                 { id: 'finishes', label: 'Paint & floor' },
                 { id: 'plan', label: 'Plan & budget' },
               ] as const
-            ).map((tab) => (
-              <button
-                key={tab.id}
-                type="button"
-                role="tab"
-                aria-selected={inspector === tab.id}
-                onClick={() => {
-                  setInspector(tab.id);
-                  if (tab.id === 'layout' && has3d) setView('3d');
-                }}
-              >
-                {tab.label}
-              </button>
-            ))}
+            )
+              .filter((tab) => !(wide && tab.id === 'plan'))
+              .map((tab) => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={shownTab === tab.id}
+                  onClick={() => {
+                    setInspector(tab.id);
+                    if (tab.id === 'layout' && has3d) setView('3d');
+                  }}
+                >
+                  {tab.label}
+                </button>
+              ))}
           </div>
-          <div hidden={inspector !== 'design'}>
+          <div hidden={shownTab !== 'design'}>
             <InspoPanel
               key={`${project.id}:${room.id}`}
               projectId={localScope}
@@ -1816,7 +1876,7 @@ export function PaintFloorStudio({
               }}
             />
           </div>
-          <div hidden={inspector !== 'layout'}>
+          <div hidden={shownTab !== 'layout'}>
             <FurniturePanel
               model={roomModel(room, ceilingFt)}
               placements={placements[room.id] ?? []}
@@ -1830,7 +1890,7 @@ export function PaintFloorStudio({
               onAdd={(id) => addAssets(room, [id])}
             />
           </div>
-          <div hidden={inspector !== 'finishes'}>
+          <div hidden={shownTab !== 'finishes'}>
             <Imagine
               key={`imagine-${room.id}`}
               room={room}
@@ -1970,7 +2030,7 @@ export function PaintFloorStudio({
                 </p>
               ) : null}
               <div className="pf-subtotal">
-                <span>Paint & floor materials</span>
+                <span>Materials</span>
                 <b>{money(takeoff.totalMinor)}</b>
               </div>
             </div>
@@ -1994,33 +2054,7 @@ export function PaintFloorStudio({
               Include in the whole-house total
             </label>
           </div>
-          <div hidden={inspector !== 'plan'}>
-            <RoomPlan
-              key={room.id}
-              items={items[room.id] ?? []}
-              onChange={(next) => {
-                setItems((current) => ({ ...current, [room.id]: next }));
-                setPlacements((current) => ({
-                  ...current,
-                  [room.id]: (current[room.id] ?? []).filter((p) =>
-                    next.some((i) => i.id === p.itemId),
-                  ),
-                }));
-              }}
-              finishesMinor={takeoff.totalMinor}
-              finishesIncomplete={needsSize && !!(pick.color || pick.floor)}
-              versionKey={snapshotJson}
-              onPrepare={async () => {
-                const meta = await save();
-                if (!meta) throw new Error('Save the project before preparing its work plan.');
-                return (await workspaceRequest('/studio-designs/prepare-scope', {
-                  ...meta,
-                  roomId: room.id,
-                  requestId: crypto.randomUUID(),
-                })) as StudioHandoff;
-              }}
-            />
-          </div>
+          {!wide && <div hidden={shownTab !== 'plan'}>{roomPlan}</div>}
         </aside>
       </div>
 
@@ -2034,7 +2068,7 @@ export function PaintFloorStudio({
           onClose={() => setListOpen(false)}
           onPlan={() => {
             setListOpen(false);
-            setInspector('plan');
+            showPlan();
           }}
         />
       )}

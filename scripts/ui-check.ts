@@ -122,12 +122,19 @@ async function generalChecks(browser: Browser, base: string) {
     }
 }
 
+// A rolling total shows intermediate numbers; its .sr-only twin holds the final value.
+async function finalText(page: Page, selector: string) {
+  const el = page.locator(selector).first();
+  const final = el.locator('.sr-only');
+  return ((await final.count()) ? await final.textContent() : await el.innerText())?.trim() ?? '';
+}
+
 async function budgetChecks(browser: Browser, base: string) {
   const vp = viewports[0];
   // Brooklyn ships without room sizes: rooms are unpriced, never "$0".
   {
     const { page, close } = await open(browser, base, '/#example/brooklyn', vp);
-    const total = (await page.locator('.pf-total strong').innerText()).trim();
+    const total = await finalText(page, '.pf-total strong');
     check('brooklyn: header says "Not priced yet", not $0', total === 'Not priced yet', total);
     const metas = await page.locator('.pf-rooms .pf-room-meta').allInnerTexts();
     check(
@@ -140,7 +147,7 @@ async function budgetChecks(browser: Browser, base: string) {
   // Oakland is sized: a real total, and every room priced.
   {
     const { page, close } = await open(browser, base, '/#example/oakland', vp);
-    const total = (await page.locator('.pf-total strong').innerText()).trim();
+    const total = await finalText(page, '.pf-total strong');
     check('oakland: header shows a non-zero total', /^\$[1-9][\d,]*\.\d\d$/.test(total), total);
     const metas = await page.locator('.pf-rooms .pf-room-meta').allInnerTexts();
     check(

@@ -1,5 +1,19 @@
 # Project status — Renovagent
 
+Studio layout, motion and copy trim (November 3):
+- **Studio layout:**
+  - On desktop (≥761 px), Plan & budget sits under the photo: a budget strip, then the room list beside the work plan.
+  - The inspector drops to three tabs whose widths fill the bar, and the photo column no longer sticks, so both columns end at similar heights.
+  - Phones keep Plan & budget as a fourth tab. The Shopping list's plan link scrolls to it on desktop.
+- **Motion:** budget totals (studio header, plan card, landing preview) roll between values (`components/rolling-number.tsx`). Screen readers get only the final value, and reduced motion jumps straight there.
+- **Landing carousel:** previous/next arrows moved onto the photo. The thumbnails' numbering, mood lines and ↗ marks are gone.
+- **Soft elevation:** studio panel, plan card, room tabs and gallery cards use soft shadows instead of hairline borders.
+- **Copy:** about 155 words of visible copy cut. Landing 480 → 383 words, gallery 70 → 58, Connect 438 → 407, and about 14 in the studio chrome (the studio's total rises only because Plan & budget is now visible).
+  - All demo, price and provenance disclosures are kept, shortened where repeated: "Rendered with Muse", demo catalog, Muse/SAM credits, Buildertrend qualifier, prepared-concept note.
+  - Connect's duplicated key-safety line was merged into step 3.
+
+Verification: types, format, build, 15 + 313 tests and 85/85 UI checks pass. Browser sampling shows the landing allowance rolling $1,257.07 → $2,378.44 in about 0.45 s; the reduced-motion context shows the final value at once, and the screen-reader text is final throughout. Desktop, 1024 px and 390 px layouts checked; no console errors.
+
 UI consolidation, first increments (November 3):
 - **One accent blue in the studio:** removed the `.pf-studio` `#3858ed` accent override and its 12 hardcoded copies (now `var(--pf-accent, #0866ff)`), so the studio matches the landing, Connect and logo (`#0866ff`).
 - **Readable labels:** 8 px and 9 px text in the landing and studio CSS is raised to 10 px and 11 px. The older notes-workspace CSS is untouched.
