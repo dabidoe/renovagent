@@ -372,9 +372,8 @@
 .hero-paint-line a {
   text-decoration: none;
 }
-/* The owner's lockup is dark artwork; on the dark hero it sits on a light card. */
+/* The landing hero uses the owner's light lockup directly on the photo. */
 .prompt-workspace.is-landing .prompt-header .brand-lockup {
-  padding: 4px 5px;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.9);
+  /* A soft shadow keeps the light lockup legible over bright parts of the photo. */
+  filter: drop-shadow(0 1px 8px rgb(7 19 33 / 0.55));
 }

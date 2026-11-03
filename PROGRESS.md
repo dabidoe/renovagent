@@ -1,5 +1,7 @@
 # Project status — Renovagent
 
+Landing light logo (November 3): the landing header now uses the owner's light lockup (`apps/web/src/assets/brand/renovagent-logo-light.webp`, same canvas as the original) directly on the hero photo with a soft shadow, replacing the white chip. Other pages keep the original dark lockup. The hero photo stays as is, per the owner. Browser checks at 1440 and 390 px; tests and build pass.
+
 UI audit step 3 — studio, intake and Connect layout (November 3):
 - Studio room tabs keep names on one line (ellipsis plus a title tooltip), so prices align.
 - The Plan-tab budget card is now a light breakdown under the header's dark total.
