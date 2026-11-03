@@ -1073,19 +1073,25 @@ export function PaintFloorStudio({
   ) => {
     const model = roomModel(target, project.ceilingFt);
     if (!model) return;
-    const existing = placements[target.id] ?? [];
-    const nextItems = [...(items[target.id] ?? [])];
-    const next = [...existing];
+    // Append-only: back-to-back calls (e.g. "Add all" placing each spotted
+    // piece) must not overwrite each other's items.
+    const baseItems = items[target.id] ?? [];
+    const basePlacements = placements[target.id] ?? [];
+    const newItems: StudioItem[] = [];
+    const newPlacements: StudioPlacement[] = [];
     for (const assetId of ids) {
-      if (next.length >= 60 || nextItems.length >= 100) break;
+      if (basePlacements.length + newPlacements.length >= 60) break;
+      if (baseItems.length + newItems.length >= 100) break;
       const asset = studioAsset(assetId);
       // Detected furniture always gets its own keep item: never attach an
       // existing placement to a proposed (budgeted) line.
+      const poolItems = [...baseItems, ...newItems];
+      const poolPlacements = [...basePlacements, ...newPlacements];
       let item = opts?.keep
         ? undefined
-        : nextItems.find(
+        : poolItems.find(
             (i) =>
-              !next.some((p) => p.itemId === i.id) &&
+              !poolPlacements.some((p) => p.itemId === i.id) &&
               assetId.split('-').every((word) => i.name.toLowerCase().includes(word)),
           );
       if (!item) {
@@ -1097,10 +1103,10 @@ export function PaintFloorStudio({
           quantity: 1,
           unitAllowanceMinor: null,
         };
-        nextItems.push(item);
+        newItems.push(item);
       }
       const rough = opts?.positions?.[assetId];
-      next.push({
+      newPlacements.push({
         id: crypto.randomUUID(),
         itemId: item.id,
         assetId,
@@ -1110,9 +1116,17 @@ export function PaintFloorStudio({
           : {}),
       });
     }
-    setItems((current) => ({ ...current, [target.id]: nextItems }));
-    setPlacements((current) => ({ ...current, [target.id]: next }));
-    setSelectedPlacement(next.at(-1)?.id ?? null);
+    if (!newPlacements.length) {
+      setView('3d');
+      setInspector('layout');
+      return;
+    }
+    setItems((current) => ({ ...current, [target.id]: [...(current[target.id] ?? []), ...newItems] }));
+    setPlacements((current) => ({
+      ...current,
+      [target.id]: [...(current[target.id] ?? []), ...newPlacements],
+    }));
+    setSelectedPlacement(newPlacements.at(-1)?.id ?? null);
     setView('3d');
     setInspector('layout');
   };
