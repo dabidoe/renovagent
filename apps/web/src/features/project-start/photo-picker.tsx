@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Glyph } from '../../components/glyph.js';
 import { PROJECT_PHOTO_TYPES, validateProjectPhotos } from '../../app/project-intake.js';
 import './photo-picker.css';
+import { AddPhotoSheet } from './add-photo-sheet.js';
 export function PhotoPicker({
   files,
   onChange,
@@ -9,6 +10,7 @@ export function PhotoPicker({
   disabled = false,
   title = 'Add room photos',
   hint = 'Drop photos here or browse · Up to 5',
+  sampleRooms = false,
 }: {
   files: File[];
   onChange: (files: File[]) => void;
@@ -16,10 +18,12 @@ export function PhotoPicker({
   disabled?: boolean;
   title?: string;
   hint?: string;
+  sampleRooms?: boolean;
 }) {
   const input = useRef<HTMLInputElement>(null);
   const [previews, setPreviews] = useState<string[]>([]);
   const [error, setError] = useState('');
+  const [sheetOpen, setSheetOpen] = useState(false);
   useEffect(() => {
     const urls = files.map((file) => URL.createObjectURL(file));
     setPreviews(urls);
@@ -71,7 +75,7 @@ export function PhotoPicker({
       <button
         className="photo-picker-add"
         type="button"
-        onClick={() => input.current?.click()}
+        onClick={() => (sampleRooms ? setSheetOpen(true) : input.current?.click())}
         disabled={disabled}
         aria-label={
           compact ? `Add room photos${files.length ? ` · ${files.length} added` : ''}` : undefined
@@ -118,6 +122,7 @@ export function PhotoPicker({
           ))}
         </div>
       )}
+      {sheetOpen && <AddPhotoSheet onFiles={add} onClose={() => setSheetOpen(false)} />}
       {error && (
         <p role="alert" className="photo-picker-error">
           {error}

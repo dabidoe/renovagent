@@ -1,3 +1,9 @@
+import {
+  sampleForFile,
+  tagSampleFile,
+  sampleRoomSchema,
+  type SampleRoom,
+} from '../project-start/sample-rooms.js';
 // Browser-only recovery, including the actual files. A failed provider call must
 // not turn a reload into a second photo-upload exercise. This is not an account save.
 export type OwnIntakeDraft = {
@@ -7,7 +13,7 @@ export type OwnIntakeDraft = {
   photos: File[];
   plans: File[];
 };
-type StoredFile = { blob: Blob; name: string; lastModified: number };
+type StoredFile = { blob: Blob; name: string; lastModified: number; sample?: SampleRoom };
 type StoredDraft = Omit<OwnIntakeDraft, 'photos' | 'plans'> & {
   photos: StoredFile[];
   plans: StoredFile[];
@@ -40,11 +46,18 @@ async function access<T>(
 }
 const storeFile = (file: File): StoredFile => ({
   blob: file,
+  sample: sampleForFile(file),
   name: file.name,
   lastModified: file.lastModified,
 });
-const restoreFile = (file: StoredFile) =>
-  new File([file.blob], file.name, { type: file.blob.type, lastModified: file.lastModified });
+const restoreFile = (file: StoredFile) => {
+  const restored = new File([file.blob], file.name, {
+    type: file.blob.type,
+    lastModified: file.lastModified,
+  });
+  const sample = sampleRoomSchema.safeParse(file.sample);
+  return sample.success ? tagSampleFile(restored, sample.data) : restored;
+};
 export async function loadOwnIntake(): Promise<OwnIntakeDraft | null> {
   await writes.catch(() => {});
   const draft = await access<StoredDraft | undefined>('readonly', (store) => store.get('current'));

@@ -1,0 +1,20 @@
+[
+  {
+    "id": "living-room",
+    "title": "Living room",
+    "roomType": "living room",
+    "file": "living-room.jpg",
+    "source": "Renovagent owner photo",
+    "license": "Owner-provided for demo",
+    "suggestions": ["Sage walls + light oak floor", "Warm white walls + walnut floor"]
+  },
+  {
+    "id": "bedroom",
+    "title": "Bedroom",
+    "roomType": "bedroom",
+    "file": "bedroom.jpg",
+    "source": "Renovagent owner photo",
+    "license": "Owner-provided for demo",
+    "suggestions": ["Soft blue walls + light oak floor", "Warm white walls + natural oak floor"]
+  }
+]

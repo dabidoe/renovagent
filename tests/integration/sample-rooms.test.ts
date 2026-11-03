@@ -1,0 +1,138 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { imageSize } from 'image-size';
+import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
+import { register } from 'node:module';
+import { indexedDB } from 'fake-indexeddb';
+import {
+  fetchSampleFile,
+  parseSampleRooms,
+  sampleForFile,
+  sampleForPhoto,
+  sampleThumbnail,
+} from '../../apps/web/src/features/project-start/sample-rooms.js';
+import { uploadStudioPhoto } from '../../apps/web/src/features/project-start/photo-upload.js';
+import {
+  loadOwnIntake,
+  saveOwnIntake,
+} from '../../apps/web/src/features/house-example/own-intake-draft.js';
+register(
+  'data:text/javascript,' +
+    encodeURIComponent(
+      `export async function load(url, context, next) { return url.endsWith('.css') ? { format: 'module', source: '', shortCircuit: true } : next(url, context); }`,
+    ),
+  import.meta.url,
+);
+const { SampleRoomGrid } = await import(
+  '../../apps/web/src/features/project-start/add-photo-sheet.js'
+);
+const manifest = JSON.parse(
+  readFileSync(new URL('../../public/starter-rooms/manifest.json', import.meta.url), 'utf8'),
+);
+const rooms = parseSampleRooms(manifest);
+const bytes = (file: string) =>
+  readFileSync(new URL(`../../public/starter-rooms/${file}`, import.meta.url));
+
+test('sample manifest rejects missing/blank rights, unsafe paths and duplicate IDs before rendering', () => {
+  const valid = rooms[0]!;
+  const entries = parseSampleRooms([
+    valid,
+    { ...valid, id: 'no-source', source: undefined },
+    { ...valid, id: 'no-license', license: '' },
+    { ...valid, id: 'blank-source', source: '  ' },
+    { ...valid, id: 'unsafe', file: '../example-room/before.jpg' },
+    valid,
+  ]);
+  assert.deepEqual(entries, [valid]);
+  const html = renderToStaticMarkup(
+    createElement(SampleRoomGrid, { rooms: entries, busy: false, onChoose: () => {} }),
+  );
+  assert.equal((html.match(/<button/g) ?? []).length, 1);
+  assert.match(html, /Living room/);
+  assert.doesNotMatch(html, /no-source|no-license|blank-source|unsafe/);
+});
+
+test('gallery contains only the two approved owner photos, resized JPEGs and 400px thumbnails', () => {
+  assert.deepEqual(
+    rooms.map((room) => room.id),
+    ['living-room', 'bedroom'],
+  );
+  for (const room of rooms) {
+    assert.equal(room.source, 'Renovagent owner photo');
+    assert.equal(room.license, 'Owner-provided for demo');
+    const full = imageSize(bytes(room.file));
+    assert.equal(full.type, 'jpg');
+    assert.ok(Math.max(full.width!, full.height!) <= 2048);
+    const thumb = imageSize(bytes(sampleThumbnail(room).split('/').pop()!));
+    assert.equal(Math.max(thumb.width!, thumb.height!), 400);
+  }
+});
+
+test('sample and user files use the identical raw /studio/photo request shape', async () => {
+  const original = globalThis.fetch;
+  const sha = 'a'.repeat(64);
+  const uploads: { url: string; init: RequestInit }[] = [];
+  globalThis.fetch = (async (url, init) => {
+    if (String(url).startsWith('/starter-rooms/'))
+      return new Response(bytes(rooms[0]!.file), { headers: { 'Content-Type': 'image/jpeg' } });
+    uploads.push({ url: String(url), init: init! });
+    return Response.json({ sha256: sha });
+  }) as typeof fetch;
+  try {
+    const sample = await fetchSampleFile(rooms[0]!);
+    assert.deepEqual(Buffer.from(await sample.arrayBuffer()), bytes(rooms[0]!.file));
+    const user = new File([sample], 'my-room.jpg', { type: 'image/jpeg' });
+    for (const file of [sample, user]) assert.equal(await uploadStudioPhoto(file), sha);
+    for (const [i, file] of [sample, user].entries()) {
+      const request = uploads[i]!;
+      assert.equal(request.url, '/api/workspace/studio/photo');
+      assert.equal(request.init.method, 'POST');
+      assert.equal(request.init.credentials, 'same-origin');
+      assert.deepEqual(request.init.headers, {
+        'X-Renovagent-Client': 'workspace',
+        'Content-Type': 'image/jpeg',
+        'X-File-Name': encodeURIComponent(file.name),
+      });
+      assert.equal(request.init.body, file);
+    }
+    assert.deepEqual(sampleForPhoto(`/api/workspace/design-images/${sha}`), rooms[0]);
+  } finally {
+    globalThis.fetch = original;
+  }
+});
+
+test('failed or non-JPEG sample fetch rejects without uploading or supplying canned results', async () => {
+  const original = globalThis.fetch;
+  try {
+    globalThis.fetch = (async () => new Response('missing', { status: 404 })) as typeof fetch;
+    await assert.rejects(fetchSampleFile(rooms[0]!), /HTTP 404/);
+    globalThis.fetch = (async () =>
+      new Response('<html>missing</html>', {
+        headers: { 'Content-Type': 'text/html' },
+      })) as typeof fetch;
+    await assert.rejects(fetchSampleFile(rooms[0]!), /nonempty JPEG/);
+  } finally {
+    globalThis.fetch = original;
+  }
+});
+
+test('sample attribution and suggestions survive intake recovery alongside real file bytes', async () => {
+  globalThis.indexedDB = indexedDB;
+  const original = globalThis.fetch;
+  globalThis.fetch = (async () =>
+    new Response(bytes(rooms[1]!.file), {
+      headers: { 'Content-Type': 'image/jpeg' },
+    })) as typeof fetch;
+  try {
+    const sample = await fetchSampleFile(rooms[1]!);
+    await saveOwnIntake({ idea: '', where: '', ceiling: '', photos: [sample], plans: [] });
+    const restored = (await loadOwnIntake())!;
+    assert.deepEqual(sampleForFile(restored.photos[0]!), rooms[1]);
+    assert.deepEqual(Buffer.from(await restored.photos[0]!.arrayBuffer()), bytes(rooms[1]!.file));
+    await saveOwnIntake(null);
+  } finally {
+    globalThis.fetch = original;
+  }
+});

@@ -88,7 +88,7 @@ export function Landing({
               placeholder="Make my old living room feel brighter. Keep the character."
             />
             <div>
-              <PhotoPicker compact files={photos} onChange={onPhotos} disabled={busy} />
+              <PhotoPicker sampleRooms compact files={photos} onChange={onPhotos} disabled={busy} />
               <button className="send" disabled={busy}>
                 {busy ? 'Opening…' : 'Start a project'}
                 <Glyph name="right" />

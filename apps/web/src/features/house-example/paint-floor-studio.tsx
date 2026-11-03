@@ -1,3 +1,5 @@
+import { sampleForPhoto, type SampleRoom } from '../project-start/sample-rooms.js';
+import { StudioError } from './studio-error.js';
 import { studioFinishSignature as lookSignature } from './studio-signatures.js';
 import { StudioSync, pendingStudioSave, type StudioSaveMeta } from './studio-sync.js';
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
@@ -548,11 +550,13 @@ function Imagine({
   busy,
   error,
   onImagine,
+  sample,
 }: {
   room: StudioRoom;
   busy: boolean;
   error: string;
   onImagine: (text: string) => void;
+  sample?: SampleRoom;
 }) {
   const [text, setText] = useState('');
   return (
@@ -577,7 +581,24 @@ function Imagine({
           {busy ? <span className="pf-spinner" aria-hidden="true" /> : <Glyph name="right" />}
         </button>
       </div>
-      {error && <p className="pf-intake-error">{error}</p>}
+      {sample && (
+        <div className="sample-room-suggestions" aria-label="Sample room suggestions">
+          {sample.suggestions.map((suggestion) => (
+            <button
+              type="button"
+              key={suggestion}
+              disabled={busy}
+              onClick={() => {
+                setText(suggestion);
+                document.getElementById('pf-imagine-text')?.focus();
+              }}
+            >
+              {suggestion}
+            </button>
+          ))}
+        </div>
+      )}
+      {error && <StudioError message={error} />}
     </form>
   );
 }
@@ -1061,7 +1082,7 @@ export function PaintFloorStudio({
     }
   }, [renderStore, modelRenders]);
   const [selectedPlacement, setSelectedPlacement] = useState<string | null>(null);
-  const [inspector, setInspector] = useState<'design' | 'layout' | 'finishes' | 'plan'>('design');
+  const [inspector, setInspector] = useState<'design' | 'layout' | 'finishes' | 'plan'>('finishes');
   const addAssets = (target: StudioRoom, ids: StudioAssetId[]) => {
     const model = roomModel(target, project.ceilingFt);
     if (!model) return;
@@ -1421,6 +1442,7 @@ export function PaintFloorStudio({
     [project.rooms, ceilingFt, picks, tier],
   );
   if (!room) return null;
+  const sample = sampleForPhoto(room.photo.src);
   const takeoff = takeoffs[room.id]!;
   const included = project.rooms.filter((r) => (picks[r.id] ?? DEFAULT_PICK).included);
   const houseTotal = included.reduce((sum, r) => sum + takeoffs[r.id]!.totalMinor, 0);
@@ -1436,6 +1458,17 @@ export function PaintFloorStudio({
         <div>
           <p className="pf-kicker">{kicker}</p>
           <h1>{project.address}</h1>
+          {sample && (
+            <details className="sample-room-info">
+              <summary title={`${sample.source} · ${sample.license}`}>Sample room ⓘ</summary>
+              <p>
+                {sample.source}
+                <br />
+                {sample.license}
+              </p>
+            </details>
+          )}
+
           {(project.place || project.listing) && (
             <p className="pf-sub">
               {project.place}
@@ -1700,9 +1733,9 @@ export function PaintFloorStudio({
           <div className="pf-inspector-tabs" role="tablist" aria-label="Studio tools">
             {(
               [
-                { id: 'design', label: 'Design' },
+                { id: 'design', label: 'Restyle' },
                 { id: 'layout', label: '3D layout' },
-                { id: 'finishes', label: 'Finishes' },
+                { id: 'finishes', label: 'Paint & floor' },
                 { id: 'plan', label: 'Plan & budget' },
               ] as const
             ).map((tab) => (
@@ -1770,6 +1803,7 @@ export function PaintFloorStudio({
             <Imagine
               key={room.id}
               room={room}
+              sample={sample}
               busy={imagining.busy}
               error={imagining.error}
               onImagine={(text) => void imagine(text, room)}
