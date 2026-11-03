@@ -2793,3 +2793,94 @@
   background: #fff1ce;
   color: #6b501a;
 }
+
+/* Keep the room prominent; reveal catalog and numeric editing on demand. */
+.pf-budget-link {
+  border: 0;
+  padding: 8px 0;
+  background: transparent;
+  color: var(--pf-muted);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+.pf-budget-link:hover {
+  color: var(--pf-accent);
+  text-decoration: underline;
+}
+.pf-rooms > button {
+  min-width: 148px;
+  grid-template-rows: 1fr;
+}
+.pf-rooms > button > img,
+.pf-rooms > button > .pf-look {
+  grid-row: auto;
+}
+.pf-room-name {
+  align-self: center;
+}
+.pf-panel {
+  align-self: start;
+}
+.pf-add-furniture {
+  min-height: 44px;
+  border: 1px solid #dce3ef;
+  border-radius: 10px;
+  background: white;
+  color: #3858ed;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+.pf-furniture-panel .pf-asset-grid {
+  max-height: 350px;
+  overflow-y: auto;
+}
+.pf-furniture-details,
+.pf-reference-details {
+  font-size: 11px;
+  color: var(--pf-muted);
+}
+.pf-furniture-details > summary,
+.pf-reference-details > summary {
+  cursor: pointer;
+  padding-block: 8px;
+}
+.pf-furniture-details > label,
+.pf-furniture-details > .pf-placement-fields {
+  margin-block: 12px;
+}
+.pf-furniture-selection {
+  display: grid;
+  gap: 6px;
+  color: var(--pf-muted);
+  font-size: 11px;
+}
+.pf-furniture-selection select {
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid #dce3ef;
+  border-radius: 8px;
+  background: white;
+  color: #465670;
+  padding: 8px;
+  font: inherit;
+}
+@media (min-width: 761px) {
+  .pf-body {
+    grid-template-columns: minmax(0, 1fr) 320px;
+    gap: 20px;
+  }
+}
+@media (min-width: 761px) and (max-width: 1100px) {
+  .pf-body {
+    grid-template-columns: minmax(0, 1fr) 300px;
+    gap: 16px;
+  }
+}
+@media (min-width: 761px) {
+  .pf-3d-host:not(.is-photoreal) {
+    aspect-ratio: auto;
+    height: clamp(320px, calc(100dvh - 360px), 640px);
+  }
+}

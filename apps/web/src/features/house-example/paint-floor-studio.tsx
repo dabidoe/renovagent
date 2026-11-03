@@ -408,12 +408,15 @@ export function Room3D({
     <div className="pf-3d">
       <p className="pf-3d-note">Layout reference · not to scale of real products</p>
       <div ref={host} className="pf-3d-host" />
-      <p className="pf-3d-basis">
-        {room.sizeNote
-          ? 'Room shell uses an estimated size.'
-          : 'Room shell uses the entered dimensions.'}{' '}
-        Furniture sizes and positions are editable concepts; openings and fit need checking.
-      </p>
+      <details className="pf-reference-details">
+        <summary>Room geometry</summary>
+        <p className="pf-3d-basis">
+          {room.sizeNote
+            ? 'Room shell uses an estimated size.'
+            : 'Room shell uses the entered dimensions.'}{' '}
+          Furniture sizes and positions are editable concepts; openings and fit need checking.
+        </p>
+      </details>
       {error && <StudioError message={error} className="pf-error" />}
     </div>
   );
@@ -1434,20 +1437,10 @@ export function PaintFloorStudio({
           <button type="button" className="pf-reset" disabled={saving} onClick={() => void save()}>
             {saving ? 'Saving…' : 'Save project'}
           </button>
-          <button type="button" className="pf-reset" onClick={() => setListOpen(true)}>
-            Shopping list
-          </button>
           {actions}
-          <div className="pf-total" aria-live="polite">
-            <span>
-              Budget so far · {included.length} room{included.length === 1 ? '' : 's'}
-            </span>
-            <strong>{money(houseTotal + itemBudget.allowanceMinor)}</strong>
-            <span>Demo finishes + your allowances</span>
-            <small>
-              {itemBudget.unpriced ? `${itemBudget.unpriced} items to price` : 'Example prices'}
-            </small>
-          </div>
+          <button type="button" className="pf-budget-link" onClick={() => setInspector('plan')}>
+            Example budget · {money(houseTotal + itemBudget.allowanceMinor)}
+          </button>
         </div>
       </header>
       {(autoSave || saveMeta || saveError) && (
@@ -1521,15 +1514,7 @@ export function PaintFloorStudio({
                 <LookThumb pick={p} />
               )}
               <span className="pf-room-name">{r.title}</span>
-              <span className="pf-room-meta">
-                <i style={{ background: p.color?.hex ?? 'transparent' }} />
-                {p.included
-                  ? money(
-                      takeoffs[r.id]!.totalMinor +
-                        studioItemBudget(items[r.id] ?? []).allowanceMinor,
-                    )
-                  : 'Deferred'}
-              </span>
+              {!p.included && <span className="pf-room-meta">Deferred</span>}
             </button>
           );
         })}
@@ -1732,6 +1717,7 @@ export function PaintFloorStudio({
           </div>
           <div hidden={inspector !== 'layout'}>
             <FurniturePanel
+              key={room.id}
               model={roomModel(room, ceilingFt)}
               placements={placements[room.id] ?? []}
               items={items[room.id] ?? []}
@@ -1854,6 +1840,9 @@ export function PaintFloorStudio({
             </label>
           </div>
           <div hidden={inspector !== 'plan'}>
+            <button type="button" className="pf-reset" onClick={() => setListOpen(true)}>
+              Shopping list
+            </button>
             <LocalCodeCard address={project.address} inputs={localCodeInputs} />
             <RoomPlan
               key={room.id}

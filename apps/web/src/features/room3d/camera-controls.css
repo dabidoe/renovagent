@@ -62,3 +62,29 @@
     height: 320px;
   }
 }
+.room3d-camera-options {
+  position: relative;
+  pointer-events: auto;
+}
+.room3d-camera-options > summary {
+  box-sizing: border-box;
+  min-height: 52px;
+  padding: 17px 12px;
+  border: 1px solid #d6dfe9;
+  border-radius: 12px;
+  background: rgb(255 255 255 / 0.96);
+  color: #334155;
+  font:
+    600 12px/1.2 system-ui,
+    sans-serif;
+  cursor: pointer;
+}
+.room3d-camera-options:not([open]) > .room3d-camera-group {
+  display: none;
+}
+.room3d-camera-options > .room3d-camera-group {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  right: 0;
+  white-space: nowrap;
+}

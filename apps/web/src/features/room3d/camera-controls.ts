@@ -54,6 +54,13 @@ export function attachCameraControls(
   setMode(false);
 
   const views = group('Room camera');
+  const viewOptions = document.createElement('details');
+  viewOptions.className = 'room3d-camera-options';
+  const viewSummary = document.createElement('summary');
+  viewSummary.textContent = 'View';
+  viewSummary.setAttribute('aria-label', 'Camera views');
+  viewOptions.append(viewSummary, views);
+  bar.append(viewOptions);
   const changeView = (change: () => void) => {
     finishDrag();
     // Drain gesture damping before applying a button view, so reset/top do not drift.

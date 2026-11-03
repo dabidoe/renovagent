@@ -47,6 +47,7 @@ export function FurniturePanel({
   onChange: (next: StudioPlacement[]) => void;
   onAdd: (assetId: StudioAssetId) => void;
 }) {
+  const [libraryOpen, setLibraryOpen] = useState(false);
   const chosen = placements.find((p) => p.id === selected);
   const bounds = model ? studioRoomBounds(model) : null;
   const patch = (data: Partial<StudioPlacement>) => {
@@ -63,48 +64,59 @@ export function FurniturePanel({
   });
   return (
     <div className="pf-furniture-panel">
-      <div className="pf-group-head">
-        <h3>Arrange a layout reference</h3>
-        <span>{placements.length} objects</span>
-      </div>
-      <p>Add reference pieces. Rotate to explore or Move to arrange.</p>
+      <button
+        type="button"
+        className="pf-add-furniture"
+        aria-expanded={libraryOpen}
+        onClick={() => setLibraryOpen(!libraryOpen)}
+      >
+        {libraryOpen ? 'Close library' : 'Add furniture'}
+      </button>
       {!model && (
         <p className="pf-intake-error">
           Add room dimensions to place furniture. The photo designer works without them.
         </p>
       )}
-      <div className="pf-asset-grid" aria-label="3D furniture library">
-        {STUDIO_ASSETS.map((a) => (
-          <button
-            type="button"
-            key={a.id}
-            disabled={!model || placements.length >= 60}
-            onClick={() => onAdd(a.id)}
-            aria-label={`Add ${a.name} to 3D`}
-          >
-            <AssetThumb id={a.id} />
-            <span>{a.name}</span>
-            <b aria-hidden="true">+</b>
-          </button>
-        ))}
-      </div>
-      {!!placements.length && (
-        <div className="pf-placement-list" aria-label="Objects in this room">
-          {placements.map((p) => (
+      {libraryOpen && (
+        <div className="pf-asset-grid" aria-label="3D furniture library">
+          {STUDIO_ASSETS.map((a) => (
             <button
               type="button"
-              key={p.id}
-              aria-pressed={p.id === selected}
-              onClick={() => onSelect(p.id)}
+              key={a.id}
+              disabled={!model || placements.length >= 60}
+              onClick={() => {
+                onAdd(a.id);
+                setLibraryOpen(false);
+              }}
+              aria-label={`Add ${a.name} to 3D`}
             >
-              <span>
-                {items.find((i) => i.id === p.itemId)?.name ?? studioAsset(p.assetId).name}
-              </span>
-              <small>{studioAsset(p.assetId).name}</small>
+              <AssetThumb id={a.id} />
+              <span>{a.name}</span>
+              <b aria-hidden="true">+</b>
             </button>
           ))}
         </div>
       )}
+      {placements.length > 1 && (
+        <label className="pf-furniture-selection">
+          Selected piece
+          <select
+            aria-label="Selected furniture piece"
+            value={selected ?? ''}
+            onChange={(e) => onSelect(e.target.value || null)}
+          >
+            <option value="" disabled>
+              Choose a piece
+            </option>
+            {placements.map((p) => (
+              <option key={p.id} value={p.id}>
+                {items.find((item) => item.id === p.itemId)?.name ?? studioAsset(p.assetId).name}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
+      {!chosen && <p>Choose a piece in the room to edit it.</p>}
       {chosen && (
         <div className="pf-placement-editor">
           <div className="pf-group-head">
@@ -120,38 +132,6 @@ export function FurniturePanel({
             </button>
           </div>
           <label>
-            Room list item
-            <select
-              aria-label="Room list item for selected 3D object"
-              value={chosen.itemId}
-              onChange={(e) => patch({ itemId: e.target.value })}
-            >
-              {items.map((i) => (
-                <option key={i.id} value={i.id}>
-                  {i.name}
-                </option>
-              ))}
-            </select>
-          </label>
-          <div className="pf-placement-fields">
-            {(['widthM', 'depthM', 'heightM'] as const).map((key) => (
-              <label key={key}>
-                {key === 'widthM' ? 'Width' : key === 'depthM' ? 'Depth' : 'Height'} · m
-                <input
-                  type="number"
-                  step="0.05"
-                  min="0.01"
-                  max={key === 'heightM' ? 10 : 20}
-                  value={chosen[key]}
-                  onChange={(e) => {
-                    const n = Number(e.target.value);
-                    if (n > 0 && n <= (key === 'heightM' ? 10 : 20)) patch({ [key]: n });
-                  }}
-                />
-              </label>
-            ))}
-          </div>
-          <label>
             Rotate · {Math.round(chosen.rotationDeg)}°
             <input
               aria-label="Rotate selected furniture"
@@ -163,31 +143,66 @@ export function FurniturePanel({
               onChange={(e) => patch({ rotationDeg: Number(e.target.value) })}
             />
           </label>
-          {bounds && (
+          <details className="pf-furniture-details">
+            <summary>Position & size</summary>
+            <label>
+              Room list item
+              <select
+                aria-label="Room list item for selected 3D object"
+                value={chosen.itemId}
+                onChange={(e) => patch({ itemId: e.target.value })}
+              >
+                {items.map((i) => (
+                  <option key={i.id} value={i.id}>
+                    {i.name}
+                  </option>
+                ))}
+              </select>
+            </label>
             <div className="pf-placement-fields">
-              {(['xM', 'zM'] as const).map((key) => (
+              {(['widthM', 'depthM', 'heightM'] as const).map((key) => (
                 <label key={key}>
-                  {key === 'xM' ? 'Across' : 'Along'} room · m
+                  {key === 'widthM' ? 'Width' : key === 'depthM' ? 'Depth' : 'Height'} · m
                   <input
                     type="number"
-                    step="0.1"
-                    min={-10000}
-                    max={10000}
+                    step="0.05"
+                    min="0.01"
+                    max={key === 'heightM' ? 10 : 20}
                     value={chosen[key]}
                     onChange={(e) => {
                       const n = Number(e.target.value);
-                      if (e.target.value && Number.isFinite(n) && Math.abs(n) <= 10000)
-                        patch({ [key]: n });
+                      if (n > 0 && n <= (key === 'heightM' ? 10 : 20)) patch({ [key]: n });
                     }}
                   />
                 </label>
               ))}
             </div>
-          )}
-          <small>
-            Models keep their proportions within these size limits. Measure real products before
-            buying.
-          </small>
+            {bounds && (
+              <div className="pf-placement-fields">
+                {(['xM', 'zM'] as const).map((key) => (
+                  <label key={key}>
+                    {key === 'xM' ? 'Across' : 'Along'} room · m
+                    <input
+                      type="number"
+                      step="0.1"
+                      min={-10000}
+                      max={10000}
+                      value={chosen[key]}
+                      onChange={(e) => {
+                        const n = Number(e.target.value);
+                        if (e.target.value && Number.isFinite(n) && Math.abs(n) <= 10000)
+                          patch({ [key]: n });
+                      }}
+                    />
+                  </label>
+                ))}
+              </div>
+            )}
+            <small>
+              Models keep their proportions within these size limits. Measure real products before
+              buying.
+            </small>
+          </details>
         </div>
       )}
       {!!(warnings.length || quantities.length) && (
@@ -200,13 +215,16 @@ export function FurniturePanel({
           ))}
         </div>
       )}
-      <p className="pf-furniture-note">
-        Layout proposal · doors, circulation, overlaps and product fit still need checking. Removing
-        a model keeps its room-list item.{' '}
-        <a href="/furniture/kenney/README.md" target="_blank" rel="noreferrer">
-          Kenney assets · CC0 ↗
-        </a>
-      </p>
+      <details className="pf-furniture-details">
+        <summary>Reference details</summary>
+        <p className="pf-furniture-note">
+          Layout proposal · doors, circulation, overlaps and product fit still need checking.
+          Removing a model keeps its room-list item.{' '}
+          <a href="/furniture/kenney/README.md" target="_blank" rel="noreferrer">
+            Kenney assets · CC0 ↗
+          </a>
+        </p>
+      </details>
     </div>
   );
 }
