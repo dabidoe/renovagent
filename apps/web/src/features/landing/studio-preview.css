@@ -82,6 +82,14 @@
 .studio-preview .pf-3d-host {
   border-radius: 0;
 }
+.studio-preview .pf-tag-before {
+  right: auto;
+  left: 12px;
+}
+.studio-preview .pf-tag-after {
+  left: auto;
+  right: 12px;
+}
 .studio-preview-placeholder {
   display: block;
   width: 100%;

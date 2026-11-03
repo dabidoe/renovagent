@@ -564,7 +564,7 @@ export function InspoPanel({
           maxLength={1000}
           disabled={!!status.busy}
           onChange={(e) => setBrief(e.target.value)}
-          placeholder="A cream sofa, walnut coffee table and a large striped rug. Keep the stairs clear. Warm and lived-in."
+          placeholder="A cream sofa, walnut coffee table and a large striped rug. Warm and lived-in."
         />
       </label>
       {!!sampleRoom?.furnishingSuggestions?.length && (

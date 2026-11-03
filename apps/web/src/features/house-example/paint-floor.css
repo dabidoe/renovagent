@@ -308,11 +308,12 @@
   font-size: 0.75rem;
   pointer-events: none;
 }
+/* Tags ride beside the divider, clear of listing watermarks in the photo corners. */
 .pf-tag-before {
-  left: 12px;
+  right: calc(100% - var(--split, 50%) + 10px);
 }
 .pf-tag-after {
-  right: 12px;
+  left: calc(var(--split, 50%) + 10px);
 }
 .pf-error {
   position: absolute;
@@ -807,6 +808,7 @@
 
 /* Examples gallery. */
 .pf-gallery {
+  padding-top: 24px;
   --pf-ink: #142038;
   --pf-muted: #64748b;
   --pf-line: #e2e8f0;
@@ -1436,6 +1438,7 @@
 }
 .pf-inspo-go {
   min-height: 44px;
+  padding: 0 22px;
   border: 0;
   border-radius: 999px;
   background: var(--pf-accent);
@@ -2649,4 +2652,21 @@
     padding: 8px;
     justify-content: start;
   }
+}
+.pf-model-details {
+  margin: 4px 0 10px;
+  color: var(--pf-muted);
+  font-size: 0.75rem;
+}
+.pf-model-details summary {
+  cursor: pointer;
+}
+.pf-model-details dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 12px;
+  margin: 8px 0 0;
+}
+.pf-model-details dd {
+  margin: 0;
 }

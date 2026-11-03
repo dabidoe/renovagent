@@ -9,8 +9,14 @@
   width: 100%;
   height: auto;
   aspect-ratio: 1;
-  border-radius: 10px;
-  background: #fff;
+  /* The clip's near-white backdrop blends into the page instead of showing as a box. */
+  mix-blend-mode: multiply;
+  filter: brightness(1.03);
+  /* Soften the clip's cropped bottom/right edges (laptop, table). */
+  mask-image:
+    linear-gradient(to bottom, #000 82%, transparent),
+    linear-gradient(to right, #000 86%, transparent);
+  mask-composite: intersect;
 }
 .agent-story-intro {
   display: flex;
@@ -19,9 +25,11 @@
   gap: 24px;
 }
 .agent-story-intro .muse-animation {
-  width: 144px;
+  width: 200px;
 }
 .ca-muse-intro {
+  /* The sticky sidebar isolates blending; give the mascot the page colour to multiply into. */
+  background: #f8fafc;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -29,7 +37,7 @@
   padding: 0 18px 12px;
 }
 .ca-muse-intro .muse-animation {
-  width: 112px;
+  width: 150px;
 }
 .ca-muse-intro h2 {
   margin: 0 0 10px;
@@ -57,7 +65,7 @@
     gap: 16px;
   }
   .agent-story-intro .muse-animation {
-    width: 112px;
+    width: 136px;
   }
   .agent-story-copy > p {
     margin-block: 12px;

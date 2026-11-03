@@ -1454,6 +1454,9 @@ export function PaintFloorStudio({
   const included = project.rooms.filter((r) => (picks[r.id] ?? DEFAULT_PICK).included);
   const houseTotal = included.reduce((sum, r) => sum + takeoffs[r.id]!.totalMinor, 0);
   const itemBudget = studioItemBudget(included.flatMap((r) => items[r.id] ?? []));
+  // Finishes are priced from the room size; an unsized room is unpriced, not $0.
+  const unsized = included.filter((r) => !r.size).length;
+  const headerTotal = houseTotal + itemBudget.allowanceMinor;
   const has3d = !!roomModel(room, ceilingFt);
   const photoless = !room.photo.src;
   const needsSize = !room.size || !ceilingFt;
@@ -1517,10 +1520,14 @@ export function PaintFloorStudio({
             <span>
               Budget so far · {included.length} room{included.length === 1 ? '' : 's'}
             </span>
-            <strong>{money(houseTotal + itemBudget.allowanceMinor)}</strong>
+            <strong>{headerTotal || !unsized ? money(headerTotal) : 'Not priced yet'}</strong>
             <span>Demo finishes + your allowances</span>
             <small>
-              {itemBudget.unpriced ? `${itemBudget.unpriced} items to price` : TIER_LABELS[tier]}
+              {unsized
+                ? `${unsized} room${unsized === 1 ? ' needs' : 's need'} a size`
+                : itemBudget.unpriced
+                  ? `${itemBudget.unpriced} items to price`
+                  : TIER_LABELS[tier]}
             </small>
           </div>
         </div>
@@ -1598,12 +1605,14 @@ export function PaintFloorStudio({
               <span className="pf-room-name">{r.title}</span>
               <span className="pf-room-meta">
                 <i style={{ background: p.color?.hex ?? 'transparent' }} />
-                {p.included
-                  ? money(
-                      takeoffs[r.id]!.totalMinor +
-                        studioItemBudget(items[r.id] ?? []).allowanceMinor,
-                    )
-                  : 'Deferred'}
+                {!p.included
+                  ? 'Deferred'
+                  : !r.size && !studioItemBudget(items[r.id] ?? []).allowanceMinor
+                    ? 'Needs size'
+                    : money(
+                        takeoffs[r.id]!.totalMinor +
+                          studioItemBudget(items[r.id] ?? []).allowanceMinor,
+                      )}
               </span>
             </button>
           );
@@ -1821,7 +1830,7 @@ export function PaintFloorStudio({
           </div>
           <div hidden={inspector !== 'finishes'}>
             <Imagine
-              key={room.id}
+              key={`imagine-${room.id}`}
               room={room}
               sample={sample}
               onFurnish={() => setInspector('design')}
@@ -1832,7 +1841,7 @@ export function PaintFloorStudio({
             {roomTools?.(room)}
             {((needsSize && onEditRoom) || editCeiling || editSize) && (
               <SizeEntry
-                key={room.id}
+                key={`size-${room.id}`}
                 room={room}
                 ceilingFt={editCeiling ? null : ceilingFt}
                 editSize={editSize}

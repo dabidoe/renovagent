@@ -6,7 +6,6 @@ export default defineConfig({
   build: {
     rollupOptions: {
       input: {
-        landing: fileURLToPath(new URL('./landing.html', import.meta.url)),
         workspace: fileURLToPath(new URL('./index.html', import.meta.url)),
         legacy: fileURLToPath(new URL('./legacy.html', import.meta.url)),
       },
