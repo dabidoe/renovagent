@@ -1,15 +1,20 @@
-const logoUrl = new URL('../assets/brand/renovagent-logo.png', import.meta.url).href;
+const darkLogoUrl = new URL('../assets/brand/renovagent-logo.png', import.meta.url).href;
+// The owner's light lockup for dark backgrounds (the landing hero); same canvas and layout.
+const lightLogoUrl = new URL('../assets/brand/renovagent-logo-light.webp', import.meta.url).href;
 
 // The owner's original artwork: full stacked lockup, or a viewport on its symbol.
 export function BrandMark({
   size = 30,
   lockup = false,
   compact = false,
+  tone = 'dark',
 }: {
   size?: number;
   lockup?: boolean;
   compact?: boolean;
+  tone?: 'dark' | 'light';
 }) {
+  const logoUrl = tone === 'light' ? lightLogoUrl : darkLogoUrl;
   if (lockup && compact)
     return (
       <svg

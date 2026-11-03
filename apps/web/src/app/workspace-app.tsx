@@ -418,7 +418,7 @@ export function App({ controller }: { controller: WorkspaceController }) {
           }}
           aria-label="Renovagent home"
         >
-          <BrandMark size={174} lockup compact={isLanding} />
+          <BrandMark size={174} lockup compact={isLanding} tone={isLanding ? 'light' : 'dark'} />
         </button>
         {isLanding ? (
           <nav className="landing-nav" aria-label="Main navigation">
