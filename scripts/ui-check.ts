@@ -141,16 +141,68 @@ async function finalText(page: Page, selector: string) {
 
 async function budgetChecks(browser: Browser, base: string) {
   const vp = viewports[0];
-  // Brooklyn ships without room sizes: rooms are unpriced, never "$0".
+  // Brooklyn uses editable photo-based planning estimates for its missing sizes.
   {
     const { page, close } = await open(browser, base, '/#example/brooklyn', vp);
     const total = await finalText(page, '.pf-total strong');
-    check('brooklyn: header says "Not priced yet", not $0', total === 'Not priced yet', total);
+    check(
+      'brooklyn: estimated materials have a non-zero total',
+      /^\$[1-9][\d,]*(?:\.\d\d)?$/.test(total),
+      total,
+    );
     const metas = await page.locator('.pf-rooms .pf-room-meta').allInnerTexts();
     check(
-      'brooklyn: every unsized room tab says "Needs size"',
-      metas.length > 0 && metas.every((m) => m.trim() === 'Needs size'),
+      'brooklyn: every room has an estimated materials price',
+      metas.length > 0 && metas.every((m) => /^\$[1-9][\d,]*(?:\.\d\d)?$/.test(m.trim())),
       metas.join(' / '),
+    );
+    check(
+      'brooklyn: photo estimate is visibly disclosed',
+      (await page.locator('.pf-size-note').innerText()).includes('not measured'),
+    );
+    await page.getByRole('button', { name: 'Edit room measurements', exact: true }).click();
+    check(
+      'brooklyn: editor prefills estimated width',
+      (await page.getByRole('textbox', { name: 'Width in feet', exact: true }).inputValue()) ===
+        '12',
+    );
+    check(
+      'brooklyn: editor prefills estimated length',
+      (await page.getByRole('textbox', { name: 'Length in feet', exact: true }).inputValue()) ===
+        '18',
+    );
+    await page.getByRole('textbox', { name: 'Width in feet', exact: true }).fill('16');
+    await page.locator('.pf-size button[type="submit"]').click();
+    const changed = await finalText(page, '.pf-total strong');
+    check(
+      'brooklyn: size edit recalculates materials',
+      changed !== total && changed.startsWith('$'),
+      changed,
+    );
+    await page.reload();
+    await page.locator('.pf-stage-bar').waitFor();
+    await page.getByRole('button', { name: 'Edit room measurements', exact: true }).click();
+    check(
+      'brooklyn: edited size survives reload',
+      (await page.getByRole('textbox', { name: 'Width in feet', exact: true }).inputValue()) ===
+        '16',
+    );
+    check(
+      'brooklyn: user size replaces the photo estimate',
+      !(await page.locator('.pf-size-note').innerText()).includes('not measured'),
+    );
+    await page.locator('.pf-stage-bar button').filter({ hasText: 'ceilings' }).click();
+    check(
+      'brooklyn: ceiling editor prefills existing height',
+      (await page
+        .getByRole('textbox', { name: 'Ceiling height in feet', exact: true })
+        .inputValue()) === '8',
+    );
+    await page.getByRole('textbox', { name: 'Ceiling height in feet', exact: true }).fill('9');
+    await page.locator('.pf-size button[type="submit"]').click();
+    check(
+      'brooklyn: confirming ceiling clears its estimate label',
+      (await page.locator('.pf-size-note').count()) === 0,
     );
     await close();
   }

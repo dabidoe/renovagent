@@ -46,6 +46,7 @@ export function RoomPlan({
   onChange,
   finishesMinor,
   finishesIncomplete = false,
+  estimateNote,
   onPrepare,
   versionKey,
 }: {
@@ -53,6 +54,7 @@ export function RoomPlan({
   onChange: (items: StudioItem[]) => void;
   finishesMinor: number;
   finishesIncomplete?: boolean;
+  estimateNote?: string;
   onPrepare: () => Promise<StudioHandoff>;
   versionKey: string;
 }) {
@@ -101,6 +103,12 @@ export function RoomPlan({
           </div>
         </dl>
         <small>
+          {estimateNote && (
+            <>
+              {estimateNote}
+              <br />
+            </>
+          )}
           {budget.unpriced
             ? `${budget.unpriced} item${budget.unpriced === 1 ? '' : 's'} still to price · `
             : ''}

@@ -573,6 +573,16 @@
   gap: 6px;
   flex-wrap: wrap;
 }
+.pf-size label {
+  display: grid;
+  gap: 4px;
+  font-size: 0.78rem;
+}
+.pf-size-note {
+  max-width: 56ch;
+  color: var(--pf-muted);
+  font-size: 0.75rem;
+}
 .pf-size input {
   width: 84px;
   padding: 7px 10px;

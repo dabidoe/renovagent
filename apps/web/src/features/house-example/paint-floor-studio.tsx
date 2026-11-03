@@ -788,6 +788,7 @@ function ShoppingSheet({
                   </div>
                   {r.paint && <p>Walls · {r.paint}</p>}
                   {r.floor && <p>Floor · {r.floor}</p>}
+                  {r.sizeBasis && <p>Planning estimate · {r.sizeBasis}</p>}
                   {r.ideas.length > 0 && (
                     <p className="pf-list-ideas">Not priced · {r.ideas.join(', ')}</p>
                   )}
@@ -884,6 +885,7 @@ function SizeEntry({
   room,
   ceilingFt,
   editSize = false,
+  editCeiling = false,
   onSize,
   onCeiling,
 }: {
@@ -891,12 +893,16 @@ function SizeEntry({
   ceilingFt: number | null;
   // Asks for the size even when one is known (an estimate being corrected).
   editSize?: boolean;
+  editCeiling?: boolean;
   onSize: (size: { xFt: number; yFt: number }) => void;
   onCeiling?: (ft: number) => void;
 }) {
-  const [x, setX] = useState('');
-  const [y, setY] = useState('');
-  const [c, setC] = useState('');
+  const [x, setX] = useState(room.size ? String(room.size.xFt) : '');
+  const [y, setY] = useState(room.size ? String(room.size.yFt) : '');
+  const [c, setC] = useState(ceilingFt ? String(ceilingFt) : '');
+  const [error, setError] = useState('');
+  const showSize = !room.size || editSize;
+  const showCeiling = (!ceilingFt || editCeiling) && !!onCeiling;
   return (
     <form
       className="pf-size"
@@ -905,42 +911,57 @@ function SizeEntry({
         const xFt = parseFeet(x),
           yFt = parseFeet(y),
           cFt = parseFeet(c);
-        if (xFt && yFt) onSize({ xFt, yFt });
-        if (cFt && onCeiling) onCeiling(cFt);
+        if ((showSize && (!xFt || !yFt)) || (showCeiling && !cFt)) {
+          setError('Enter dimensions greater than 0 and less than 200 feet.');
+          return;
+        }
+        setError('');
+        if (showSize && xFt && yFt) onSize({ xFt, yFt });
+        if (showCeiling && cFt && onCeiling) onCeiling(cFt);
       }}
     >
       <h3>Room size</h3>
       <div>
-        {(!room.size || editSize) && (
+        {showSize && (
           <>
-            <input
-              aria-label="Width in feet"
-              placeholder="12′"
-              inputMode="decimal"
-              value={x}
-              onChange={(e) => setX(e.target.value)}
-            />
+            <label>
+              Width · ft
+              <input
+                aria-label="Width in feet"
+                placeholder="12′"
+                inputMode="decimal"
+                value={x}
+                onChange={(e) => setX(e.target.value)}
+              />
+            </label>
             <span aria-hidden="true">×</span>
-            <input
-              aria-label="Length in feet"
-              placeholder="14′"
-              inputMode="decimal"
-              value={y}
-              onChange={(e) => setY(e.target.value)}
-            />
+            <label>
+              Length · ft
+              <input
+                aria-label="Length in feet"
+                placeholder="14′"
+                inputMode="decimal"
+                value={y}
+                onChange={(e) => setY(e.target.value)}
+              />
+            </label>
           </>
         )}
-        {!ceilingFt && onCeiling && (
-          <input
-            aria-label="Ceiling height in feet"
-            placeholder="Ceiling 8′"
-            inputMode="decimal"
-            value={c}
-            onChange={(e) => setC(e.target.value)}
-          />
+        {showCeiling && (
+          <label>
+            Height · ft
+            <input
+              aria-label="Ceiling height in feet"
+              placeholder="Ceiling 8′"
+              inputMode="decimal"
+              value={c}
+              onChange={(e) => setC(e.target.value)}
+            />
+          </label>
         )}
         <button type="submit">Set</button>
       </div>
+      {error && <p role="alert">{error}</p>}
     </form>
   );
 }
@@ -1546,6 +1567,7 @@ export function PaintFloorStudio({
   const itemBudget = studioItemBudget(included.flatMap((r) => items[r.id] ?? []));
   // Finishes are priced from the room size; an unsized room is unpriced, not $0.
   const unsized = included.filter((r) => !r.size).length;
+  const estimated = included.filter((r) => r.sizeNote || project.ceilingNote).length;
   const headerTotal = houseTotal + itemBudget.allowanceMinor;
   const has3d = !!roomModel(room, ceilingFt);
   const photoless = !room.photo.src;
@@ -1565,6 +1587,11 @@ export function PaintFloorStudio({
       }}
       finishesMinor={takeoff.totalMinor}
       finishesIncomplete={needsSize && !!(pick.color || pick.floor)}
+      estimateNote={
+        room.sizeNote || project.ceilingNote
+          ? 'Planning estimate · check room dimensions'
+          : undefined
+      }
       versionKey={snapshotJson}
       onPrepare={async () => {
         const meta = await save();
@@ -1642,7 +1669,7 @@ export function PaintFloorStudio({
                 'Not priced yet'
               )}
             </strong>
-            <span>Demo prices</span>
+            <span>{estimated ? 'Estimated · demo prices' : 'Demo prices'}</span>
             <small>
               {unsized
                 ? `${unsized} room${unsized === 1 ? ' needs' : 's need'} a size`
@@ -1796,6 +1823,11 @@ export function PaintFloorStudio({
                     `${feetInches(ceilingFt)} ceilings`
                   ) : null}
                 </span>
+              )}
+              {(room.sizeNote || project.ceilingNote) && (
+                <small className="pf-size-note">
+                  {[room.sizeNote, project.ceilingNote].filter(Boolean).join(' · ')}
+                </small>
               )}
             </div>
             {((has3d && !photoless) || inspired[room.id]) && (
@@ -1982,10 +2014,11 @@ export function PaintFloorStudio({
             {roomTools?.(room)}
             {((needsSize && onEditRoom) || editCeiling || editSize) && (
               <SizeEntry
-                key={`size-${room.id}`}
+                key={`size-${room.id}-${editSize}-${editCeiling}`}
                 room={room}
-                ceilingFt={editCeiling ? null : ceilingFt}
+                ceilingFt={ceilingFt}
                 editSize={editSize}
+                editCeiling={editCeiling}
                 onSize={(size) => {
                   // A typed size is the owner's, no longer an estimate.
                   onEditRoom?.(room.id, { size, sizeNote: undefined });

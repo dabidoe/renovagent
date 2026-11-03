@@ -297,6 +297,7 @@ export type ShoppingList = {
     lines: PlanLine[];
     totalMinor: number;
     ideas: string[];
+    sizeBasis?: string;
   }[];
   buy: { item: string; units: number; unitPriceMinor: number; totalMinor: number }[];
   totalMinor: number;
@@ -321,6 +322,11 @@ export function shoppingList(
         lines: takeoffs[r.id]?.lines ?? [],
         totalMinor: takeoffs[r.id]?.totalMinor ?? 0,
         ideas: pick.ideas ?? [],
+        ...((r.sizeNote || project.ceilingNote) && r.size
+          ? {
+              sizeBasis: `${feetInches(r.size.xFt)} × ${feetInches(r.size.yFt)}${project.ceilingFt ? ` × ${feetInches(project.ceilingFt)} high` : ''} · ${[r.sizeNote, project.ceilingNote].filter(Boolean).join('; ')}`,
+            }
+          : {}),
         color: pick.color,
       };
     })
@@ -358,6 +364,7 @@ export function shoppingText(project: HouseProject, list: ShoppingList, tier: Ti
     '',
     ...list.rooms.flatMap((r) => [
       `${r.title}: ${money(r.totalMinor)}`,
+      ...(r.sizeBasis ? [`  Planning estimate: ${r.sizeBasis}`] : []),
       ...(r.paint ? [`  Walls: ${r.paint}`] : []),
       ...(r.floor ? [`  Floor: ${r.floor}`] : []),
       ...(r.ideas.length ? [`  Not priced: ${r.ideas.join(', ')}`] : []),

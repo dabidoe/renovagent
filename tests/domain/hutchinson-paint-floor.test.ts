@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { studioDesignSchema } from '@renovagent/contracts';
 import { wallSwatch } from '@renovagent/core';
 import {
@@ -14,6 +15,7 @@ import {
   type RoomPick,
   type StudioRoom,
   type TierKey,
+  type HouseProject,
 } from '../../apps/web/src/features/house-example/paint-floor.js';
 import { HUTCHINSON } from '../../apps/web/src/features/house-example/hutchinson-project.js';
 
@@ -25,6 +27,34 @@ const roomTakeoff = (r: StudioRoom, pick: RoomPick, tier: TierKey) =>
 
 const room = (id: string) => HOUSE_ROOMS.find((r) => r.id === id)!;
 const gray = PRESET_COLORS[0]!;
+
+test('Brooklyn photo estimates price every example room and remain estimates in exports', () => {
+  const project = JSON.parse(
+    readFileSync(new URL('../../public/examples/brooklyn/project.json', import.meta.url), 'utf8'),
+  ) as HouseProject;
+  const picks = project.starting!;
+  assert.ok(new Set(project.rooms.map((r) => r.size!.xFt * r.size!.yFt)).size > 1);
+  const takeoffs = Object.fromEntries(
+    project.rooms.map((r) => {
+      assert.match(r.sizeNote!, /photo-based.*not measured/);
+      const result = takeoff(r, project.ceilingFt, picks[r.id]!, 'mid');
+      assert.ok(result.totalMinor > 0);
+      return [r.id, result];
+    }),
+  );
+  const text = shoppingText(project, shoppingList(project, picks, takeoffs), 'mid');
+  assert.match(text, /Planning estimate: 12′ × 18′ × 8′ high/);
+  assert.match(text, /not measured/);
+  const living = project.rooms[0]!;
+  const larger = takeoff(
+    { ...living, size: { xFt: 16, yFt: 18 }, sizeNote: undefined },
+    project.ceilingFt,
+    picks[living.id]!,
+    'mid',
+  );
+  assert.ok(larger.totalMinor > takeoffs[living.id]!.totalMinor);
+  assert.equal(larger.floorSqFt, 288);
+});
 
 test('the actual whole-house example can be saved with its floor-plan image references', () => {
   studioDesignSchema.parse({
