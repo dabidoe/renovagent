@@ -471,7 +471,7 @@ export function InspoPanel({
                         <AssetThumb key={id} id={id} />
                       ))}
                     </div>
-                    <div className="pf-direction-palette" aria-label="Proposed colour palette">
+                    <div className="pf-direction-palette" aria-label="Proposed color palette">
                       {idea.palette.map((c, i) => (
                         <i key={`${c}:${i}`} title={c} style={{ background: c }} />
                       ))}
@@ -553,7 +553,7 @@ export function InspoPanel({
       <p className="pf-inspo-note">
         {mode === 'furnish'
           ? 'Borrow furniture and lighting from a room you love. Keep your room’s architecture.'
-          : 'Borrow colours and textures while keeping your furniture in place.'}
+          : 'Borrow colors and textures while keeping your furniture in place.'}
       </p>
       <label className="pf-design-brief">
         Your design brief
@@ -696,8 +696,8 @@ export function InspoPanel({
                   <div className="pf-inspo-paints">
                     <small>
                       {paints.close
-                        ? `Closest ${paints.matches[0]?.brand ?? ''} colours to how it looks in this photo`
-                        : 'No close match in the loaded colours; the nearest are'}
+                        ? `Closest ${paints.matches[0]?.brand ?? ''} colors to how it looks in this photo`
+                        : 'No close match in the loaded colors; the nearest are'}
                     </small>
                     <div role="group" aria-label="Closest paints">
                       {paints.matches.map((m) => (
@@ -732,7 +732,7 @@ export function InspoPanel({
           </ul>
           <p className="pf-inspo-note">
             Furniture and lighting are visual concepts; fit, products and installation are not
-            verified or included in the paint-and-floor total. Colours are read from the photo, so
+            verified or included in the paint-and-floor total. Colors are read from the photo, so
             its lighting shows in them. Store links are searches, not picked products.
             {usesAmazon ? ` ${AMAZON_DISCLOSURE}` : ''}
           </p>

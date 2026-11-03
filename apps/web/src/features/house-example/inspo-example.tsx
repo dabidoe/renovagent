@@ -57,7 +57,7 @@ export function InspoExample({ onBack, onTry }: { onBack: () => void; onTry: () 
           <h3>What made the look</h3>
           <p className="pf-inspo-note">
             {modelName(example.models.items)} named them, {modelName(example.models.outlines)}{' '}
-            outlined each one, and the colour is read from inside its outline.
+            outlined each one, and the color is read from inside its outline.
           </p>
           <details className="pf-model-details">
             <summary>Model details</summary>
@@ -103,7 +103,7 @@ export function InspoExample({ onBack, onTry }: { onBack: () => void; onTry: () 
           <h3>Closest paints to the walls</h3>
           <p className="pf-inspo-note">
             Read as {example.walls.read} from the photo, lighting included; the closest catalog
-            colours, not the paint on that wall.
+            colors, not the paint on that wall.
           </p>
           <ul className="pf-inspo-example-paints">
             {example.walls.matches.map((m) => (

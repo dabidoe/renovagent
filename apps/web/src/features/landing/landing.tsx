@@ -12,19 +12,6 @@ import './product-experience.css';
 import './hero-ar.css';
 import './landing-polish.css';
 
-const starters = [
-  { label: 'Renovate a room', text: 'I want to renovate my living room.', icon: 'home' },
-  {
-    label: 'Diagnose a problem',
-    icon: 'activity',
-    text: 'I need help figuring out why my dishwasher is not draining.',
-  },
-  {
-    label: 'Review a quote',
-    icon: 'file',
-    text: 'I want to review a contractor quote and understand what is included.',
-  },
-];
 export function Landing({
   prompt,
   onPrompt,
@@ -98,7 +85,7 @@ export function Landing({
           {/* "Start a project" opens the studio; these are the two other ways in. */}
           <p className="hero-paint-line">
             <button type="button" onClick={onExamples}>
-              See listing examples <span aria-hidden="true">→</span>
+              See listing examples <Glyph name="right" />
             </button>
             <a href="#connect">
               <img
@@ -107,23 +94,9 @@ export function Landing({
                 width={20}
                 height={20}
               />
-              Connect Muse or your agent <span aria-hidden="true">↗</span>
+              Connect Muse or your agent <Glyph name="right" />
             </a>
           </p>
-          <div className="landing-starters" aria-label="Project idea starters">
-            {starters.map((starter) => (
-              <button
-                key={starter.label}
-                onClick={() => {
-                  onPrompt(starter.text);
-                  input.current?.focus();
-                }}
-              >
-                {starter.label}
-                <Glyph name={starter.icon} />
-              </button>
-            ))}
-          </div>
         </div>
       </section>
 

@@ -131,7 +131,7 @@ export function StudioPreview({ onOpen, busy }: { onOpen: () => void; busy: bool
                 <h3>Walls</h3>
                 <span>{pick.color?.name}</span>
               </div>
-              <div className="studio-preview-colors" role="group" aria-label="Preview wall colour">
+              <div className="studio-preview-colors" role="group" aria-label="Preview wall color">
                 {colors.map((c) => (
                   <button
                     key={c.code}
@@ -203,7 +203,7 @@ export function StudioPreview({ onOpen, busy }: { onOpen: () => void; busy: bool
                   </li>
                 ))}
               </ul>
-              <small>Demo catalog · labour quoted separately</small>
+              <small>Demo catalog · labor quoted separately</small>
             </div>
           </div>
         </div>

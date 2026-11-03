@@ -69,7 +69,7 @@ export const STUDIO_DIRECTIONS: readonly StudioDirection[] = [
       'Furnish my room as a welcoming dining nook: round walnut table, four rust upholstered chairs, sideboard, cream and terracotta rug and a plant. Keep my room’s architecture and access clear.',
     mood: 'Make room for company',
     description:
-      'A round table under the original pendant, four chairs and a little colour. The good seats are all yours.',
+      'A round table under the original pendant, four chairs and a little color. The good seats are all yours.',
     brief:
       'Turn this room into a welcoming dining nook. Keep the bay windows, doorway, trim, stained-glass pendant and light oak floor. Add a round walnut dining table centered under the pendant, four upholstered rust dining chairs, a low walnut sideboard on the right wall, a cream rug with muted terracotta detail and a potted plant by the bay. Warm white walls. Keep the doorway clear.',
     palette: ['#edeae0', '#a75c43', '#78513b', '#789475'],

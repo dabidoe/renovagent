@@ -25,7 +25,7 @@ export function HutchinsonStudio({ onRoomExample }: { onRoomExample?: () => void
             </li>
             <li>
               Quantities: the living-room recipe (2 coats; openings not deducted). Prices: an
-              example catalog for this demo, not live offers. Labour is quoted separately.
+              example catalog for this demo, not live offers. Labor is quoted separately.
             </li>
           </ul>
           {onRoomExample && (

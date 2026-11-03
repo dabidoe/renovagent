@@ -74,7 +74,7 @@ export function SavedPlan({ id }: { id: string }) {
             Choices: proposed by {plan.agent}, your connected agent. Change anything here; your
             changes stay in this browser.
           </li>
-          <li>Prices: example prices for this demo, not live offers. Labour is not included.</li>
+          <li>Prices: example prices for this demo, not live offers. Labor is not included.</li>
         </ul>
       }
     />

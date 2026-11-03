@@ -155,10 +155,9 @@
   line-height: 1.5;
 }
 .direction-pieces > p {
-  color: #64748b;
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
+  color: #25324a;
+  font-size: 12px;
+  font-weight: 600;
   margin: 0 0 8px;
 }
 .direction-pieces ul {
@@ -193,10 +192,9 @@
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  color: #64748b;
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
+  color: #25324a;
+  font-size: 12px;
+  font-weight: 600;
 }
 .direction-request button {
   border: 0;

@@ -5,7 +5,7 @@
   --muted: #64748b;
   --ink: #1e293b;
   --blue: #2563eb;
-  --serif: 'Satoshi', 'Inter', system-ui, sans-serif;
+  --serif: 'Display Stop', 'Plus Jakarta Sans Variable', 'Inter Variable', system-ui, sans-serif;
   --font-display: var(--serif);
   color: var(--ink);
   background: var(--paper);

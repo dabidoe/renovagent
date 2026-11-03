@@ -354,7 +354,7 @@ export function shoppingList(
 export function shoppingText(project: HouseProject, list: ShoppingList, tier: TierKey) {
   const lines = [
     `${project.address} — paint & floors`,
-    `Materials, ${TIER_LABELS[tier].toLowerCase()}: ${money(list.totalMinor)} (example prices for this demo, not live offers; labour not included)`,
+    `Materials, ${TIER_LABELS[tier].toLowerCase()}: ${money(list.totalMinor)} (example prices for this demo, not live offers; labor not included)`,
     '',
     ...list.rooms.flatMap((r) => [
       `${r.title}: ${money(r.totalMinor)}`,

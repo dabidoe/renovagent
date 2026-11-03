@@ -104,7 +104,7 @@ export function RoomPlan({
           {budget.unpriced
             ? `${budget.unpriced} item${budget.unpriced === 1 ? '' : 's'} still to price · `
             : ''}
-          Labour, tax & delivery separate
+          Labor, tax & delivery separate
         </small>
       </div>
       <div className="pf-group-head">
