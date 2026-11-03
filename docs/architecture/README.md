@@ -42,6 +42,8 @@ A user can give the agent work to do, watch its real progress, inspect a produce
 
 ## Implementation boundary
 
+**November 3 public startup:** [Public startup and saved-workspace routing](public-startup.md) separates the landing page and public studios from notes-workspace bootstrap, keeps saved-project access on explicit workspace routes, and records the built-site regression checks and performance limits.
+
 **Local November 2 follow-up (not deployed):** [Studio room design](studio-room-design.md) records furnishing controls, explicit saved studio revisions shared with MCP, and the bounded living-room scope/handoff bridge. [Editable furniture and photo ideas](studio-furniture-and-ideas.md) adds a CC0 3D library, saved concept placements, photo-specific Muse suggestions and a tested furnished 3D-to-Muse API path. Complete furniture procurement, measured fit and full-room technical coverage remain open.
 
 **As of November 1, 2026 the site is hosted on Railway** (one origin: site, API, `/mcp`; Atlas; Google and guest sign-in), with a paint and floor studio driven by SAM 3.1, Muse Spark and Muse Image, and an inspiration panel. [HANDOFF.md](../../HANDOFF.md) is the current entry point; the paragraphs below are the dated record of earlier increments.

@@ -1,9 +1,15 @@
-import { useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { RollingNumber } from '../../components/rolling-number.js';
 import { Glyph } from '../../components/glyph.js';
 import { HUTCHINSON } from '../house-example/hutchinson-project.js';
 import { thumbnailUrl } from '../house-example/ui-thumbnails.js';
-import { BeforeAfter, Room3D } from '../house-example/paint-floor-studio.js';
+// The full studio and its private save tools do not belong to the home-page startup.
+const BeforeAfter = lazy(() =>
+  import('../house-example/paint-floor-studio.js').then((m) => ({ default: m.BeforeAfter })),
+);
+const Room3D = lazy(() =>
+  import('../house-example/paint-floor-studio.js').then((m) => ({ default: m.Room3D })),
+);
 import {
   FLOOR_STYLES,
   PRESET_COLORS,
@@ -14,6 +20,7 @@ import {
   type RoomPick,
 } from '../house-example/paint-floor.js';
 import './studio-preview.css';
+import '../house-example/paint-floor.css';
 
 const room = HUTCHINSON.rooms[0]!;
 const colors = PRESET_COLORS.filter((c) =>
@@ -89,25 +96,36 @@ export function StudioPreview({ onOpen, busy }: { onOpen: () => void; busy: bool
         </div>
         <div className="studio-preview-body">
           <div className="studio-preview-scene">
-            {awake ? (
-              view === 'photo' ? (
-                <BeforeAfter room={room} pick={pick} pending={null} />
-              ) : (
-                <Room3D
-                  room={room}
-                  ceilingFt={HUTCHINSON.ceilingFt}
-                  pick={pick}
-                  renderActions={false}
+            <Suspense
+              fallback={
+                <img
+                  className="studio-preview-placeholder"
+                  src={room.photo.src}
+                  alt="Living and dining room from the listing"
+                  loading="lazy"
                 />
-              )
-            ) : (
-              <img
-                className="studio-preview-placeholder"
-                src={room.photo.src}
-                alt="Living and dining room from the listing"
-                loading="lazy"
-              />
-            )}
+              }
+            >
+              {awake ? (
+                view === 'photo' ? (
+                  <BeforeAfter room={room} pick={pick} pending={null} />
+                ) : (
+                  <Room3D
+                    room={room}
+                    ceilingFt={HUTCHINSON.ceilingFt}
+                    pick={pick}
+                    renderActions={false}
+                  />
+                )
+              ) : (
+                <img
+                  className="studio-preview-placeholder"
+                  src={room.photo.src}
+                  alt="Living and dining room from the listing"
+                  loading="lazy"
+                />
+              )}
+            </Suspense>
             <div className="studio-preview-view" role="group" aria-label="Room preview view">
               <button
                 type="button"

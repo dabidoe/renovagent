@@ -1,10 +1,12 @@
 # Renovagent handoff
 
-**Updated 1 November 2026 (America/New_York).** This file replaces the 29 October handoff. That version's tunnel URL, grant expiry, QA project IDs and "uncommitted work" note are historical. Git history has them.
+**Updated 3 November 2026 (America/New_York).** This file replaces the 29 October handoff. That version's tunnel URL, grant expiry, QA project IDs and "uncommitted work" note are historical. Git history has them.
 
 Any agent or person picking this up should read this file first, then [AGENTS.md](AGENTS.md). Read the linked docs only for the area you are changing.
 
 ## Resume here
+
+- **Landing/startup fix (3 Nov):** `/` always opens the public landing, including for returning owners. Public studios no longer await the private notes workspace. Saved projects open explicitly from the studio menu at `#workspace/projects`; the workspace itself is `#workspace`. See [public-startup.md](docs/architecture/public-startup.md) for regression checks, measured timings and remaining performance limits.
 
 - **Deadline:** Meta Global AI Developer Hackathon submission is due **4 Nov 2026, 9:00 PM ET** (Cerebral Valley portal). Judging runs 4–8 Nov and finals are 9 Nov.
 - **Judging weights:** Impact 30%, use of Meta AI tooling beyond a basic integration 25%, technical depth 20%, and a demo that holds up live (including the video) 25%.

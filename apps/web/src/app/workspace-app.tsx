@@ -14,7 +14,8 @@ import { OwnStudio, type OwnStart } from '../features/house-example/own-studio.j
 import { ConnectAgent } from '../features/connect/connect-agent.js';
 import { ExamplesGallery, ListingStudio } from '../features/house-example/listing-studio.js';
 import { InspoExample } from '../features/house-example/inspo-example.js';
-import { rememberReturn, SignInChoices, takeReturn } from '../features/connect/sign-in.js';
+import { rememberReturn, SignInChoices } from '../features/connect/sign-in.js';
+import { landingAnchors } from './public-routes.js';
 import { SavedPlan } from '../features/house-example/saved-plan.js';
 import { SavedDesign } from '../features/house-example/saved-design.js';
 import { isHouseCase } from '../features/house-example/house-example-model.js';
@@ -53,19 +54,6 @@ import {
   LEGACY_STORAGE_KEY,
   type LegacyImportPreview,
 } from '../adapters/fixtures/import-legacy.js';
-// Back from sign-in (which lands on "/"): reopen the page that asked for it.
-if (!window.location.hash) {
-  const to = takeReturn();
-  if (to) window.history.replaceState(null, '', to);
-}
-
-const landingAnchors = new Set([
-  '#product-proof',
-  '#studio-possibilities',
-  '#agent-connection',
-  '#compare-tools',
-]);
-
 export function App({ controller }: { controller: WorkspaceController }) {
   const {
     workspace: state,
@@ -76,8 +64,8 @@ export function App({ controller }: { controller: WorkspaceController }) {
   const active = state.activeProjectId || Object.keys(state.projects)[0] || '';
   const project = state.projects[active];
   const view = state.views[active] || defaultView;
-  const [landingVisible, setLandingVisible] = useState(() =>
-    landingAnchors.has(window.location.hash),
+  const [landingVisible, setLandingVisible] = useState(
+    () => !window.location.hash || landingAnchors.has(window.location.hash),
   );
   const [houseExampleOpen, setHouseExampleOpen] = useState(
     () => window.location.hash === '#example-house',
@@ -133,7 +121,7 @@ export function App({ controller }: { controller: WorkspaceController }) {
     | 'connections'
     | 'reference'
     | null
-  >(null);
+  >(window.location.hash === '#workspace/projects' ? 'projects' : null);
   const [editingFact, setEditingFact] = useState<Fact | undefined>();
   const [sourceId, setSourceId] = useState<string | null>(null);
   const [workOpen, setWorkOpen] = useState(false);
@@ -269,16 +257,18 @@ export function App({ controller }: { controller: WorkspaceController }) {
     else await controller.sampleProject();
     setLandingVisible(false);
     setHouseExampleOpen(false);
-    if (window.location.hash === '#example-house')
-      window.history.replaceState(null, '', window.location.pathname + window.location.search);
+    window.history.replaceState(null, '', '#workspace');
     setModal(null);
   };
+  useEffect(() => {
+    if (window.location.hash === '#workspace/example-room') safe(openRoomExample());
+  }, [controller]);
   const openStudio = (route: string) => {
     setStudioRoute(route);
     setHouseExampleOpen(false);
     setLandingVisible(false);
     setModal(null);
-    window.history.replaceState(null, '', route);
+    window.location.hash = route;
     window.scrollTo({ top: 0 });
   };
   const openExample = async () => {
@@ -288,7 +278,7 @@ export function App({ controller }: { controller: WorkspaceController }) {
     setHouseExampleOpen(true);
     setLandingVisible(false);
     setModal(null);
-    window.history.replaceState(null, '', '#example-house');
+    window.location.hash = '#example-house';
     window.scrollTo({ top: 0 });
   };
   function projectButtons() {
@@ -304,12 +294,7 @@ export function App({ controller }: { controller: WorkspaceController }) {
               setLandingVisible(false);
               setHouseExampleOpen(false);
               setStudioRoute(null);
-              if (studioHash() || window.location.hash === '#example-house')
-                window.history.replaceState(
-                  null,
-                  '',
-                  window.location.pathname + window.location.search,
-                );
+              window.history.replaceState(null, '', '#workspace');
               setModal(null);
             }}
           >
@@ -400,6 +385,7 @@ export function App({ controller }: { controller: WorkspaceController }) {
         <button
           className="prompt-brand"
           onClick={() => {
+            window.location.hash = '';
             setWorkOpen(false);
             setShowRecent(false);
             setLandingVisible(true);
