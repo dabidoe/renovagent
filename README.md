@@ -153,7 +153,7 @@ See the [connected setup guide](docs/architecture/connected-muse-and-mongo.md) f
 | `npm test` | Run contract, domain, legacy, and integration tests |
 | `npm run test:connected` | Run connected integration tests against local MongoDB |
 | `npm run build` | Type-check, validate boundaries, and build |
-| `npm run build:pages` | Produce a static GitHub Pages package |
+| `npm run build:pages` | Produce a static GitHub Pages package of the site |
 
 ### Repository structure
 

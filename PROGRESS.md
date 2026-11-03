@@ -1,5 +1,18 @@
 # Project status — Renovagent
 
+UI audit step 1 — visible demo defects (November 3): fixes from `docs/audits/ui-audit-2026-11-03.md`, each contained to its own file.
+- Removed the stale `landing.html` (old brand, empty preview) from the build. `build:pages` now packages the site as-is.
+- Unsized rooms read **Needs size** and the header reads **Not priced yet · N rooms need a size** instead of `$0` (Brooklyn). No dimensions were invented.
+- Fixed duplicate React keys between the Imagine and SizeEntry siblings.
+- Gave `.pf-inspo-go` base padding.
+- Studio Before/After tags now sit beside the divider, clear of MLS watermarks; the landing preview keeps its corner tags.
+- Added top spacing to the examples gallery.
+- Dropped the room-specific "Keep the stairs clear" placeholder.
+- The bedroom example names models readably (Muse Image, Muse Spark, SAM 3.1), with exact IDs in Model details.
+- The mascot clips blend into the page with softened cropped edges and are larger (landing 200 px, Connect 150 px).
+
+Verification: types, boundaries and build pass; 15 legacy + 313 TypeScript tests pass (52 skips); changed files are Prettier-clean. Local browser checks covered Brooklyn's unpriced labels with no console errors, Oakland's tags clear of the watermark, the plan button padding, the gallery gap, the bedroom model details, the landing preview tags and the mascot on landing and Connect at 1440 and 390 px. No provider calls or production writes. Not yet re-checked: the hero, comparison and studio-layout items (audit steps 2–3).
+
 Sample-room main integration (November 2): the two gallery commits are integrated against current main independently of the other branch work. The required shared friendly-error component is included; Paint & floor opens first and the furniture shortcut opens Restyle. Verification on this integration: 15 legacy + 313 TypeScript tests passed, 52 skipped, zero failures; all 60 local MongoDB integration tests passed; build/types/boundaries passed; all 111 intercepted-API Playwright assertions passed with refreshed desktop/phone previews. Live provider generation remains unverified. Earlier entries below record their original branch validation.
 
 Expanded sample rooms (November 2; local branch, not pushed): six attributed, free-use Unsplash photos join the two owner photos, covering an empty apartment, kitchen, bathroom, bedroom, dining room and artist workspace. Optimized 2048 px JPEGs and 400 px thumbnails ship locally with source/license links and pinned provenance hashes; no runtime stock service is needed. Room filters help browse, and every room has two editable furnishing directions. Try furniture ideas opens Restyle, choosing a direction fills its brief without running a model, and Create room design uses the existing live endpoint. Provider/domain APIs are unchanged. See [credits and owner slots](public/starter-rooms/README.md) and [verification/screenshots](docs/architecture/sample-rooms-gallery.md).
