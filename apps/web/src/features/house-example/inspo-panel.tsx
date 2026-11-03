@@ -1,3 +1,4 @@
+import type { SampleRoom } from '../project-start/sample-rooms.js';
 import { StudioError } from './studio-error.js';
 import { studioStylingSignature } from './studio-signatures.js';
 import { useEffect, useRef, useState } from 'react';
@@ -132,6 +133,7 @@ export function InspoPanel({
   floorPending,
   designItems = [],
   initialBrief,
+  sampleRoom,
   onIdeaLayout,
   onPaint,
   onRestyled,
@@ -148,6 +150,7 @@ export function InspoPanel({
   floorPending?: boolean;
   designItems?: StudioItem[];
   initialBrief?: string;
+  sampleRoom?: SampleRoom;
   onIdeaLayout?: (assets: StudioAssetId[]) => void;
   onPaint: (color: WallColor) => void;
   onRestyled: (src: string, finishSignature?: string) => void;
@@ -431,6 +434,7 @@ export function InspoPanel({
         Your design brief
         <textarea
           ref={briefInput}
+          aria-label="Your design brief"
           value={brief}
           maxLength={1000}
           disabled={!!status.busy}
@@ -438,6 +442,28 @@ export function InspoPanel({
           placeholder="A cream sofa, walnut coffee table and a large striped rug. Keep the stairs clear. Warm and lived-in."
         />
       </label>
+      {!!sampleRoom?.furnishingSuggestions?.length && (
+        <div className="sample-room-restyle">
+          <p>Try a furniture direction</p>
+          <div className="sample-room-suggestions" aria-label="Sample furnishing ideas">
+            {sampleRoom.furnishingSuggestions.map((idea) => (
+              <button
+                type="button"
+                key={idea.title}
+                disabled={!!status.busy}
+                onClick={() => {
+                  setBrief(idea.brief);
+                  setMode('furnish');
+                  briefInput.current?.focus();
+                }}
+              >
+                {idea.title}
+              </button>
+            ))}
+          </div>
+          <small>Fills your brief. Create room design makes the live mockup.</small>
+        </div>
+      )}
       <label className="pf-styling-keep">
         Keep unchanged
         <input

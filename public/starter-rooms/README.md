@@ -8,14 +8,44 @@ No masks, dimensions, prices or generated images are bundled in this gallery.
 
 ## Published assets and rights
 
-| ID          | Original in this repository                  | Rights supplied by owner                         | Full JPEG   | Thumbnail |
-| ----------- | -------------------------------------------- | ------------------------------------------------ | ----------- | --------- |
-| living-room | `public/example-room/before.jpg`             | Renovagent owner photo / Owner-provided for demo | 1600 × 1000 | 400 × 250 |
-| bedroom     | `public/examples/bedroom-refresh/before.jpg` | Renovagent owner photo / Owner-provided for demo | 1200 × 1200 | 400 × 400 |
+Eight room photos cover living rooms, bedrooms, a kitchen, bathroom, dining room
+and artist studio. The empty apartment is useful for furnishing from scratch;
+the furnished photos are useful for changing furniture, accessories and finishes.
+
+| ID              | Photographer / source                                                                                            | License                                          | Full JPEG   | Thumbnail |
+| --------------- | ---------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ | ----------- | --------- |
+| living-room     | Renovagent owner photo (`public/example-room/before.jpg`)                                                        | Owner-provided for demo                          | 1600 × 1000 | 400 × 250 |
+| bedroom         | Renovagent owner photo (`public/examples/bedroom-refresh/before.jpg`)                                            | Owner-provided for demo                          | 1200 × 1200 | 400 × 400 |
+| empty-apartment | [Lisa Anna / Unsplash](https://unsplash.com/photos/an-empty-kitchen-and-living-room-in-an-apartment-PfeKrK-V_XA) | [Unsplash License](https://unsplash.com/license) | 2048 × 1365 | 400 × 266 |
+| sunlit-kitchen  | [Cat Han / Unsplash](https://unsplash.com/photos/modern-kitchen-with-island-and-large-window-VgyN_CWXQVM)        | [Unsplash License](https://unsplash.com/license) | 2048 × 1365 | 400 × 266 |
+| bright-bathroom | [Christa Grover / Unsplash](https://unsplash.com/photos/white-empty-bathroom-LGJ6MkX-la4)                        | [Unsplash License](https://unsplash.com/license) | 1365 × 2048 | 266 × 400 |
+| calm-bedroom    | [Clay Banks / Unsplash](https://unsplash.com/photos/a-cozy-bedroom-with-a-neatly-made-bed-UvVHCAz9mFY)           | [Unsplash License](https://unsplash.com/license) | 1366 × 2048 | 267 × 400 |
+| forest-dining   | [Clay Banks / Unsplash](https://unsplash.com/photos/a-dining-room-with-a-table-and-chairs-aYjdg6wZrOU)           | [Unsplash License](https://unsplash.com/license) | 2048 × 1365 | 400 × 266 |
+| artist-studio   | [Annie Spratt / Unsplash](https://unsplash.com/photos/empty-room-Qh64IU1A8wM)                                    | [Unsplash License](https://unsplash.com/license) | 2048 × 1365 | 400 × 266 |
+
+The six external photo pages each list the free Unsplash License (checked
+November 2, 2026). [The license](https://unsplash.com/license) permits downloading,
+copying, modifying and distributing photos, including commercial uses, while
+restricting unmodified photo sales and building a competing photo service.
+These are free-use stock photos, not a claim of CC0/public-domain status. They
+are curated input photos for interactive design; no photographer endorsement
+is implied. Photographer credits link to the original photo page in the gallery
+and the project info disclosure. The disclosure also links the license.
+
+`provenance.json` records the six source pages, photographers, download URLs,
+license, check date, exact shipped sizes and SHA-256 hashes for full photos and
+thumbnails. Rights for the two original owner photos remain owner-provided.
 
 JPEG quality is 85, long edge capped at 2048 without upscaling. Thumbnails use
-a 400 px long edge. Originals are unchanged. Rights are owner-provided claims,
-not independently verified licensing advice.
+a 400 px long edge. Six new photos plus thumbnails total 2,318,173 bytes
+(about 2.21 MiB). The files are local static assets; gallery use does not contact
+Unsplash or need an API key. There is no runtime stock-photo search or scraping.
+
+Every room has two finish prompts and two furniture directions. Furniture
+prompts are editable UI suggestions, not observations or generated results.
+**Try furniture ideas** opens Restyle; a direction fills the brief, and the
+normal **Create room design** button runs the existing live request. Prompts
+ask to retain fixed room geometry/openings; model compliance is not guaranteed.
 
 Excluded pending the owner's rights decision: `public/examples/hutchinson/`,
 `public/examples/brooklyn/`, and `public/examples/oakland/`. They contain
@@ -61,7 +91,8 @@ Each can become any room type, not just the suggested one.
    }
    ```
 
-   Use the actual source/license if different. The thumbnail is derived from
+   Use the actual source/license if different. For external photos, also include
+   HTTPS `sourceUrl` and `licenseUrl` fields and retain a provenance record. The thumbnail is derived from
    `file` by replacing `.jpg` with `-thumb.jpg`. Missing/blank source or license,
    invalid paths and duplicate IDs are rejected. Suggestions are editable prompts,
    not model findings; choosing one only fills Paint & floors. Apply runs normally.

@@ -6,7 +6,17 @@
     "file": "living-room.jpg",
     "source": "Renovagent owner photo",
     "license": "Owner-provided for demo",
-    "suggestions": ["Sage walls + light oak floor", "Warm white walls + walnut floor"]
+    "suggestions": ["Sage walls + light oak floor", "Warm white walls + walnut floor"],
+    "furnishingSuggestions": [
+      {
+        "title": "Relaxed lounge",
+        "brief": "Try a cream sofa, a walnut coffee table, a large woven rug and a reading lamp. Keep the room geometry, windows and doors unchanged."
+      },
+      {
+        "title": "Work and unwind",
+        "brief": "Try a small writing desk, an upholstered reading chair, a bookcase and a warm floor lamp. Keep existing openings and the camera view."
+      }
+    ]
   },
   {
     "id": "bedroom",
@@ -15,6 +25,142 @@
     "file": "bedroom.jpg",
     "source": "Renovagent owner photo",
     "license": "Owner-provided for demo",
-    "suggestions": ["Soft blue walls + light oak floor", "Warm white walls + natural oak floor"]
+    "suggestions": ["Soft blue walls + light oak floor", "Warm white walls + natural oak floor"],
+    "furnishingSuggestions": [
+      {
+        "title": "Calm bedroom",
+        "brief": "Refresh the bedding with warm white linen, add simple oak bedside tables and soft lamps. Keep the bed location and all room openings."
+      },
+      {
+        "title": "Cosy retreat",
+        "brief": "Try a textured headboard, layered neutral bedding, a small reading chair and warm lighting. Preserve the room layout and windows."
+      }
+    ]
+  },
+  {
+    "id": "empty-apartment",
+    "title": "Empty apartment",
+    "roomType": "living room",
+    "file": "empty-apartment.jpg",
+    "source": "Lisa Anna / Unsplash",
+    "license": "Unsplash License",
+    "sourceUrl": "https://unsplash.com/photos/an-empty-kitchen-and-living-room-in-an-apartment-PfeKrK-V_XA",
+    "licenseUrl": "https://unsplash.com/license",
+    "suggestions": ["Warm white walls + natural oak floor", "Soft sage walls + walnut floor"],
+    "furnishingSuggestions": [
+      {
+        "title": "Living + dining",
+        "brief": "Furnish the empty area with a compact cream sofa, a low coffee table, a woven rug and a small round dining table. Keep the kitchen, room geometry and openings unchanged."
+      },
+      {
+        "title": "Home office lounge",
+        "brief": "Add a compact desk, an ergonomic chair, a bookcase and a small lounge chair with a floor lamp. Keep all kitchen cabinetry, windows and doors unchanged."
+      }
+    ]
+  },
+  {
+    "id": "sunlit-kitchen",
+    "title": "Sunlit kitchen",
+    "roomType": "kitchen",
+    "file": "sunlit-kitchen.jpg",
+    "source": "Cat Han / Unsplash",
+    "license": "Unsplash License",
+    "sourceUrl": "https://unsplash.com/photos/modern-kitchen-with-island-and-large-window-VgyN_CWXQVM",
+    "licenseUrl": "https://unsplash.com/license",
+    "suggestions": ["Warm white walls + light oak floor", "Muted olive walls + pale oak floor"],
+    "furnishingSuggestions": [
+      {
+        "title": "Warm natural kitchen",
+        "brief": "Try oak counter stools, a washable runner, a ceramic fruit bowl and a small plant. Keep all cabinets, appliances, countertops, windows and plumbing locations unchanged."
+      },
+      {
+        "title": "Colourful kitchen",
+        "brief": "Try colourful counter stools, a patterned runner and a few cheerful countertop accessories. Preserve the kitchen layout, appliances and window."
+      }
+    ]
+  },
+  {
+    "id": "bright-bathroom",
+    "title": "Bright bathroom",
+    "roomType": "bathroom",
+    "file": "bright-bathroom.jpg",
+    "source": "Christa Grover / Unsplash",
+    "license": "Unsplash License",
+    "sourceUrl": "https://unsplash.com/photos/white-empty-bathroom-LGJ6MkX-la4",
+    "licenseUrl": "https://unsplash.com/license",
+    "suggestions": ["Warm white walls + pale oak floor", "Soft sage walls + natural oak floor"],
+    "furnishingSuggestions": [
+      {
+        "title": "Quiet spa",
+        "brief": "Try a plain linen shower curtain, neatly folded cream towels and minimal bath accessories. Keep the tub, shower fixtures, tile, plumbing locations and room geometry unchanged."
+      },
+      {
+        "title": "Playful bath",
+        "brief": "Try a softly patterned shower curtain and coordinated blue towels and bath accessories. Keep all fixed bathroom fittings, tile and the room layout."
+      }
+    ]
+  },
+  {
+    "id": "calm-bedroom",
+    "title": "Calm bedroom",
+    "roomType": "bedroom",
+    "file": "calm-bedroom.jpg",
+    "source": "Clay Banks / Unsplash",
+    "license": "Unsplash License",
+    "sourceUrl": "https://unsplash.com/photos/a-cozy-bedroom-with-a-neatly-made-bed-UvVHCAz9mFY",
+    "licenseUrl": "https://unsplash.com/license",
+    "suggestions": ["Warm white walls + light oak floor", "Dusty blue walls + walnut floor"],
+    "furnishingSuggestions": [
+      {
+        "title": "Soft modern bedroom",
+        "brief": "Try crisp white bedding, a rust-coloured throw, simple oak bedside tables and warm bedside lamps. Keep the bed position, windows, doors and room geometry."
+      },
+      {
+        "title": "Layered retreat",
+        "brief": "Try layered neutral bedding, a textured wool rug and soft bedside lighting. Keep the headboard, openings and camera view unchanged."
+      }
+    ]
+  },
+  {
+    "id": "forest-dining",
+    "title": "Forest-view dining",
+    "roomType": "dining room",
+    "file": "forest-dining.jpg",
+    "source": "Clay Banks / Unsplash",
+    "license": "Unsplash License",
+    "sourceUrl": "https://unsplash.com/photos/a-dining-room-with-a-table-and-chairs-aYjdg6wZrOU",
+    "licenseUrl": "https://unsplash.com/license",
+    "suggestions": ["Warm white walls + natural oak floor", "Soft sage walls + light oak floor"],
+    "furnishingSuggestions": [
+      {
+        "title": "Natural dining",
+        "brief": "Try a light oak dining table, woven-seat chairs, a textured rug and simple ceramic tableware. Keep the windows, doors and the view unchanged."
+      },
+      {
+        "title": "Colourful gathering",
+        "brief": "Try colourful upholstered dining chairs, a warm wood table, a patterned rug and restrained table decorations. Keep the room geometry, windows and doors unchanged."
+      }
+    ]
+  },
+  {
+    "id": "artist-studio",
+    "title": "Artist studio",
+    "roomType": "studio",
+    "file": "artist-studio.jpg",
+    "source": "Annie Spratt / Unsplash",
+    "license": "Unsplash License",
+    "sourceUrl": "https://unsplash.com/photos/empty-room-Qh64IU1A8wM",
+    "licenseUrl": "https://unsplash.com/license",
+    "suggestions": ["Warm white walls + natural oak floor", "Muted blue walls + light oak floor"],
+    "furnishingSuggestions": [
+      {
+        "title": "Creative workspace",
+        "brief": "Try a simple oak worktable, a comfortable task chair, low open shelves and warm task lighting. Retain the easel, windows, doors and room geometry."
+      },
+      {
+        "title": "Reading and making",
+        "brief": "Try a cosy reading chair, a low bookcase, a woven rug and a floor lamp beside the creative workspace. Keep the easel, windows and doors unchanged."
+      }
+    ]
   }
 ]

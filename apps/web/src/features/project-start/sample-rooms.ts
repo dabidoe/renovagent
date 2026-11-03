@@ -1,5 +1,10 @@
 import { z } from 'zod';
 
+const httpsUrl = z
+  .string()
+  .url()
+  .refine((value) => value.startsWith('https://'), 'Use an HTTPS source link.');
+
 // UI asset metadata only. This never supplies room facts or model results.
 export const sampleRoomSchema = z.object({
   id: z.string().regex(/^[a-z0-9-]+$/),
@@ -8,6 +13,17 @@ export const sampleRoomSchema = z.object({
   file: z.string().regex(/^[a-z0-9-]+\.jpg$/),
   source: z.string().trim().min(1).max(300),
   license: z.string().trim().min(1).max(300),
+  sourceUrl: httpsUrl.optional(),
+  licenseUrl: httpsUrl.optional(),
+  furnishingSuggestions: z
+    .array(
+      z.object({
+        title: z.string().trim().min(1).max(60),
+        brief: z.string().trim().min(3).max(1000),
+      }),
+    )
+    .max(4)
+    .optional(),
   suggestions: z.array(z.string().trim().min(3).max(300)).max(6),
 });
 export type SampleRoom = z.infer<typeof sampleRoomSchema>;

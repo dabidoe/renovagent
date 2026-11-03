@@ -524,12 +524,14 @@ function Imagine({
   error,
   onImagine,
   sample,
+  onFurnish,
 }: {
   room: StudioRoom;
   busy: boolean;
   error: string;
   onImagine: (text: string) => void;
   sample?: SampleRoom;
+  onFurnish?: () => void;
 }) {
   const [text, setText] = useState('');
   return (
@@ -571,6 +573,11 @@ function Imagine({
           ))}
         </div>
       )}
+      {sample?.furnishingSuggestions?.length && onFurnish ? (
+        <button type="button" className="sample-room-furnish" onClick={onFurnish}>
+          Try furniture ideas <Glyph name="right" />
+        </button>
+      ) : null}
       {error && <StudioError message={error} />}
     </form>
   );
@@ -1441,9 +1448,21 @@ export function PaintFloorStudio({
             <details className="sample-room-info">
               <summary title={`${sample.source} · ${sample.license}`}>Sample room ⓘ</summary>
               <p>
-                {sample.source}
+                {sample.sourceUrl ? (
+                  <a href={sample.sourceUrl} target="_blank" rel="noreferrer">
+                    {sample.source}
+                  </a>
+                ) : (
+                  sample.source
+                )}
                 <br />
-                {sample.license}
+                {sample.licenseUrl ? (
+                  <a href={sample.licenseUrl} target="_blank" rel="noreferrer">
+                    {sample.license}
+                  </a>
+                ) : (
+                  sample.license
+                )}
               </p>
             </details>
           )}
@@ -1725,6 +1744,7 @@ export function PaintFloorStudio({
               onDraftChange={onStylingChange}
               designItems={items[room.id] ?? []}
               initialBrief={project.idea}
+              sampleRoom={sample}
               currentColor={pick.color}
               basePhotoSrc={shownImage?.src || room.photo.src}
               floorPending={!!pending}
@@ -1767,6 +1787,7 @@ export function PaintFloorStudio({
               key={room.id}
               room={room}
               sample={sample}
+              onFurnish={() => setInspector('design')}
               busy={imagining.busy}
               error={imagining.error}
               onImagine={(text) => void imagine(text, room)}
