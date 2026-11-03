@@ -1,0 +1,156 @@
+{
+  "purpose": "Curated source photos for interactive renovation and furnishing concepts; no precomputed model results.",
+  "licenseUrl": "https://unsplash.com/license",
+  "records": [
+    {
+      "id": "empty-apartment",
+      "photographer": "Lisa Anna",
+      "sourceUrl": "https://unsplash.com/photos/an-empty-kitchen-and-living-room-in-an-apartment-PfeKrK-V_XA",
+      "license": "Unsplash License",
+      "licenseUrl": "https://unsplash.com/license",
+      "checkedOn": "2026-11-02",
+      "downloadUrl": "https://images.unsplash.com/photo-1721395283507-1b17e527a922?fm=jpg&fit=max&w=2048&h=2048&q=85",
+      "assets": {
+        "photo": {
+          "file": "empty-apartment.jpg",
+          "bytes": 250162,
+          "width": 2048,
+          "height": 1365,
+          "sha256": "120f5d9132c8c3c78971ba5d5fb7641923d5881e5d6c1f81168dd88e6aa0c65b"
+        },
+        "thumbnail": {
+          "file": "empty-apartment-thumb.jpg",
+          "bytes": 14775,
+          "width": 400,
+          "height": 266,
+          "sha256": "07a1731a10aa5abd4b6fbd8ef85b8cfd18b3aff2bcd78dbc15d50e62782b188a"
+        }
+      }
+    },
+    {
+      "id": "sunlit-kitchen",
+      "photographer": "Cat Han",
+      "sourceUrl": "https://unsplash.com/photos/modern-kitchen-with-island-and-large-window-VgyN_CWXQVM",
+      "license": "Unsplash License",
+      "licenseUrl": "https://unsplash.com/license",
+      "checkedOn": "2026-11-02",
+      "downloadUrl": "https://images.unsplash.com/photo-1617228069096-4638a7ffc906?fm=jpg&fit=max&w=2048&h=2048&q=85",
+      "assets": {
+        "photo": {
+          "file": "sunlit-kitchen.jpg",
+          "bytes": 520530,
+          "width": 2048,
+          "height": 1365,
+          "sha256": "0ea0c5b4f538237fef7f83db7c58530a7de7948788a7eed5830aa8b7c02f0eef"
+        },
+        "thumbnail": {
+          "file": "sunlit-kitchen-thumb.jpg",
+          "bytes": 29193,
+          "width": 400,
+          "height": 266,
+          "sha256": "fa0026168223cd52bb26c0f1001b388a8c812c4b986739b1410bc2fd27862c2f"
+        }
+      }
+    },
+    {
+      "id": "bright-bathroom",
+      "photographer": "Christa Grover",
+      "sourceUrl": "https://unsplash.com/photos/white-empty-bathroom-LGJ6MkX-la4",
+      "license": "Unsplash License",
+      "licenseUrl": "https://unsplash.com/license",
+      "checkedOn": "2026-11-02",
+      "downloadUrl": "https://images.unsplash.com/photo-1554861147-9428266de650?fm=jpg&fit=max&w=2048&h=2048&q=85",
+      "assets": {
+        "photo": {
+          "file": "bright-bathroom.jpg",
+          "bytes": 306668,
+          "width": 1365,
+          "height": 2048,
+          "sha256": "a8e750811d8da3413fce45bd54ec2f76e730e75c20beb99ffca7a5a5b5001da2"
+        },
+        "thumbnail": {
+          "file": "bright-bathroom-thumb.jpg",
+          "bytes": 21680,
+          "width": 266,
+          "height": 400,
+          "sha256": "4725d67422a6dd21f5a024fc55af1fd33efde0442855f86929758b8622097ba9"
+        }
+      }
+    },
+    {
+      "id": "calm-bedroom",
+      "photographer": "Clay Banks",
+      "sourceUrl": "https://unsplash.com/photos/a-cozy-bedroom-with-a-neatly-made-bed-UvVHCAz9mFY",
+      "license": "Unsplash License",
+      "licenseUrl": "https://unsplash.com/license",
+      "checkedOn": "2026-11-02",
+      "downloadUrl": "https://images.unsplash.com/photo-1757417983938-2c2a931d41aa?fm=jpg&fit=max&w=2048&h=2048&q=85",
+      "assets": {
+        "photo": {
+          "file": "calm-bedroom.jpg",
+          "bytes": 299481,
+          "width": 1366,
+          "height": 2048,
+          "sha256": "a7ad84da1efcc483cde6e19a21ca79033be87bae9ddeead227ea4082bd6c76f7"
+        },
+        "thumbnail": {
+          "file": "calm-bedroom-thumb.jpg",
+          "bytes": 18234,
+          "width": 267,
+          "height": 400,
+          "sha256": "419cb41eb0faf220bc3dedfae9dd9fedd5ca0c8057413d056a8b7e919d4db125"
+        }
+      }
+    },
+    {
+      "id": "forest-dining",
+      "photographer": "Clay Banks",
+      "sourceUrl": "https://unsplash.com/photos/a-dining-room-with-a-table-and-chairs-aYjdg6wZrOU",
+      "license": "Unsplash License",
+      "licenseUrl": "https://unsplash.com/license",
+      "checkedOn": "2026-11-02",
+      "downloadUrl": "https://images.unsplash.com/photo-1723750290151-164cb19ebab7?fm=jpg&fit=max&w=2048&h=2048&q=85",
+      "assets": {
+        "photo": {
+          "file": "forest-dining.jpg",
+          "bytes": 449189,
+          "width": 2048,
+          "height": 1365,
+          "sha256": "5204ecee33ac731e593367a1dfd0e1e24f615fb37248428981a8d2f8d1d5c1f4"
+        },
+        "thumbnail": {
+          "file": "forest-dining-thumb.jpg",
+          "bytes": 27544,
+          "width": 400,
+          "height": 266,
+          "sha256": "a6e9581b7826dbcbffec2bfd59a0d2d6913c42869be342f6b0791405b2506814"
+        }
+      }
+    },
+    {
+      "id": "artist-studio",
+      "photographer": "Annie Spratt",
+      "sourceUrl": "https://unsplash.com/photos/empty-room-Qh64IU1A8wM",
+      "license": "Unsplash License",
+      "licenseUrl": "https://unsplash.com/license",
+      "checkedOn": "2026-11-02",
+      "downloadUrl": "https://images.unsplash.com/photo-1556889882-50d7a74e8be4?fm=jpg&fit=max&w=2048&h=2048&q=85",
+      "assets": {
+        "photo": {
+          "file": "artist-studio.jpg",
+          "bytes": 357527,
+          "width": 2048,
+          "height": 1365,
+          "sha256": "0a2b6838eed588ed1aa16e0bcac1992729d1daad19388dc2e35ad70bfb7fd87e"
+        },
+        "thumbnail": {
+          "file": "artist-studio-thumb.jpg",
+          "bytes": 23190,
+          "width": 400,
+          "height": 266,
+          "sha256": "4206c69a3b101d10001d22437cd31a8fca83e1de90b2f9b91ac90445d46ab9ad"
+        }
+      }
+    }
+  ]
+}

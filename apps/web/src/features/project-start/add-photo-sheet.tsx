@@ -19,16 +19,48 @@ export function SampleRoomGrid({
   busy: boolean;
   onChoose: (room: SampleRoom) => void;
 }) {
+  const [roomType, setRoomType] = useState('All rooms');
+  const types = ['All rooms', ...new Set(rooms.map((room) => room.roomType))];
+  const curatedFirst = [...rooms].sort((a, b) => Number(!!b.sourceUrl) - Number(!!a.sourceUrl));
+  const shown =
+    roomType === 'All rooms'
+      ? curatedFirst
+      : curatedFirst.filter((room) => room.roomType === roomType);
   return (
-    <div className="sample-room-grid">
-      {rooms.map((room) => (
-        <button type="button" key={room.id} disabled={busy} onClick={() => onChoose(room)}>
-          <img src={sampleThumbnail(room)} alt="" width={400} height={300} />
-          <strong>{room.title}</strong>
-          <small>Sample room · {room.roomType}</small>
-        </button>
-      ))}
-    </div>
+    <>
+      <div className="sample-room-filters" aria-label="Filter sample rooms">
+        {types.map((type) => (
+          <button
+            type="button"
+            key={type}
+            aria-pressed={roomType === type}
+            onClick={() => setRoomType(type)}
+          >
+            {type}
+          </button>
+        ))}
+      </div>
+      <div className="sample-room-grid">
+        {shown.map((room) => (
+          <article key={room.id}>
+            <button type="button" disabled={busy} onClick={() => onChoose(room)}>
+              <img src={sampleThumbnail(room)} alt="" width={400} height={300} />
+              <strong>{room.title}</strong>
+              <small>Sample room · {room.roomType}</small>
+            </button>
+            <small className="sample-room-credit">
+              {room.sourceUrl ? (
+                <a href={room.sourceUrl} target="_blank" rel="noreferrer">
+                  {room.source}
+                </a>
+              ) : (
+                room.source
+              )}
+            </small>
+          </article>
+        ))}
+      </div>
+    </>
   );
 }
 
@@ -129,7 +161,7 @@ export function AddPhotoSheet({
       {gallery && (
         <section aria-label="Sample rooms">
           <h3>Pick a room to make your own.</h3>
-          <p>Owner-provided demo photos. No saved analysis or generated results.</p>
+          <p>Try paint, floors or a furniture mockup. Each photo starts a new project.</p>
           {rooms && (
             <SampleRoomGrid rooms={rooms} busy={busy} onChoose={(room) => void choose(room)} />
           )}

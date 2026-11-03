@@ -102,6 +102,11 @@ async function openGallery(page, fromLanding) {
   const sheet = page.getByRole('dialog', { name: 'Add photo', exact: true });
   await sheet.getByRole('button', { name: 'Sample rooms', exact: false }).click();
   await sheet.getByRole('button', { name: /Living room.*Sample room/ }).waitFor();
+  await page.waitForFunction(() =>
+    [...document.querySelectorAll('.sample-room-grid img')].every(
+      (image) => image.complete && image.naturalWidth > 0,
+    ),
+  );
   check((await sheet.getByRole('button', { name: /Take photo/ }).count()) === 1, 'camera option');
   check(
     (await sheet.getByLabel('Take room photo').getAttribute('capture')) === 'environment',
@@ -211,6 +216,115 @@ try {
     );
     await context.close();
   }
+  // A sourced empty room can be furnished through the existing live request path.
+  for (const viewport of [
+    { width: 1440, height: 900 },
+    { width: 390, height: 844 },
+  ]) {
+    const { page, context, events, uploads, calls } = await setup(viewport);
+    const sheet = await openGallery(page, false);
+    check(
+      (await sheet.locator('.sample-room-grid article').count()) === 8,
+      'all eight room photos are available',
+    );
+    check(
+      (await sheet.locator('.sample-room-credit a').count()) === 6,
+      'all sourced photos link to photographer pages',
+    );
+    check(
+      await sheet
+        .locator('.sample-room-grid img')
+        .evaluateAll((images) => images.every((image) => image.complete && image.naturalWidth > 0)),
+      'all thumbnails load',
+    );
+    await sheet
+      .getByLabel('Filter sample rooms')
+      .getByRole('button', { name: 'kitchen', exact: true })
+      .click();
+    check(
+      (await sheet.locator('.sample-room-grid article').count()) === 1,
+      'kitchen filter isolates kitchen',
+    );
+    await sheet
+      .getByLabel('Filter sample rooms')
+      .getByRole('button', { name: 'living room', exact: true })
+      .click();
+    check(
+      (await sheet.locator('.sample-room-grid article').count()) === 2,
+      'living room filter includes empty apartment',
+    );
+    await sheet.getByRole('button', { name: /Empty apartment.*Sample room/ }).click();
+    await page.getByRole('button', { name: /Build my plan/ }).click();
+    await page.getByRole('button', { name: 'Continue as guest', exact: true }).click();
+    await page.locator('.pf-studio').waitFor();
+    check(events.join(',') === 'mint,upload', 'sourced photo uses guest gate before upload');
+    const room = manifest.find((entry) => entry.id === 'empty-apartment');
+    check(
+      uploads[0].bytes.equals(
+        await readFile(new URL('../public/starter-rooms/' + room.file, import.meta.url)),
+      ),
+      'sourced photo uploads exact local asset bytes',
+    );
+    await page.getByText('Sample room ⓘ', { exact: true }).click();
+    check(
+      (await page.locator('.sample-room-info a').count()) === 2,
+      'project links source and license',
+    );
+    check(
+      (await page.locator('.sample-room-info a').first().getAttribute('href')) === room.sourceUrl,
+      'project source is the actual photographer page',
+    );
+    await page.getByText('Sample room ⓘ', { exact: true }).click();
+    await page.getByRole('button', { name: 'Try furniture ideas', exact: true }).click();
+    check(
+      (await page
+        .getByRole('tab', { name: 'Restyle', exact: true })
+        .getAttribute('aria-selected')) === 'true',
+      'furniture shortcut opens Restyle',
+    );
+    await page
+      .getByRole('button', { name: room.furnishingSuggestions[0].title, exact: true })
+      .click();
+    check(
+      (await page.getByLabel('Your design brief', { exact: true }).inputValue()) ===
+        room.furnishingSuggestions[0].brief,
+      'furniture direction fills editable brief',
+    );
+    check(!calls.includes('/studio/restyle'), 'furniture prompt does not auto-run generation');
+    await page
+      .getByLabel('Your design brief', { exact: true })
+      .fill(room.furnishingSuggestions[0].brief + ' Add one blue cushion.');
+    await page.locator('.pf-inspo').scrollIntoViewIfNeeded();
+    await page.screenshot({
+      path: fileURLToPath(
+        new URL(`sample-furniture-${viewport.width}x${viewport.height}.png`, output),
+      ),
+    });
+    const [response] = await Promise.all([
+      page.waitForResponse((response) => response.url().endsWith('/studio/restyle')),
+      page.getByRole('button', { name: 'Create room design', exact: true }).click(),
+    ]);
+    const body = response.request().postDataJSON();
+    check(
+      body.mode === 'furnish' && body.brief.endsWith('Add one blue cushion.'),
+      'normal Create sends editable furniture brief and furnish mode',
+    );
+    check(
+      body.sha256 === createHash('sha256').update(uploads[0].bytes).digest('hex') &&
+        body.preserveFloor === true,
+      'normal Restyle uses uploaded image and existing floor-preservation flag',
+    );
+    await page.locator('.pf-inspo .pf-studio-error').waitFor();
+    check(
+      (await page.locator('.pf-inspo .pf-studio-error details[open]').count()) === 0,
+      'unavailable fixture provider shows collapsed Details with no canned result',
+    );
+    check(
+      await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
+      'furniture inspector has no horizontal overflow',
+    );
+    await context.close();
+  }
   // A normal user file goes through the same guest gate and raw upload in the UI.
   {
     const { page, context, events, uploads } = await setup({ width: 390, height: 844 });
@@ -268,7 +382,7 @@ try {
   check(uploads.length === 0, 'failed photo fetch cannot upload or open canned result');
   await context.close();
   console.log(
-    `Sample-room browser QA: ${checks} assertions passed; four screenshots; intercepted APIs only.`,
+    `Sample-room browser QA: ${checks} assertions passed; six screenshots; intercepted APIs only.`,
   );
 } finally {
   await browser.close();

@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import { imageSize } from 'image-size';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
@@ -43,25 +44,46 @@ test('sample manifest rejects missing/blank rights, unsafe paths and duplicate I
     { ...valid, id: 'no-license', license: '' },
     { ...valid, id: 'blank-source', source: '  ' },
     { ...valid, id: 'unsafe', file: '../example-room/before.jpg' },
+    { ...valid, id: 'unsafe-source', sourceUrl: 'javascript:alert(1)' },
     valid,
   ]);
   assert.deepEqual(entries, [valid]);
   const html = renderToStaticMarkup(
     createElement(SampleRoomGrid, { rooms: entries, busy: false, onChoose: () => {} }),
   );
-  assert.equal((html.match(/<button/g) ?? []).length, 1);
+  assert.equal(
+    (html.match(/class="sample-room-grid"[\s\S]*/)?.[0].match(/<button/g) ?? []).length,
+    1,
+  );
   assert.match(html, /Living room/);
   assert.doesNotMatch(html, /no-source|no-license|blank-source|unsafe/);
 });
 
-test('gallery contains only the two approved owner photos, resized JPEGs and 400px thumbnails', () => {
+test('gallery contains eight approved room photos, resized JPEGs and 400px thumbnails', () => {
   assert.deepEqual(
     rooms.map((room) => room.id),
-    ['living-room', 'bedroom'],
+    [
+      'living-room',
+      'bedroom',
+      'empty-apartment',
+      'sunlit-kitchen',
+      'bright-bathroom',
+      'calm-bedroom',
+      'forest-dining',
+      'artist-studio',
+    ],
   );
   for (const room of rooms) {
-    assert.equal(room.source, 'Renovagent owner photo');
-    assert.equal(room.license, 'Owner-provided for demo');
+    if (['living-room', 'bedroom'].includes(room.id)) {
+      assert.equal(room.source, 'Renovagent owner photo');
+      assert.equal(room.license, 'Owner-provided for demo');
+    } else {
+      assert.equal(room.license, 'Unsplash License');
+      assert.match(room.sourceUrl!, /^https:\/\/unsplash.com\/photos\//);
+      assert.equal(room.licenseUrl, 'https://unsplash.com/license');
+    }
+    assert.equal(room.furnishingSuggestions?.length, 2);
+    assert.ok(room.furnishingSuggestions!.every((idea) => idea.brief.length >= 20));
     const full = imageSize(bytes(room.file));
     assert.equal(full.type, 'jpg');
     assert.ok(Math.max(full.width!, full.height!) <= 2048);
@@ -135,4 +157,32 @@ test('sample attribution and suggestions survive intake recovery alongside real 
   } finally {
     globalThis.fetch = original;
   }
+});
+
+test('curated source credits and hashes pin all six downloaded photos and their thumbnails', () => {
+  const provenance = JSON.parse(
+    readFileSync(new URL('../../public/starter-rooms/provenance.json', import.meta.url), 'utf8'),
+  );
+  assert.equal(provenance.records.length, 6);
+  assert.equal(new Set(rooms.map((room) => room.roomType)).size, 6);
+  for (const record of provenance.records) {
+    const room = rooms.find((candidate) => candidate.id === record.id)!;
+    assert.equal(room.source, `${record.photographer} / Unsplash`);
+    assert.equal(room.sourceUrl, record.sourceUrl);
+    assert.equal(room.licenseUrl, record.licenseUrl);
+    for (const asset of Object.values(record.assets) as {
+      file: string;
+      bytes: number;
+      sha256: string;
+    }[]) {
+      const data = bytes(asset.file);
+      assert.equal(data.length, asset.bytes);
+      assert.equal(createHash('sha256').update(data).digest('hex'), asset.sha256);
+    }
+  }
+  const html = renderToStaticMarkup(
+    createElement(SampleRoomGrid, { rooms, busy: false, onChoose: () => {} }),
+  );
+  assert.equal((html.match(/<article/g) ?? []).length, 8);
+  assert.equal((html.match(/href="https:\/\/unsplash.com\/photos\//g) ?? []).length, 6);
 });
