@@ -2,11 +2,18 @@ import { useEffect, useState } from 'react';
 import type { StudioAssetId, StudioItem, StudioPlacement } from '@renovagent/contracts';
 import {
   STUDIO_ASSETS,
+  furnitureRoughPosition,
+  photoFurnitureSpotted,
   studioAsset,
   studioRoomBounds,
   studioPlacementWarnings,
+  type PhotoBox,
+  type PhotoRead,
   type RoomModel,
 } from '@renovagent/core';
+import { forJev } from '../room3d/owner-photos.js';
+import { workspaceRequest, type SessionInfo } from '../../adapters/http/project-repository.js';
+import { StudioError } from './studio-error.js';
 import { furnitureThumbnail } from '../room3d/furniture-assets.js';
 
 export function AssetThumb({ id }: { id: StudioAssetId }) {
@@ -30,6 +37,104 @@ export function AssetThumb({ id }: { id: StudioAssetId }) {
     </span>
   );
 }
+type SpottedScan =
+  | { status: 'idle' }
+  | { status: 'working' }
+  | { status: 'done'; read: PhotoRead }
+  | { status: 'error'; message: string };
+
+function SpottedRow({
+  photoSrc,
+  bounds,
+  onAddExisting,
+}: {
+  photoSrc: string;
+  bounds: { minX: number; maxX: number; minZ: number; maxZ: number } | null;
+  onAddExisting: (assetId: StudioAssetId, position: { xM: number; zM: number } | null) => void;
+}) {
+  const [scan, setScan] = useState<SpottedScan>({ status: 'idle' });
+  const [added, setAdded] = useState<StudioAssetId[]>([]);
+  const run = async () => {
+    setScan({ status: 'working' });
+    setAdded([]);
+    try {
+      const res = await fetch(photoSrc);
+      if (!res.ok) throw Error('Could not load the room photo.');
+      const image = await forJev(await res.blob());
+      const session = (await workspaceRequest('/session')) as SessionInfo;
+      if (session.mode === 'account' && !session.signedIn)
+        throw Error('Sign in to the connected app to read photos with Jev.');
+      if (!session.jev) throw Error('Jev is not configured on this server.');
+      const read = (await workspaceRequest('/photo/read', image)) as PhotoRead;
+      setScan({ status: 'done', read });
+    } catch (e) {
+      setScan({ status: 'error', message: e instanceof Error ? e.message : String(e) });
+    }
+  };
+  const suggestions = scan.status === 'done' ? photoFurnitureSpotted(scan.read) : [];
+  const place = (assetId: StudioAssetId, box: PhotoBox | undefined) => {
+    onAddExisting(assetId, box && bounds ? furnitureRoughPosition(box, bounds) : null);
+    setAdded((current) => (current.includes(assetId) ? current : [...current, assetId]));
+  };
+  return (
+    <div className="pf-spotted">
+      <div className="pf-group-head">
+        <h3>Spotted in your photo</h3>
+        {scan.status === 'done' ? (
+          <button type="button" className="link-button" onClick={() => void run()}>
+            Rescan
+          </button>
+        ) : scan.status !== 'working' ? (
+          <button type="button" onClick={() => void run()}>
+            Scan this room&apos;s photo
+          </button>
+        ) : null}
+      </div>
+      {scan.status === 'working' && <p className="small-note">Jev is reading the photo…</p>}
+      {scan.status === 'error' && <StudioError message={scan.message} />}
+      {scan.status === 'done' && !suggestions.length && (
+        <p className="small-note">No catalog furniture spotted in this photo.</p>
+      )}
+      {!!suggestions.length && (
+        <>
+          <div className="pf-spotted-chips">
+            {suggestions.map((s) => {
+              const done = added.includes(s.assetId);
+              return (
+                <span key={s.assetId} className="pf-spotted-chip">
+                  <b>
+                    {studioAsset(s.assetId).name} · {Math.round(s.p * 100)}%
+                  </b>
+                  {done ? (
+                    <small>Added ✓</small>
+                  ) : (
+                    <button type="button" onClick={() => place(s.assetId, s.box)}>
+                      Add to layout
+                    </button>
+                  )}
+                </span>
+              );
+            })}
+          </div>
+          {suggestions.some((s) => !added.includes(s.assetId)) && (
+            <button
+              type="button"
+              onClick={() =>
+                suggestions
+                  .filter((s) => !added.includes(s.assetId))
+                  .forEach((s) => place(s.assetId, s.box))
+              }
+            >
+              Add all
+            </button>
+          )}
+          <p className="small-note">Approximate position from photo — drag to adjust.</p>
+        </>
+      )}
+    </div>
+  );
+}
+
 export function FurniturePanel({
   model,
   placements,
@@ -38,6 +143,8 @@ export function FurniturePanel({
   onSelect,
   onChange,
   onAdd,
+  photoSrc,
+  onAddExisting,
 }: {
   model: RoomModel | null;
   placements: StudioPlacement[];
@@ -46,6 +153,8 @@ export function FurniturePanel({
   onSelect: (id: string | null) => void;
   onChange: (next: StudioPlacement[]) => void;
   onAdd: (assetId: StudioAssetId) => void;
+  photoSrc?: string | null;
+  onAddExisting?: (assetId: StudioAssetId, position: { xM: number; zM: number } | null) => void;
 }) {
   const [libraryOpen, setLibraryOpen] = useState(false);
   const chosen = placements.find((p) => p.id === selected);
@@ -96,6 +205,9 @@ export function FurniturePanel({
             </button>
           ))}
         </div>
+      )}
+      {photoSrc && onAddExisting && (
+        <SpottedRow photoSrc={photoSrc} bounds={bounds} onAddExisting={onAddExisting} />
       )}
       {placements.length > 1 && (
         <label className="pf-furniture-selection">

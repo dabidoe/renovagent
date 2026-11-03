@@ -1066,7 +1066,11 @@ export function PaintFloorStudio({
   }, [renderStore, modelRenders]);
   const [selectedPlacement, setSelectedPlacement] = useState<string | null>(null);
   const [inspector, setInspector] = useState<'design' | 'layout' | 'finishes' | 'plan'>('finishes');
-  const addAssets = (target: StudioRoom, ids: StudioAssetId[]) => {
+  const addAssets = (
+    target: StudioRoom,
+    ids: StudioAssetId[],
+    opts?: { keep?: boolean; positions?: Partial<Record<StudioAssetId, { xM: number; zM: number }>> },
+  ) => {
     const model = roomModel(target, project.ceilingFt);
     if (!model) return;
     const existing = placements[target.id] ?? [];
@@ -1075,27 +1079,35 @@ export function PaintFloorStudio({
     for (const assetId of ids) {
       if (next.length >= 60 || nextItems.length >= 100) break;
       const asset = studioAsset(assetId);
-      let item = nextItems.find(
-        (i) =>
-          !next.some((p) => p.itemId === i.id) &&
-          assetId.split('-').every((word) => i.name.toLowerCase().includes(word)),
-      );
+      // Detected furniture always gets its own keep item: never attach an
+      // existing placement to a proposed (budgeted) line.
+      let item = opts?.keep
+        ? undefined
+        : nextItems.find(
+            (i) =>
+              !next.some((p) => p.itemId === i.id) &&
+              assetId.split('-').every((word) => i.name.toLowerCase().includes(word)),
+          );
       if (!item) {
         item = {
           id: crypto.randomUUID(),
           name: asset.name,
           category: asset.category,
-          action: 'add',
+          action: opts?.keep ? 'keep' : 'add',
           quantity: 1,
           unitAllowanceMinor: null,
         };
         nextItems.push(item);
       }
+      const rough = opts?.positions?.[assetId];
       next.push({
         id: crypto.randomUUID(),
         itemId: item.id,
         assetId,
         ...studioPlacementStart(assetId, model),
+        ...(rough && Number.isFinite(rough.xM) && Number.isFinite(rough.zM)
+          ? { xM: rough.xM, zM: rough.zM }
+          : {}),
       });
     }
     setItems((current) => ({ ...current, [target.id]: nextItems }));
@@ -1780,6 +1792,14 @@ export function PaintFloorStudio({
               }}
               onChange={(next) => setPlacements((all) => ({ ...all, [room.id]: next }))}
               onAdd={(id) => addAssets(room, [id])}
+              photoSrc={room.photo.src}
+              onAddExisting={(assetId, position) =>
+                addAssets(
+                  room,
+                  [assetId],
+                  position ? { keep: true, positions: { [assetId]: position } } : { keep: true },
+                )
+              }
             />
           </div>
           <div hidden={inspector !== 'finishes'}>

@@ -22,7 +22,7 @@ type Reading =
 
 // Jev takes 280–1568 px per side: shrink large photos in the browser so only a
 // small JPEG ever leaves it.
-async function forJev(blob: Blob) {
+export async function forJev(blob: Blob) {
   const bitmap = await createImageBitmap(blob);
   const scale = Math.min(1, 1500 / Math.max(bitmap.width, bitmap.height));
   const w = Math.round(bitmap.width * scale);

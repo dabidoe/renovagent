@@ -297,6 +297,27 @@ export async function readRoomPhoto(
       ),
       fan_box: box('The ceiling exhaust fan or vent grille'),
       window_box: box('The window'),
+      // Furniture by 3D catalog id: visibility plus an image box each. With
+      // the room questions this is 35 per request, under the 40-per-request
+      // precedent, so the read stays a single Jev call on the route's budget.
+      sofa: seen('a sofa or couch'),
+      sofa_box: box('The sofa or couch'),
+      chair: seen('an armchair or lounge chair (not a dining chair)'),
+      chair_box: box('The armchair or lounge chair'),
+      'coffee-table': seen('a coffee table'),
+      'coffee-table_box': box('The coffee table'),
+      rug: seen('an area rug on the floor'),
+      rug_box: box('The area rug'),
+      bed: seen('a bed'),
+      bed_box: box('The bed'),
+      desk: seen('a desk'),
+      desk_box: box('The desk'),
+      bookcase: seen('a bookcase or bookshelf'),
+      bookcase_box: box('The bookcase or bookshelf'),
+      'dining-table': seen('a dining table'),
+      'dining-table_box': box('The dining table'),
+      'media-console': seen('a TV stand or media console'),
+      'media-console_box': box('The TV stand or media console'),
     },
     { ...options, images: { [ROOM_PHOTO_REF]: image } },
   );
@@ -318,6 +339,23 @@ export async function readRoomPhoto(
     }
   if (floor?.choice !== 'not-visible' && b('floor')) boxes.floor = b('floor')!;
   if (b('wall')) boxes.wall = b('wall')!;
+  const furniture: PhotoRead['furniture'] = {};
+  for (const k of [
+    'sofa',
+    'chair',
+    'coffee-table',
+    'rug',
+    'bed',
+    'desk',
+    'bookcase',
+    'dining-table',
+    'media-console',
+  ] as const) {
+    const probability = p(k);
+    if (probability <= 0) continue;
+    const found = probability >= 0.5 ? b(k) : undefined;
+    furniture[k] = found ? { p: probability, box: found } : { p: probability };
+  }
   return {
     model,
     room: {
@@ -339,6 +377,7 @@ export async function readRoomPhoto(
     },
     vanityDated: dated ? { score: dated.score, confidence: dated.confidence } : null,
     boxes,
+    furniture,
   };
 }
 

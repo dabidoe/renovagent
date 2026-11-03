@@ -1,7 +1,14 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import type { Workspace } from '@renovagent/contracts';
-import { compileScopeDraft, photoNotes, photoPins, type PhotoRead } from '@renovagent/core';
+import {
+  compileScopeDraft,
+  furnitureRoughPosition,
+  photoFurnitureSpotted,
+  photoNotes,
+  photoPins,
+  type PhotoRead,
+} from '@renovagent/core';
 
 const draft = (recipeId: string, packageIds: string[]) =>
   compileScopeDraft({ facts: {}, artifacts: {}, projects: {} } as unknown as Workspace, 'p', {
@@ -79,4 +86,49 @@ test('carpet under a planned living-room floor must come up first', () => {
   assert.ok(notes.some((n) => n.id === 'damage' && n.kind === 'check'));
   // Bathroom-only rules stay out of a living room.
   assert.ok(!notes.some((n) => n.id === 'no-fan' || n.id === 'dated-vanity'));
+});
+
+test('detected furniture becomes suggestions at the SEEN threshold, never placements', () => {
+  const read: PhotoRead = {
+    ...bath,
+    furniture: {
+      bed: { p: 0.92, box: { top: 0.3, bottom: 0.9, left: 0.5, right: 0.95 } },
+      sofa: { p: 0.6 },
+      rug: { p: 0.59, box: { top: 0.7, bottom: 1, left: 0, right: 1 } },
+    },
+  };
+  const spotted = photoFurnitureSpotted(read);
+  // Boundary 0.6 is in, 0.59 is out; suggestions carry no placement fields.
+  assert.deepEqual(
+    spotted.map((s) => s.assetId),
+    ['bed', 'sofa'],
+  );
+  assert.deepEqual(spotted[0], {
+    assetId: 'bed',
+    p: 0.92,
+    box: { top: 0.3, bottom: 0.9, left: 0.5, right: 0.95 },
+  });
+  assert.ok(!('xM' in spotted[0]!) && !('itemId' in spotted[0]!));
+  // Reads from before furniture detection suggest nothing but still work.
+  assert.deepEqual(photoFurnitureSpotted(bath), []);
+});
+
+test('image boxes map to rough room thirds, or null without a box', () => {
+  const bounds = { minX: 0, maxX: 6, minZ: 0, maxZ: 4 };
+  assert.equal(furnitureRoughPosition(undefined, bounds), null);
+  // Left edge, low in the photo: near-left third center.
+  assert.deepEqual(furnitureRoughPosition({ top: 0.6, bottom: 0.95, left: 0, right: 0.2 }, bounds), {
+    xM: 1,
+    zM: 10 / 3,
+  });
+  // Right edge, high in the photo: far-right third center.
+  assert.deepEqual(furnitureRoughPosition({ top: 0, bottom: 0.2, left: 0.8, right: 1 }, bounds), {
+    xM: 5,
+    zM: 2 / 3,
+  });
+  // Middle of the frame: room center.
+  assert.deepEqual(furnitureRoughPosition({ top: 0.3, bottom: 0.6, left: 0.4, right: 0.6 }, bounds), {
+    xM: 3,
+    zM: 2,
+  });
 });

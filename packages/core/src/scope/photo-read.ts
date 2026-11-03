@@ -1,4 +1,4 @@
-import type { ScopeDraft } from '@renovagent/contracts';
+import type { ScopeDraft, StudioAssetId } from '@renovagent/contracts';
 
 // What a vision model reported about one of the owner's room photos, and what
 // code makes of it: pins for the planned work and suggested changes to the
@@ -27,6 +27,9 @@ export type PhotoRead = {
   boxes: Partial<
     Record<'toilet' | 'vanity' | 'shower' | 'floor' | 'wall' | 'fan' | 'window', PhotoBox>
   >;
+  // Detected furniture by catalog id: visibility probability plus an image box
+  // when Jev also placed one. Absent on reads from before furniture detection.
+  furniture?: Partial<Record<StudioAssetId, { p: number; box?: PhotoBox }>>;
 };
 
 const FLOOR_LABEL: Record<FloorKind, string> = {
@@ -89,6 +92,42 @@ export type PhotoNote = {
   // A package the owner can add to the plan (after approval).
   packageId?: string;
 };
+
+export type FurnitureSpotting = {
+  assetId: StudioAssetId;
+  p: number;
+  box?: PhotoBox;
+};
+
+// Suggestions only: furniture at or above the SEEN threshold. Nothing here
+// places anything — the owner confirms each piece in the Furniture tab.
+export function photoFurnitureSpotted(read: PhotoRead): FurnitureSpotting[] {
+  const found = read.furniture ?? {};
+  return (Object.entries(found) as [StudioAssetId, { p: number; box?: PhotoBox }][]).flatMap(
+    ([assetId, spot]) =>
+      spot && spot.p >= SEEN ? [{ assetId, p: spot.p, ...(spot.box ? { box: spot.box } : {}) }] : [],
+  );
+}
+
+export type RoomBoundsXZ = { minX: number; maxX: number; minZ: number; maxZ: number };
+
+// Rough position from the image box: horizontal center picks the left/center/
+// right third of the width; the box bottom (lower in the photo is nearer the
+// camera, which views from the +Z side) picks the far/mid/near third of depth.
+// Approximate by design — the owner drags to adjust.
+export function furnitureRoughPosition(
+  box: PhotoBox | undefined,
+  bounds: RoomBoundsXZ,
+): { xM: number; zM: number } | null {
+  if (!box) return null;
+  const third = (v: number) => (v < 1 / 3 ? 0 : v < 2 / 3 ? 1 : 2);
+  const cx = third((box.left + box.right) / 2);
+  const depth = third(box.bottom);
+  return {
+    xM: bounds.minX + ((bounds.maxX - bounds.minX) * (cx * 2 + 1)) / 6,
+    zM: bounds.minZ + ((bounds.maxZ - bounds.minZ) * (depth * 2 + 1)) / 6,
+  };
+}
 
 export function photoNotes(read: PhotoRead, draft: ScopeDraft | null): PhotoNote[] {
   const notes: PhotoNote[] = [];

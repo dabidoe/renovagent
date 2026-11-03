@@ -190,7 +190,10 @@ export function RoomPlan({
       )}
       <div className="pf-room-items">
         {items.map((item) => (
-          <article key={item.id} className="pf-room-item">
+          <article
+            key={item.id}
+            className={`pf-room-item${item.action === 'keep' ? ' is-keep' : ''}`}
+          >
             <div className="pf-item-title">
               <input
                 aria-label={`Item name: ${item.name}`}
@@ -200,6 +203,7 @@ export function RoomPlan({
                   if (e.target.value.trim()) patch(item.id, { name: e.target.value });
                 }}
               />
+              {item.action === 'keep' && <span className="pf-item-existing">Existing</span>}
               <button
                 type="button"
                 aria-label={`Remove ${item.name}`}

@@ -7,6 +7,7 @@ import {
   photoChecks,
   rankReviewFindings,
   rankSections,
+  readRoomPhoto,
 } from '../../apps/api/src/jev.js';
 
 // A fake fetch that records the request and answers like the documented API.
@@ -192,4 +193,33 @@ test('product judging batches 40 candidates per request and keeps every answer',
   );
   assert.equal(Object.keys(judged).length, 45);
   assert.deepEqual(judged.c44, { fit: 0.9, quality: 1 });
+});
+
+test('room reads ask furniture visibility plus boxes in one request', async () => {
+  const seen: Record<string, number> = { bed: 0.92, sofa: 0.55, rug: 0.4 };
+  const { f, calls } = fake((q) =>
+    Object.fromEntries(
+      Object.keys(q).map((k) => {
+        if (k.endsWith('_box'))
+          return [k, { type: 'box', box: { top: 0.1, bottom: 0.9, left: 0.1, right: 0.9 }, confidence: 0.8 }];
+        if (k === 'room') return [k, { type: 'choice', choice: 'bedroom', confidence: 0.9, probabilities: {} }];
+        if (k === 'floor')
+          return [k, { type: 'choice', choice: 'wood', confidence: 0.9, probabilities: {} }];
+        if (k === 'vanity_dated') return [k, { type: 'score', score: 0, confidence: 1 }];
+        return [k, { type: 'noul', noul: seen[k.replace(/_present$/, '')] ?? 0 }];
+      }),
+    ),
+  );
+  const read = await readRoomPhoto(
+    { format: 'jpg', bytes: new Uint8Array([1, 2, 3]) },
+    { key: 'test-key-123', fetch: f },
+  );
+  // One call on the route budget: room, floor, bathroom, damage, dated + 9 furniture × 2.
+  assert.equal(calls.length, 1);
+  assert.equal(Object.keys(calls[0]!.body.questions).length, 35);
+  assert.deepEqual(read.furniture, {
+    bed: { p: 0.92, box: { top: 0.1, bottom: 0.9, left: 0.1, right: 0.9 } },
+    sofa: { p: 0.55, box: { top: 0.1, bottom: 0.9, left: 0.1, right: 0.9 } },
+    rug: { p: 0.4 },
+  });
 });

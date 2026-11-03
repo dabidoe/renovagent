@@ -2000,6 +2000,37 @@
   border-radius: 12px;
   background: #fdfdff;
 }
+.pf-room-item.is-keep {
+  background: #f1f3f7;
+}
+.pf-item-existing {
+  font-size: 11px;
+  color: #5b6472;
+  border: 1px solid rgb(0 0 0 / 0.12);
+  border-radius: 4px;
+  padding: 1px 6px;
+  white-space: nowrap;
+}
+.pf-spotted {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+.pf-spotted-chips {
+  display: grid;
+  gap: 8px;
+}
+.pf-spotted-chip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid #e2e7f0;
+  border-radius: 10px;
+  background: #fdfdff;
+  font-size: 13px;
+}
 .pf-item-title {
   display: flex;
   align-items: center;
