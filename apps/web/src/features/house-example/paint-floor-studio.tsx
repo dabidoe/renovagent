@@ -1602,7 +1602,9 @@ export function PaintFloorStudio({
               ) : (
                 <LookThumb pick={p} />
               )}
-              <span className="pf-room-name">{r.title}</span>
+              <span className="pf-room-name" title={r.title}>
+                {r.title}
+              </span>
               <span className="pf-room-meta">
                 <i style={{ background: p.color?.hex ?? 'transparent' }} />
                 {!p.included

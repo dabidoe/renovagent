@@ -1138,6 +1138,8 @@
     padding: 12px 0;
     max-width: 180px;
     font-size: 11px;
+    /* Keep the label against the right edge, not floating mid-bar. */
+    justify-content: flex-end;
   }
   .is-example-project .prompt-account {
     display: none;
