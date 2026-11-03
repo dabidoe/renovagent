@@ -1,5 +1,34 @@
 # Sample rooms in photo intake
 
+## Prepared sample follow-up — November 3, 2026
+
+The owner requested that the eight photo-picker samples open preloaded and saved,
+and explicitly approved preparing room details and previews with new model calls.
+This supersedes the raw-upload-only behavior documented below for those eight
+published samples. Unprepared future entries and owner photos retain raw intake.
+
+`prepared: true` in the manifest routes selection directly to
+`#example/starter-<id>`, using the existing example studio, validated project shape,
+local edit persistence and explicit account-save flow. Prepared source photos,
+room analysis, source/output SAM masks and two Muse Image floor looks (light oak
+and walnut) live under `public/examples/starter-<id>/`. No model, account creation
+or upload runs when opening or editing a sample. Custom Restyle remains explicit.
+The other floor looks remain unavailable rather than displaying an unsaved look.
+
+Sizes and ceiling heights remain editable photo estimates. Budget labels and
+shopping exports disclose them; formal scope guards continue withholding estimated
+sizes from reported measurement inputs. Credits and license text are retained in
+the project and saved copies. Gallery/source thumbnails reuse existing small JPEGs.
+
+`prepare-starter-rooms.ts --run` uses current owner-authorized model access with a
+bounded provider-call budget, two concurrent rooms, source-hash checks, resumable
+checkpoints and content-addressed generated images. It never connects to Mongo or
+creates production accounts. Manifest publication waits for valid project shapes.
+Receipts retain source/output hashes, model IDs, prompts and available run IDs.
+See the [asset README](../../public/starter-rooms/README.md) for current behavior.
+
+The remainder is the historical November 2 implementation record.
+
 November 2, 2026. UI and static assets only; integrated against main for publication.
 Expanded in the owner-requested follow-up from two owner photos to eight rooms,
 with six attributed Unsplash photos and editable furniture prompts.

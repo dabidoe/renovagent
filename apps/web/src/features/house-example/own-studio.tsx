@@ -467,7 +467,9 @@ export function OwnStudio({
         savedDesign={recoveredDesign}
         kicker={
           initialDesign?.snapshot.basis === 'listing-example'
-            ? 'Saved listing example · proposed design'
+            ? project.id.startsWith('starter-')
+              ? 'Saved sample · proposed design'
+              : 'Saved listing example · proposed design'
             : 'Your project'
         }
         renderFloor={renderFloor}

@@ -1310,7 +1310,9 @@ export function PaintFloorStudio({
     basis:
       savedDesign?.snapshot.basis ??
       initialDesign?.basis ??
-      (/example/i.test(kicker) ? ('listing-example' as const) : ('owner-studio' as const)),
+      (/example|prepared sample/i.test(kicker)
+        ? ('listing-example' as const)
+        : ('owner-studio' as const)),
     project: {
       id: project.id,
       address: project.address,
@@ -1644,7 +1646,7 @@ export function PaintFloorStudio({
                   target="_blank"
                   rel="noreferrer"
                 >
-                  View listing ↗
+                  {project.id.startsWith('starter-') ? 'Photo source ↗' : 'View listing ↗'}
                 </a>
               )}
             </p>

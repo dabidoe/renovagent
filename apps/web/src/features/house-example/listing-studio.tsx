@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Glyph } from '../../components/glyph.js';
 import { PaintFloorStudio } from './paint-floor-studio.js';
 import type { HouseProject, StudioRoom } from './paint-floor.js';
+import { parseSampleRooms, rememberPreparedSample } from '../project-start/sample-rooms.js';
 
 // Curated listing examples, prepared once by scripts/prepare-listing-example.ts
 // from images the owner saved from a listing they chose to feature.
@@ -64,7 +65,18 @@ export function ListingStudio({ id, onBack }: { id: string; onBack: () => void }
     let live = true;
     fetch(`./examples/${studioDirection(id) ? 'oakland' : id}/project.json`)
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error('This example is not available.'))))
-      .then((p) => live && setProject(p))
+      .then(async (p) => {
+        if (id.startsWith('starter-')) {
+          const response = await fetch('/starter-rooms/manifest.json');
+          if (!response.ok) throw Error('Sample photo credits could not be loaded.');
+          const sample = parseSampleRooms(await response.json()).find(
+            (s) => `starter-${s.id}` === id && s.prepared,
+          );
+          if (!sample) throw Error('This prepared sample is not available.');
+          if (live) rememberPreparedSample(sample);
+        }
+        if (live) setProject(p);
+      })
       .catch((e) => live && setError(e instanceof Error ? e.message : String(e)));
     return () => {
       live = false;
@@ -108,7 +120,9 @@ export function ListingStudio({ id, onBack }: { id: string; onBack: () => void }
       kicker={
         direction
           ? 'Muse photo concept · editable 3D starter · changes stay in this browser'
-          : 'Listing example · changes stay in this browser'
+          : id.startsWith('starter-')
+            ? 'Prepared sample · changes stay in this browser'
+            : 'Listing example · changes stay in this browser'
       }
       onEditRoom={(roomId, patch) =>
         patch.size && save({ ...edits, sizes: { ...edits.sizes, [roomId]: patch.size } })
@@ -128,33 +142,49 @@ export function ListingStudio({ id, onBack }: { id: string; onBack: () => void }
               products need confirming.
             </li>
           )}
-          <li>
-            Photos{project.listing ? ' and plans' : ''}:{' '}
-            {project.listing ? (
-              <a href={project.listing} target="_blank" rel="noreferrer">
-                the public listing
-              </a>
-            ) : (
-              'the listing'
-            )}
-            , saved by the owner of this demo.
-          </li>
-          <li>
-            Rooms and printed plan sizes: read by Muse Spark. Wall outlines: SAM 3.1. New floors:
-            Muse Image edits of each photo (receipts in{' '}
-            <a
-              href={`./examples/${direction ? 'oakland' : id}/project.json`}
-              target="_blank"
-              rel="noreferrer"
-            >
-              project.json
-            </a>
-            ).
-          </li>
-          <li>
-            Quantities: the living-room recipe (2 coats; openings not deducted). Prices: an example
-            catalog for this demo, not live offers. Labor is quoted separately.
-          </li>
+          {id.startsWith('starter-') ? (
+            <>
+              <li>
+                Room details and wall masks are saved from Muse Spark and SAM 3.1. Light-oak and
+                walnut floor previews are saved Muse Image concepts. Browsing does not run models.
+              </li>
+              <li>
+                Dimensions are rough photo-based estimates, editable above the photo. Prices are
+                example material allowances, not retailer quotes. Custom restyles run only when
+                requested.
+              </li>
+            </>
+          ) : (
+            <>
+              <li>
+                Photos{project.listing ? ' and plans' : ''}:{' '}
+                {project.listing ? (
+                  <a href={project.listing} target="_blank" rel="noreferrer">
+                    the public listing
+                  </a>
+                ) : (
+                  'the listing'
+                )}
+                , saved by the owner of this demo.
+              </li>
+              <li>
+                Rooms and printed plan sizes: read by Muse Spark. Wall outlines: SAM 3.1. New
+                floors: Muse Image edits of each photo (receipts in{' '}
+                <a
+                  href={`./examples/${direction ? 'oakland' : id}/project.json`}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  project.json
+                </a>
+                ).
+              </li>
+              <li>
+                Quantities: the living-room recipe (2 coats; openings not deducted). Prices: an
+                example catalog for this demo, not live offers. Labor is quoted separately.
+              </li>
+            </>
+          )}
         </ul>
       }
     />

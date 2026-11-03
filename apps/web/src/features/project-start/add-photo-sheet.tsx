@@ -5,6 +5,8 @@ import { StudioError } from '../house-example/studio-error.js';
 import {
   fetchSampleFile,
   parseSampleRooms,
+  preparedSampleRoute,
+  rememberPreparedSample,
   sampleThumbnail,
   type SampleRoom,
 } from './sample-rooms.js';
@@ -46,7 +48,9 @@ export function SampleRoomGrid({
             <button type="button" disabled={busy} onClick={() => onChoose(room)}>
               <img src={sampleThumbnail(room)} alt="" width={400} height={300} />
               <strong>{room.title}</strong>
-              <small>Sample room · {room.roomType}</small>
+              <small>
+                {room.prepared ? 'Ready-to-edit sample' : 'Sample room'} · {room.roomType}
+              </small>
             </button>
             <small className="sample-room-credit">
               {room.sourceUrl ? (
@@ -105,6 +109,12 @@ export function AddPhotoSheet({
     onClose();
   };
   const choose = async (room: SampleRoom) => {
+    if (room.prepared) {
+      rememberPreparedSample(room);
+      onClose();
+      window.location.hash = preparedSampleRoute(room);
+      return;
+    }
     setBusy(true);
     setError('');
     try {
@@ -123,7 +133,7 @@ export function AddPhotoSheet({
         if (!busy) onClose();
       }}
     >
-      <p>Start with your room or borrow a sample. Every new look runs live.</p>
+      <p>Upload your room or open a prepared sample with saved paint and floor previews.</p>
       <div className="add-photo-options" aria-label="Photo source">
         <button type="button" disabled={busy} onClick={() => camera.current?.click()}>
           Take photo<small>Use your camera</small>
@@ -161,7 +171,10 @@ export function AddPhotoSheet({
       {gallery && (
         <section aria-label="Sample rooms">
           <h3>Pick a room to make your own.</h3>
-          <p>Try paint, floors or a furniture mockup. Each photo starts a new project.</p>
+          <p>
+            Samples open ready to edit. Your changes stay in this browser; save a project to keep an
+            account copy. Custom restyles run when you request them.
+          </p>
           {rooms && (
             <SampleRoomGrid rooms={rooms} busy={busy} onChoose={(room) => void choose(room)} />
           )}

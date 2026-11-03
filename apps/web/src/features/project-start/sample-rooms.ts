@@ -5,7 +5,7 @@ const httpsUrl = z
   .url()
   .refine((value) => value.startsWith('https://'), 'Use an HTTPS source link.');
 
-// UI asset metadata only. This never supplies room facts or model results.
+// UI asset metadata. Prepared results live in separately validated example projects.
 export const sampleRoomSchema = z.object({
   id: z.string().regex(/^[a-z0-9-]+$/),
   title: z.string().trim().min(1).max(100),
@@ -15,6 +15,7 @@ export const sampleRoomSchema = z.object({
   license: z.string().trim().min(1).max(300),
   sourceUrl: httpsUrl.optional(),
   licenseUrl: httpsUrl.optional(),
+  prepared: z.boolean().optional(),
   furnishingSuggestions: z
     .array(
       z.object({
@@ -56,6 +57,16 @@ export async function fetchSampleFile(room: SampleRoom): Promise<File> {
 // Browser-local provenance follows the uploaded image hash, without changing API/domain contracts.
 const provenanceKey = (sha: string) => `renovagent.sample-room.${sha}`;
 const uploadedSamples = new Map<string, SampleRoom>();
+const preparedSamples = new Map<string, SampleRoom>();
+export const preparedSampleRoute = (room: SampleRoom) => `#example/starter-${room.id}`;
+export function rememberPreparedSample(room: SampleRoom) {
+  preparedSamples.set(room.id, room);
+  try {
+    localStorage.setItem(`renovagent.prepared-sample.${room.id}`, JSON.stringify(room));
+  } catch {
+    /* Available for this visit. */
+  }
+}
 export function rememberSampleUpload(file: File, sha: string) {
   const sample = sampleForFile(file);
   if (!sample) return;
@@ -67,6 +78,18 @@ export function rememberSampleUpload(file: File, sha: string) {
   }
 }
 export function sampleForPhoto(src: string): SampleRoom | undefined {
+  const preparedId = /^\.?\/examples\/starter-([a-z0-9-]+)\/[^/?#]+$/.exec(src)?.[1];
+  if (preparedId) {
+    if (preparedSamples.has(preparedId)) return preparedSamples.get(preparedId);
+    try {
+      const parsed = sampleRoomSchema.safeParse(
+        JSON.parse(localStorage.getItem(`renovagent.prepared-sample.${preparedId}`) || 'null'),
+      );
+      return parsed.success ? parsed.data : undefined;
+    } catch {
+      return;
+    }
+  }
   const sha = /\/design-images\/([a-f0-9]{64})$/.exec(src)?.[1];
   if (!sha) return;
   if (uploadedSamples.has(sha)) return uploadedSamples.get(sha);

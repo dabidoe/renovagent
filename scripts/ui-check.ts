@@ -11,6 +11,10 @@
 import { mkdir } from 'node:fs/promises';
 import { chromium, type Browser, type Page } from 'playwright';
 import { createLogger, createServer, type ViteDevServer } from 'vite';
+import {
+  parseSampleRooms,
+  preparedSampleRoute,
+} from '../apps/web/src/features/project-start/sample-rooms.js';
 
 const args = process.argv.slice(2);
 const baseArg = args.includes('--base') ? args[args.indexOf('--base') + 1] : undefined;
@@ -221,6 +225,101 @@ async function budgetChecks(browser: Browser, base: string) {
   }
 }
 
+async function preparedSampleChecks(browser: Browser, base: string) {
+  const manifest = await fetch(`${base}/starter-rooms/manifest.json`).then((r) => r.json());
+  const samples = parseSampleRooms(manifest);
+  for (const vp of [viewports[0], viewports[2]]) {
+    const { page, close } = await open(browser, base, '/', vp);
+    const writes: string[] = [];
+    page.on('request', (request) => {
+      if (request.method() === 'POST' && request.url().includes('/api/'))
+        writes.push(request.url());
+    });
+    for (const sample of samples) {
+      await page.goto(base, { waitUntil: 'networkidle' });
+      await page.getByRole('button', { name: 'Add room photos', exact: true }).click();
+      await page.getByRole('button', { name: 'Sample rooms No photo needed', exact: true }).click();
+      await page
+        .locator('.sample-room-grid button')
+        .filter({ has: page.getByText(sample.title, { exact: true }) })
+        .click();
+      await page.getByRole('heading', { name: sample.title, exact: true }).waitFor();
+      check(
+        `${vp.tag} ${sample.id}: opens prepared sample directly`,
+        page.url().endsWith(preparedSampleRoute(sample)),
+      );
+      check(
+        `${vp.tag} ${sample.id}: material budget is priced`,
+        /^\$[1-9]/.test(await finalText(page, '.pf-total strong')),
+      );
+      await page.getByRole('button', { name: 'Dark walnut', exact: true }).click();
+      await page.getByRole('button', { name: 'Naval SW 6244', exact: true }).click();
+      await page.getByRole('button', { name: 'Edit room measurements', exact: true }).click();
+      await page.getByRole('textbox', { name: 'Width in feet', exact: true }).fill('15');
+      await page.locator('.pf-size button[type="submit"]').click();
+      await page.reload({ waitUntil: 'networkidle' });
+      check(
+        `${vp.tag} ${sample.id}: floor and paint edits survive reload`,
+        (await page
+          .getByRole('button', { name: 'Dark walnut', exact: true })
+          .getAttribute('aria-pressed')) === 'true' &&
+          (await page
+            .getByRole('button', { name: 'Naval SW 6244', exact: true })
+            .getAttribute('aria-pressed')) === 'true',
+      );
+      await page.getByRole('button', { name: 'Edit room measurements', exact: true }).click();
+      check(
+        `${vp.tag} ${sample.id}: size edit survives reload`,
+        (await page.getByRole('textbox', { name: 'Width in feet', exact: true }).inputValue()) ===
+          '15',
+      );
+      check(
+        `${vp.tag} ${sample.id}: editor fits viewport`,
+        await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1),
+      );
+      check(
+        `${vp.tag} ${sample.id}: source credit retained`,
+        (await page.locator('.pf-head').innerText()).includes(sample.source),
+      );
+      await page.screenshot({
+        path: `${outDir}/${vp.tag}-sample-${sample.id}.png`,
+        fullPage: true,
+      });
+    }
+    check(
+      `${vp.tag}: browsing and editing samples needs no uploads, account creation or model calls`,
+      writes.length === 0,
+      writes.join(', '),
+    );
+    if (!baseArg) {
+      let payload:
+        | {
+            snapshot: {
+              project: { id: string; place?: string };
+              picks: Record<string, { floorStyle?: string }>;
+            };
+          }
+        | undefined;
+      await page.route('**/api/workspace/studio-designs', (route) => {
+        payload = route.request().postDataJSON();
+        return route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ projectId: 'sample-fixture', revision: 1 }),
+        });
+      });
+      await page.getByRole('button', { name: 'Save project', exact: true }).click();
+      await page.waitForFunction(() => location.hash === '#design/sample-fixture/1');
+      check(
+        `${vp.tag}: account save carries prepared project and edits`,
+        payload?.snapshot.project.id === `starter-${samples.at(-1)!.id}` &&
+          payload.snapshot.picks[samples.at(-1)!.id]?.floorStyle === 'walnut',
+      );
+    }
+    await close();
+  }
+}
+
 async function intakeChecks(browser: Browser, base: string) {
   const { page, close } = await open(browser, base, '/#your-project', viewports[1]);
   const idea = page.locator('.pf-intake input.pf-intake-idea');
@@ -317,6 +416,7 @@ try {
   browser = await chromium.launch({ executablePath: process.env.CHROME_PATH || undefined });
   await generalChecks(browser, base);
   await budgetChecks(browser, base);
+  await preparedSampleChecks(browser, base);
   await intakeChecks(browser, base);
   await connectChecks(browser, base);
   await landingChecks(browser, base);

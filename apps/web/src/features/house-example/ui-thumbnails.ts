@@ -29,5 +29,9 @@ const thumbnails: Record<string, string> = {
   'finishes/walnut.jpg': './ui-thumbnails/f320d67ff62de4fc.webp',
   'finishes/white-oak.jpg': './ui-thumbnails/f789f2d06e44bf82.webp',
 };
-export const thumbnailUrl = (src: string) =>
-  thumbnails[src.replace(/^\.\//, '').replace(/^\//, '')] ?? src;
+export const thumbnailUrl = (src: string) => {
+  const starter = /^\.?\/examples\/starter-([a-z0-9-]+)\/source-[a-f0-9]+\.jpg$/.exec(src)?.[1];
+  return starter
+    ? `/starter-rooms/${starter}-thumb.jpg`
+    : (thumbnails[src.replace(/^\.\//, '').replace(/^\//, '')] ?? src);
+};

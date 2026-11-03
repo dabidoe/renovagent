@@ -13,8 +13,15 @@ import {
   sampleForFile,
   sampleForPhoto,
   sampleThumbnail,
+  preparedSampleRoute,
+  rememberPreparedSample,
 } from '../../apps/web/src/features/project-start/sample-rooms.js';
 import { uploadStudioPhoto } from '../../apps/web/src/features/project-start/photo-upload.js';
+import { studioDesignSchema } from '@renovagent/contracts';
+import {
+  roomTakeoff,
+  type HouseProject,
+} from '../../apps/web/src/features/house-example/paint-floor.js';
 import {
   loadOwnIntake,
   saveOwnIntake,
@@ -35,6 +42,58 @@ const manifest = JSON.parse(
 const rooms = parseSampleRooms(manifest);
 const bytes = (file: string) =>
   readFileSync(new URL(`../../public/starter-rooms/${file}`, import.meta.url));
+
+test('prepared samples retain exact source bytes, verified outputs, estimates and credits in saveable projects', () => {
+  for (const sample of rooms) {
+    assert.equal(sample.prepared, true);
+    const folder = new URL(`../../public/examples/starter-${sample.id}/`, import.meta.url);
+    const project = JSON.parse(
+      readFileSync(new URL('project.json', folder), 'utf8'),
+    ) as HouseProject;
+    const receipt = JSON.parse(readFileSync(new URL('preparation.json', folder), 'utf8'));
+    const room = project.rooms[0]!;
+    assert.equal(project.id, `starter-${sample.id}`);
+    assert.equal(project.rooms.length, 1);
+    assert.match(project.place!, new RegExp(sample.source.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+    assert.ok(project.place!.includes(sample.license));
+    assert.equal(project.listing, sample.sourceUrl);
+    assert.match(room.sizeNote!, /estimate|assumption/);
+    assert.ok(project.ceilingNote);
+    const input = bytes(sample.file);
+    assert.equal(receipt.sourceSha256, createHash('sha256').update(input).digest('hex'));
+    assert.deepEqual(
+      readFileSync(new URL(room.photo.src.replace('./', '../../public/'), import.meta.url)),
+      input,
+    );
+    assert.equal(typeof room.photo.walls, 'object');
+    assert.deepEqual(Object.keys(room.floors).sort(), ['light-oak', 'walnut']);
+    for (const [style, floor] of Object.entries(room.floors)) {
+      const saved = receipt.floors[style];
+      const output = readFileSync(new URL(saved.file, folder));
+      assert.equal(createHash('sha256').update(output).digest('hex'), saved.sha256);
+      assert.equal(saved.walls.imageSha256, saved.sha256);
+      assert.equal(saved.model, 'muse-image-1.0');
+      assert.ok(floor!.src.endsWith(saved.file));
+      assert.ok(typeof floor!.walls === 'object');
+    }
+    assert.equal(receipt.walls.imageSha256, receipt.sourceSha256);
+    const picks = project.starting!;
+    assert.ok(roomTakeoff(room, project.ceilingFt, picks[room.id]!, 'mid').totalMinor > 0);
+    studioDesignSchema.parse({
+      kind: 'studio-design',
+      basis: 'listing-example',
+      project,
+      picks,
+      tier: 'mid',
+      inspired: {},
+      renderSignatures: {},
+      styling: {},
+    });
+    rememberPreparedSample(sample);
+    assert.deepEqual(sampleForPhoto(room.photo.src), sample);
+    assert.equal(preparedSampleRoute(sample), `#example/starter-${sample.id}`);
+  }
+});
 
 test('sample manifest rejects missing/blank rights, unsafe paths and duplicate IDs before rendering', () => {
   const valid = rooms[0]!;

@@ -1,10 +1,27 @@
 # Starter room photos
 
-These are **source photos**, not prepared example projects. Choosing one fetches
-its JPEG into a File; the normal intake checks the session, offers guest minting,
-and uploads the raw file to `/api/workspace/studio/photo`. Room reads, wall
-detection, paint/floor generation and Restyle use the existing live endpoints.
-No masks, dimensions, prices or generated images are bundled in this gallery.
+The eight published photos now have **prepared, editable sample projects** under
+`public/examples/starter-<id>/`. Choosing one opens `#example/starter-<id>` directly,
+without an account, upload, room read, segmentation call or image generation.
+Each project includes a Muse Spark room read, estimated dimensions, SAM wall masks
+for the source and generated images, and saved light-oak and walnut floor previews.
+Paint choices tint the saved masks locally. Other floor looks are unavailable in
+these prepared samples; custom Restyle still uses the normal live endpoint when
+requested. Samples are proposed concepts, never measured rooms or verified fit.
+
+Selections, price tier, room dimensions, furniture and design drafts stay in the
+browser with a separate namespace per sample. **Save project** creates an account
+copy through the existing validated studio-design proposal flow. Source/license
+credit is retained in the project, including account snapshots. Browsing does not
+create an account or write to the workspace.
+
+`preparation.json` beside each project records source/output SHA-256 hashes, model
+IDs, room-read and segmentation run IDs, prompts and checkpoints. Source copies
+are byte-identical to the gallery originals. Generated floor filenames include
+their output hash. `scripts/prepare-starter-rooms.ts --run` prepares/resumes this
+bounded set; it requires current owner approval for model spend, checks source
+identity and reuses completed outputs instead of regenerating them. It enables
+prepared selection in the manifest only after all projects validate.
 
 ## Published assets and rights
 
@@ -44,7 +61,8 @@ Unsplash or need an API key. There is no runtime stock-photo search or scraping.
 Every room has two finish prompts and two furniture directions. Furniture
 prompts are editable UI suggestions, not observations or generated results.
 **Try furniture ideas** opens Restyle; a direction fills the brief, and the
-normal **Create room design** button runs the existing live request. Prompts
+normal **Create room design** button runs the existing live request. The two floor
+previews and their wall masks are already saved, with no request on selection. Prompts
 ask to retain fixed room geometry/openings; model compliance is not guaranteed.
 
 Excluded pending the owner's rights decision: `public/examples/hutchinson/`,
@@ -97,13 +115,17 @@ Each can become any room type, not just the suggested one.
    invalid paths and duplicate IDs are rejected. Suggestions are editable prompts,
    not model findings; choosing one only fills Paint & floors. Apply runs normally.
 
-4. Run `npm test` and `npm run build`, then open Add photo → Sample rooms and check
-   the thumbnail, upload, attribution and suggestions. Browser QA with intercepted
+4. New entries without `prepared: true` retain the raw-upload path. With current
+   owner approval for model spend, run `node --import tsx scripts/prepare-starter-rooms.ts --run`
+   to prepare the room read, masks and previews. Run `npm test` and `npm run build`,
+   then open Add photo → Sample rooms and check direct opening, preview changes,
+   attribution and reload persistence. Browser QA with intercepted
    APIs is documented in `docs/architecture/sample-rooms-gallery.md`. When expanding
    the approved gallery, update the explicit approved-ID assertion in
    `tests/integration/sample-rooms.test.ts` after reviewing the new photo rights.
 
-Attribution follows the uploaded hash in browser storage, including recovered
-intake files. It survives reload in the same browser. It is UI metadata, not a
-new canonical fact or server-side license record, and does not travel to another
-browser with a saved project link. Existing API/domain schemas remain unchanged.
+Legacy raw-upload attribution still follows the uploaded hash in browser storage,
+including recovered intake files. Prepared samples restore their metadata from
+the manifest when opened directly; source/license text and the source-page link
+also travel in their saved project snapshots. Existing API/domain schemas remain
+unchanged. No sample dimensions are recorded as canonical physical facts.

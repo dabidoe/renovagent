@@ -16,7 +16,8 @@
         "title": "Work and unwind",
         "brief": "Try a small writing desk, an upholstered reading chair, a bookcase and a warm floor lamp. Keep existing openings and the camera view."
       }
-    ]
+    ],
+    "prepared": true
   },
   {
     "id": "bedroom",
@@ -35,7 +36,8 @@
         "title": "Cosy retreat",
         "brief": "Try a textured headboard, layered neutral bedding, a small reading chair and warm lighting. Preserve the room layout and windows."
       }
-    ]
+    ],
+    "prepared": true
   },
   {
     "id": "empty-apartment",
@@ -56,7 +58,8 @@
         "title": "Home office lounge",
         "brief": "Add a compact desk, an ergonomic chair, a bookcase and a small lounge chair with a floor lamp. Keep all kitchen cabinetry, windows and doors unchanged."
       }
-    ]
+    ],
+    "prepared": true
   },
   {
     "id": "sunlit-kitchen",
@@ -77,7 +80,8 @@
         "title": "Colourful kitchen",
         "brief": "Try colourful counter stools, a patterned runner and a few cheerful countertop accessories. Preserve the kitchen layout, appliances and window."
       }
-    ]
+    ],
+    "prepared": true
   },
   {
     "id": "bright-bathroom",
@@ -98,7 +102,8 @@
         "title": "Playful bath",
         "brief": "Try a softly patterned shower curtain and coordinated blue towels and bath accessories. Keep all fixed bathroom fittings, tile and the room layout."
       }
-    ]
+    ],
+    "prepared": true
   },
   {
     "id": "calm-bedroom",
@@ -119,7 +124,8 @@
         "title": "Layered retreat",
         "brief": "Try layered neutral bedding, a textured wool rug and soft bedside lighting. Keep the headboard, openings and camera view unchanged."
       }
-    ]
+    ],
+    "prepared": true
   },
   {
     "id": "forest-dining",
@@ -140,7 +146,8 @@
         "title": "Colourful gathering",
         "brief": "Try colourful upholstered dining chairs, a warm wood table, a patterned rug and restrained table decorations. Keep the room geometry, windows and doors unchanged."
       }
-    ]
+    ],
+    "prepared": true
   },
   {
     "id": "artist-studio",
@@ -161,6 +168,7 @@
         "title": "Reading and making",
         "brief": "Try a cosy reading chair, a low bookcase, a woven rug and a floor lamp beside the creative workspace. Keep the easel, windows and doors unchanged."
       }
-    ]
+    ],
+    "prepared": true
   }
 ]
