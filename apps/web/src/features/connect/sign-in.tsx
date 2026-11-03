@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { flushOwnIntakeSave } from '../house-example/own-intake-draft.js';
 import { signInUrlFor, workspaceRequest } from '../../adapters/http/project-repository.js';
 
 import { rememberReturn } from './sign-in-return.js';
@@ -23,7 +24,7 @@ export function SignInChoices({
     let live = true;
     (workspaceRequest('/session') as Promise<{ providers?: string[]; guests?: boolean }>)
       .then((s) => live && setSession({ providers: s.providers ?? [], guests: Boolean(s.guests) }))
-      .catch(() => {});
+      .catch(() => setError('Sign-in is unavailable right now. Please try again.'));
     return () => {
       live = false;
     };
@@ -34,6 +35,7 @@ export function SignInChoices({
     setError('');
     try {
       await workspaceRequest('/auth/guest', {});
+      window.dispatchEvent(new Event('renovagent-session'));
       if (onSignedIn) {
         await onSignedIn();
         setBusy(false);
@@ -45,21 +47,35 @@ export function SignInChoices({
   };
   return (
     <>
-      {session?.guests && (
-        <button type="button" className={className} disabled={busy} onClick={() => void guest()}>
-          {busy ? 'Starting…' : 'Continue as guest'}
-        </button>
-      )}
       {shown.map((provider) => (
         <a
           key={provider}
           className={className}
           href={signInUrlFor(provider)}
-          onClick={rememberReturn}
+          onClick={(event) => {
+            event.preventDefault();
+            const href = event.currentTarget.href;
+            setBusy(true);
+            void flushOwnIntakeSave()
+              .then(() => {
+                rememberReturn();
+                window.location.assign(href);
+              })
+              .catch(() => {
+                setBusy(false);
+                setError('Your draft could not be saved. Keep this tab open and try again.');
+              });
+          }}
         >
-          Sign in with {provider === 'meta' ? 'Meta' : 'Google'}
+          Continue with {provider === 'meta' ? 'Meta' : 'Google'}
         </a>
       ))}
+      {session?.guests && (
+        <button type="button" className={className} disabled={busy} onClick={() => void guest()}>
+          {busy ? 'Starting…' : 'Continue as guest'}
+        </button>
+      )}
+      {!session && !error && <span role="status">Loading sign-in options…</span>}
       {error && <span role="alert">{error}</span>}
     </>
   );

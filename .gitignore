@@ -19,3 +19,10 @@ docs/pics/
 # macOS and local agent worktrees
 .DS_Store
 .claude/worktrees/
+
+# Owner-provided restricted bathroom pack: local app use only, never commit meshes.
+/LowPolyBathLaundry_v1.0/
+/public/furniture/bathroom/
+
+/3D Retro Plumbing & Wiring/
+/3D Retro Plumbing & Wiring.zip

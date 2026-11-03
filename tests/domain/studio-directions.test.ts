@@ -14,7 +14,7 @@ import {
 const source = JSON.parse(
   readFileSync('public/examples/oakland/project.json', 'utf8'),
 ) as HouseProject;
-test('each carousel direction opens its own coherent, unpriced studio proposal', () => {
+test('each carousel direction opens its own coherent studio proposal with explicit demo allowances', () => {
   assert.equal(new Set(STUDIO_DIRECTIONS.map((d) => d.id)).size, 3);
   for (const direction of STUDIO_DIRECTIONS) {
     const before = JSON.stringify(source);
@@ -33,13 +33,17 @@ test('each carousel direction opens its own coherent, unpriced studio proposal',
       direction.pieces.reduce((n, p) => n + p.count, 0),
     );
     for (const item of items) {
-      assert.equal(item.unitAllowanceMinor, null);
+      assert.equal(item.allowanceSource, 'demo');
+      assert.ok(item.unitAllowanceMinor! > 0);
       assert.equal(placements.filter((p) => p.itemId === item.id).length, item.quantity);
     }
     const budget = studioItemBudget(items);
-    assert.equal(budget.unpriced, items.length);
-    assert.equal(budget.allowanceMinor, 0);
-    assert.ok(budget.lines.every((l) => l.totalMinor === null));
+    assert.equal(budget.unpriced, 0);
+    assert.equal(
+      budget.allowanceMinor,
+      { 'studio-lounge': 111500, 'studio-office': 52000, 'studio-dining': 86500 }[direction.id],
+    );
+    assert.ok(budget.lines.every((l) => l.totalMinor! > 0));
     const model = roomModel(room, design.project.ceilingFt)!;
     assert.deepEqual(studioPlacementWarnings(model, placements), [], direction.id);
     const draft = design.styling[room.id]!;

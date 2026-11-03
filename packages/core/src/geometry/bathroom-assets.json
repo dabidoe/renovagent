@@ -1,0 +1,199 @@
+{
+  "version": 1,
+  "units": "metres",
+  "coordinates": "right-handed-Y-up-XZ-floor",
+  "assets": [
+    {
+      "id": "toilet",
+      "name": "Toilet",
+      "file": "toilet",
+      "category": "other",
+      "semanticCategory": "toilet",
+      "url": "/furniture/bathroom/toilet.glb",
+      "size": [0.42, 0.695, 0.805],
+      "color": "#ece8e1",
+      "mounting": "floor",
+      "defaultElevationM": 0,
+      "dimensionsBasis": "source-mesh-bounds-metres-not-product-measurements",
+      "sourceBounds": {
+        "min": [-0.21, 0, -0.37],
+        "max": [0.21, 0.805, 0.325]
+      },
+      "normalization": {
+        "up": "+Y",
+        "front": "+Z",
+        "rotationDeg": 0,
+        "scale": 1,
+        "origin": "bounds-base-center"
+      },
+      "anchors": {
+        "base": [0, 0, 0],
+        "back": [0, 0, -0.3475]
+      },
+      "clearanceEnvelope": null,
+      "license": "reodesuxz-project-use-restricted-redistribution",
+      "creator": "reodesuxz",
+      "sha256": "256fe0b5b609089f8cf0af6ad5f7f6750e984871430fef6ba823427ab7fc6ceb"
+    },
+    {
+      "id": "vanity",
+      "name": "Double vanity",
+      "file": "vanity_double",
+      "category": "other",
+      "semanticCategory": "vanity",
+      "url": "/furniture/bathroom/vanity_double.glb",
+      "size": [1.55, 0.6, 1.005],
+      "color": "#ece8e1",
+      "mounting": "floor",
+      "defaultElevationM": 0,
+      "dimensionsBasis": "source-mesh-bounds-metres-not-product-measurements",
+      "sourceBounds": {
+        "min": [-0.775, 0, -0.3],
+        "max": [0.775, 1.005, 0.3]
+      },
+      "normalization": {
+        "up": "+Y",
+        "front": "+Z",
+        "rotationDeg": 0,
+        "scale": 1,
+        "origin": "bounds-base-center"
+      },
+      "anchors": {
+        "base": [0, 0, 0],
+        "back": [0, 0, -0.3]
+      },
+      "clearanceEnvelope": null,
+      "license": "reodesuxz-project-use-restricted-redistribution",
+      "creator": "reodesuxz",
+      "sha256": "c50c869d658a390ea3a501210773062a5311c28dd121efab7fcd5bb7621a81d8"
+    },
+    {
+      "id": "shower",
+      "name": "Shower stall",
+      "file": "shower_stall",
+      "category": "other",
+      "semanticCategory": "shower",
+      "url": "/furniture/bathroom/shower_stall.glb",
+      "size": [1.055, 1.055, 2.054569],
+      "color": "#ece8e1",
+      "mounting": "floor",
+      "defaultElevationM": 0,
+      "dimensionsBasis": "source-mesh-bounds-metres-not-product-measurements",
+      "sourceBounds": {
+        "min": [-0.525, 0, -0.525],
+        "max": [0.53, 2.054569, 0.53]
+      },
+      "normalization": {
+        "up": "+Y",
+        "front": "+Z",
+        "rotationDeg": 0,
+        "scale": 1,
+        "origin": "bounds-base-center"
+      },
+      "anchors": {
+        "base": [0, 0, 0],
+        "back": [0, 0, -0.5275]
+      },
+      "clearanceEnvelope": null,
+      "license": "reodesuxz-project-use-restricted-redistribution",
+      "creator": "reodesuxz",
+      "sha256": "4c6936de10ab3800058c6634985eb3ba7d5ca66da9e2dbbe0aba66bc1f81f0f8"
+    },
+    {
+      "id": "tub",
+      "name": "Bathtub",
+      "file": "bathtub",
+      "category": "other",
+      "semanticCategory": "tub",
+      "url": "/furniture/bathroom/bathtub.glb",
+      "size": [1.7, 0.75, 0.717321],
+      "color": "#ece8e1",
+      "mounting": "floor",
+      "defaultElevationM": 0,
+      "dimensionsBasis": "source-mesh-bounds-metres-not-product-measurements",
+      "sourceBounds": {
+        "min": [-0.85, 0, -0.375],
+        "max": [0.85, 0.717321, 0.375]
+      },
+      "normalization": {
+        "up": "+Y",
+        "front": "+Z",
+        "rotationDeg": 0,
+        "scale": 1,
+        "origin": "bounds-base-center"
+      },
+      "anchors": {
+        "base": [0, 0, 0],
+        "back": [0, 0, -0.375]
+      },
+      "clearanceEnvelope": null,
+      "license": "reodesuxz-project-use-restricted-redistribution",
+      "creator": "reodesuxz",
+      "sha256": "7d9fb21aa20238c60c276e31a56398e51f1c264719d2fec8620936a30d26e582"
+    },
+    {
+      "id": "sink",
+      "name": "Pedestal sink",
+      "file": "pedestal_sink",
+      "category": "other",
+      "semanticCategory": "sink",
+      "url": "/furniture/bathroom/pedestal_sink.glb",
+      "size": [0.55, 0.42, 0.97],
+      "color": "#ece8e1",
+      "mounting": "floor",
+      "defaultElevationM": 0,
+      "dimensionsBasis": "source-mesh-bounds-metres-not-product-measurements",
+      "sourceBounds": {
+        "min": [-0.275, 0, -0.21],
+        "max": [0.275, 0.97, 0.21]
+      },
+      "normalization": {
+        "up": "+Y",
+        "front": "+Z",
+        "rotationDeg": 0,
+        "scale": 1,
+        "origin": "bounds-base-center"
+      },
+      "anchors": {
+        "base": [0, 0, 0],
+        "back": [0, 0, -0.21]
+      },
+      "clearanceEnvelope": null,
+      "license": "reodesuxz-project-use-restricted-redistribution",
+      "creator": "reodesuxz",
+      "sha256": "2edf834a24a3e01e5de6b902ba843c648bee3871e935182927166abbe6c1e806"
+    },
+    {
+      "id": "mirror",
+      "name": "Vanity mirror",
+      "file": "vanity_mirror",
+      "category": "other",
+      "semanticCategory": "mirror",
+      "url": "/furniture/bathroom/vanity_mirror.glb",
+      "size": [0.9, 0.12, 0.875],
+      "color": "#ece8e1",
+      "mounting": "wall",
+      "defaultElevationM": 1.15,
+      "dimensionsBasis": "source-mesh-bounds-metres-not-product-measurements",
+      "sourceBounds": {
+        "min": [-0.45, 0, -0.02],
+        "max": [0.45, 0.875, 0.1]
+      },
+      "normalization": {
+        "up": "+Y",
+        "front": "+Z",
+        "rotationDeg": 0,
+        "scale": 1,
+        "origin": "bounds-base-center"
+      },
+      "anchors": {
+        "base": [0, 0, 0],
+        "back": [0, 0, -0.06]
+      },
+      "clearanceEnvelope": null,
+      "license": "reodesuxz-project-use-restricted-redistribution",
+      "creator": "reodesuxz",
+      "sha256": "275ad01b88e43b63b57e2d4631a38c64e1ca8c533e554f7e4715b374f85dbacd"
+    }
+  ]
+}

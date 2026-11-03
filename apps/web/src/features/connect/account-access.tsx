@@ -1,0 +1,118 @@
+import { lazy, Suspense, useEffect, useState } from 'react';
+import type { SessionInfo } from '../../adapters/http/project-repository.js';
+import { Modal } from '../../components/modal.js';
+import { rememberReturn } from './sign-in-return.js';
+const SignInChoices = lazy(() =>
+  import('./sign-in.js').then((module) => ({ default: module.SignInChoices })),
+);
+
+// Session discovery stays small and never loads the private workspace contracts.
+async function sessionRequest(path: string, post = false) {
+  const response = await fetch(`/api/workspace${path}`, {
+    method: post ? 'POST' : 'GET',
+    credentials: 'same-origin',
+    headers: { 'X-Renovagent-Client': 'workspace' },
+  });
+  if (!response.ok) throw new Error('Account service is unavailable. Please try again.');
+  return response.json();
+}
+
+export function AccountAccess() {
+  const [session, setSession] = useState<SessionInfo | null>(null);
+  const [open, setOpen] = useState(false);
+  const [error, setError] = useState('');
+  const refresh = () =>
+    sessionRequest('/session')
+      .then(setSession)
+      .catch(() => {});
+  useEffect(() => {
+    void refresh();
+    window.addEventListener('renovagent-session', refresh);
+    return () => window.removeEventListener('renovagent-session', refresh);
+  }, []);
+  const guest = session?.user?.guest;
+  return (
+    <>
+      <button className="public-account" onClick={() => setOpen(true)}>
+        {session?.signedIn ? (guest ? 'Guest account' : 'Account') : 'Sign in'}
+      </button>
+      {open && (
+        <Modal
+          title={
+            session?.signedIn
+              ? guest
+                ? 'Keep your projects'
+                : 'Your account'
+              : 'Welcome to Renovagent'
+          }
+          onClose={() => setOpen(false)}
+          className="public-account-dialog"
+        >
+          {session?.signedIn ? (
+            <>
+              <p>
+                {guest
+                  ? 'You’re using a guest workspace in this browser. Connect Google to return to these projects on another device.'
+                  : session.user?.email}
+              </p>
+              <div className="public-account-choices">
+                {guest && session.providers?.includes('google') && (
+                  <a
+                    href="/api/workspace/auth/google"
+                    onClick={(event) => {
+                      event.preventDefault();
+                      void import('../house-example/own-intake-draft.js')
+                        .then((module) => module.flushOwnIntakeSave())
+                        .then(() => {
+                          rememberReturn();
+                          window.location.assign('/api/workspace/auth/google');
+                        })
+                        .catch(() =>
+                          setError(
+                            'Your draft could not be saved. Keep this tab open and try again.',
+                          ),
+                        );
+                    }}
+                  >
+                    Keep my projects with Google
+                  </a>
+                )}
+                <a href="#projects" onClick={() => setOpen(false)}>
+                  Open my projects
+                </a>
+                <button
+                  onClick={() =>
+                    void sessionRequest('/auth/logout', true)
+                      .then(() => window.location.reload())
+                      .catch((e) => setError(e.message))
+                  }
+                >
+                  Sign out
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <p>
+                Sign in with Google to keep your projects and open them on another device. Or try a
+                private guest workspace in this browser.
+              </p>
+              <div className="public-account-choices">
+                <Suspense fallback={<p role="status">Loading sign-in options…</p>}>
+                  <SignInChoices
+                    className="public-auth-choice"
+                    onSignedIn={async () => {
+                      await refresh();
+                      setOpen(false);
+                    }}
+                  />
+                </Suspense>
+              </div>
+            </>
+          )}
+          {error && <p role="alert">{error}</p>}
+        </Modal>
+      )}
+    </>
+  );
+}

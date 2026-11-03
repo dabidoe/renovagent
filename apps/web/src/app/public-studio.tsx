@@ -4,6 +4,7 @@ import { ExamplesGallery, ListingStudio } from '../features/house-example/listin
 import { InspoExample } from '../features/house-example/inspo-example.js';
 import { SavedPlan } from '../features/house-example/saved-plan.js';
 import { SavedDesign } from '../features/house-example/saved-design.js';
+import { ProjectLibrary } from '../features/house-example/project-library.js';
 import { ConnectAgent } from '../features/connect/connect-agent.js';
 import '../features/house-example/house-example.css';
 import '../features/house-example/paint-floor.css';
@@ -19,6 +20,7 @@ export default function PublicStudio({
   start: OwnStart | null;
   onOpen: (route: string) => void;
 }) {
+  if (hash === '#projects') return <ProjectLibrary />;
   if (hash === '#connect') return <ConnectAgent />;
   if (hash === '#your-project') return <OwnStudio key={start ? 'start' : 'own'} start={start} />;
   if (hash === '#example-house')

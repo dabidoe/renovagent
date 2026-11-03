@@ -1,17 +1,18 @@
 .room3d-camera {
   position: absolute;
   z-index: 3;
-  bottom: 12px;
-  left: 8px;
-  right: 8px;
+  top: 50%;
+  left: 10px;
+  transform: translateY(-50%);
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   justify-content: center;
   gap: 6px;
   pointer-events: none;
 }
 .room3d-camera-group {
   display: flex;
+  flex-direction: column;
   gap: 2px;
   padding: 3px;
   border: 1px solid #d6dfe9;
@@ -26,8 +27,8 @@
 }
 .room3d-camera button {
   box-sizing: border-box;
-  min-width: 44px;
-  min-height: 44px;
+  min-width: 36px;
+  min-height: 36px;
   margin: 0;
   padding: 6px;
   border: 0;
@@ -41,8 +42,8 @@
 }
 .room3d-camera svg {
   display: block;
-  width: 22px;
-  height: 22px;
+  width: 18px;
+  height: 18px;
 }
 .room3d-camera button:hover {
   background: #eff6ff;
@@ -60,5 +61,12 @@
   .pf-3d-host:not(.is-photoreal) {
     aspect-ratio: auto;
     height: 320px;
+  }
+}
+
+@media (pointer: coarse) {
+  .room3d-camera button {
+    min-width: 44px;
+    min-height: 44px;
   }
 }

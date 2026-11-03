@@ -427,19 +427,6 @@ export function InspoPanel({
   const usesAmazon = Boolean(amazonTag && inspo);
   return (
     <div className="pf-inspo">
-      <div className="pf-group-head">
-        <h3>Make it your room.</h3>
-        {inspo && (
-          <button
-            type="button"
-            disabled={!!status.busy}
-            className="pf-inspo-again"
-            onClick={() => file.current?.click()}
-          >
-            Another photo
-          </button>
-        )}
-      </div>
       <section className="pf-room-ideas" aria-label="Ideas for your room">
         <div className="pf-ideas-intro">
           <span>A fresh pair of eyes</span>
@@ -530,293 +517,316 @@ export function InspoPanel({
           </>
         )}
       </section>
-      <div className="pf-styling-modes" role="group" aria-label="Room design approach">
-        <button
-          type="button"
-          aria-pressed={mode === 'refresh'}
-          disabled={!!status.busy}
-          onClick={() => setMode('refresh')}
-        >
-          <b>Refresh finishes</b>
-          <small>Keep the furniture</small>
-        </button>
-        <button
-          type="button"
-          aria-pressed={mode === 'furnish'}
-          disabled={!!status.busy}
-          onClick={() => setMode('furnish')}
-        >
-          <b>Furnish the room</b>
-          <small>Furniture, lighting & décor</small>
-        </button>
-      </div>
-      <p className="pf-inspo-note">
-        {mode === 'furnish'
-          ? 'Borrow furniture and lighting from a room you love. Keep your room’s architecture.'
-          : 'Borrow colors and textures while keeping your furniture in place.'}
-      </p>
-      <label className="pf-design-brief">
-        Your design brief
-        <textarea
-          ref={briefInput}
-          aria-label="Your design brief"
-          value={brief}
-          maxLength={1000}
-          disabled={!!status.busy}
-          onChange={(e) => setBrief(e.target.value)}
-          placeholder="A cream sofa, walnut coffee table and a large striped rug. Warm and lived-in."
-        />
-      </label>
-      {!!sampleRoom?.furnishingSuggestions?.length && (
-        <div className="sample-room-restyle">
-          <p>Try a furniture direction</p>
-          <div className="sample-room-suggestions" aria-label="Sample furnishing ideas">
-            {sampleRoom.furnishingSuggestions.map((idea) => (
-              <button
-                type="button"
-                key={idea.title}
-                disabled={!!status.busy}
-                onClick={() => {
-                  setBrief(idea.brief);
-                  setMode('furnish');
-                  briefInput.current?.focus();
-                }}
-              >
-                {idea.title}
-              </button>
-            ))}
+      <div className="pf-design-compose">
+        <section className="pf-design-request" aria-label="Design brief and preferences">
+          <h4>Make it yours</h4>
+          <div className="pf-styling-modes" role="group" aria-label="Room design approach">
+            <button
+              type="button"
+              aria-pressed={mode === 'refresh'}
+              disabled={!!status.busy}
+              onClick={() => setMode('refresh')}
+            >
+              <b>Refresh finishes</b>
+              <small>Keep the furniture</small>
+            </button>
+            <button
+              type="button"
+              aria-pressed={mode === 'furnish'}
+              disabled={!!status.busy}
+              onClick={() => setMode('furnish')}
+            >
+              <b>Furnish the room</b>
+              <small>Furniture, lighting & décor</small>
+            </button>
           </div>
-          <small>Fills your brief. Create room design makes the live mockup.</small>
-        </div>
-      )}
-      <label className="pf-styling-keep">
-        Keep unchanged
-        <input
-          type="text"
-          maxLength={300}
-          disabled={!!status.busy}
-          value={keep}
-          placeholder="e.g. my sofa, the piano and the fireplace"
-          onChange={(e) => setKeep(e.target.value)}
-        />
-      </label>
-      <input
-        ref={file}
-        type="file"
-        accept="image/*"
-        hidden
-        onChange={(e) => {
-          const picked = e.target.files?.[0];
-          e.target.value = '';
-          if (picked) void analyse(picked);
-        }}
-      />
-      {!inspo && !status.busy && (
-        <button type="button" className="pf-inspo-add" onClick={() => file.current?.click()}>
-          <Glyph name="photo" />
-          <span>
-            <b>Use an inspiration photo</b>
-            <small>Optional · a screenshot or a room you love</small>
-          </span>
-        </button>
-      )}
-      <InspoBoard onUsePhoto={(sha256) => void analyse(sha256)} busy={!!status.busy} />
-      {status.busy && (
-        <p className="pf-inspo-status">
-          <span className="pf-spinner" aria-hidden="true" /> {status.busy}
-        </p>
-      )}
-      {status.error && (
-        <div>
-          <StudioError message={status.error} />
-          {signIn && (
-            <div className="pf-inspo-signin">
-              <SignInChoices />
+          <p className="pf-inspo-note">
+            {mode === 'furnish'
+              ? 'Borrow furniture and lighting from a room you love. Keep your room’s architecture.'
+              : 'Borrow colors and textures while keeping your furniture in place.'}
+          </p>
+          <label className="pf-design-brief">
+            Your design brief
+            <textarea
+              ref={briefInput}
+              aria-label="Your design brief"
+              value={brief}
+              maxLength={1000}
+              disabled={!!status.busy}
+              onChange={(e) => setBrief(e.target.value)}
+              placeholder="A cream sofa, walnut coffee table and a large striped rug. Warm and lived-in."
+            />
+          </label>
+          {!!sampleRoom?.furnishingSuggestions?.length && (
+            <div className="sample-room-restyle">
+              <p>Try a furniture direction</p>
+              <div className="sample-room-suggestions" aria-label="Sample furnishing ideas">
+                {sampleRoom.furnishingSuggestions.map((idea) => (
+                  <button
+                    type="button"
+                    key={idea.title}
+                    disabled={!!status.busy}
+                    onClick={() => {
+                      setBrief(idea.brief);
+                      setMode('furnish');
+                      briefInput.current?.focus();
+                    }}
+                  >
+                    {idea.title}
+                  </button>
+                ))}
+              </div>
+              <small>Fills your brief. Create room design makes the live mockup.</small>
             </div>
           )}
-        </div>
-      )}
-      {inspo && (
-        <>
-          <figure className="pf-inspo-photo">
-            <img src={imageUrl(inspo.sha256)} alt="Your inspiration photo" />
-            <svg viewBox={`0 0 ${inspo.width} ${inspo.height}`} aria-hidden="true">
-              {inspo.items.map((item) =>
-                item.segments.map((s, k) => (
-                  <path
-                    key={`${item.phrase}-${k}`}
-                    d={s.path}
-                    transform={`translate(${s.box.left} ${s.box.top}) scale(${s.scaleX} ${s.scaleY})`}
-                    className={hover === item.phrase ? 'is-hover' : ''}
-                  />
-                )),
-              )}
-            </svg>
-            <figcaption>Outlined by SAM 3.1 · named by Muse</figcaption>
-          </figure>
-          <ul className="pf-inspo-items">
-            {inspo.items.map((item, i) => (
-              <li
-                key={item.phrase}
-                onMouseEnter={() => setHover(item.phrase)}
-                onMouseLeave={() => setHover(null)}
+          <label className="pf-styling-keep">
+            Keep unchanged
+            <input
+              type="text"
+              maxLength={300}
+              disabled={!!status.busy}
+              value={keep}
+              placeholder="e.g. my sofa, the piano and the fireplace"
+              onChange={(e) => setKeep(e.target.value)}
+            />
+          </label>
+        </section>
+        <section className="pf-design-reference" aria-label="Design inspiration">
+          <div className="pf-group-head">
+            <h4>Bring your inspiration</h4>
+            {inspo && (
+              <button
+                type="button"
+                disabled={!!status.busy}
+                className="pf-inspo-again"
+                onClick={() => file.current?.click()}
               >
-                <label>
-                  <input
-                    type="checkbox"
-                    checked={
-                      borrow.has(item.phrase) &&
-                      (item.kind !== 'floor' || /rug|mat/i.test(item.phrase))
-                    }
-                    disabled={
-                      !!status.busy || (item.kind === 'floor' && !/rug|mat/i.test(item.phrase))
-                    }
-                    onChange={(e) =>
-                      setBorrow((b) => {
-                        const next = new Set(b);
-                        if (e.target.checked) next.add(item.phrase);
-                        else next.delete(item.phrase);
-                        return next;
-                      })
-                    }
-                  />
-                  <i style={{ background: colours[i] || 'transparent' }} />
-                  <span>
-                    {item.name}
-                    <small>
-                      {item.kind === 'floor' && !/rug|mat/i.test(item.phrase)
-                        ? 'Use floor controls below'
-                        : item.segments.length
-                          ? item.kind
-                          : `${item.kind} · not outlined`}
-                    </small>
-                  </span>
-                </label>
-                {item.kind === 'walls' && paints?.matches.length ? (
-                  <div className="pf-inspo-paints">
-                    <small>
-                      {paints.close
-                        ? `Closest ${paints.matches[0]?.brand ?? ''} colors to how it looks in this photo`
-                        : 'No close match in the loaded colors; the nearest are'}
-                    </small>
-                    <div role="group" aria-label="Closest paints">
-                      {paints.matches.map((m) => (
-                        <button
-                          key={m.code || m.name}
-                          type="button"
-                          aria-pressed={paint?.hex === m.hex}
-                          onClick={() => {
-                            setPaint(m);
-                            onPaint({ name: m.name, code: m.code, hex: m.hex, brand: m.brand });
-                          }}
-                        >
-                          <i style={{ background: m.hex }} />
-                          {m.name}
-                          <small>{m.code}</small>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                ) : item.kind !== 'walls' ? (
-                  <p className="pf-inspo-shop">
-                    Search:{' '}
-                    {shopLinks(item.name, amazonTag).map((l) => (
-                      <a key={l.store} href={l.href} target="_blank" rel="noreferrer sponsored">
-                        {l.store}
-                      </a>
-                    ))}
-                  </p>
-                ) : null}
-              </li>
-            ))}
-          </ul>
-          <p className="pf-inspo-note">
-            Furniture and lighting are visual concepts; fit, products and installation are not
-            verified or included in the paint-and-floor total. Colors are read from the photo, so
-            its lighting shows in them. Store links are searches, not picked products.
-            {usesAmazon ? ` ${AMAZON_DISCLOSURE}` : ''}
-          </p>
-        </>
-      )}
-      {changes.length > 0 && (
-        <div className="pf-inspo-changes">
-          <h4>Last design · proposed changes</h4>
-          {resultSignature !== signature && (
-            <p className="pf-styling-stale" role="status">
-              Choices changed. Generate a new design to see them applied.
+                Another photo
+              </button>
+            )}
+          </div>
+          <input
+            ref={file}
+            type="file"
+            accept="image/*"
+            hidden
+            onChange={(e) => {
+              const picked = e.target.files?.[0];
+              e.target.value = '';
+              if (picked) void analyse(picked);
+            }}
+          />
+          {!inspo && !status.busy && (
+            <button type="button" className="pf-inspo-add" onClick={() => file.current?.click()}>
+              <Glyph name="photo" />
+              <span>
+                <b>Use an inspiration photo</b>
+                <small>Optional · a screenshot or a room you love</small>
+              </span>
+            </button>
+          )}
+          <InspoBoard onUsePhoto={(sha256) => void analyse(sha256)} busy={!!status.busy} />
+          {status.busy && (
+            <p className="pf-inspo-status">
+              <span className="pf-spinner" aria-hidden="true" /> {status.busy}
             </p>
           )}
-          <ul>
-            {changes.map((c) => (
-              <li key={c.target}>
-                <s>{c.target}</s> → {c.becomes}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+          {status.error && (
+            <div>
+              <StudioError message={status.error} />
+              {signIn && (
+                <div className="pf-inspo-signin">
+                  <SignInChoices />
+                </div>
+              )}
+            </div>
+          )}
+          {inspo && (
+            <>
+              <figure className="pf-inspo-photo">
+                <img src={imageUrl(inspo.sha256)} alt="Your inspiration photo" />
+                <svg viewBox={`0 0 ${inspo.width} ${inspo.height}`} aria-hidden="true">
+                  {inspo.items.map((item) =>
+                    item.segments.map((s, k) => (
+                      <path
+                        key={`${item.phrase}-${k}`}
+                        d={s.path}
+                        transform={`translate(${s.box.left} ${s.box.top}) scale(${s.scaleX} ${s.scaleY})`}
+                        className={hover === item.phrase ? 'is-hover' : ''}
+                      />
+                    )),
+                  )}
+                </svg>
+                <figcaption>Outlined by SAM 3.1 · named by Muse</figcaption>
+              </figure>
+              <ul className="pf-inspo-items">
+                {inspo.items.map((item, i) => (
+                  <li
+                    key={item.phrase}
+                    onMouseEnter={() => setHover(item.phrase)}
+                    onMouseLeave={() => setHover(null)}
+                  >
+                    <label>
+                      <input
+                        type="checkbox"
+                        checked={
+                          borrow.has(item.phrase) &&
+                          (item.kind !== 'floor' || /rug|mat/i.test(item.phrase))
+                        }
+                        disabled={
+                          !!status.busy || (item.kind === 'floor' && !/rug|mat/i.test(item.phrase))
+                        }
+                        onChange={(e) =>
+                          setBorrow((b) => {
+                            const next = new Set(b);
+                            if (e.target.checked) next.add(item.phrase);
+                            else next.delete(item.phrase);
+                            return next;
+                          })
+                        }
+                      />
+                      <i style={{ background: colours[i] || 'transparent' }} />
+                      <span>
+                        {item.name}
+                        <small>
+                          {item.kind === 'floor' && !/rug|mat/i.test(item.phrase)
+                            ? 'Use floor controls below'
+                            : item.segments.length
+                              ? item.kind
+                              : `${item.kind} · not outlined`}
+                        </small>
+                      </span>
+                    </label>
+                    {item.kind === 'walls' && paints?.matches.length ? (
+                      <div className="pf-inspo-paints">
+                        <small>
+                          {paints.close
+                            ? `Closest ${paints.matches[0]?.brand ?? ''} colors to how it looks in this photo`
+                            : 'No close match in the loaded colors; the nearest are'}
+                        </small>
+                        <div role="group" aria-label="Closest paints">
+                          {paints.matches.map((m) => (
+                            <button
+                              key={m.code || m.name}
+                              type="button"
+                              aria-pressed={paint?.hex === m.hex}
+                              onClick={() => {
+                                setPaint(m);
+                                onPaint({ name: m.name, code: m.code, hex: m.hex, brand: m.brand });
+                              }}
+                            >
+                              <i style={{ background: m.hex }} />
+                              {m.name}
+                              <small>{m.code}</small>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    ) : item.kind !== 'walls' ? (
+                      <p className="pf-inspo-shop">
+                        Search:{' '}
+                        {shopLinks(item.name, amazonTag).map((l) => (
+                          <a key={l.store} href={l.href} target="_blank" rel="noreferrer sponsored">
+                            {l.store}
+                          </a>
+                        ))}
+                      </p>
+                    ) : null}
+                  </li>
+                ))}
+              </ul>
+              <p className="pf-inspo-note">
+                Furniture and lighting are visual concepts; fit, products and installation are not
+                verified or included in the paint-and-floor total. Colors are read from the photo,
+                so its lighting shows in them. Store links are searches, not picked products.
+                {usesAmazon ? ` ${AMAZON_DISCLOSURE}` : ''}
+              </p>
+            </>
+          )}
+        </section>
+        <section className="pf-design-review" aria-label="Render your design">
+          <h4>Render your room</h4>
+          {changes.length > 0 && (
+            <div className="pf-inspo-changes">
+              <h4>Last design · proposed changes</h4>
+              {resultSignature !== signature && (
+                <p className="pf-styling-stale" role="status">
+                  Choices changed. Generate a new design to see them applied.
+                </p>
+              )}
+              <ul>
+                {changes.map((c) => (
+                  <li key={c.target}>
+                    <s>{c.target}</s> → {c.becomes}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
-      <div className="pf-design-action">
-        <button
-          type="button"
-          className="pf-inspo-go"
-          disabled={
-            !!status.busy ||
-            !!floorPending ||
-            !room.photo.src ||
-            (!brief.trim() &&
-              !borrowsItems &&
-              !designItems.some((i) => i.action !== 'keep') &&
-              !(currentColor === undefined ? paint : currentColor))
-          }
-          onClick={() => void restyle()}
-        >
-          {status.busy
-            ? 'Creating…'
-            : resultSignature
-              ? 'Update room design'
-              : 'Create room design'}{' '}
-          <Glyph name="right" />
-        </button>
-        <small>
-          {floorPending
-            ? 'Waiting for the selected floor preview…'
-            : 'Generated concept · your room, your choices'}
-        </small>
-      </div>
-      {versions.length > 0 && (
-        <div className="pf-design-history">
-          <h4>
-            Your designs <span>{versions.length}</span>
-          </h4>
-          <div role="group" aria-label="Previous room designs">
-            {versions.map((v, index) => (
-              <button
-                key={v.id}
-                type="button"
-                aria-pressed={v.id === selectedVersionId}
-                disabled={!!status.busy}
-                onClick={() => {
-                  setSelectedVersionId(v.id);
-                  setResultSignature(v.signature);
-                  setChanges(v.changes);
-                  onRestyled(v.image, v.finishSignature);
-                }}
-              >
-                <img src={v.image} alt={`Design ${index + 1}`} />
-                <span>
-                  {index + 1}. {v.title}
-                </span>
-              </button>
-            ))}
+          <div className="pf-design-action">
+            <button
+              type="button"
+              className="pf-inspo-go"
+              disabled={
+                !!status.busy ||
+                !!floorPending ||
+                !room.photo.src ||
+                (!brief.trim() &&
+                  !borrowsItems &&
+                  !designItems.some((i) => i.action !== 'keep') &&
+                  !(currentColor === undefined ? paint : currentColor))
+              }
+              onClick={() => void restyle()}
+            >
+              {status.busy
+                ? 'Creating…'
+                : resultSignature
+                  ? 'Update room design'
+                  : 'Create room design'}{' '}
+              <Glyph name="right" />
+            </button>
+            <small>
+              {floorPending
+                ? 'Waiting for the selected floor preview…'
+                : 'Generated concept · your room, your choices'}
+            </small>
           </div>
-        </div>
-      )}
-      <p className="pf-inspo-note">
-        {storageFailed
-          ? 'Choices could not be saved in this browser.'
-          : 'Save project to keep this design in your workspace.'}
-      </p>
+          {versions.length > 0 && (
+            <div className="pf-design-history">
+              <h4>
+                Your designs <span>{versions.length}</span>
+              </h4>
+              <div role="group" aria-label="Previous room designs">
+                {versions.map((v, index) => (
+                  <button
+                    key={v.id}
+                    type="button"
+                    aria-pressed={v.id === selectedVersionId}
+                    disabled={!!status.busy}
+                    onClick={() => {
+                      setSelectedVersionId(v.id);
+                      setResultSignature(v.signature);
+                      setChanges(v.changes);
+                      onRestyled(v.image, v.finishSignature);
+                    }}
+                  >
+                    <img src={v.image} alt={`Design ${index + 1}`} />
+                    <span>
+                      {index + 1}. {v.title}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          <p className="pf-inspo-note">
+            {storageFailed
+              ? 'Choices could not be saved in this browser.'
+              : 'Save project to keep this design in your workspace.'}
+          </p>
+        </section>
+      </div>
     </div>
   );
 }
@@ -825,16 +835,23 @@ export function InspoPanel({
 export function InspiredView({
   before,
   after,
+  compare = true,
+  sideBySide = false,
   caption = 'Generated room concept · check dimensions and product fit before buying.',
 }: {
   before: string;
   after: string;
+  compare?: boolean;
+  sideBySide?: boolean;
   caption?: string;
 }) {
   const [split, setSplit] = useState(50);
   return (
     <figure className="pf-inspired">
-      <div className="pf-inspired-stage" style={{ ['--split' as string]: `${split}%` }}>
+      <div
+        className={`pf-inspired-stage${compare ? (sideBySide ? ' pf-compare-pair' : '') : ' pf-design-only'}`}
+        style={{ ['--split' as string]: `${split}%` }}
+      >
         <img src={after} alt="Your generated room design" />
         <img className="pf-inspired-before" src={before} alt="Your room before" />
         <span className="pf-inspired-divider" aria-hidden="true" />

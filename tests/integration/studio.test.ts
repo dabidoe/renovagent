@@ -107,6 +107,18 @@ test(
           ],
         },
         modelRenders: { living: { image: src, signature: 'fixture-layout-one' } },
+        renderStyles: { living: 'Warm and cozy: natural materials' },
+        comparisonStyles: {
+          living: [
+            {
+              id: 'finish-style',
+              name: 'Sage and oak',
+              kind: 'finishes',
+              pick: { color: null, floor: 'keep', included: true },
+            },
+            { id: 'photo-style', name: 'Evening look', kind: 'image', image: src },
+          ],
+        },
         items: {
           living: [
             {
@@ -203,6 +215,40 @@ test(
       assert.deepEqual(revised.snapshot.items, snapshot.items);
       assert.deepEqual(revised.snapshot.placements, snapshot.placements);
       assert.deepEqual(revised.snapshot.modelRenders, snapshot.modelRenders);
+      assert.deepEqual(revised.snapshot.comparisonStyles, snapshot.comparisonStyles);
+      await assert.rejects(
+        () =>
+          saveStudioDesign(repo, images, {
+            requestId: 'bad-look-room',
+            expectedRevision: 0,
+            snapshot: {
+              ...snapshot,
+              comparisonStyles: { nonexistent: snapshot.comparisonStyles!.living },
+            },
+          }),
+        /project’s rooms/,
+      );
+      await assert.rejects(
+        () =>
+          saveStudioDesign(repo, images, {
+            requestId: 'foreign-look-photo',
+            expectedRevision: 0,
+            snapshot: {
+              ...snapshot,
+              comparisonStyles: {
+                living: [
+                  {
+                    id: 'foreign',
+                    name: 'Foreign',
+                    kind: 'image',
+                    image: `/api/workspace/design-images/${'f'.repeat(64)}`,
+                  },
+                ],
+              },
+            },
+          }),
+        /image is missing/,
+      );
       assert.deepEqual(revised.snapshot.styling.living.versions, snapshot.styling.living.versions);
       const studioScope = (await repo.read()).workspace.artifacts[
         `${saved.projectId}:scope-draft`
@@ -781,10 +827,21 @@ test(
       assert.match(prompts.at(-1)!, /Lounge sofa/);
       assert.match(prompts.at(-1)!, /every furniture object's location/);
       assert.equal(
+        (await post('/studio/model-render', { ...modelInput, style: 'Warm natural textiles' }))
+          .status,
+        200,
+      );
+      assert.match(prompts.at(-1)!, /Warm natural textiles/);
+      assert.match(prompts.at(-1)!, /preserving furniture shapes, sizes and placement/);
+      assert.equal(
         (await fetch(`${base}/design-images/${rendered.sha256}`, { headers: auth })).status,
         200,
       );
       const beforeInvalidRender = { ...calls };
+      assert.equal(
+        (await post('/studio/model-render', { ...modelInput, style: 'x'.repeat(301) })).status,
+        400,
+      );
       assert.equal(
         (
           await post('/studio/model-render', {

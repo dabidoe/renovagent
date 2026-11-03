@@ -9,7 +9,7 @@ function load(id: StudioAssetId) {
   let pending = cache.get(id);
   if (!pending) {
     pending = loader
-      .loadAsync(`/furniture/kenney/${studioAsset(id).file}.glb`)
+      .loadAsync(studioAsset(id).url ?? `/furniture/kenney/${studioAsset(id).file}.glb`)
       .then((g) => g.scene);
     cache.set(id, pending);
     void pending.catch(() => cache.delete(id));
@@ -29,6 +29,10 @@ export async function furnitureObject(p: StudioPlacement) {
       const m = raw.clone();
       // Recolour the main material while retaining legs, lamp shades and secondary details.
       if (
+        (studioAsset(p.assetId).url &&
+          p.color !== studioAsset(p.assetId).color &&
+          m.name ===
+            (p.assetId === 'vanity' ? 'wood2' : p.assetId === 'mirror' ? 'yellow' : 'white')) ||
         /carpet$|carpetDarker/.test(m.name) ||
         (p.assetId === 'plant' && m.name === 'plant') ||
         (p.assetId === 'bed' && m.name === 'carpetWhite') ||
@@ -59,7 +63,7 @@ export async function furnitureObject(p: StudioPlacement) {
   return group;
 }
 export function positionFurniture(group: THREE.Group, p: StudioPlacement) {
-  group.position.set(p.xM, p.assetId === 'rug' ? 0.008 : 0, p.zM);
+  group.position.set(p.xM, p.yM ?? (p.assetId === 'rug' ? 0.008 : 0), p.zM);
   group.rotation.y = (p.rotationDeg * Math.PI) / 180;
   group.scale.set(p.widthM, p.heightM, p.depthM);
   group.name = studioAsset(p.assetId).name;
@@ -70,8 +74,8 @@ export function positionFurniture(group: THREE.Group, p: StudioPlacement) {
     displayOnly: true,
     verified: false,
     dimensions: 'Owner-editable concept dimensions, not measured product sizes',
-    license: 'CC0-1.0',
-    creator: 'Kenney',
+    license: studioAsset(p.assetId).license ?? 'CC0-1.0',
+    creator: studioAsset(p.assetId).creator ?? 'Kenney',
   };
 }
 export function disposeFurniture(group: THREE.Object3D) {

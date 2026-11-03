@@ -1,6 +1,6 @@
 import { Component, lazy, Suspense, useEffect, useState, type ReactNode } from 'react';
 import { BrandMark } from '../components/brand-mark.js';
-import { Glyph } from '../components/glyph.js';
+import { AccountAccess } from '../features/connect/account-access.js';
 import { Landing } from '../features/landing/landing.js';
 import type { OwnStart } from '../features/house-example/own-studio.js';
 import { landingAnchors, publicRoute } from './public-routes.js';
@@ -78,7 +78,9 @@ export function PublicApp() {
     window.scrollTo({ top: 0 });
   };
   const own = (idea?: string) => {
-    setStart({ idea: idea ?? prompt.trim(), photos });
+    const brief = idea ?? prompt.trim();
+    // An empty ‘try your own’ action resumes recovery instead of replacing it.
+    setStart(brief || photos.length ? { idea: brief, photos } : null);
     open('#your-project');
   };
   const errorBanner = authError && (
@@ -107,52 +109,21 @@ export function PublicApp() {
         <button className="prompt-brand" aria-label="Renovagent home" onClick={() => open('')}>
           <BrandMark size={174} lockup compact={landing} tone={landing ? 'light' : 'dark'} />
         </button>
-        {landing ? (
-          <nav className="landing-nav" aria-label="Main navigation">
-            <a href="#product-proof">Studio</a>
-            <a href="#connect">Connect your agent</a>
-            <details className="landing-mobile-menu">
-              <summary aria-label="Navigation menu">
-                <Glyph name="menu" />
-              </summary>
-              <div
-                onClick={(event) => {
-                  if ((event.target as HTMLElement).closest('a, button'))
-                    event.currentTarget.closest('details')?.removeAttribute('open');
-                }}
-              >
-                <a href="#product-proof">Studio</a>
-                <a href="#connect">Connect your agent</a>
-              </div>
-            </details>
-          </nav>
-        ) : (
-          <nav className="prompt-studio-nav" aria-label="Studio navigation">
-            <a
-              href="#examples"
-              aria-current={
-                hash === '#example-house' || hash === '#examples' || hash.startsWith('#example/')
-                  ? 'page'
-                  : undefined
-              }
-            >
-              Examples
-            </a>
-            <a href="#your-project" aria-current={hash === '#your-project' ? 'page' : undefined}>
-              Your project
-            </a>
-            <a href="#connect" aria-current={hash === '#connect' ? 'page' : undefined}>
-              Connect
-            </a>
-            <button
-              type="button"
-              aria-label="Open workspace"
-              onClick={() => open('#workspace/projects')}
-            >
-              <Glyph name="menu" />
-            </button>
-          </nav>
-        )}
+        <AccountAccess />
+        <nav className="public-navigation" aria-label="Main navigation">
+          <a href="#examples" aria-current={hash === '#examples' ? 'page' : undefined}>
+            Examples
+          </a>
+          <a href="#your-project" aria-current={hash === '#your-project' ? 'page' : undefined}>
+            Your project
+          </a>
+          <a href="#projects" aria-current={hash === '#projects' ? 'page' : undefined}>
+            My projects
+          </a>
+          <a href="#connect" aria-current={hash === '#connect' ? 'page' : undefined}>
+            Connect agent
+          </a>
+        </nav>
       </header>
       {errorBanner}
       {landing ? (

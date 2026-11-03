@@ -33,6 +33,7 @@ const routes = [
   '/#example/bedroom-refresh',
   '/#example-house',
   '/#your-project',
+  '/#projects',
   '/#connect',
 ];
 
@@ -243,7 +244,10 @@ async function preparedSampleChecks(browser: Browser, base: string) {
         .locator('.sample-room-grid button')
         .filter({ has: page.getByText(sample.title, { exact: true }) })
         .click();
-      await page.getByRole('heading', { name: sample.title, exact: true }).waitFor();
+      await page
+        .locator('.pf-project-details > summary')
+        .filter({ hasText: sample.title })
+        .waitFor();
       check(
         `${vp.tag} ${sample.id}: opens prepared sample directly`,
         page.url().endsWith(preparedSampleRoute(sample)),
@@ -252,17 +256,35 @@ async function preparedSampleChecks(browser: Browser, base: string) {
         `${vp.tag} ${sample.id}: material budget is priced`,
         /^\$[1-9]/.test(await finalText(page, '.pf-total strong')),
       );
+      await page
+        .getByRole('group', { name: 'Preview tools', exact: true })
+        .getByRole('button', { name: /^Floor(?: |$)/ })
+        .click();
       await page.getByRole('button', { name: 'Dark walnut', exact: true }).click();
+      await page
+        .getByRole('group', { name: 'Preview tools', exact: true })
+        .getByRole('button', { name: /^Paint(?: |$)/ })
+        .click();
       await page.getByRole('button', { name: 'Naval SW 6244', exact: true }).click();
       await page.getByRole('button', { name: 'Edit room measurements', exact: true }).click();
       await page.getByRole('textbox', { name: 'Width in feet', exact: true }).fill('15');
       await page.locator('.pf-size button[type="submit"]').click();
       await page.reload({ waitUntil: 'networkidle' });
-      check(
-        `${vp.tag} ${sample.id}: floor and paint edits survive reload`,
+      await page
+        .getByRole('group', { name: 'Preview tools', exact: true })
+        .getByRole('button', { name: /^Floor(?: |$)/ })
+        .click();
+      const floorRetained =
         (await page
           .getByRole('button', { name: 'Dark walnut', exact: true })
-          .getAttribute('aria-pressed')) === 'true' &&
+          .getAttribute('aria-pressed')) === 'true';
+      await page
+        .getByRole('group', { name: 'Preview tools', exact: true })
+        .getByRole('button', { name: /^Paint(?: |$)/ })
+        .click();
+      check(
+        `${vp.tag} ${sample.id}: floor and paint edits survive reload`,
+        floorRetained &&
           (await page
             .getByRole('button', { name: 'Naval SW 6244', exact: true })
             .getAttribute('aria-pressed')) === 'true',
@@ -277,10 +299,13 @@ async function preparedSampleChecks(browser: Browser, base: string) {
         `${vp.tag} ${sample.id}: editor fits viewport`,
         await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1),
       );
+      await page.locator('.pf-project-details > summary').click();
+      await page.locator('.sample-room-info > summary').click();
       check(
         `${vp.tag} ${sample.id}: source credit retained`,
-        (await page.locator('.pf-head').innerText()).includes(sample.source),
+        (await page.locator('.sample-room-info p').innerText()).includes(sample.source),
       );
+      await page.locator('.pf-project-details > summary').click();
       await page.screenshot({
         path: `${outDir}/${vp.tag}-sample-${sample.id}.png`,
         fullPage: true,
@@ -308,7 +333,7 @@ async function preparedSampleChecks(browser: Browser, base: string) {
           body: JSON.stringify({ projectId: 'sample-fixture', revision: 1 }),
         });
       });
-      await page.getByRole('button', { name: 'Save project', exact: true }).click();
+      await page.getByRole('button', { name: 'Save to workspace', exact: true }).click();
       await page.waitForFunction(() => location.hash === '#design/sample-fixture/1');
       check(
         `${vp.tag}: account save carries prepared project and edits`,

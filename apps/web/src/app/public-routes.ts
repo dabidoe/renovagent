@@ -7,9 +7,10 @@ export const landingAnchors = new Set([
 ]);
 
 export function publicRoute(hash: string) {
+  if (/^#connect\/approve\/[A-Za-z0-9_-]{43}$/.test(hash)) return 'studio';
   if (/^#workspace(?:\/(?:projects|example-room))?$/.test(hash)) return 'workspace';
   if (
-    /^#(example-house|your-project|examples|connect|example\/[a-z0-9-]+|plan\/[A-Za-z0-9_-]{22}|design\/[A-Za-z0-9_:%-]+\/[1-9][0-9]*)$/.test(
+    /^#(example-house|your-project|projects|examples|connect|example\/[a-z0-9-]+|plan\/[A-Za-z0-9_-]{22}|design\/[A-Za-z0-9_:%-]+\/[1-9][0-9]*)$/.test(
       hash,
     )
   )

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { workspaceRequest } from '../../adapters/http/project-repository.js';
+import { SignInChoices } from '../connect/sign-in.js';
 import { OwnStudio } from './own-studio.js';
 import type { SavedStudioDesign } from './paint-floor-studio.js';
 
@@ -33,7 +34,8 @@ export function SavedDesign({ projectId, revision }: { projectId: string; revisi
         <h1>This design could not be opened.</h1>
         <p>{error}</p>
         <p>Use the account or guest browser that saved it. This is a private project link.</p>
-        <a href="#connect">Connect your account</a>
+        <SignInChoices />
+        <a href="#projects">Back to my projects</a>
       </section>
     );
   if (!design) return <p role="status">Opening saved room design…</p>;

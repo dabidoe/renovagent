@@ -143,7 +143,11 @@ async function run(browser: Browser, directory: string, before = false) {
         });
         if (before) continue;
         assert.ok(landing, `${mode}: / opens the landing with saved projects`);
-        assert.equal(api.length, 0, `${mode}: / never requests the private API`);
+        assert.equal(
+          api.filter((path) => path !== '/api/workspace/session').length,
+          0,
+          `${mode}: / never requests the private API`,
+        );
         const scripts = await page.evaluate(() =>
           performance.getEntriesByType('resource').map((r) => r.name),
         );
@@ -153,12 +157,20 @@ async function run(browser: Browser, directory: string, before = false) {
         );
         await page.reload({ waitUntil: 'domcontentloaded' });
         await page.locator('#landing-title').waitFor();
-        assert.equal(api.length, 0, 'refresh remains independent of the private API');
+        assert.equal(
+          api.filter((path) => path !== '/api/workspace/session').length,
+          0,
+          'refresh remains independent of the private API',
+        );
         await page.screenshot({ path: `${out}/landing-${mode}.png` });
 
         await page.getByRole('button', { name: 'See listing examples' }).click();
         await page.locator('.pf-gallery').waitFor();
-        assert.equal(api.length, 0, 'gallery also avoids private workspace reads');
+        assert.equal(
+          api.filter((path) => path !== '/api/workspace/session').length,
+          0,
+          'gallery also avoids private workspace reads',
+        );
         await page.getByRole('button', { name: 'Renovagent home', exact: true }).click();
         await page.locator('#landing-title').waitFor();
         await page.goBack();

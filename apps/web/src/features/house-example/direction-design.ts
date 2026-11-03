@@ -1,5 +1,10 @@
 import { studioDesignSchema, type StudioItem, type StudioPlacement } from '@renovagent/contracts';
-import { studioAsset, studioPlacementStart, studioRoomBounds } from '@renovagent/core';
+import {
+  DEMO_FURNITURE_ALLOWANCES,
+  studioAsset,
+  studioPlacementStart,
+  studioRoomBounds,
+} from '@renovagent/core';
 import { PRESET_COLORS, roomModel, type HouseProject, type RoomPick } from './paint-floor.js';
 import { studioFinishSignature, studioStylingSignature } from './studio-signatures.js';
 import type { StudioDirection } from './studio-directions.js';
@@ -39,7 +44,8 @@ export function directionDesign(source: HouseProject, direction: StudioDirection
     category: studioAsset(p.asset).category,
     action: 'add',
     quantity: p.count,
-    unitAllowanceMinor: null,
+    unitAllowanceMinor: DEMO_FURNITURE_ALLOWANCES[p.asset],
+    allowanceSource: 'demo',
   }));
   const placements: StudioPlacement[] = [];
   if (model) {

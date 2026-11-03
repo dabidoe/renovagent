@@ -1,0 +1,336 @@
+.systems-example {
+  padding: clamp(18px, 3vw, 36px);
+  background: #f8faf9;
+  color: #243f43;
+  border-top: 1px solid #dce4e0;
+}
+.systems-example-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 18px;
+  margin-bottom: 24px;
+}
+.systems-kicker {
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  font-weight: 700;
+}
+.systems-example-heading h2 {
+  margin: 8px 0;
+  font-size: clamp(1.4rem, 3vw, 2rem);
+  letter-spacing: -0.035em;
+}
+.systems-example-heading p:not(.systems-kicker) {
+  margin: 0;
+  font-size: 0.87rem;
+  color: #5c7376;
+}
+.systems-coming-soon {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border: 1px solid #d5dfda;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 0.77rem;
+  white-space: nowrap;
+}
+.systems-coming-soon b {
+  color: #71817a;
+  font-size: 0.68rem;
+  font-weight: 500;
+}
+.systems-sheet {
+  border: 1px solid #c8d7db;
+  background: #f4f8fa;
+  border-radius: 12px;
+  overflow: hidden;
+}
+.systems-sheet-top {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 14px 20px;
+  border-bottom: 1px solid #d0dee1;
+  font:
+    10px ui-monospace,
+    monospace;
+  letter-spacing: 0.09em;
+}
+.systems-sheet svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.systems-wall {
+  fill: none;
+  stroke: #294d59;
+  stroke-width: 9;
+  stroke-linejoin: round;
+}
+.systems-door {
+  fill: none;
+  stroke: #97adb5;
+  stroke-width: 1.5;
+}
+.systems-fixture {
+  fill: #fdfefe;
+  stroke: #426877;
+  stroke-width: 2;
+}
+.systems-label {
+  fill: #476c78;
+  font:
+    11px ui-monospace,
+    monospace;
+  letter-spacing: 1px;
+}
+.systems-extension {
+  stroke: #9ab2ba;
+  stroke-width: 1;
+  stroke-dasharray: 4 4;
+  fill: none;
+}
+.systems-dimension {
+  fill: none;
+  stroke: #638691;
+  stroke-width: 1.2;
+}
+.systems-dim-label {
+  fill: #426877;
+  font:
+    12px ui-monospace,
+    monospace;
+}
+.systems-circuit {
+  fill: none;
+  stroke: #277d6a;
+  stroke-width: 2.5;
+  stroke-dasharray: 6 5;
+}
+.systems-electrical {
+  fill: #e6f3ed;
+  stroke: #277d6a;
+  stroke-width: 2;
+}
+.systems-light-route {
+  fill: none;
+  stroke: #b58a42;
+  stroke-width: 2;
+  stroke-dasharray: 3 4;
+}
+.systems-light {
+  fill: #fcf4df;
+  stroke: #b58a42;
+  stroke-width: 2;
+}
+.systems-switch {
+  fill: #b58a42;
+  font:
+    18px ui-monospace,
+    monospace;
+}
+.systems-pin circle {
+  fill: #294d59;
+}
+.systems-pin text {
+  fill: #fff;
+  text-anchor: middle;
+  font:
+    11px ui-monospace,
+    monospace;
+}
+.systems-footnote {
+  fill: #647f88;
+  font:
+    11px ui-monospace,
+    monospace;
+}
+.systems-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 22px;
+  padding: 14px 20px;
+  border-top: 1px solid #d0dee1;
+  font-size: 0.7rem;
+  color: #476c78;
+}
+.systems-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.systems-legend i {
+  width: 19px;
+  border-top: 2px solid #426877;
+}
+.systems-legend .systems-key-circuit {
+  border-color: #277d6a;
+  border-top-style: dashed;
+}
+.systems-legend .systems-key-light {
+  border-color: #b58a42;
+  border-top-style: dotted;
+}
+.systems-requirement-heading {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: space-between;
+  align-items: center;
+  margin: 26px 0 14px;
+}
+.systems-requirement-heading h3 {
+  margin: 0;
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.055em;
+}
+.systems-example a {
+  color: #38695e;
+  text-underline-offset: 3px;
+  font-size: 0.75rem;
+}
+.systems-requirements {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.systems-requirements article {
+  display: flex;
+  gap: 12px;
+  padding: 18px;
+  border: 1px solid #dce4e0;
+  border-radius: 10px;
+  background: #fff;
+}
+.systems-requirement-number {
+  font:
+    0.75rem ui-monospace,
+    monospace;
+  color: #67847d;
+  padding-top: 3px;
+}
+.systems-requirements h4 {
+  margin: 0 0 8px;
+  font-size: 0.9rem;
+}
+.systems-requirements p {
+  margin: 0 0 12px;
+  font-size: 0.8rem;
+  line-height: 1.6;
+  color: #586e70;
+}
+.systems-source-note {
+  margin: 18px 0 0;
+  font-size: 0.71rem;
+  line-height: 1.6;
+  color: #71817a;
+}
+@media (max-width: 600px) {
+  .systems-requirements {
+    grid-template-columns: 1fr;
+  }
+  .systems-coming-soon {
+    flex-direction: row;
+    gap: 12px;
+  }
+  .systems-sheet-top,
+  .systems-legend {
+    padding: 12px;
+  }
+}
+.room-diagram {
+  padding: clamp(18px, 3vw, 36px);
+  background: #f8faf9;
+  color: #243f43;
+}
+.room-diagram-sheet {
+  margin: 0;
+  border: 1px solid #d5dfda;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fff;
+}
+.room-diagram-sheet img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 680px;
+  object-fit: contain;
+}
+.room-diagram-sheet figcaption {
+  padding: 12px 16px;
+  border-top: 1px solid #e0e7e3;
+  color: #647873;
+  font-size: 0.72rem;
+  line-height: 1.6;
+}
+.room-diagram-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  margin: 16px 0 24px;
+}
+.room-diagram-actions a {
+  display: inline-block;
+  color: #fff;
+  background: #354a43;
+  padding: 12px 16px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-size: 0.85rem;
+}
+.room-diagram-actions span {
+  font-size: 0.75rem;
+  color: #647873;
+}
+/* Reference opens from the right edge of the drawing toolbar. */
+.room-diagram-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 14px;
+  font-size: 0.77rem;
+  color: #536f73;
+}
+.room-diagram-example-link {
+  margin-left: auto;
+  border: 0;
+  background: transparent;
+  color: #38695e;
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+  padding: 6px 0 6px 12px;
+}
+.room-diagram-example-modal {
+  width: min(1100px, calc(100vw - 32px));
+  max-width: calc(100vw - 32px);
+  max-height: 90vh;
+  padding: 0;
+  border: 1px solid #d5dfda;
+  border-radius: 16px;
+  overflow: auto;
+}
+.room-diagram-example-modal::backdrop {
+  background: #142b36aa;
+}
+.room-diagram-example-modal > header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 24px;
+}
+.room-diagram-example-modal > header h2 {
+  margin: 0;
+  font-size: 1rem;
+}

@@ -1,6 +1,6 @@
 import { studioItemSchema, type StudioItem } from '@renovagent/contracts';
 
-// Owner-entered allowances only. A saved search or generated object never
+// Explicit demo or owner allowances only. A saved search or generated object never
 // becomes a product price; unknown quantity or allowance stays unpriced.
 export function studioItemBudget(items: StudioItem[]) {
   let allowanceMinor = 0;

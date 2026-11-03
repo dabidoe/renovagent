@@ -1,6 +1,9 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { CSS2DObject, CSS2DRenderer } from 'three/examples/jsm/renderers/CSS2DRenderer.js';
+import { LineSegments2 } from 'three/examples/jsm/lines/LineSegments2.js';
+import { LineSegmentsGeometry } from 'three/examples/jsm/lines/LineSegmentsGeometry.js';
+import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
 import { GLTFExporter } from 'three/examples/jsm/exporters/GLTFExporter.js';
 import { attachPhotoreal } from './photoreal.js';
 import { attachCameraControls } from './camera-controls.js';
@@ -41,6 +44,7 @@ export type RoomScene = {
   exportGlb(): Promise<ArrayBuffer>;
   // An eye-level JPEG of the room for image models (see photoreal.ts).
   captureEyeLevel(): Promise<Blob>;
+  captureTopDown(): Promise<Blob>;
   setPlacements(placements: StudioPlacement[]): void;
   selectPlacement(id: string | null): void;
   dispose(): void;
@@ -163,6 +167,7 @@ export function mountRoomScene(
     placements?: StudioPlacement[];
     onPlacementSelect?: (id: string | null) => void;
     onPlacementMove?: (id: string, xM: number, zM: number) => void;
+    onPlacementRotate?: (id: string, degrees: number) => void;
     modelRender?: StudioModelRenderContext;
     onFurnitureError?: (message: string) => void;
   },
@@ -205,9 +210,11 @@ export function mountRoomScene(
   const objects = new Map<string, { group: THREE.Group; color: string; assetId: string }>();
   const loading = new Map<string, Promise<void>>();
   let selectedPlacement: string | null = null;
+  let selectedTools: HTMLElement | null = null;
   let furnitureOutline: THREE.BoxHelper | null = null;
   const selectPlacement = (id: string | null) => {
     selectedPlacement = id;
+    if (selectedTools) selectedTools.hidden = !id;
     if (furnitureOutline) {
       scene.remove(furnitureOutline);
       furnitureOutline.geometry.dispose();
@@ -449,6 +456,36 @@ export function mountRoomScene(
   controls.enableDamping = true;
   controls.maxPolarAngle = Math.PI * 0.49;
   controls.update();
+  // Leave ordinary wheel/trackpad scrolling to the page. Ctrl-wheel is trackpad pinch.
+  const pageScroll = (event: WheelEvent) => {
+    if (!event.ctrlKey) event.stopImmediatePropagation();
+  };
+  renderer.domElement.addEventListener('wheel', pageScroll, { capture: true, passive: true });
+  if (meta.onPlacementRotate) {
+    selectedTools = document.createElement('div');
+    selectedTools.className = 'room3d-object-tools';
+    selectedTools.hidden = true;
+    selectedTools.setAttribute('role', 'group');
+    selectedTools.setAttribute('aria-label', 'Selected object rotation');
+    const objectLabel = document.createElement('span');
+    objectLabel.textContent = 'Rotate piece';
+    selectedTools.append(objectLabel);
+    for (const [degrees, label, text] of [
+      [-15, 'Rotate selected object left 15 degrees', '↶'],
+      [15, 'Rotate selected object right 15 degrees', '↷'],
+    ] as const) {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.textContent = text;
+      button.title = label;
+      button.setAttribute('aria-label', label);
+      button.addEventListener('click', () => {
+        if (selectedPlacement) meta.onPlacementRotate?.(selectedPlacement, degrees);
+      });
+      selectedTools.append(button);
+    }
+    host.append(selectedTools);
+  }
   const furnitureRay = new THREE.Raycaster();
   const floorPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
   let dragging: { id: string; offset: THREE.Vector3; pointer: number } | null = null;
@@ -633,6 +670,145 @@ export function mountRoomScene(
     onSelect(hit ? (hit.userData.surfaceId as string) : null);
   });
 
+  // Orthographic line drawing from the same loaded meshes, including their actual
+  // rotations, dimensions and elevations. Opaque white faces hide rear edges;
+  // EdgesGeometry avoids triangulation lines. The live scene is never modified.
+  const captureTopDown = async () => {
+    await readyFurniture();
+    if (disposed || objects.size !== placements.length)
+      throw new Error('The room models could not finish loading. Reopen Diagrams to retry.');
+    room.updateMatrixWorld(true);
+    const drawing = new THREE.Scene();
+    drawing.background = new THREE.Color('#ffffff');
+    const paper = new THREE.MeshBasicMaterial({
+      color: '#ffffff',
+      side: THREE.DoubleSide,
+      polygonOffset: true,
+      polygonOffsetFactor: 1,
+      polygonOffsetUnits: 1,
+    });
+    const ink = new LineMaterial({
+      color: '#263d46',
+      linewidth: 2.5,
+      resolution: new THREE.Vector2(1400, 1100),
+    });
+    const wallInk = new LineMaterial({
+      color: '#203640',
+      linewidth: 4.5,
+      resolution: new THREE.Vector2(1400, 1100),
+    });
+    const edges: LineSegmentsGeometry[] = [];
+    room.traverse((object) => {
+      if (!(object instanceof THREE.Mesh)) return;
+      const face = new THREE.Mesh(object.geometry, paper);
+      face.matrixAutoUpdate = false;
+      face.matrix.copy(object.matrixWorld);
+      drawing.add(face);
+      const geometry = new THREE.EdgesGeometry(object.geometry, 25);
+      const strokes = new LineSegmentsGeometry();
+      strokes.setPositions(geometry.getAttribute('position').array as Float32Array);
+      geometry.dispose();
+      edges.push(strokes);
+      const line = new LineSegments2(
+        strokes,
+        String(object.userData.surfaceId ?? '').startsWith('wall:') ? wallInk : ink,
+      );
+      line.matrixAutoUpdate = false;
+      line.matrix.copy(object.matrixWorld);
+      drawing.add(line);
+    });
+    const shot = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+    shot.setSize(1400, 1100, false);
+    shot.outputColorSpace = THREE.SRGBColorSpace;
+    const aspect = 1400 / 1100;
+    const halfWidth = Math.max((maxX - minX) * 0.6, (maxY - minY) * aspect * 0.6);
+    const top = new THREE.OrthographicCamera(
+      -halfWidth,
+      halfWidth,
+      halfWidth / aspect,
+      -halfWidth / aspect,
+      0.01,
+      roomHeight + span * 5 + 10,
+    );
+    top.up.set(0, 0, -1);
+    top.position.set(center.x, roomHeight + span * 2 + 1, center.z);
+    top.lookAt(center.x, 0, center.z);
+    try {
+      shot.render(drawing, top);
+      // Compose dimension ink into the PNG itself, so downloads retain labels.
+      // These are the room's overall X/Z extents, not individual wall lengths.
+      const sheet = document.createElement('canvas');
+      sheet.width = 1400;
+      sheet.height = 1100;
+      const context = sheet.getContext('2d');
+      if (!context) throw new Error('Could not label the room drawing');
+      context.drawImage(shot.domElement, 0, 0);
+      const project = (x: number, z: number) => {
+        const p = new THREE.Vector3(x, 0, z).project(top);
+        return [(p.x + 1) * 700, (1 - p.y) * 550];
+      };
+      const [left, upper] = project(minX, minY);
+      const [right, lower] = project(maxX, maxY);
+      const horizontal = upper! - 42,
+        vertical = right! + 46;
+      context.strokeStyle = '#47616a';
+      context.fillStyle = '#263d46';
+      context.lineWidth = 2;
+      context.beginPath();
+      context.moveTo(left!, upper! - 10);
+      context.lineTo(left!, horizontal - 10);
+      context.moveTo(right!, upper! - 10);
+      context.lineTo(right!, horizontal - 10);
+      context.moveTo(left!, horizontal);
+      context.lineTo(right!, horizontal);
+      context.moveTo(right! + 10, upper!);
+      context.lineTo(vertical + 10, upper!);
+      context.moveTo(right! + 10, lower!);
+      context.lineTo(vertical + 10, lower!);
+      context.moveTo(vertical, upper!);
+      context.lineTo(vertical, lower!);
+      for (const [x, y] of [
+        [left!, horizontal],
+        [right!, horizontal],
+        [vertical, upper!],
+        [vertical, lower!],
+      ]) {
+        context.moveTo(x! - 6, y! + 6);
+        context.lineTo(x! + 6, y! - 6);
+      }
+      context.stroke();
+      const label = (text: string, x: number, y: number, angle = 0) => {
+        context.save();
+        context.translate(x, y);
+        context.rotate(angle);
+        context.font = '600 25px system-ui, sans-serif';
+        context.textAlign = 'center';
+        context.textBaseline = 'middle';
+        const width = context.measureText(text).width;
+        context.fillStyle = '#ffffff';
+        context.fillRect(-width / 2 - 12, -18, width + 24, 36);
+        context.fillStyle = '#263d46';
+        context.fillText(text, 0, 0);
+        context.restore();
+      };
+      label(dimensionLabel(maxX - minX), (left! + right!) / 2, horizontal);
+      label(dimensionLabel(maxY - minY), vertical, (upper! + lower!) / 2, -Math.PI / 2);
+      return await new Promise<Blob>((ok, fail) =>
+        sheet.toBlob(
+          (blob) => (blob ? ok(blob) : fail(Error('Could not save the room drawing'))),
+          'image/png',
+        ),
+      );
+    } finally {
+      edges.forEach((geometry) => geometry.dispose());
+      paper.dispose();
+      wallInk.dispose();
+      ink.dispose();
+      shot.dispose();
+      shot.forceContextLoss();
+    }
+  };
+
   // Standing in one corner at eye height looking across, with every wall
   // solid, a ceiling and a room light: a photo-like still that image models
   // can keep the geometry of. Rendered offscreen; the live view is untouched.
@@ -768,6 +944,7 @@ export function mountRoomScene(
       if (id) photoreal?.show3d();
     },
     captureEyeLevel: () => captureEyeLevel(),
+    captureTopDown,
     async exportGlb() {
       await readyFurniture();
       const result = await new GLTFExporter().parseAsync(room, { binary: true, onlyVisible: true });
@@ -779,6 +956,8 @@ export function mountRoomScene(
       for (const entry of objects.values()) disposeFurniture(entry.group);
       cancelAnimationFrame(frame);
       observer.disconnect();
+      renderer.domElement.removeEventListener('wheel', pageScroll, true);
+      selectedTools?.remove();
       controls.dispose();
       navigation.dispose();
       renderer.dispose();

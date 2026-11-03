@@ -4,7 +4,8 @@ import type { RoomLook } from './room-scene.js';
 import type { StudioPlacement } from '@renovagent/contracts';
 
 export type StudioModelRenderContext = {
-  current: () => { placements: StudioPlacement[]; signature: string };
+  current: () => { placements: StudioPlacement[]; signature: string; style?: string };
+  onStyleChange?: (style: string) => void;
   initial?: { image: string; signature: string };
   onRendered: (image: string, signature: string) => void;
 };
@@ -79,6 +80,38 @@ export function attachPhotoreal(
   downloads.className = 'room3d-photoreal-downloads';
   downloads.hidden = true;
   bar.append(run, hd, switcher, status);
+  if (studio?.onStyleChange) {
+    const options = document.createElement('details');
+    options.className = 'room3d-render-style';
+    const summary = document.createElement('summary');
+    summary.textContent = 'Render style';
+    const select = document.createElement('select');
+    select.setAttribute('aria-label', 'Rendering style');
+    for (const [value, label] of [
+      ['', 'Use current colors & finishes'],
+      ['Warm and cozy: warm light, soft textiles and natural material finishes.', 'Warm & cozy'],
+      [
+        'Minimal and bright: light natural finishes, soft neutral textiles and clear daylight.',
+        'Minimal & bright',
+      ],
+      [
+        'Classic and layered: rich textile finishes, warm wood and balanced soft lighting.',
+        'Classic & layered',
+      ],
+    ]) {
+      const option = document.createElement('option');
+      option.value = value;
+      option.textContent = label;
+      select.append(option);
+    }
+    select.value = studio.current().style ?? '';
+    select.addEventListener('change', () => {
+      studio.onStyleChange?.(select.value);
+      requestAnimationFrame(invalidate);
+    });
+    options.append(summary, select);
+    bar.prepend(options);
+  }
 
   const figure = document.createElement('figure');
   figure.className = 'room3d-photoreal-view';
@@ -136,6 +169,7 @@ export function attachPhotoreal(
         wall: current.wallColor,
         floor: current.floorFinish,
         placements: layout.placements,
+        style: layout.style ?? '',
       })) as { sha256: string; model: string; note: string };
       if (disposed) {
         studio.onRendered(`/api/workspace/design-images/${result.sha256}`, layout.signature);

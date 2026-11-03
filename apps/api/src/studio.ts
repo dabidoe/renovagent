@@ -427,6 +427,7 @@ const requests = {
       wall: z.string().trim().min(1).max(80),
       floor: z.string().trim().min(1).max(80),
       placements: z.array(studioPlacementSchema).max(60),
+      style: z.string().trim().max(300).default(''),
     })
     .strict(),
   restyle: z
@@ -524,7 +525,7 @@ export function studioRoutes(deps: {
         .join('; ');
       const result = await deps.providers.repaint({
         image: { bytes: image.bytes, mediaType: imageMediaType(image.bytes) },
-        prompt: `Turn this 3D layout view into a photorealistic interior concept of the same furnished room. Keep the same camera, room shape, wall positions, ceiling height, openings, and every furniture object's location, orientation, silhouette and relative size. The illustrative furniture in the input is: ${objects || 'none; keep the room empty'}. Walls: ${JSON.stringify(input.wall)}. Floor: ${JSON.stringify(input.floor)}. Improve materials, soft daylight, fabric, wood grain and realistic shadows. Do not add or remove furniture, windows, doors or architectural features. This is an unverified concept layout, not measured furniture or verified products.`,
+        prompt: `Turn this 3D layout view into a photorealistic interior concept of the same furnished room. Keep the same camera, room shape, wall positions, ceiling height, openings, and every furniture object's location, orientation, silhouette and relative size. The illustrative furniture in the input is: ${objects || 'none; keep the room empty'}. Walls: ${JSON.stringify(input.wall)}. Floor: ${JSON.stringify(input.floor)}. Improve materials, soft daylight, fabric, wood grain and realistic shadows. Rendering style preference: ${JSON.stringify(input.style || 'Keep the proposed materials and colors')}. Apply style through materials, lighting and finish detail while preserving furniture shapes, sizes and placement. Do not add or remove furniture, windows, doors or architectural features. This is an unverified concept layout, not measured furniture or verified products.`,
       });
       const normalized = await normalizeImage(result.bytes);
       const record = await deps.images.put(ownerId, normalized);

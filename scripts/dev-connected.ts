@@ -7,23 +7,15 @@
 import { spawn, type ChildProcess } from 'node:child_process';
 import { MongoClient } from 'mongodb';
 import { LOCAL_URI, projectEnv, workspaceMongoConfig } from '../apps/api/src/database-config.js';
+import { developmentEnv } from './dev-settings.js';
 
 const local = process.argv.includes('--local');
-const { env } = await projectEnv();
+const settings = await projectEnv();
 // Sign-in is opt-in. Google/Meta login settings exported in a shell would
 // otherwise put the demo behind a login and an empty per-account workspace;
 // without them the API runs one shared workspace. --accounts keeps sign-in.
 const accounts = process.argv.includes('--accounts');
-const SIGN_IN = [
-  'GOOGLE_CLIENT_ID',
-  'GOOGLE_CLIENT_SECRET',
-  'GOOGLE_REDIRECT_URI',
-  'GOOGLE_CALLBACK_URL',
-  'META_APP_ID',
-  'META_APP_SECRET',
-  'META_REDIRECT_URI',
-];
-if (!accounts) for (const name of SIGN_IN) delete env[name];
+const env = developmentEnv(settings.env, accounts);
 if (local) {
   env.RENOVAGENT_MONGO_TARGET = 'local';
   env.RENOVAGENT_LOCAL_MONGO_URI = LOCAL_URI;
@@ -86,8 +78,10 @@ for (let attempt = 0; attempt < 120 && !stopping; attempt++) {
   }
 }
 if (ready && !stopping) {
-  start('Workspace API', ['--import', 'tsx', 'apps/api/src/server.ts']);
-  start('MCP HTTP', ['--import', 'tsx', 'apps/api/src/mcp-http.ts'], true);
+  // Keep server routes/contracts in step with Vite's source reloads. Without a
+  // watcher an old API can keep serving for days while the UI gains new routes.
+  start('Workspace API', ['--watch', '--import', 'tsx', 'apps/api/src/server.ts']);
+  start('MCP HTTP', ['--watch', '--import', 'tsx', 'apps/api/src/mcp-http.ts'], true);
   start('Vite', [
     'node_modules/vite/bin/vite.js',
     '--host',

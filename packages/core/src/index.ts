@@ -62,3 +62,7 @@ export * from './scope/project-handoff.js';
 export * from './scope/studio-budget.js';
 export * from './scope/photo-read.js';
 export * from './geometry/finish-swatches.js';
+
+export * from './scope/demo-furniture.js';
+
+export { studioPlacementAtWall } from './geometry/studio-furniture.js';

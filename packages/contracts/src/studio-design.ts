@@ -69,6 +69,7 @@ export const studioItemSchema = z
     action: z.enum(['add', 'replace', 'keep']),
     quantity: z.number().int().positive().max(1000).nullable(),
     unitAllowanceMinor: z.number().int().nonnegative().max(100_000_000).nullable(),
+    allowanceSource: z.enum(['demo', 'owner']).optional(),
     url: z
       .string()
       .url()
@@ -131,6 +132,14 @@ export const studioStylingDraftSchema = z
     ideas: studioIdeasSchema.optional(),
   })
   .strict();
+const comparisonStyle = z.discriminatedUnion('kind', [
+  z
+    .object({ id: id, name: z.string().trim().min(1).max(120), kind: z.literal('finishes'), pick })
+    .strict(),
+  z
+    .object({ id: id, name: z.string().trim().min(1).max(120), kind: z.literal('image'), image })
+    .strict(),
+]);
 export const studioDesignSchema = z
   .object({
     kind: z.literal('studio-design'),
@@ -227,6 +236,8 @@ export const studioDesignSchema = z
     styling: z.record(z.string(), studioStylingDraftSchema),
     items: z.record(z.string(), z.array(studioItemSchema).max(100)).optional(),
     placements: z.record(z.string(), z.array(studioPlacementSchema).max(60)).optional(),
+    comparisonStyles: z.record(z.string(), z.array(comparisonStyle).max(12)).optional(),
+    renderStyles: z.record(z.string(), z.string().trim().max(300)).optional(),
     modelRenders: z
       .record(z.string(), z.object({ image, signature: z.string().max(30000) }).strict())
       .optional(),

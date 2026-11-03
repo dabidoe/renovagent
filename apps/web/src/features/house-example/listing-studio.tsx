@@ -1,11 +1,12 @@
-import { studioDirection } from './studio-directions.js';
+import { DEMO_FURNITURE_ALLOWANCES } from '@renovagent/core';
+import { STUDIO_DIRECTIONS, studioDirection } from './studio-directions.js';
 import { thumbnailUrl } from './ui-thumbnails.js';
 import { directionDesign } from './direction-design.js';
 import { EXAMPLE_ADDRESS } from './example-privacy.js';
 import { useEffect, useMemo, useState } from 'react';
 import { Glyph } from '../../components/glyph.js';
 import { PaintFloorStudio } from './paint-floor-studio.js';
-import type { HouseProject, StudioRoom } from './paint-floor.js';
+import { money, type HouseProject, type StudioRoom } from './paint-floor.js';
 import { parseSampleRooms, rememberPreparedSample } from '../project-start/sample-rooms.js';
 
 // Curated listing examples, prepared once by scripts/prepare-listing-example.ts
@@ -194,10 +195,44 @@ export function ListingStudio({ id, onBack }: { id: string; onBack: () => void }
 export function ExamplesGallery({ onOpen }: { onOpen: (route: string) => void }) {
   return (
     <section className="pf-gallery" aria-label="Listing examples">
-      <h1>From a listing to a plan.</h1>
+      <h1>Find a room to make your own.</h1>
       <p className="pf-sub">
-        Real listings, priced room by room. Plus a room restyled from a saved pin.
+        Explore furnished concepts with editable demo budgets, or start with an original listing
+        room.
       </p>
+      <h2>Furnished concepts</h2>
+      <p className="pf-sub">
+        Three ways to use the same room. Furniture allowances are illustrative USD amounts, not live
+        offers. Tax, delivery and labor are separate.
+      </p>
+      <div className="pf-cards">
+        {STUDIO_DIRECTIONS.map((direction) => (
+          <button
+            key={direction.id}
+            type="button"
+            className="pf-card"
+            onClick={() => onOpen(`#example/${direction.id}`)}
+          >
+            <img src={direction.image} alt="" loading="lazy" />
+            <span>
+              <b>{direction.title}</b>
+              <small>{direction.mood}</small>
+              <small>
+                Furniture ·{' '}
+                {money(
+                  direction.pieces.reduce(
+                    (total, piece) =>
+                      total + (DEMO_FURNITURE_ALLOWANCES[piece.asset] ?? 0) * piece.count,
+                    0,
+                  ),
+                )}{' '}
+                demo allowance
+              </small>
+            </span>
+          </button>
+        ))}
+      </div>
+      <h2>Listing rooms & more</h2>
       <div className="pf-cards">
         <button type="button" className="pf-card is-own" onClick={() => onOpen('#your-project')}>
           <Glyph name="plus" />

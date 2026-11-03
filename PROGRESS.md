@@ -1,5 +1,168 @@
 # Project status — Renovagent
 
+Connected preview route recovery (November 3, local): the user's preview was
+reaching API code started November 1, before studio-design saves and furnished
+renders existed. Reproduced both unknown-route errors through its authenticated
+local session. The development launcher now watches API/MCP source changes and
+isolates localhost host/port/cookie settings from production hosting variables,
+while preserving configured database/provider settings and opt-in account mode.
+Restarted this checkout's connected preview on its original 4000/4010/8741 ports;
+the other worktree's servers were left alone. Through 8741, session reads and
+validation-only requests confirm both routes are active (400 for empty payloads,
+replacing the prior unknown-route 404s). Two environment regression tests and
+typechecking pass. No valid project saves or inference requests were submitted;
+browser storage was not touched. A fresh owner render remains unverified.
+
+Top save controls and autosave (November 3, local): Save look and save status are
+above the canvas beside the estimate/Compare controls. Save look opens Compare and
+focuses naming directly. Browser drafts persist automatically with an acknowledged
+status/error; examples do not create account projects merely by opening them.
+After an explicit first workspace save, subsequent edits use the existing debounced,
+serialized writer automatically. Own-project autosave remains enabled. Saved,
+waiting, failed-sync/browser-copy and retry states are visible at the top; the
+manual workspace save button is replaced by status after linking. Build and four
+sync tests pass; 56 offline assertions cover menu placement, reload, no browsing
+mutations, revision autosave and replay of failed requests at four screen widths.
+No production writes, live model calls or deployment were used.
+
+Named comparisons and interaction clarity (November 3, local): Compare now has
+two selectors for source photo, live finishes, generated photo versions, the
+current 3D render and up to twelve named looks per room. A saved look freezes finish
+choices or an image reference; browsing it does not apply old choices to the room.
+Names can be changed, and looks persist in browser drafts and validated saved
+revisions. Room references and owner image access are checked on save.
+Selected objects have separate 15° rotation buttons on the canvas. Ordinary wheel
+scroll passes to the page; pinch and camera +/− still zoom. The render default says
+“Use current colors & finishes.” Paint cost assumptions are secondary, with no
+invented branded prices. The estimate is labeled per room; work-plan creation is
+optional and explains its separate task/checklist purpose. Empty room lists omit
+disabled allowance filler and long pricing notes.
+Build/types/boundaries, 15 legacy + 330 TypeScript tests (52 skips), both local
+studio integration suites, 76 focused browser checks and the 240-check studio flow
+pass, along with all 202 public UI checks. Comparison and control captures were
+reviewed at desktop/phone widths.
+No live model calls, production writes or deployment were performed.
+
+Furnishings controls and room sets (November 3, local): editable 3D rooms default
+to dragging furniture; Rotate/Move mode buttons are removed. A compact vertical
+camera bar retains left/right turns, Top and Reset (larger targets on touch).
+Living room, Study and Bedroom starter sets add missing generic asset types in one
+undoable edit, preserving existing arrangements and room-list values. Room-size
+and fit notes are collapsed beneath the canvas. Render style now belongs beside
+Render with Muse: materials/light preferences are saved per room, sent through a
+validated optional API field, and included in render freshness signatures without
+changing placements. Existing saves and renders remain compatible.
+Build/types/boundaries pass; 15 legacy + 328 TypeScript tests pass (52 skips), with
+both studio API suites passing on disposable local Mongo fixtures. Offline checks
+pass 57 furnishing assertions and 240 studio-flow assertions across four widths;
+desktop/phone screenshots were reviewed. No live models or deployment were used.
+
+Preview toolbar and Furnishings follow-up (November 3, local): Paint and Floor now
+live in one collapsible toolbar directly beneath the preview. Paint opens the full
+catalog/search/custom-color selector; Floor uses the existing finish library.
+Both use the live before/after canvas even when a generated photo exists, so finish
+edits are visible immediately. Generated-image comparison remains an explicit
+alternative. Furnishings opens the 3D scene and placement library directly;
+Photo ideas/restyling is secondary. Only one editing panel opens at a time.
+88 offline toolbar checks pass across 1440/1024/390/320 px, including catalog access,
+finish persistence, live/generated distinction, collapse/Escape, overflow and direct
+3D furnishing access. The 232-assertion studio flow also passes. No model spend,
+production writes or deployment were used.
+
+Canvas studio layout (November 3, local): replaces the duplicate upper sidebar
+with one full-width room canvas. Design / Compare / 3D sit between the room title
+and project estimate on desktop. Project metadata is disclosed on demand; Save
+project stays visible. Paint, floor & style opens the existing full-width controls
+below the image, collapsed initially, preserving unsent drafts when closed. This
+uses the below-image variant of the approved mockup, with restrained accents.
+Design shows the selected generated still; Compare shows source and generated
+images separately, rather than implying matching geometry. Photo and 3D outputs
+update room thumbnails, with an explicit source choice when both exist. Furniture
+uses compact library thumbnails and expandable item editors. Existing demo/owner
+allowances, unknown values, stale warnings, undo/reset and saved revisions remain.
+No model calls, production writes or deployment were performed. Verification is
+recorded in `docs/architecture/studio-room-design.md`.
+
+Reversible design edits and furniture budgets (November 3, local): Undo/Redo and
+confirmed room-only Reset preserve photos, dimensions, generated versions and
+saved history. The gallery now leads with three furnished concepts, with editable
+furniture demo allowances ($1,115 lounge / $520 office / $865 dining). Library
+pieces show demo amounts; explicit fill preserves owner budgets and unknown
+quantities. Allowance provenance is saved and shown in shopping/handoff output.
+Build/types/boundaries, 202 public UI guardrails, and 15 legacy + 327 TypeScript
+tests pass (52 skips).
+Offline desktop/phone checks cover reversible reset, undo/redo, removed-item
+restoration, persistence and layout. No live prices, generation or deployment.
+See `docs/architecture/studio-room-design.md`.
+
+Account and project discovery (November 3, local): public Sign in/Account and My
+projects are visible in navigation, wrapping in flow on phones. The project library
+opens saved studio revisions directly and distinguishes browser recovery from
+account saves. Empty “try your own” resumes the current studio; Google navigation
+waits for queued photo-draft transactions. Existing autosave commands are unchanged.
+Build/types/boundaries, five sync/recovery tests, startup regressions and 202 public
+UI guardrails pass. Offline account/project checks cover five widths (320–1440 px);
+phone and desktop captures were visually reviewed. No live OAuth, database writes
+or deployment. See `docs/architecture/public-startup.md`.
+
+Wide editing workspace (November 3, local): moved Restyle, furniture placement and
+paint/floor editors out of the narrow sidebar into one full-width workspace between
+the room preview and Plan & budget. The upper side card now shows compact current
+choices and a shortcut. Style suggestions use three cards across on desktop/tablet;
+the brief, optional inspiration and render controls use separate responsive sections.
+Large workflows have no nested vertical scroller. Furniture uses a wider model
+library and side-by-side selection/editing; finishes use responsive columns.
+
+Tool shortcuts and measurement edits focus the lower workspace; View room returns
+to the preview. A completed photo render or Try in 3D direction returns to the
+resulting scene. Existing drafts, request signatures, provider limits, explicit
+generation actions and plan state are preserved. No new server or provider behavior
+was introduced. The expanded offline fixture check passes 187 checks across
+1440/1024/390/320 px, including three-card alignment, workspace width, no internal
+vertical scrolling, idea selection, draft retention, generation and result focus.
+Style-workspace screenshots were visually reviewed in `.local/room-design-qa/`.
+No production writes, real model calls or deployment were used.
+
+Verification: build/types/boundaries and formatting pass; 15 legacy + 325 TypeScript
+tests pass (52 connected cases skipped), and all 193 public UI guardrails pass.
+
+Full-width room plan (November 3, local): moved **Plan & budget** outside the photo
+and inspector columns into one persistent section below the editor on every screen
+size. Budget and work-plan cards share the top row on wide screens; proposed room
+items fill an adaptive grid below (three columns in the 1440 px check, two at
+1024 px, one on phones). The mobile-only plan tab is removed, and a header shortcut
+scrolls/focuses the bottom plan. Desktop tools scroll within a bounded panel so they
+cannot stretch the editor into a long empty column. Generated item proposals still
+populate the same room-list state, and resizing no longer remounts the plan or loses
+its draft. Shared calculations, saving and work-plan preparation remain unchanged.
+
+The expanded offline studio check passes 144 checks at 1440/1024/390/320 px,
+including full-width placement, live generated items, $251 for 2 × $125.50, draft
+retention across resizing, reload and room isolation. Desktop and phone screenshots
+were visually reviewed in `.local/room-design-qa/`. No real model calls, production
+writes or deployment were part of this change.
+
+Build/types/boundaries and changed-file formatting pass, as do 15 legacy + 325
+TypeScript tests (52 connected cases skipped) and all 193 public UI guardrails.
+
+Photo design / 3D disconnect (November 3, local): photo generation had its own image
+and proposed-item list but did not create furniture placements, leaving the separate
+3D shell empty. The three views are now stable **Finishes / Photo design / 3D layout**
+controls, paired with their corresponding tools. Photo concepts offer **Arrange in
+3D**; the layout previews matching library starters from the room list for an explicit
+add action. It retains item identities, unknown quantities/prices, existing placements
+and saved-render invalidation. Unsupported/ambiguous items are disclosed. These are
+generic concept models requiring arrangement, not reconstruction of the photo or
+verified furniture fit. No new model/API/data contract or deployment was added.
+See [the handoff and verification boundary](docs/architecture/studio-furniture-and-ideas.md#photo-design-to-3d-handoff--november-3).
+
+Verification: build/types/boundaries and changed-file formatting pass; 15 legacy +
+325 TypeScript tests pass (52 connected cases skipped). The new offline studio
+check passes 78 checks across desktop/390/320 px, and the existing public UI
+guardrail passes 193/193. Furnished scenes and phone/photo views were visually
+reviewed under `.local/room-design-qa/`; model responses were fixtures. No live
+inference, production writes, or deployment verification was performed.
+
 Landing/startup regression (November 3): a saved active project could take over `/`, while clicking the logo revealed the correct landing page. The entry point also awaited the entire private workspace before rendering public pages. The public shell now chooses the page from the URL, renders without opening a repository, and defers studio/workspace chunks. Saved local and connected projects remain accessible through the studio menu (`#workspace/projects`), with explicit workspace URLs and retained records. Brief/photo handoff, sign-in return links and errors, browser history, and the older measured-room example remain supported.
 
 The production entry drops from 1,178 KB to 464 KB uncompressed. In local Chrome with 4× CPU throttling and a mocked four-second workspace read, the old build showed the wrong project page after 4,617 ms; the fixed build showed the landing after 558 ms with zero API requests. These are controlled startup timings, not production-network or model-generation promises. The build/types/boundaries and formatting pass; 15 legacy + 324 TypeScript tests pass (52 skips), all 60 local connected tests pass, and the public UI guardrail passes 193/193 checks. A dedicated production-build startup check covers returning local/remote owners, private-code deferral, navigation, File/brief handoff through sign-in, encoded OAuth returns, leaving a slow request, and public browsing with blocked storage/unavailable API. See [public-startup.md](docs/architecture/public-startup.md). No production account, upload, inference or database-write QA was used.
@@ -598,3 +761,67 @@ Muse inspected all 35 Bingham listing images in five accepted attachment batches
 - Reduced the opening to the home selector, prompt, attachments and Tools. Photo questions, history and work surfaces remain available on demand. Added an agent-first product proposal centered on usable scopes, traceable quantities, comparable offers and revision-aware changes.
 - Built a responsive public landing page at `/landing.html`, rewrote the README, and added `npm run build:pages`. The generated package puts the landing at its root and preserves the prototype at `workspace.html`; local preview routing remains intact. No remote publication has been performed.
 - Final Pages build passed strict types, boundaries and both production builds; generated entry-point links/assets resolve. Desktop and phone browser checks covered the landing, packaged prototype navigation and on-demand photo questions. Existing test results are recorded in the prompt-first workspace note. Standard-agent MCP, hosted accounts, live offers and contractor verification remain planned.
+
+## November 3 — local bathroom fixture library
+
+Six owner-supplied bathroom GLBs now use the existing studio library and saved
+placement contract: toilet, double vanity, shower, bathtub, pedestal sink and mirror.
+Bathroom starter, elevation and wall snapping are available locally. A deterministic
+import records mesh bounds and hashes; restricted model binaries/source pack stay
+Git-ignored. Fixture allowances remain unknown. No new dependencies or AI calls.
+
+The existing headless Blender generator imports these placements; a hypothetical
+four-wall bathroom produced visually checked isometric and eye-level images at
+`.local/bathroom-concept/`. Build and offline Chrome GLB/placement/reload checks
+pass. Full suite: 15 legacy + 330 TypeScript pass, 52 connected skips. Local only;
+no deployment, Modal asset provisioning, code-clearance approval or measured fit.
+See [bathroom assets](docs/architecture/bathroom-assets.md) for import, rendering,
+changed areas and limitations.
+
+## November 3 — diagram example preview
+
+Added a **Diagrams** studio view with one fixed Philadelphia private-half-bath
+schematic, fixture clearance arrows, illustrative receptacle/lighting routes, four
+numbered source-linked requirement cards, and **Diagram editor · Coming soon**.
+References reuse the existing technical source catalog: IPC 405.3.1, IRC E3703.4,
+E3901.6/E3902.1, City code basis and local plumbing amendments. Circuit wording
+preserves the single-bathroom exception. The view identifies an example scenario;
+it does not infer the selected property's jurisdiction or mutate its technical
+assessment, measurements or project state. No AI calls or dependencies added.
+
+Changed: `systems-diagram.tsx`/`.css` and the studio view switch in
+`paint-floor-studio.tsx`. Production build/types/boundaries pass. Offline Chrome
+checks at 1440/390/320 px pass for source links, accessible SVG, coming-soon label,
+view switching and overflow, with no API writes or page errors. Desktop/mobile
+screenshots visually reviewed (`.local/diagram-*.png`). Local only, not deployed.
+
+## November 3 — current-room top-down drawings
+
+Diagrams now leads with the selected room's actual wall/floor geometry and placed
+3D meshes in an orthographic line drawing. White faces occlude hidden edges; mesh
+edge lines retain object shape, scale, rotation and elevation. **Save drawing · PNG**
+downloads the current 1400 × 1100 view. Placement edits regenerate the drawing;
+room sizes retain their estimated/entered basis. Missing sizes ask for dimensions
+and model-load failures show an error rather than a fabricated plan. The earlier
+Philadelphia bathroom systems example remains in a collapsed reference section;
+**Diagram editor · Coming soon** remains visible. No new dependencies or AI calls.
+
+Changed: `room-scene.ts` adds an isolated capture method; `room-diagram.tsx` adds
+preview/download; `paint-floor-studio.tsx` supplies the current room and placements;
+`systems-diagram.css` styles the sheet. No saved-project schema or server changes.
+The PNG is a download, not a new canonical project artifact. Build/types/boundaries
+pass. Offline browser checks verify actual furnished geometry, PNG download, changed
+image pixels after an object edit, collapsed reference example, and no overflow at
+1440/390/320 px; no API writes or page errors. Screenshots and downloaded PNG were
+visually inspected (`.local/room-diagram-*.png`, `.local/room-top-down.png`). Local only.
+
+### Top-down drawing polish
+
+Wall strokes now use 4.5 px ink and object edges 2.5 px through Three.js wide-line
+rendering. Overall X/Z dimensions use the shared feet/inches + metres formatter;
+dimension lines and labels are composed into the downloaded PNG and also shown
+as accessible text above the sheet. Dimensions retain the room's existing
+estimated/entered basis. **Example bathroom** is now right-aligned above the image
+and opens the reference in the existing accessible modal, replacing the collapsed
+section. Build/types/boundaries and offline desktop/390/320px drawing/download,
+layout-edit and modal open/close checks pass. Export and mobile screenshots reviewed.

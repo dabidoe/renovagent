@@ -6,6 +6,14 @@ Any agent or person picking this up should read this file first, then [AGENTS.md
 
 ## Resume here
 
+- **Local preview route recovery (3 Nov):** `dev:connected` now watches API/MCP
+  source and forces localhost hosting settings, retaining configured database and
+  provider settings. The owner's 8741 preview had been using a November 1 API,
+  causing "Unknown studio request" for model renders and "Unknown workspace
+  endpoint" for saves. Its stack was restarted; both routes now validate requests
+  through 8741. No new inference or project-save probe was made. Do not confuse
+  fixture UI checks or a healthy Vite page with a current running backend.
+
 - **Landing/startup fix (3 Nov):** `/` always opens the public landing, including for returning owners. Public studios no longer await the private notes workspace. Saved projects open explicitly from the studio menu at `#workspace/projects`; the workspace itself is `#workspace`. See [public-startup.md](docs/architecture/public-startup.md) for regression checks, measured timings and remaining performance limits.
 
 - **Deadline:** Meta Global AI Developer Hackathon submission is due **4 Nov 2026, 9:00 PM ET** (Cerebral Valley portal). Judging runs 4–8 Nov and finals are 9 Nov.

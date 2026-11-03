@@ -1,10 +1,17 @@
 import { useEffect, useState } from 'react';
+import { money } from './paint-floor.js';
+import { studioAssetAvailable } from '../room3d/available-assets.js';
 import type { StudioAssetId, StudioItem, StudioPlacement } from '@renovagent/contracts';
 import {
+  DEMO_FURNITURE_ALLOWANCES,
   STUDIO_ASSETS,
+  STUDIO_ROOM_PRESETS,
   studioAsset,
+  studioPlacementAtWall,
   studioRoomBounds,
   studioPlacementWarnings,
+  studioItemAsset,
+  studioItemModelSuggestions,
   type RoomModel,
 } from '@renovagent/core';
 
@@ -39,6 +46,8 @@ export function FurniturePanel({
   onSelect,
   onChange,
   onAdd,
+  onAddRoomItems,
+  onPreset,
 }: {
   model: RoomModel | null;
   placements: StudioPlacement[];
@@ -47,6 +56,8 @@ export function FurniturePanel({
   onSelect: (id: string | null) => void;
   onChange: (next: StudioPlacement[]) => void;
   onAdd: (assetId: StudioAssetId) => void;
+  onAddRoomItems: () => void;
+  onPreset: (id: string) => void;
 }) {
   const chosen = placements.find((p) => p.id === selected);
   const bounds = model ? studioRoomBounds(model) : null;
@@ -54,6 +65,13 @@ export function FurniturePanel({
     if (chosen) onChange(placements.map((p) => (p.id === chosen.id ? { ...p, ...data } : p)));
   };
   const warnings = model ? studioPlacementWarnings(model, placements) : [];
+  const suggestions = studioItemModelSuggestions(items, placements).filter((s) =>
+    studioAssetAvailable(s.assetId),
+  );
+  const starterCount = suggestions.reduce((sum, s) => sum + s.count, 0);
+  const unsupported = items.filter(
+    (item) => !studioItemAsset(item.name) && !placements.some((p) => p.itemId === item.id),
+  );
   const quantities = items.flatMap((item) => {
     const count = placements.filter((p) => p.itemId === item.id).length;
     return count && item.quantity !== null && count !== item.quantity
@@ -65,17 +83,95 @@ export function FurniturePanel({
   return (
     <div className="pf-furniture-panel">
       <div className="pf-group-head">
-        <h3>Build the room in 3D</h3>
+        <h3>Add furniture & fixtures</h3>
         <span>{placements.length} objects</span>
       </div>
-      <p>Add pieces. Rotate to explore, Move to arrange, then render with Muse.</p>
+      <p>Start with a room set or add pieces. Drag furniture to arrange it.</p>
+      <section className="pf-room-presets" aria-label="Starter room layouts">
+        {STUDIO_ROOM_PRESETS.filter((p) => p.assets.every(studioAssetAvailable)).map((preset) => {
+          const missing = preset.assets.filter(
+            (assetId) => !placements.some((p) => p.assetId === assetId),
+          ).length;
+          return (
+            <button
+              type="button"
+              key={preset.id}
+              aria-label={`Add ${preset.name} starter`}
+              disabled={
+                !model ||
+                !missing ||
+                placements.length + missing > 60 ||
+                items.length + missing > 100
+              }
+              onClick={() => onPreset(preset.id)}
+            >
+              <span className="pf-preset-art">
+                {preset.assets.slice(0, 3).map((id) => (
+                  <AssetThumb key={id} id={id} />
+                ))}
+              </span>
+              <b>{preset.name}</b>
+              <small>{missing ? `Add ${missing} pieces` : 'Pieces already placed'}</small>
+            </button>
+          );
+        })}
+      </section>
+      <small className="pf-inspo-note">
+        Generic starter layouts · adds missing pieces without replacing your arrangement. Sizes and
+        fit need checking.
+      </small>
+      <p className="pf-inspo-note">
+        New library pieces include editable demo allowances in Plan & budget. These are illustrative
+        amounts, not product prices.
+      </p>
+      {!placements.length && (
+        <p className="pf-layout-empty" role="status">
+          No furniture placed yet. A photo design does not create 3D objects.
+        </p>
+      )}
+      {!!suggestions.length && (
+        <section className="pf-layout-starters" aria-label="Room-list starter models">
+          <h4>Start from your room list</h4>
+          <ul>
+            {suggestions.map((s) => (
+              <li key={s.itemId}>
+                {s.name} → {s.count} × {studioAsset(s.assetId).name}
+                {s.quantityUnknown && ' (one starter; quantity unknown)'}
+              </li>
+            ))}
+          </ul>
+          <p>
+            Generic models with starter sizes and positions. Arrange them to suit your room; they do
+            not reproduce the photo design. Your item quantities and allowances stay as entered.
+          </p>
+          <button
+            className="pf-design-download"
+            type="button"
+            disabled={!model || placements.length + starterCount > 60}
+            onClick={onAddRoomItems}
+          >
+            Add {starterCount} starter {starterCount === 1 ? 'piece' : 'pieces'} to 3D
+          </button>
+          {placements.length + starterCount > 60 && (
+            <p>
+              The layout supports 60 objects. Reduce room-list quantities to add these starters.
+            </p>
+          )}
+        </section>
+      )}
+      {!!unsupported.length && (
+        <p>
+          No matching library model: {unsupported.map((item) => item.name).join('; ')}. You can add
+          a library piece below and link it to a room-list item.
+        </p>
+      )}
       {!model && (
         <p className="pf-intake-error">
           Add room dimensions to place furniture. The photo designer works without them.
         </p>
       )}
       <div className="pf-asset-grid" aria-label="3D furniture library">
-        {STUDIO_ASSETS.map((a) => (
+        {STUDIO_ASSETS.filter((a) => studioAssetAvailable(a.id)).map((a) => (
           <button
             type="button"
             key={a.id}
@@ -85,6 +181,11 @@ export function FurniturePanel({
           >
             <AssetThumb id={a.id} />
             <span>{a.name}</span>
+            <small className="pf-demo-allowance">
+              {DEMO_FURNITURE_ALLOWANCES[a.id] === null
+                ? 'Allowance not entered'
+                : `${money(DEMO_FURNITURE_ALLOWANCES[a.id]!)} · demo`}
+            </small>
             <b aria-hidden="true">+</b>
           </button>
         ))}
@@ -153,6 +254,49 @@ export function FurniturePanel({
             ))}
           </div>
           <label>
+            Elevation above floor · m
+            <input
+              type="number"
+              aria-label="Elevation above floor"
+              min={0}
+              max={10}
+              step="0.05"
+              value={chosen.yM ?? 0}
+              onChange={(e) => {
+                const n = Number(e.target.value);
+                if (e.target.value && Number.isFinite(n) && n >= 0 && n <= 10) patch({ yM: n });
+              }}
+            />
+          </label>
+          {model && studioAsset(chosen.assetId).url && (
+            <label>
+              Place against wall
+              <select
+                aria-label="Place fixture against wall"
+                value=""
+                onChange={(e) => {
+                  if (e.target.value)
+                    patch(
+                      studioPlacementAtWall(
+                        chosen.assetId,
+                        model,
+                        e.target.value,
+                        undefined,
+                        chosen,
+                      ),
+                    );
+                }}
+              >
+                <option value="">Choose wall…</option>
+                {model.walls.map((w, i) => (
+                  <option key={w.id} value={w.id}>
+                    Wall {i + 1}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
+          <label>
             Rotate · {Math.round(chosen.rotationDeg)}°
             <input
               aria-label="Rotate selected furniture"
@@ -213,8 +357,12 @@ export function FurniturePanel({
         Layout proposal · doors, circulation, overlaps and product fit still need checking. Removing
         a model keeps its room-list item.{' '}
         <a href="/furniture/kenney/README.md" target="_blank" rel="noreferrer">
-          Kenney assets · CC0 ↗
+          Kenney furniture · CC0 ↗
         </a>
+      </p>
+      <p className="pf-furniture-note">
+        Bathroom fixtures: reodesuxz, project-use license. Source-mesh sizes are illustrative, not
+        measured products. No code-clearance envelopes are supplied.
       </p>
     </div>
   );

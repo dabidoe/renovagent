@@ -5,6 +5,7 @@
 //
 // Needs a local Blender (BLENDER env var, or /Applications/Blender.app on macOS).
 // Writes room-model.json, perspective.png, plan-top.png and room.glb.
+import { studioPlacementSchema } from '@renovagent/contracts';
 import { spawnSync } from 'node:child_process';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -35,6 +36,11 @@ writeFileSync(
   JSON.stringify(
     {
       ...model,
+      placements: flag('placements', '')
+        ? JSON.parse(readFileSync(flag('placements', '')!, 'utf8')).map((p: unknown) =>
+            studioPlacementSchema.parse(p),
+          )
+        : [],
       floorOutline: floorOutline(model),
       look: {
         wallHex: wallSwatch(wall).hex,

@@ -74,6 +74,8 @@ export async function saveStudioDesign(
       ...Object.keys(input.snapshot.items ?? {}),
       ...Object.keys(input.snapshot.placements ?? {}),
       ...Object.keys(input.snapshot.modelRenders ?? {}),
+      ...Object.keys(input.snapshot.renderStyles ?? {}),
+      ...Object.keys(input.snapshot.comparisonStyles ?? {}),
     ].some((id) => !roomIds.has(id))
   )
     throw new DomainError('VALIDATION', 'Studio selections must reference this project’s rooms');
@@ -83,6 +85,10 @@ export async function saveStudioDesign(
         'VALIDATION',
         'Styling choices must reference this room’s source photo',
       );
+  }
+  for (const list of Object.values(input.snapshot.comparisonStyles ?? {})) {
+    if (new Set(list.map((style) => style.id)).size !== list.length)
+      throw new DomainError('VALIDATION', 'Saved looks need unique identities');
   }
   for (const list of Object.values(input.snapshot.items ?? {})) {
     if (new Set(list.map((i) => i.id)).size !== list.length)
@@ -247,10 +253,10 @@ export async function prepareStudioHandoff(
     new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(minor / 100);
   const inline = (value: string) => value.replace(/[\r\n]/g, ' ');
   const itemAppendix = roomItems.length
-    ? `\n\n## Furniture & decor · separate owner proposals\n\nSaved studio revision ${saved.revision}. These items are not included in the finish scope above. Allowances are owner budgets, not verified prices. Dimensions, fit, product availability and installation remain unchecked.\n\n${roomItems
+    ? `\n\n## Furniture & decor · separate owner proposals\n\nSaved studio revision ${saved.revision}. These items are not included in the finish scope above. Allowances are demo or owner budgets, not verified prices. Dimensions, fit, product availability and installation remain unchecked.\n\n${roomItems
         .map((item) => {
           const total = studioItemBudget([item]).lines[0]!.totalMinor;
-          return `- ${inline(item.name)} — ${item.action === 'keep' ? 'Keep existing' : `${item.action}; quantity ${item.quantity ?? 'unknown'}; allowance each ${item.unitAllowanceMinor === null ? 'not priced' : dollar(item.unitAllowanceMinor)}; total ${total === null ? 'not priced' : dollar(total)}`}${item.url ? `; owner product link: ${item.url}` : ''}`;
+          return `- ${inline(item.name)} — ${item.action === 'keep' ? 'Keep existing' : `${item.action}; quantity ${item.quantity ?? 'unknown'}; ${item.allowanceSource === 'demo' ? 'demo allowance' : 'owner allowance'} each ${item.unitAllowanceMinor === null ? 'not priced' : dollar(item.unitAllowanceMinor)}; total ${total === null ? 'not priced' : dollar(total)}`}${item.url ? `; owner product link: ${item.url}` : ''}`;
         })
         .join('\n')}\n`
     : '';

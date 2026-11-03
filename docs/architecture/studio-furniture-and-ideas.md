@@ -4,6 +4,88 @@ November 2, 2026. Implemented locally; not deployed. Extends
 [the saved photo studio](studio-room-design.md). This is a concept-layout workflow,
 not a furniture measurement, exact-product or installation approval system.
 
+## Furnishing starters, camera and rendering styles — November 3, local
+
+Follow-up: selected pieces now have separate left/right 15° rotation buttons on
+the canvas, independent of the camera turns. They use existing placement updates,
+preserving IDs, X/Z, dimensions, elevation and any recorded wall basis; normal
+undo/persistence/render invalidation applies. Ordinary wheel scrolling reaches the
+page. Ctrl-wheel trackpad pinch and touch pinch remain zoom gestures, with explicit
+camera +/− alternatives. The default render option reads **Use current colors &
+finishes**. These paths are covered by the 76-check comparison/control fixture
+suite, including an actual vanity rotation and page scroll over the WebGL canvas.
+
+This supersedes the Rotate/Move mode controls described below. Editable rooms
+default to dragging furniture; blank-space camera gestures remain available, with
+a compact vertical left/right/Top/Reset bar. Mouse buttons are 36 px; coarse-pointer
+targets remain 44 px. Camera operations do not change placements or saved revisions.
+The size/fit explanation is collapsed below the canvas as **Room dimensions & fit**.
+
+Living room, Study and Bedroom starters are shared generic library arrangements
+(`STUDIO_ROOM_PRESETS` / `studioPresetStarts`). An explicit click adds only missing
+asset types, using editable concept dimensions and existing demo allowances. It
+does not replace, reposition or reprice existing pieces, infer positions from a
+photo, or approve fit. Capacity checks block the batch rather than truncating it.
+Existing room-list matches retain their quantities and allowances. The batch is
+one undo checkpoint; selecting an already-complete starter cannot add duplicates.
+
+**Render style** sits with **Render with Muse**, separate from placement. Keep
+materials, Warm & cozy, Minimal & bright and Classic & layered provide bounded
+material/light directions. The optional `renderStyles` snapshot field retains
+per-room choices. `/studio/model-render` accepts a validated optional style string
+(300 characters maximum), asks the provider to preserve geometry and placement,
+and retains existing limits and authorization. Style affects render signatures,
+not furniture geometry. These remain model instructions, not output guarantees.
+Older snapshots and unstylized signatures remain compatible.
+
+Verification: build/types/boundaries/formatting; 15 legacy + 328 TypeScript tests
+(52 regular-suite skips); both connected studio suites on disposable local Mongo
+with fixture providers. The updated studio fixture flow passes 240 checks and
+`scripts/studio-furnishings-check.mjs` passes 57 checks at 1440/1024/390/320 px,
+including actual default-mode dragging, vertical controls, starter preservation,
+duplicate prevention, batch undo, style persistence and overflow. Desktop and phone
+captures in `.local/furnishings-qa/` were reviewed. No live model calls, production
+writes or deployment were performed.
+
+## Photo design to 3D handoff — November 3
+
+The studio now keeps three photo-room views visible from the start: **Finishes**,
+**Photo design**, and **3D layout**. Generating a photo no longer adds a new view tab.
+View selection opens the corresponding Paint & floor, Restyle, or 3D tools; selecting
+those tools also changes the view. Saved designs open with the matching tools.
+An ungenerated photo-design view explains how to create one, and an unsized 3D view
+asks for dimensions rather than falling back to an unrelated photo.
+
+**Arrange in 3D** on a photo concept opens the layout tools. Empty layouts explain
+that photo generation does not create objects. **Start from your room list** previews
+conservative name-to-library suggestions and the number of starter models before an
+explicit add action. Ambiguous names, accessories and unsupported items are disclosed
+without silently replacing them. Each model links to its existing room-list item;
+no item, allowance, action or quantity is rewritten. A null quantity gives one labeled
+starter, and a known quantity supplies only the remaining unplaced count. Existing
+placements are preserved; repeating the action does not duplicate completed counts.
+The 60-object limit blocks the batch rather than silently truncating it.
+
+These generic meshes use the existing concept sizes and starter positions, with
+repeated models spread for selection. They do not extract positions, dimensions,
+colors, exact products or room openings from the generated photo. Owners still need
+to arrange/resize them and check fit. The existing furnished-render API and saved
+snapshot contracts are unchanged; this adds no provider call on browsing or placement.
+
+`node scripts/studio-design-check.mjs` runs a disposable loopback Vite preview with
+all API calls intercepted and fixture responses. Its desktop/390/320 px checks cover
+photo generation, stable tabs and aligned tools, room-list linkage, unknown-value
+preservation, local GLB loading, furnished WebGL capture in the render request,
+stale-render warnings, reload persistence, room isolation and overflow. The fixture
+photo is a bundled finish preview, not new model-quality evidence. Screenshots are
+written to `.local/room-design-qa/`. No live account, database or model is used.
+
+Verification for this increment: 78 focused offline browser checks and 193 public
+UI guardrails pass; desktop and phone screenshots were visually reviewed. Build,
+types, dependency boundaries and formatting pass. The regular suite passes 15
+legacy + 325 TypeScript tests, with 52 connected cases skipped. Real-provider photo
+to exact-geometry reconstruction is not implemented or established by these checks.
+
 ## What changed
 
 - **3D layout** adds twelve bundled GLB furniture/decor models: sofa, lounge chair,

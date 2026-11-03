@@ -86,3 +86,8 @@ export function saveOwnIntake(draft: OwnIntakeDraft | null): Promise<void> {
   writes = next;
   return next;
 }
+
+// Provider navigation must wait for the actual file transaction to finish.
+export async function flushOwnIntakeSave() {
+  await writes;
+}

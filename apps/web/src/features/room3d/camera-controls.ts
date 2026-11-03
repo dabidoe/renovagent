@@ -13,7 +13,7 @@ export function attachCameraControls(
 ) {
   const startPosition = camera.position.clone();
   const startTarget = controls.target.clone();
-  let moving = false;
+  const moving = canMove;
   const bar = document.createElement('div');
   bar.className = 'room3d-camera';
   const group = (label: string) => {
@@ -34,24 +34,12 @@ export function attachCameraControls(
     parent.append(el);
     return el;
   };
-  const mode = group('3D interaction');
-  const setMode = (next: boolean) => {
-    finishDrag();
-    moving = next;
-    rotate.setAttribute('aria-pressed', String(!moving));
-    move?.setAttribute('aria-pressed', String(moving));
-    if (controls.domElement) {
-      controls.domElement.style.cursor = moving ? 'move' : 'grab';
-      controls.domElement.title = moving
-        ? 'Drag a piece to move it. Choose Rotate to turn the room.'
-        : 'Drag to rotate the room. Pinch or scroll to zoom.';
-    }
-  };
-  const rotate = button(mode, 'Rotate view', 'Rotate', () => setMode(false));
-  const move = canMove ? button(mode, 'Move furniture', 'Move', () => setMode(true)) : null;
-  // Avoid a lone toggle on viewers without editable furniture.
-  mode.hidden = !canMove;
-  setMode(false);
+  if (controls.domElement) {
+    controls.domElement.style.cursor = moving ? 'move' : 'grab';
+    controls.domElement.title = moving
+      ? 'Drag furniture to move it. Use the camera buttons to turn the view.'
+      : 'Drag to turn the room. Pinch or scroll to zoom.';
+  }
 
   const views = group('Room camera');
   const changeView = (change: () => void) => {
@@ -100,16 +88,27 @@ export function attachCameraControls(
     button(views, 'Rotate view right 45 degrees', '', () => turn(Math.PI / 4)),
     true,
   );
+  const zoom = (factor: number) =>
+    changeView(() => {
+      const offset = camera.position.clone().sub(controls.target);
+      const length = Math.min(
+        controls.maxDistance,
+        Math.max(controls.minDistance, offset.length() * factor),
+      );
+      camera.position.copy(controls.target).add(offset.normalize().multiplyScalar(length));
+    });
+  button(views, 'Zoom in', '+', () => zoom(0.85));
+  button(views, 'Zoom out', '−', () => zoom(1 / 0.85));
   button(views, 'Top view', 'Top', () =>
     changeView(() => {
       // Fit the floor in both dimensions, with breathing room for the controls.
-      const reserved = Math.min((bar.offsetHeight + 24) / Math.max(host.clientHeight, 1), 0.65);
-      const extent = Math.max(floorSize.depth / (1 - reserved), floorSize.width / camera.aspect);
+      const reserved = Math.min((bar.offsetWidth + 24) / Math.max(host.clientWidth, 1), 0.35);
+      const extent = Math.max(floorSize.depth, floorSize.width / ((1 - reserved) * camera.aspect));
       const halfFov = Math.tan((camera.fov * Math.PI) / 360);
       const distance = (extent / (2 * halfFov)) * 1.1 + floorSize.wallHeight;
       controls.maxDistance = Math.max(controls.maxDistance, distance * 1.1);
       controls.target.copy(startTarget).setY(0);
-      controls.target.z += distance * halfFov * reserved;
+
       const orbit = new THREE.Spherical(distance, 0.001, 0);
       camera.position.copy(controls.target).add(new THREE.Vector3().setFromSpherical(orbit));
     }),

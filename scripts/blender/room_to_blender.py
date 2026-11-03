@@ -6,6 +6,8 @@ Blender (x, -y), Z up, so the top view matches the plan drawing. Walls whose
 height or thickness the plan does not give are drawn with display stand-ins in
 an orange "not measured" material and flagged in the GLB extras.
 """
+import hashlib
+import pathlib
 import json
 import math
 import os
@@ -13,7 +15,7 @@ import sys
 
 import bmesh
 import bpy
-from mathutils import Vector
+from mathutils import Vector, Matrix
 
 model_path, out_dir = sys.argv[sys.argv.index("--") + 1 :][:2]
 model = json.load(open(model_path))
@@ -153,6 +155,51 @@ for f in model["fixtures"]:
     ob["category"] = f["category"]
     ob["existing"] = True
 
+# Optional proposed assets. Asset IDs resolve only through our local allowlisted catalog;
+# model input never supplies filesystem paths. GLBs are never downloaded here.
+placements = model.get("placements", [])
+if placements:
+    root = pathlib.Path(__file__).resolve().parents[2]
+    catalog_path = root / "packages/core/src/geometry/bathroom-assets.json"
+    catalog = {a["id"]: a for a in json.load(open(catalog_path))["assets"]}
+    for p in placements:
+        asset = catalog.get(p["assetId"])
+        if asset is None:
+            raise ValueError("Unsupported Blender fixture asset: " + p["assetId"])
+        path = root / "public/furniture/bathroom" / (asset["file"] + ".glb")
+        if hashlib.sha256(path.read_bytes()).hexdigest() != asset["sha256"]:
+            raise ValueError("Fixture hash mismatch: " + asset["id"])
+        before = set(bpy.data.objects)
+        bpy.ops.import_scene.gltf(filepath=str(path))
+        imported = set(bpy.data.objects) - before
+        meshes = [o for o in imported if o.type == "MESH"]
+        points = [o.matrix_world @ Vector(c) for o in meshes for c in o.bound_box]
+        lo = Vector(tuple(min(v[i] for v in points) for i in range(3)))
+        hi = Vector(tuple(max(v[i] for v in points) for i in range(3)))
+        size = hi - lo
+        normal = Matrix.Translation(Vector((-(lo.x + hi.x) / 2, -(lo.y + hi.y) / 2, -lo.z)))
+        scale = Matrix.Diagonal((p["widthM"] / size.x, p["depthM"] / size.y, p["heightM"] / size.z, 1))
+        transform = Matrix.Translation(Vector((p["xM"], -p["zM"], p.get("yM", 0)))) @ Matrix.Rotation(math.radians(p["rotationDeg"]), 4, "Z") @ scale @ normal
+        worlds = {o: o.matrix_world.copy() for o in meshes}
+        for ob in meshes:
+            ob.parent = None
+            ob.matrix_world = transform @ worlds[ob]
+            ob["renovagent_surface"] = "proposed-fixture"
+            ob["placement_id"] = p["id"]
+            ob["asset_id"] = p["assetId"]
+            ob["verified"] = False
+            ob["license"] = asset["license"]
+            tint_name = "wood2" if p["assetId"] == "vanity" else "yellow" if p["assetId"] == "mirror" else "white"
+            for slot in ob.material_slots:
+                if slot.material and slot.material.name.split(".")[0] == tint_name and p.get("color") and p["color"] != asset["color"]:
+                    slot.material = slot.material.copy()
+                    bsdf = slot.material.node_tree.nodes.get("Principled BSDF")
+                    if bsdf:
+                        bsdf.inputs["Base Color"].default_value = hex_rgba(p["color"])
+        for ob in imported:
+            if ob.type != "MESH":
+                bpy.data.objects.remove(ob, do_unlink=True)
+
 cx, cy = (min(xs) + max(xs)) / 2, (min(ys) + max(ys)) / 2
 span = max(max(xs) - min(xs), max(ys) - min(ys), 2)
 top = max([(w["heightM"] or DISPLAY_H) for w in model["walls"]])
@@ -204,13 +251,28 @@ def shoot(name, location, target, ortho=None, size=(1600, 1000), lens=20):
         cam.data.lens = lens
     cam.rotation_euler = (Vector(target) - cam.location).to_track_quat("-Z", "Y").to_euler()
     scene.camera = cam
-    scene.render.resolution_x, scene.render.resolution_y = size
+    resolution_scale = max(0.1, min(1, float(model.get("resolutionScale", 1))))
+    scene.render.resolution_x, scene.render.resolution_y = [int(n * resolution_scale) for n in size]
     scene.render.filepath = os.path.join(out_dir, name)
     bpy.ops.render.render(write_still=True)
 
 
-shoot("perspective.png", (cx + span * 0.75, cy - span * 0.95, top + span * 0.7), (cx, cy, 0.9))
+# Optional concept cutaway affects overview images only; all four walls remain in
+# the model/export and are restored for the eye-level interior.
+cutaway = []
+if model.get("conceptCutaway"):
+    for ob in scene.objects:
+        if ob.get("renovagent_surface") != "wall":
+            continue
+        center = sum((ob.matrix_world @ Vector(c) for c in ob.bound_box), Vector()) / 8
+        if center.x > cx + 0.01 or center.y < cy - 0.01:
+            ob.hide_render = True
+            cutaway.append(ob)
+shoot("perspective.png", (cx + span * 0.75, cy - span * 0.95, top + span * 0.7), (cx, cy, 0.9), ortho=span * 1.65 if model.get("conceptCutaway") else None)
 shoot("plan-top.png", (cx, cy, top + 20), (cx, cy + 0.0001, 0), ortho=span * 1.25, size=(1400, 1400))
+
+for ob in cutaway:
+    ob.hide_render = False
 
 bpy.ops.export_scene.gltf(
     filepath=os.path.join(out_dir, "room.glb"),

@@ -13,6 +13,12 @@ export const studioAssetIds = [
   'dining-table',
   'dining-chair',
   'media-console',
+  'toilet',
+  'vanity',
+  'shower',
+  'tub',
+  'sink',
+  'mirror',
 ] as const;
 export const studioAssetIdSchema = z.enum(studioAssetIds);
 export type StudioAssetId = z.infer<typeof studioAssetIdSchema>;
@@ -23,6 +29,8 @@ export const studioPlacementSchema = z
     itemId: z.string().min(1).max(100),
     assetId: studioAssetIdSchema,
     xM: z.number().finite().min(-10000).max(10000),
+    yM: z.number().finite().min(0).max(10).optional(),
+    wallId: z.string().min(1).max(100).optional(),
     zM: z.number().finite().min(-10000).max(10000),
     rotationDeg: z.number().finite().min(-360).max(360),
     widthM: z.number().positive().max(20),
