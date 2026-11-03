@@ -87,6 +87,8 @@
 }
 .direction-photo-top {
   top: 18px;
+  /* Both chips sit top-right, clear of the listing watermark in the top-left corner. */
+  justify-content: flex-end;
 }
 .direction-photo-top > span,
 .direction-photo-top > button {
@@ -145,7 +147,7 @@
   color: #0866ff;
   text-transform: uppercase;
   letter-spacing: 0.07em;
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 700;
 }
 .landing.landing-v2 .direction-details h3 {
@@ -175,13 +177,13 @@
 }
 .direction-palette small {
   color: #64748b;
-  font-size: 9px;
+  font-size: 11px;
   margin-left: 4px;
   line-height: 1.5;
 }
 .direction-pieces > p {
   color: #64748b;
-  font-size: 9px;
+  font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   margin: 0 0 8px;
@@ -219,7 +221,7 @@
   justify-content: space-between;
   gap: 10px;
   color: #64748b;
-  font-size: 9px;
+  font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
@@ -315,7 +317,7 @@
 }
 .direction-options small {
   display: block;
-  font-size: 8px;
+  font-size: 10px;
   margin-bottom: 5px;
   line-height: 1.3;
   color: #64748b;
@@ -462,11 +464,11 @@
     gap: 8px;
   }
   .direction-photo-top > span {
-    font-size: 8px;
+    font-size: 10px;
     padding: 6px 8px;
   }
   .direction-photo-top > button {
-    font-size: 9px;
+    font-size: 11px;
     padding: 8px;
   }
   .direction-photo-top .glyph {
@@ -477,7 +479,7 @@
     padding: 22px 12px 10px;
   }
   .direction-photo-bottom > span {
-    font-size: 9px;
+    font-size: 11px;
     max-width: 195px;
   }
   .direction-photo-bottom b {
@@ -524,7 +526,7 @@
     gap: 4px;
   }
   .direction-options b {
-    font-size: 9px;
+    font-size: 11px;
     line-height: 1.3;
   }
   .direction-arrows {

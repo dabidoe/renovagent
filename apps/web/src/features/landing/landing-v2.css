@@ -83,7 +83,7 @@
 .landing.landing-v2 .landing-eyebrow {
   display: block;
   color: #64748b;
-  font-size: 9px;
+  font-size: 11px;
   line-height: 1.6;
   font-weight: 700;
   letter-spacing: 0.12em;
@@ -486,11 +486,11 @@
   border-radius: 4px;
 }
 .landing.landing-v2 .pin-card > small {
-  font-size: 8px;
+  font-size: 10px;
   color: #64748b;
 }
 .landing.landing-v2 .pin-card > strong {
-  font-size: 9px;
+  font-size: 11px;
   line-height: 1.45;
   margin: 3px 0;
 }
@@ -501,7 +501,7 @@
 .landing.landing-v2 .pin-spec {
   display: none;
   color: #64748b;
-  font-size: 8px;
+  font-size: 10px;
   margin-bottom: 3px;
 }
 .landing.landing-v2 .is-selected .pin-spec {
@@ -1012,7 +1012,7 @@
     padding: 0;
   }
   .landing.landing-v2 .landing-eyebrow {
-    font-size: 8px;
+    font-size: 10px;
   }
   .landing.landing-v2 .prompt-intro {
     margin: 10px 0 16px;
