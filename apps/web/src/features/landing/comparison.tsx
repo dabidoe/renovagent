@@ -79,16 +79,6 @@ export function Comparison() {
                 {product.id === 'buildertrend' ? '+' : ''}
                 <small>/mo</small>
               </strong>
-              <div className="price-bar-space" aria-hidden="true">
-                <i
-                  style={
-                    {
-                      '--bar-height': `${Math.max(4, (product.price / 899) * 160)}px`,
-                      '--mobile-bar-height': `${Math.max(4, (product.price / 899) * 60)}px`,
-                    } as React.CSSProperties
-                  }
-                />
-              </div>
               {product.source ? (
                 <a
                   href={product.source}

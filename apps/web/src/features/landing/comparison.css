@@ -97,23 +97,6 @@
 .price-rung.is-renovagent strong {
   color: #0866ff;
 }
-.price-bar-space {
-  height: 178px;
-  display: flex;
-  align-items: end;
-  padding-top: 18px;
-  margin-top: 8px;
-}
-.price-bar-space i {
-  display: block;
-  width: 100%;
-  height: var(--bar-height);
-  background: linear-gradient(#aebbd0, #dbe2ed);
-  border-radius: 6px 6px 0 0;
-}
-.is-renovagent .price-bar-space i {
-  background: #0866ff;
-}
 .price-rung > a {
   min-height: 32px;
   display: flex;
@@ -214,13 +197,6 @@
   }
   .price-rung strong {
     font-size: 30px;
-  }
-  .price-bar-space {
-    height: 60px;
-    padding-top: 0;
-  }
-  .price-bar-space i {
-    height: var(--mobile-bar-height);
   }
   .comparison-included {
     display: block;
