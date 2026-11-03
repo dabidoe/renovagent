@@ -1,5 +1,24 @@
 # Project status — Renovagent
 
+UI audit step 4 — guardrails (November 3): added `npm run ui:check` (`scripts/ui-check.ts`) plus a separate `ui` CI job that uploads its screenshots. Playwright 1.63.0 is now a pinned dev dependency.
+
+The script starts its own Vite server with no API (or checks `--base <url>`) and drives 8 public routes at 1440, 390 and 320 px. On every route it asserts:
+- no horizontal overflow;
+- every visible control has an accessible name;
+- no console or page errors (failed API requests excepted).
+
+Targeted assertions:
+- Brooklyn reads "Not priced yet" / "Needs size", and Oakland's totals are non-zero.
+- Intake fields have visible labels, the disabled "Build my plan" explains its photo requirement, the empty form shows no saved message, and a typed brief is saved and survives reload.
+- A disabled Connect key button explains why.
+- Hero card tabs stay on one line.
+
+Screenshots are for human review, not pixel diffs.
+
+Found and fixed along the way: the bedroom example overflowed by 28 px at 320 px (a 300 px grid minimum).
+
+Verification: 85/85 checks pass locally (about 80 s). Re-introducing the `$0` header and the duplicate keys made the script fail at all three widths, then the code was restored. Not yet run in GitHub Actions.
+
 Landing light logo (November 3): the landing header now uses the owner's light lockup (`apps/web/src/assets/brand/renovagent-logo-light.webp`, same canvas as the original) directly on the hero photo with a soft shadow, replacing the white chip. Other pages keep the original dark lockup. The hero photo stays as is, per the owner. Browser checks at 1440 and 390 px; tests and build pass.
 
 UI audit step 3 — studio, intake and Connect layout (November 3):

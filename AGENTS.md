@@ -26,6 +26,7 @@ Before architecture or substantial feature work, read `docs/architecture/README.
 - `npm test` — legacy JavaScript tests plus contract, domain, and integration TypeScript suites.
 - `.local/modal-venv/bin/modal deploy modal/render_room.py` — deploy the Blender HD render job to Modal (needs the `renovagent-render` secret with `RENDER_TOKEN`; the API needs `RENOVAGENT_RENDER_URL` and `RENOVAGENT_RENDER_TOKEN`).
 - `npm run test:connected` — integration suites against real local MongoDB.
+- `npm run ui:check` — drives the public pages in Chromium (overflow, accessible names, console errors, budget wording, intake labels/persistence) and writes screenshots to `.local/ui-check/`; `-- --base <url>` checks a running site.
 - `npm run serve:mcp` — stdio MCP adapter for standard agent clients.
 - `npm run seed:catalog` — import the curated demo catalog into local Mongo.
 - `npm run seed:paint -- --brand <name> --collection <name> --file <file.ase>` — load a brand's published paint swatch file into the configured catalog.

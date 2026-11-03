@@ -30,7 +30,8 @@
     "seed:catalog": "node --import tsx scripts/seed-catalog.ts",
     "build:pages": "npm run build && node scripts/package-pages.mjs",
     "render:room": "node --import tsx scripts/render-room.ts",
-    "render:example-room": "node scripts/fetch-example-assets.mjs && \"${BLENDER:-/Applications/Blender.app/Contents/MacOS/Blender}\" --background --factory-startup --python scripts/blender/example_room.py -- .local/assets/polyhaven public/example-room 128"
+    "render:example-room": "node scripts/fetch-example-assets.mjs && \"${BLENDER:-/Applications/Blender.app/Contents/MacOS/Blender}\" --background --factory-startup --python scripts/blender/example_room.py -- .local/assets/polyhaven public/example-room 128",
+    "ui:check": "node --import tsx scripts/ui-check.ts"
   },
   "devDependencies": {
     "@types/react": "19.2.0",
@@ -38,6 +39,7 @@
     "@types/three": "0.169.0",
     "fake-indexeddb": "6.2.4",
     "mongodb-memory-server-core": "^11.3.0",
+    "playwright": "1.63.0",
     "prettier": "3.6.2",
     "tsx": "4.23.15",
     "typescript": "5.9.3",
