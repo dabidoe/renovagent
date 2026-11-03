@@ -89,162 +89,6 @@
   width: auto;
   align-self: auto;
 }
-.landing-cinematic .landing-hero .landing-starters {
-  display: none;
-}
-.hero-agent-line {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  margin: 17px 0 0;
-  font-size: 13px;
-  line-height: 1.6;
-  color: #fff;
-}
-.hero-agent-line > .glyph {
-  width: 18px;
-  height: 18px;
-  color: #b6d2ff;
-}
-.hero-agent-line > img {
-  width: 20px;
-  height: 20px;
-  border-radius: 5px;
-}
-.hero-agent-line a {
-  color: #ffffffed;
-  text-decoration: none;
-}
-.hero-agent-line a:hover {
-  text-decoration: underline;
-  text-underline-offset: 4px;
-}
-.hero-agent-line a > span {
-  margin-left: 5px;
-}
-.hero-annotations {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-}
-.hero-annotation {
-  position: absolute;
-  pointer-events: auto;
-}
-.hero-annotation-finish {
-  left: 79%;
-  top: 27%;
-}
-.hero-annotation-plumbing {
-  left: 58%;
-  top: 58%;
-}
-.hero-annotation-crew {
-  left: 86%;
-  top: 77%;
-}
-.hero-hotspot {
-  display: grid;
-  place-items: center;
-  width: 44px;
-  height: 44px;
-  padding: 0;
-  border: 1px solid #ffffffe0;
-  border-radius: 50%;
-  color: #fff;
-  background: #12263c52;
-  backdrop-filter: blur(8px);
-  box-shadow: 0 0 0 6px #ffffff1f;
-  cursor: pointer;
-}
-.hero-hotspot > .glyph {
-  width: 20px;
-  height: 20px;
-}
-.hero-hotspot[aria-expanded='true'] {
-  background: #0866ff;
-  border-color: #fff;
-}
-.hero-annotation-note {
-  position: absolute;
-  bottom: calc(100% + 14px);
-  left: -88px;
-  width: 220px;
-  padding: 14px;
-  border-radius: 9px;
-  border: 1px solid #e2e8f0;
-  background: #fffffff5;
-  box-shadow: 0 8px 24px #06101f26;
-  color: #142038;
-}
-.hero-annotation-note > div {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-.hero-annotation-note::after {
-  content: '';
-  position: absolute;
-  top: 100%;
-  left: 0;
-  width: 100%;
-  height: 14px;
-}
-.hero-annotation-note strong {
-  font-size: 13px;
-  line-height: 1.4;
-}
-.hero-annotation-note p {
-  margin: 7px 0 0;
-  color: #52627c;
-  font-size: 13px;
-  line-height: 1.6;
-}
-.hero-annotation-note button {
-  display: grid;
-  place-items: center;
-  border: 0;
-  padding: 3px;
-  background: transparent;
-  color: #52627c;
-  cursor: pointer;
-}
-.hero-annotation-note button > .glyph {
-  width: 16px;
-  height: 16px;
-}
-.work-breakdown-section {
-  display: grid;
-  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1fr);
-  align-items: center;
-  gap: 80px;
-  padding-top: 32px;
-}
-.work-breakdown-copy p {
-  max-width: 380px;
-  color: #52627c;
-  font-size: 16px;
-  line-height: 1.7;
-}
-.work-breakdown-section .project-preview {
-  grid-area: auto;
-}
-.work-breakdown-section .project-preview-scene {
-  display: none;
-}
-.work-breakdown-section .preview-workup {
-  margin: 0;
-  width: 100%;
-  box-shadow: none;
-  padding: 24px;
-}
-.work-breakdown-section .preview-workup-content {
-  min-height: 208px;
-}
-.work-breakdown-section .preview-fixture-note {
-  font-size: 12px;
-}
 
 @media (max-width: 760px) {
   .landing.landing-v2.landing-refined.landing-cinematic .landing-hero {
@@ -267,41 +111,9 @@
   .hero-room-shade {
     background: linear-gradient(180deg, #071321c9 0%, #07132191 40%, #07132114 76%, #07132185 100%);
   }
-  .hero-annotation-finish {
-    left: 79%;
-    top: 70%;
-  }
-  .hero-annotation-plumbing {
-    left: 24%;
-    top: 79%;
-  }
-  .hero-annotation-crew {
-    left: 73%;
-    top: 87%;
-  }
-  .hero-annotation-finish .hero-annotation-note,
-  .hero-annotation-crew .hero-annotation-note {
-    left: auto;
-    right: 0;
-  }
-  .hero-annotation-plumbing .hero-annotation-note {
-    left: 0;
-  }
   .landing-cinematic > .landing-block,
   .landing-cinematic > .landing-footer {
     width: calc(100% - 32px);
-  }
-  .work-breakdown-section {
-    grid-template-columns: 1fr;
-    gap: 20px;
-    padding-top: 10px;
-  }
-  .work-breakdown-copy p {
-    max-width: none;
-    font-size: 14px;
-  }
-  .work-breakdown-section .preview-workup {
-    padding: 17px;
   }
 }
 .hero-paint-line {
@@ -329,8 +141,7 @@
 
 /* The hero's links sit on the photo and its outlines: each is its own
    frosted pill, large enough to tap, above the annotations. */
-.hero-paint-line,
-.hero-agent-line {
+.hero-paint-line {
   position: relative;
   z-index: 2;
   gap: 8px;
@@ -339,8 +150,7 @@
   display: none;
 }
 .hero-paint-line button,
-.hero-paint-line a,
-.hero-agent-line a {
+.hero-paint-line a {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -354,20 +164,15 @@
   font-size: 14px;
 }
 .hero-paint-line button:hover,
-.hero-paint-line a:hover,
-.hero-agent-line a:hover {
+.hero-paint-line a:hover {
   text-decoration: none;
   background: rgba(7, 19, 33, 0.78);
   border-color: #ffffff5c;
 }
-.hero-paint-line a > img,
-.hero-agent-line a > img {
+.hero-paint-line a > img {
   width: 22px;
   height: 22px;
   border-radius: 5px;
-}
-.hero-agent-line a > span {
-  margin-left: 0;
 }
 .hero-paint-line a {
   text-decoration: none;

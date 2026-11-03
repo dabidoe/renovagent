@@ -1,5 +1,12 @@
 # Project status — Renovagent
 
+CSS and image cleanup (November 3):
+- **CSS:** removed 780 selectors / 740 rules (3,875 lines) across 18 stylesheets whose class names appear nowhere in apps/, packages/, src/, public/ or the HTML entries. The rule is conservative: dynamic class prefixes count as live, selectors with :is/:where/:has are kept, and classes inside :not() don't count. Built CSS went from 312 KB / 59 KB gzip to 258 KB / 50 KB gzip, and public-route coverage from 24% to 28%; the remainder serves signed-in, modal, 3D and notes-workspace states.
+- **Dead code:** deleted the unimported landing `project-preview`, `cost-demo` and `landing-example` modules, orphaned when the homepage was refreshed. `house-example/house-example.tsx` (942 lines, `HouseExample`) is also unimported since October 31 but was left for the owner to decide.
+- **Hero image:** now a WebP copy (395 → 95 KB). `bath.jpg` stays as the source for `scripts/hero-segments.ts`. Example room photos are untouched because they carry provenance hashes and test fixtures.
+
+Verification: full-page pixel comparison before and after the prune (9 routes × 1440/390/320 px, reduced motion, deterministic baseline confirmed) shows no change except 1–6 px of lazy-image resampling noise on one route, whose same images are byte-identical on `/`. Types, boundaries, format, build, 15 + 313 tests and 85/85 UI checks pass.
+
 Brand polish and weight (November 3):
 - **Fonts:** self-hosted Plus Jakarta Sans for every h1/h2 and Inter for text (`@fontsource-variable`, pinned), replacing the Google Fonts and Fontshare `@import`s. Headline tracking is set once for Jakarta. Jakarta's wide full stop is replaced in headlines by Inter's, via a `unicode-range` face over the Inter file the page already loads.
 - **Navigation:** removed "Open workspace" from the landing nav, desktop and mobile.

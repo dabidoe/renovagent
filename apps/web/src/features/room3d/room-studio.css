@@ -20,8 +20,7 @@
   flex-wrap: wrap;
   gap: 6px;
 }
-.room3d-actions button[aria-pressed='true'],
-.room3d-surfaces button[aria-pressed='true'] {
+.room3d-actions button[aria-pressed='true'] {
   outline: 2px solid #1d4ed8;
 }
 .room3d-body {
@@ -84,34 +83,12 @@
 .room3d-detail dt {
   color: #64748b;
 }
-.room3d-links,
-.room3d-surfaces {
+.room3d-links {
   list-style: none;
   padding: 0;
   margin: 6px 0;
   display: grid;
   gap: 6px;
-}
-.room3d-surfaces button {
-  width: 100%;
-  text-align: left;
-}
-.room3d-product {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  margin-top: 4px;
-}
-.room3d-product-image {
-  flex: 0 0 56px;
-  height: 56px;
-  border: 1px dashed #94a3b8;
-  border-radius: 6px;
-  font-size: 9px;
-  color: #64748b;
-  display: grid;
-  place-items: center;
-  text-align: center;
 }
 @media (max-width: 760px) {
   .room3d-body {
@@ -158,28 +135,6 @@
   color: #fff;
   border-color: transparent;
 }
-.room3d-pin-n,
-.room3d-badge {
-  display: inline-grid;
-  place-items: center;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: var(--blue, #2563eb);
-  color: #fff;
-  font:
-    700 11px/1 ui-sans-serif,
-    system-ui,
-    sans-serif;
-  flex: 0 0 auto;
-}
-.room3d-pin.active .room3d-pin-n {
-  background: #fff;
-  color: var(--blue, #2563eb);
-}
-.room3d-badge.muted {
-  background: #94a3b8;
-}
 .room3d-pin-c {
   font-weight: 500;
   color: #475569;
@@ -206,11 +161,6 @@
   text-transform: uppercase;
   color: #64748b;
 }
-.room3d-total {
-  font-size: 26px;
-  line-height: 1.1;
-  color: #0f172a;
-}
 .room3d-summary button.primary {
   justify-self: start;
   margin-top: 6px;
@@ -226,29 +176,6 @@
 }
 .room3d-tiers button[aria-pressed='true'] {
   outline: 2px solid var(--blue, #2563eb);
-}
-.room3d-pins {
-  list-style: none;
-  padding: 0;
-  margin: 0 0 10px;
-  display: grid;
-  gap: 4px;
-}
-.room3d-pins button {
-  width: 100%;
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  gap: 8px;
-  align-items: center;
-  text-align: left;
-  padding: 8px;
-  border: 1px solid var(--line, #e2e8f0);
-  border-radius: 8px;
-  background: #fff;
-  cursor: pointer;
-}
-.room3d-pins button:hover {
-  border-color: var(--blue, #2563eb);
 }
 .room3d-pin-title {
   display: grid;
@@ -268,11 +195,6 @@
   gap: 8px;
   margin: 8px 0 2px;
 }
-.room3d-detail-cost {
-  font-size: 20px;
-  font-weight: 600;
-  margin: 0 0 4px;
-}
 .room3d-line-head {
   display: flex;
   justify-content: space-between;
@@ -281,9 +203,6 @@
 .room3d-links li {
   padding: 8px 0;
   border-bottom: 1px solid var(--line, #e2e8f0);
-}
-.room3d-empty p {
-  max-width: 560px;
 }
 .room3d-checks {
   list-style: none;
@@ -458,14 +377,6 @@
 }
 .room3d-order button:hover {
   border-color: var(--blue, #2563eb);
-}
-.room3d-store {
-  display: grid;
-  gap: 4px;
-  margin-bottom: 8px;
-}
-.room3d-store .link-button {
-  justify-self: start;
 }
 
 /* Compact "more" menu in the header. */
@@ -867,17 +778,6 @@
   padding-left: 14px;
   font-size: 11px;
   color: #6b7280;
-}
-.room3d-handoff {
-  margin: 0;
-  max-height: 380px;
-  overflow: auto;
-  padding: 10px;
-  border-radius: 6px;
-  background: #f6f7f9;
-  font-size: 11px;
-  line-height: 1.45;
-  white-space: pre-wrap;
 }
 .room3d-confirm {
   display: grid;

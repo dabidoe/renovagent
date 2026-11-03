@@ -1,7 +1,8 @@
 import { useLayoutEffect, useRef, useState } from 'react';
 import { materials, money } from './bath-materials.js';
 import segments from './hero-segments.json';
-const room = new URL('../../assets/examples/bath.jpg', import.meta.url).href;
+// WebP copy of bath.jpg (the source scripts/hero-segments.ts reads); same pixels and size.
+const room = new URL('../../assets/examples/bath.webp', import.meta.url).href;
 
 // Outlines are SAM 3.1 masks of this photo, computed once by
 // scripts/hero-segments.ts. The photo is shown mirrored, so the masks are too.

@@ -67,18 +67,6 @@
   font-weight: 650;
   letter-spacing: -0.8px;
 }
-.prompt-brand-symbol {
-  width: 32px;
-  height: 32px;
-  display: grid;
-  place-items: center;
-  border-radius: 10px;
-  color: white;
-  background: #1e293b;
-}
-.brand-period {
-  color: #60a5fa;
-}
 .prompt-project-picker {
   margin-left: auto;
   display: flex;
@@ -96,11 +84,6 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   max-width: 320px;
-}
-.prompt-header-actions {
-  display: flex;
-  margin-left: auto;
-  gap: 8px;
 }
 .prompt-workspace .icon-btn {
   width: 38px;
@@ -127,10 +110,6 @@
   text-align: center;
   margin-bottom: 30px;
 }
-.prompt-eyebrow {
-  font-size: 13px;
-  color: #64748b;
-}
 .prompt-intro h1 {
   font: 500 clamp(30px, 4vw, 44px) / 1.18 var(--serif);
   letter-spacing: -1.9px;
@@ -142,27 +121,6 @@
   color: #64748b;
   font-size: 15px;
   line-height: 1.6;
-}
-.prompt-current-project {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  max-width: 100%;
-  padding: 7px 11px;
-  margin-bottom: 16px;
-  background: #f8fafc;
-  border-radius: 8px;
-  color: #64748b;
-  font-size: 12px;
-  text-align: left;
-}
-.prompt-status-dot {
-  width: 5px;
-  height: 5px;
-  flex-shrink: 0;
-  border-radius: 50%;
-  background: #94a3b8;
-  display: inline-block;
 }
 .prompt-workspace .prompt-composer,
 .prompt-start {
@@ -242,75 +200,12 @@
   color: #64748b;
   font-size: 12px;
 }
-.prompt-shortcuts {
-  display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 24px;
-}
-.prompt-shortcuts button {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  background: #fff;
-  color: #64748b;
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
-  padding: 10px 13px;
-  font-size: 12px;
-  transition:
-    background 120ms,
-    border-color 120ms;
-}
-.prompt-shortcuts button:hover {
-  background: #f8fafc;
-  border-color: #e2e8f0;
-  color: #334155;
-}
-.prompt-shortcuts .glyph {
-  width: 16px;
-  height: 16px;
-}
 .prompt-disclosure {
   margin: 22px 0 0;
   font-size: 11px;
   color: #64748b;
   text-align: center;
   line-height: 1.5;
-}
-.prompt-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 16px;
-  padding: 20px 36px;
-  color: #64748b;
-  font-size: 11px;
-}
-.prompt-footer > span,
-.prompt-footer button {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.prompt-footer button {
-  background: transparent;
-  color: #64748b;
-  font-size: 11px;
-}
-.prompt-footer .glyph {
-  width: 15px;
-  height: 15px;
-}
-.prompt-example {
-  margin-top: 24px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: transparent;
-  color: #64748b;
-  font-size: 12px;
 }
 .prompt-workspace .photo-question-context {
   margin: 0 0 16px;
@@ -544,12 +439,10 @@
 .prompt-workspace .work-dialog .hp-heading {
   margin-top: 0;
 }
-.prompt-workspace .work-dialog .iv-photo-empty,
 .prompt-workspace .work-dialog .hp-photo-placeholder {
   background: #f1f5f9;
 }
-.prompt-workspace .work-dialog .iv-inspector,
-.prompt-workspace .work-dialog .iv-evidence {
+.prompt-workspace .work-dialog .iv-inspector {
   background: #f8fafc;
   border-color: #e2e8f0;
 }
@@ -651,7 +544,6 @@
 .prompt-main.has-conversation .prompt-intro h1 {
   font-size: 30px;
 }
-.prompt-main.has-conversation .prompt-eyebrow,
 .prompt-main.has-conversation .prompt-intro > p {
   display: none;
 }
@@ -664,10 +556,6 @@
   }
   .prompt-brand {
     font-size: 18px;
-  }
-  .prompt-brand-symbol {
-    width: 30px;
-    height: 30px;
   }
   .prompt-project-picker {
     order: 3;
@@ -691,9 +579,6 @@
     max-width: 260px;
     margin: 0 auto;
   }
-  .prompt-eyebrow {
-    font-size: 12px;
-  }
   .prompt-intro {
     margin-bottom: 24px;
   }
@@ -705,27 +590,9 @@
   .prompt-workspace .prompt-composer textarea {
     min-height: 94px;
   }
-  .prompt-shortcuts {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 8px;
-    margin-top: 20px;
-  }
-  .prompt-shortcuts button {
-    padding: 10px 12px;
-    min-height: 44px;
-  }
   .prompt-workspace .icon-btn,
   .prompt-workspace .send {
     min-width: 44px;
-    min-height: 44px;
-  }
-  .prompt-footer {
-    padding: 18px 20px;
-    gap: 12px;
-    flex-wrap: wrap;
-  }
-  .prompt-footer button {
     min-height: 44px;
   }
   .prompt-workspace .workspace-dialog,
@@ -752,11 +619,6 @@
   .prompt-workspace .work-dialog .iv-layout,
   .prompt-workspace .work-dialog .hp-layout {
     grid-template-columns: minmax(0, 1fr);
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .prompt-shortcuts button {
-    transition: none;
   }
 }
 

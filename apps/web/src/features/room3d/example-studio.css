@@ -1141,9 +1141,6 @@
     /* Keep the label against the right edge, not floating mid-bar. */
     justify-content: flex-end;
   }
-  .is-example-project .prompt-account {
-    display: none;
-  }
   .prompt-workspace.is-example-project .prompt-main.has-room {
     width: calc(100% - 32px);
   }

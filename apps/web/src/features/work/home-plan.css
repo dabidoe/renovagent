@@ -626,46 +626,6 @@
   padding: 25px;
   margin-top: 20px;
 }
-.home-workspace .work-toolbar {
-  margin-bottom: 20px;
-}
-.home-workspace .work-pane {
-  padding-left: 36px;
-  padding-right: 36px;
-}
-.workspace-columns.home-workspace.home-wide {
-  grid-template-columns: minmax(0, 1fr);
-}
-.home-wide .conversation-pane {
-  display: none;
-}
-.home-workspace .layout-control {
-  display: none;
-}
-.home-notes-toggle {
-  padding: 8px 11px;
-  border: 1px solid #dfe3d6;
-  border-radius: 4px;
-  background: #f8f9f2;
-  font-size: 10px;
-}
-.home-workspace:not(.home-wide) .hp-layout {
-  grid-template-columns: 1fr;
-}
-.home-workspace:not(.home-wide) .hp-action-rail {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
-}
-.home-workspace:not(.home-wide) .hp-brief {
-  margin-top: 0;
-}
-.home-workspace:not(.home-wide) .hp-heading h1 {
-  font-size: 46px;
-}
-.home-workspace:not(.home-wide) .hp-heading {
-  align-items: start;
-}
 .hp-archive-list {
   display: grid;
   gap: 8px;
@@ -749,18 +709,11 @@
   .hp-photo {
     height: 300px;
   }
-  .home-workspace:not(.home-wide) .hp-action-rail {
-    display: block;
-  }
   .hp-more .hp-study-choices {
     grid-template-columns: 1fr;
   }
   .hp-address {
     max-width: 180px;
-  }
-  .home-workspace .work-pane {
-    padding-left: 20px;
-    padding-right: 20px;
   }
 }
 @media (max-width: 600px) {
@@ -807,29 +760,6 @@
   .hp-route ol {
     grid-template-columns: 1fr;
   }
-  .home-wide.mobile-conversation .conversation-pane {
-    display: flex;
-  }
-  .home-wide.mobile-conversation {
-    grid-template-columns: 1fr;
-  }
-  .home-workspace .home-notes-toggle {
-    display: none;
-  }
-}
-.hp-sidebar-property {
-  font: 25px/1.15 var(--serif);
-  padding: 10px 7px 16px;
-}
-.hp-switch-project {
-  font-size: 10px;
-  background: transparent;
-  text-align: left;
-  padding: 0 7px 14px;
-  color: #78816b;
-}
-.home-planning-shell .workspace-sidebar .lifecycle-caption {
-  margin-top: 25px;
 }
 .hp-source-notice {
   display: block;
@@ -837,9 +767,6 @@
   line-height: 1.5;
   margin-top: 9px;
   color: #727d66;
-}
-.home-planning-shell .workspace-sidebar .library-nav {
-  margin-top: auto;
 }
 .hp-brief small {
   display: -webkit-box;

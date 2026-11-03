@@ -341,11 +341,6 @@
   width: 100% !important;
   height: 100% !important;
 }
-.pf-3d-note {
-  margin: 0;
-  font-size: 0.8rem;
-  color: var(--pf-muted);
-}
 
 .pf-panel {
   display: grid;
@@ -354,11 +349,6 @@
   border: 1px solid var(--pf-line);
   border-radius: 16px;
   background: var(--pf-card);
-}
-.pf-dims {
-  margin: 0;
-  font-size: 0.82rem;
-  color: var(--pf-muted);
 }
 .pf-group {
   display: grid;
