@@ -469,16 +469,6 @@
 .iv-scope .iv-fine {
   font-size: 10px;
 }
-.home-workspace:not(.home-wide) .iv-layout {
-  grid-template-columns: 1fr;
-}
-.home-workspace:not(.home-wide) .iv-heading {
-  display: block;
-}
-.home-workspace:not(.home-wide) .iv-heading > div + div {
-  margin-top: 20px;
-  max-width: 100%;
-}
 @media (max-width: 1050px) {
   .iv-layout {
     gap: 20px;

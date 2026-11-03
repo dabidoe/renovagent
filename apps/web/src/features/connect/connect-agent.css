@@ -235,12 +235,6 @@
   top: 24px;
   min-width: 0;
 }
-.ca-example-note {
-  margin: 16px 16px 0;
-  font-size: 12px;
-  line-height: 1.7;
-  color: var(--ca-muted);
-}
 .ca-keys {
   list-style: none;
   margin: 0;
