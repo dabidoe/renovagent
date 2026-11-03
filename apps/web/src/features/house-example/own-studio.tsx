@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { pendingStudioSave, restorePendingStudioDesign } from './studio-sync.js';
 import { workspaceRequest } from '../../adapters/http/project-repository.js';
+import { AddPhotoSheet } from '../project-start/add-photo-sheet.js';
+import { uploadStudioPhoto } from '../project-start/photo-upload.js';
+import { StudioError } from './studio-error.js';
 import { Glyph } from '../../components/glyph.js';
 import { SignInChoices } from '../connect/sign-in.js';
 import { PaintFloorStudio, parseFeet, type SavedStudioDesign } from './paint-floor-studio.js';
@@ -34,12 +37,7 @@ function keep(saved: Saved | null) {
   }
 }
 
-const upload = async (file: File) =>
-  (
-    (await workspaceRequest('/studio/photo', file)) as {
-      sha256: string;
-    }
-  ).sha256;
+const upload = uploadStudioPhoto;
 const outline = (sha256: string) => workspaceRequest('/studio/walls', { sha256 }) as Promise<Masks>;
 
 type Step = { label: string; state: 'waiting' | 'working' | 'done' };
@@ -70,7 +68,7 @@ function Intake({
   const [steps, setSteps] = useState<Step[] | null>(null);
   const [error, setError] = useState('');
   const [needsAccess, setNeedsAccess] = useState(false);
-  const photoInput = useRef<HTMLInputElement>(null);
+  const [sheetOpen, setSheetOpen] = useState(false);
   const planInput = useRef<HTMLInputElement>(null);
   useEffect(() => {
     let live = true;
@@ -148,7 +146,7 @@ function Intake({
         every room from it.
       </p>
       <div className="pf-drop">
-        <button type="button" disabled={busy} onClick={() => photoInput.current?.click()}>
+        <button type="button" disabled={busy} onClick={() => setSheetOpen(true)}>
           <Glyph name="photo" />
           <span>
             <b>
@@ -171,14 +169,6 @@ function Intake({
           </span>
         </button>
         <input
-          ref={photoInput}
-          type="file"
-          accept="image/*"
-          multiple
-          hidden
-          onChange={(e) => setPhotos([...(e.target.files ?? [])].slice(0, MAX_PHOTOS))}
-        />
-        <input
           ref={planInput}
           type="file"
           accept="image/*"
@@ -187,6 +177,12 @@ function Intake({
           onChange={(e) => setPlans([...(e.target.files ?? [])].slice(0, 2))}
         />
       </div>
+      {sheetOpen && (
+        <AddPhotoSheet
+          onFiles={(next) => setPhotos([...photos, ...next].slice(0, MAX_PHOTOS))}
+          onClose={() => setSheetOpen(false)}
+        />
+      )}
       {!!photos.length && <p className="pf-sub">{photos.map((file) => file.name).join(' · ')}</p>}
       <input
         className="pf-intake-idea"
@@ -234,7 +230,7 @@ function Intake({
           Build my plan <Glyph name="right" />
         </button>
       )}
-      {error && <p className="pf-intake-error">{error}</p>}
+      {error && <StudioError message={error} />}
       <p className="pf-sub" role="status">
         {recovery}
       </p>
