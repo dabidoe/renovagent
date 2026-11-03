@@ -2,8 +2,19 @@
    One signature element, the dimension line from the mark, marks primary
    headings; everything else stays quiet: white surfaces, slate hairlines,
    ink primary actions. Blue means measurement or the agent, not decoration. */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-@import url('https://api.fontshare.com/v2/css?f[]=satoshi@500,700&display=swap');
+/* Fonts are self-hosted (@fontsource-variable, imported in main.tsx): Plus Jakarta Sans for
+   display, Inter for text. */
+/* Plus Jakarta Sans sets its full stop wide, so headline periods ("plan.") float away from
+   their word. Headlines borrow Inter's tighter full stop; everything else is Jakarta. */
+@font-face {
+  font-family: 'Display Stop';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url('@fontsource-variable/inter/files/inter-latin-wght-normal.woff2')
+    format('woff2-variations');
+  unicode-range: U+002E;
+}
 
 :root {
   --brand-ink: #0f172a;
@@ -18,10 +29,10 @@
   --ink: #0f172a;
   --blue: #2563eb;
   /* Existing rules use --serif for display text; it is now the display face. */
-  --serif: 'Satoshi', 'Inter', system-ui, sans-serif;
+  --serif: 'Display Stop', 'Plus Jakarta Sans Variable', 'Inter Variable', system-ui, sans-serif;
   --font-display: var(--serif);
   font-family:
-    'Inter',
+    'Inter Variable',
     system-ui,
     -apple-system,
     'Segoe UI',
@@ -427,4 +438,13 @@ a {
   letter-spacing: inherit !important;
   text-transform: none !important;
   font-variant-numeric: tabular-nums;
+}
+
+/* One headline voice: Plus Jakarta Sans for page and section headings, with tracking
+   tuned for it (earlier per-section values were set for a narrower face). */
+h1,
+h2,
+.direction-details h3 {
+  font-family: var(--font-display) !important;
+  letter-spacing: -0.025em !important;
 }

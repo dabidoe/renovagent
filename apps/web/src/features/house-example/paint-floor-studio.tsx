@@ -28,7 +28,8 @@ import { nearestPaint, roomSurfaces, studioItemBudget } from '@renovagent/core';
 import { workspaceRequest } from '../../adapters/http/project-repository.js';
 import { Glyph } from '../../components/glyph.js';
 import { SignInChoices } from '../connect/sign-in.js';
-import { mountRoomScene, type RoomScene } from '../room3d/room-scene.js';
+// The 3D engine (three.js) loads only when a 3D view opens.
+import type { RoomScene } from '../room3d/room-scene.js';
 import { PaintPicker, brandColorLink } from '../room3d/photo-outlines.js';
 import { InspiredView, InspoPanel, stylingDraft, type StylingDraft } from './inspo-panel.js';
 import { RoomPlan, type StudioHandoff } from './room-plan.js';
@@ -215,7 +216,7 @@ export function BeforeAfter({
       ctx.fillText(
         paintAvailable || !pick.color
           ? 'Renovagent · generated finish preview · concept only'
-          : 'Renovagent · wall colour preview unavailable · concept only',
+          : 'Renovagent · wall color preview unavailable · concept only',
         16,
         source.height + labelHeight / 2,
         output.width - 32,
@@ -275,7 +276,7 @@ export function BeforeAfter({
           role="img"
           aria-label={
             ready && hex && !paintAvailable
-              ? `${room.title} preview; wall colour unavailable`
+              ? `${room.title} preview; wall color unavailable`
               : `${room.title} with the chosen paint and floor`
           }
         />
@@ -303,7 +304,7 @@ export function BeforeAfter({
       </div>
       {ready && hex && !paintAvailable && (
         <p className="pf-sub" role="status">
-          Wall-colour preview unavailable for this photo. The selected paint remains in your plan.
+          Wall-color preview unavailable for this photo. The selected paint remains in your plan.
         </p>
       )}
       {allowDownload && (
@@ -366,10 +367,15 @@ export function Room3D({
     label: pick.color ? pick.color.name : 'Existing',
   };
   const sizeKey = `${room.size?.xFt}x${room.size?.yFt}x${ceilingFt}`;
+  // Latest view state, applied once the lazily loaded scene mounts.
+  const latest = useRef({ look, placements, selectedPlacement });
+  latest.current = { look, placements, selectedPlacement };
   useEffect(() => {
     const model = roomModel(room, ceilingFt);
     if (!host.current || !model) return;
-    try {
+    let disposed = false;
+    const mount = (mountRoomScene: typeof import('../room3d/room-scene.js').mountRoomScene) => {
+      if (disposed || !host.current) return;
       scene.current = mountRoomScene(
         host.current,
         model,
@@ -397,11 +403,19 @@ export function Room3D({
           onFurnitureError: setError,
         },
       );
+      const now = latest.current;
+      scene.current.setLook(now.look);
+      scene.current.setPlacements(now.placements);
+      scene.current.selectPlacement(now.selectedPlacement ?? null);
       setError('');
-    } catch (e) {
-      setError(e instanceof Error ? e.message : '3D needs WebGL in this browser.');
-    }
+    };
+    import('../room3d/room-scene.js')
+      .then(({ mountRoomScene }) => mount(mountRoomScene))
+      .catch((e: unknown) =>
+        setError(e instanceof Error ? e.message : '3D needs WebGL in this browser.'),
+      );
     return () => {
+      disposed = true;
       scene.current?.dispose();
       scene.current = null;
     };
@@ -472,7 +486,7 @@ function ColorChoice({
           <span>{pick.color ? `${pick.color.name} · ${pick.color.code}` : 'Current walls'}</span>
         )}
       </div>
-      <div className="pf-swatches" role="group" aria-label="Wall colour">
+      <div className="pf-swatches" role="group" aria-label="Wall color">
         <button
           type="button"
           className="pf-swatch is-keep"
@@ -503,7 +517,7 @@ function ColorChoice({
           aria-expanded={browsing}
           onClick={() => setBrowsing(!browsing)}
         >
-          {browsing ? 'Close' : 'All colours'}
+          {browsing ? 'Close' : 'All colors'}
         </button>
       </div>
       {pick.color && (
@@ -752,7 +766,7 @@ function ShoppingSheet({
           <p className="pf-empty">
             {project.rooms.some((r) => !r.size)
               ? 'Add each room’s size to price it, then the list fills in.'
-              : 'Pick a colour or a floor for a room to start the list.'}
+              : 'Pick a color or a floor for a room to start the list.'}
           </p>
         )}
         {!!itemRooms.length && (
@@ -2020,7 +2034,7 @@ export function PaintFloorStudio({
                 </ul>
               ) : (
                 <p className="pf-empty">
-                  {needsSize ? 'Add the room size to price it.' : 'Pick a colour or a floor.'}
+                  {needsSize ? 'Add the room size to price it.' : 'Pick a color or a floor.'}
                 </p>
               )}
               {effectivePicks[room.id]?.ideas?.length ? (

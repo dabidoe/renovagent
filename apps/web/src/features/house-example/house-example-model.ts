@@ -262,7 +262,7 @@ export function houseBrief(corpus: HouseCorpus, choices: HouseChoices) {
     ...housePhases.map((phase, i) => `${i + 1}. ${phase.title}: ${phase.detail}`),
     '',
     '## Quantities and budget',
-    'Concept planning does not require room dimensions. Listing plans and public records can supply reference information; dimensions need a stated basis before a takeoff. No room areas, labour hours or house budget have been invented here. Resolve the selected work into quantities, supporting materials, labour, tax/delivery and unpriced work before a cost commitment.',
+    'Concept planning does not require room dimensions. Listing plans and public records can supply reference information; dimensions need a stated basis before a takeoff. No room areas, labor hours or house budget have been invented here. Resolve the selected work into quantities, supporting materials, labor, tax/delivery and unpriced work before a cost commitment.',
     '',
     '## Visual pipeline',
     '- Source photos: original listing evidence.',

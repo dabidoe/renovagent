@@ -143,7 +143,6 @@ function Intake({
   const busy = steps !== null;
   return (
     <section className="pf-intake" aria-label="Show your project">
-      <p className="pf-kicker">Your project</p>
       <h1>Show us the rooms.</h1>
       <p className="pf-sub">
         Room photos from your phone or a listing. Add the floor plan if you have one, and we size

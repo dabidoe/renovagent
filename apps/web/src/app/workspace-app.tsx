@@ -436,14 +436,8 @@ export function App({ controller }: { controller: WorkspaceController }) {
               >
                 <a href="#product-proof">Studio</a>
                 <a href="#connect">Connect your agent</a>
-                <button type="button" onClick={() => setModal('projects')}>
-                  Open workspace
-                </button>
               </div>
             </details>
-            <button className="landing-workspace-link" onClick={() => setModal('projects')}>
-              Open workspace <Glyph name="right" />
-            </button>
           </nav>
         ) : (
           <button

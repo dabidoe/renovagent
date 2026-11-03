@@ -1,4 +1,4 @@
-const darkLogoUrl = new URL('../assets/brand/renovagent-logo.png', import.meta.url).href;
+const darkLogoUrl = new URL('../assets/brand/renovagent-logo.webp', import.meta.url).href;
 // The owner's light lockup for dark backgrounds (the landing hero); same canvas and layout.
 const lightLogoUrl = new URL('../assets/brand/renovagent-logo-light.webp', import.meta.url).href;
 

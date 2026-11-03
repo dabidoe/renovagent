@@ -7,13 +7,14 @@ import {
   studioPlacementWarnings,
   type RoomModel,
 } from '@renovagent/core';
-import { furnitureThumbnail } from '../room3d/furniture-assets.js';
 
 export function AssetThumb({ id }: { id: StudioAssetId }) {
   const [src, setSrc] = useState('');
   useEffect(() => {
     let live = true;
-    void furnitureThumbnail(id)
+    // Thumbnails render with the 3D engine, which loads on demand.
+    void import('../room3d/furniture-assets.js')
+      .then(({ furnitureThumbnail }) => furnitureThumbnail(id))
       .then((value) => {
         if (live) setSrc(value);
       })
@@ -183,10 +184,10 @@ export function FurniturePanel({
                 </label>
               ))}
               <label>
-                Colour
+                Color
                 <input
                   type="color"
-                  aria-label="Selected furniture colour"
+                  aria-label="Selected furniture color"
                   value={chosen.color}
                   onChange={(e) => patch({ color: e.target.value })}
                 />

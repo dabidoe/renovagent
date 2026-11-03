@@ -217,7 +217,7 @@ export function DesignPicker({
   const wall = WALL_OPTIONS.find((w) => w.key === pick.wall)!;
   return (
     <div className="room3d-picker">
-      <div role="group" aria-label="Wall colour">
+      <div role="group" aria-label="Wall color">
         <span className="eyebrow">Walls</span>
         {WALL_OPTIONS.map((w) => (
           <button

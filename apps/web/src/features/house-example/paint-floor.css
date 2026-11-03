@@ -37,9 +37,7 @@
 }
 .pf-kicker {
   margin: 0 0 4px;
-  font-size: 0.72rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font-size: 13px;
   color: var(--pf-muted);
 }
 .pf-head h1 {
@@ -2813,4 +2811,10 @@
 .pf-card:hover,
 .pf-rooms > button:not([aria-current='true']):hover {
   box-shadow: var(--pf-shadow-lift);
+}
+/* Desktop shows this room's total in the budget strip under the photo; one total is enough. */
+@media (min-width: 761px) {
+  .pf-panel .pf-subtotal {
+    display: none;
+  }
 }

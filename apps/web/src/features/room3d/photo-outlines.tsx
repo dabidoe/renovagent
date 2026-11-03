@@ -201,7 +201,7 @@ export function OutlineControls({ state }: { state: ReturnType<typeof usePhotoOu
               })
             }
           />
-          <div className="outline-tints" role="group" aria-label="Try a colour">
+          <div className="outline-tints" role="group" aria-label="Try a color">
             <label className="outline-custom-color">
               <input
                 type="color"
@@ -317,16 +317,16 @@ function CustomColour({ onPick }: { onPick: (color: PaintColor) => void }) {
   };
   return (
     <div className="paint-custom">
-      <span>Pick a new colour</span>
+      <span>Pick a new color</span>
       <input
         type="color"
-        aria-label="Pick a new colour"
+        aria-label="Pick a new color"
         value={/^#[0-9a-f]{6}$/i.test(hex) ? hex : '#808080'}
         onChange={(e) => apply(e.target.value)}
       />
       <input
         type="text"
-        aria-label="Custom colour hex"
+        aria-label="Custom color hex"
         value={hex}
         maxLength={7}
         spellCheck={false}
@@ -379,7 +379,7 @@ export function PaintPicker({
     return (
       <div className="paint-picker">
         <p className="small-note">
-          The paint catalogue is unavailable. You can still pick a custom colour.
+          The paint catalogue is unavailable. You can still pick a custom color.
         </p>
         <CustomColour onPick={onPick} />
       </div>
@@ -415,11 +415,11 @@ export function PaintPicker({
           value={q}
           maxLength={60}
           placeholder="Search name or number"
-          aria-label="Search paint colours"
+          aria-label="Search paint colors"
           onChange={(e) => setQ(e.target.value)}
         />
       </div>
-      <div className="outline-chips" role="group" aria-label="Colour family">
+      <div className="outline-chips" role="group" aria-label="Color family">
         <button type="button" aria-pressed={!family} onClick={() => setFamily('')}>
           All
         </button>
@@ -434,7 +434,7 @@ export function PaintPicker({
           </button>
         ))}
       </div>
-      <div className="paint-grid" role="group" aria-label="Paint colours">
+      <div className="paint-grid" role="group" aria-label="Paint colors">
         {page?.colors.map((color) => {
           const label = [color.brand, color.name, color.code].filter(Boolean).join(' ');
           return (

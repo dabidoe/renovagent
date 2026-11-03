@@ -1,6 +1,8 @@
 import { createRoot } from 'react-dom/client';
 import { WorkspaceController, storedMode } from './app/workspace-controller.js';
 import { App } from './app/workspace-app.js';
+import '@fontsource-variable/inter';
+import '@fontsource-variable/plus-jakarta-sans';
 import './styles/workspace.css';
 import './styles/prompt-workspace.css';
 import './styles/brand.css';

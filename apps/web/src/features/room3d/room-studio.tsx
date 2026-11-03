@@ -332,7 +332,7 @@ function TaskPopup({
               <div className="small-note">
                 {isExample ? (
                   <>
-                    <ExampleTag /> Labour and material allowances · before tax
+                    <ExampleTag /> Labor and material allowances · before tax
                   </>
                 ) : (
                   <Stars c={q.contractor} />
@@ -403,7 +403,7 @@ function QuotePopup({ quote, onClose }: { quote: ExampleQuote; onClose: () => vo
           <tr>
             <th>Step</th>
             <th>Materials</th>
-            <th>Labour</th>
+            <th>Labor</th>
           </tr>
         </thead>
         <tbody>

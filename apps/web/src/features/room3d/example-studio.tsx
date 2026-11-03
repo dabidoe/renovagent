@@ -319,7 +319,7 @@ export function ExampleStudio({
                     </dd>
                   </div>
                   <div>
-                    <dt>{costMode === 'pro' ? 'Labour' : 'Tools'}</dt>
+                    <dt>{costMode === 'pro' ? 'Labor' : 'Tools'}</dt>
                     <dd>
                       {costMode === 'pro'
                         ? fullQuote

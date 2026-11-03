@@ -1,5 +1,21 @@
 # Project status — Renovagent
 
+Brand polish and weight (November 3):
+- **Fonts:** self-hosted Plus Jakarta Sans for every h1/h2 and Inter for text (`@fontsource-variable`, pinned), replacing the Google Fonts and Fontshare `@import`s. Headline tracking is set once for Jakarta. Jakarta's wide full stop is replaced in headlines by Inter's, via a `unicode-range` face over the Inter file the page already loads.
+- **Navigation:** removed "Open workspace" from the landing nav, desktop and mobile.
+- **Weight:**
+  - The logo now ships as 768 px WebP (dark 34 KB, light 58 KB; previously a 1.03 MB PNG plus a 168 KB WebP).
+  - three.js and the 3D scene load only when a 3D view or furniture thumbnail is needed. The main bundle went from 1.86 MB / 521 KB gzip to 1.18 MB / 343 KB gzip.
+  - Deleted the hidden landing "starter" buttons.
+- **Consistency:**
+  - Visible copy uses American spelling (color, labor) to match gray/catalog. Data keys and identifiers are unchanged.
+  - Internal links use the arrow icon instead of ↗.
+  - Card micro-labels and the studio kicker are sentence case instead of letter-spaced caps.
+  - The paint panel's room total is hidden on desktop, where the budget strip shows it.
+  - The intake's redundant "Your project" kicker is gone.
+
+Verification: format, types, build, 15 + 313 tests and 85/85 UI checks pass. Fonts were confirmed in the browser (headings Plus Jakarta Sans, text Inter, no third-party font requests). Desktop and 390 px reviewed.
+
 Studio layout, motion and copy trim (November 3):
 - **Studio layout:**
   - On desktop (≥761 px), Plan & budget sits under the photo: a budget strip, then the room list beside the work plan.
