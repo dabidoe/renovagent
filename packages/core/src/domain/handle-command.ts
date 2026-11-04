@@ -339,9 +339,58 @@ export function handleCommand(
     ) {
       entityIds = handleHomeInventory(state, command, context)!;
       eventType = 'ArtifactProposed';
+    } else if (command.type === 'SaveProjectEntry') {
+      const p = command.payload;
+      if (!p.entryId.startsWith('entry:'))
+        throw new DomainError('VALIDATION', 'Use a notebook entry identifier');
+      const old = latest(state.artifacts[p.entryId]);
+      if (
+        !old &&
+        Object.values(state.artifacts).filter((v) => {
+          const a = v.at(-1);
+          return (
+            a?.projectId === project.id && a.payload.kind === 'project-entry' && !a.payload.deleted
+          );
+        }).length >= 300
+      )
+        throw new DomainError('VALIDATION', 'Up to 300 current notebook entries per project');
+      if (old && (old.projectId !== project.id || old.payload.kind !== 'project-entry'))
+        throw new DomainError(
+          'FORBIDDEN',
+          'Notebook entry belongs to another project or artifact kind',
+        );
+      if ((old?.revision ?? 0) !== p.expectedRevision)
+        throw new DomainError(
+          'CONFLICT',
+          'Notebook entry changed; read its latest revision before editing',
+        );
+      if (!old && p.entry.deleted)
+        throw new DomainError('VALIDATION', 'Cannot remove an entry that does not exist');
+      if (old?.payload.kind === 'project-entry' && old.payload.deleted)
+        throw new DomainError(
+          'CONFLICT',
+          'This notebook entry was removed; create a new entry to restore its content',
+        );
+      (state.artifacts[p.entryId] ||= []).push({
+        schemaVersion: 1,
+        id: p.entryId,
+        projectId: project.id,
+        revision: p.expectedRevision + 1,
+        lifecycle: 'proposed',
+        freshness: 'current',
+        inputRefs: [],
+        evidenceIds: [],
+        payload: p.entry,
+        createdAt: context.now,
+        acceptedAt: null,
+      });
+      eventType = 'ArtifactProposed';
+      entityIds = [p.entryId];
     } else if (command.type === 'ProposeArtifact') {
       const p = command.payload,
         old = latest(state.artifacts[p.artifactId]);
+      if (p.content.kind === 'project-entry' || old?.payload.kind === 'project-entry')
+        throw new DomainError('VALIDATION', 'Use notebook tools to save project entries');
       if (
         [
           'photo-inventory',

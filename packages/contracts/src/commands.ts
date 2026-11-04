@@ -1,3 +1,4 @@
+import { projectEntrySchema } from './project-notebook.js';
 import { photoInventorySchema } from './home-inventory.js';
 import { candidateSurveySchema } from './candidate-measurements.js';
 import { z } from 'zod';
@@ -19,6 +20,15 @@ const envelope = {
   basePropertyRevision: revision.optional(),
 };
 export const commandSchema = z.discriminatedUnion('type', [
+  z
+    .object({
+      ...envelope,
+      type: z.literal('SaveProjectEntry'),
+      payload: z
+        .object({ entryId: id, expectedRevision: revision, entry: projectEntrySchema })
+        .strict(),
+    })
+    .strict(),
   z
     .object({
       ...envelope,

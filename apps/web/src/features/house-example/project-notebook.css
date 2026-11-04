@@ -1,0 +1,238 @@
+.project-notebook {
+  max-width: 1150px;
+  margin: 0 auto;
+  padding: 32px 20px 64px;
+  color: #1b2c45;
+}
+.project-notebook > header {
+  display: flex;
+  gap: 24px;
+  align-items: start;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+.project-notebook h1 {
+  font-size: clamp(1.65rem, 3.5vw, 2.5rem);
+  overflow-wrap: anywhere;
+  margin: 8px 0 12px;
+}
+.project-notebook h2 {
+  margin-top: 0;
+}
+.notebook-eyebrow,
+.notebook-card-meta,
+.notebook-card small {
+  color: #526781;
+  font-size: 0.83rem;
+}
+.notebook-compose,
+.notebook-card {
+  background: white;
+  border: 1px solid #dce4ee;
+  border-radius: 18px;
+  padding: 24px;
+}
+.notebook-compose {
+  margin: 24px 0;
+  display: grid;
+  gap: 16px;
+}
+.project-notebook label {
+  display: grid;
+  gap: 7px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  min-width: 0;
+}
+.project-notebook input,
+.project-notebook textarea,
+.project-notebook select {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  border: 1px solid #c8d3e1;
+  border-radius: 9px;
+  background: #fff;
+  color: #1b2c45;
+  padding: 10px 12px;
+  font: inherit;
+  font-weight: 400;
+}
+.project-notebook textarea {
+  resize: vertical;
+  line-height: 1.55;
+}
+.project-notebook input:focus-visible,
+.project-notebook textarea:focus-visible,
+.project-notebook select:focus-visible,
+.project-notebook button:focus-visible {
+  outline: 3px solid #8ab5ee;
+  outline-offset: 2px;
+}
+.project-notebook button {
+  border: 1px solid #c8d3e1;
+  background: #fff;
+  color: #1b2c45;
+  border-radius: 999px;
+  padding: 10px 16px;
+  font: inherit;
+  cursor: pointer;
+  min-height: 42px;
+}
+.project-notebook .notebook-primary {
+  background: #31514b;
+  color: #fff;
+  border-color: #31514b;
+  font-weight: 650;
+}
+.project-notebook button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+.notebook-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr 2fr;
+  gap: 16px;
+}
+.notebook-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 12px;
+}
+.notebook-actions button {
+  font-size: 0.85rem;
+}
+.notebook-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: end;
+  margin: 24px 0;
+}
+.notebook-filters label {
+  flex: 1 1 180px;
+}
+.notebook-cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  margin: 20px 0;
+}
+.notebook-card {
+  min-width: 0;
+}
+.notebook-card h3 {
+  margin: 12px 0;
+  overflow-wrap: anywhere;
+}
+.notebook-card-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.notebook-text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.65;
+}
+.notebook-links {
+  padding-left: 20px;
+  overflow-wrap: anywhere;
+  line-height: 1.7;
+}
+.notebook-images {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 12px;
+}
+.notebook-images figure {
+  margin: 0;
+}
+.notebook-images img {
+  width: 100%;
+  aspect-ratio: 4/3;
+  object-fit: cover;
+  border-radius: 10px;
+}
+.notebook-images figcaption {
+  font-size: 0.75rem;
+  margin-top: 5px;
+  color: #526781;
+  overflow-wrap: anywhere;
+}
+.notebook-attachments {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+}
+.notebook-attachments > div {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+.notebook-attachments img {
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 10px;
+}
+.notebook-attachments span {
+  overflow-wrap: anywhere;
+}
+.notebook-tags {
+  color: #31514b;
+  font-size: 0.85rem;
+}
+.notebook-empty,
+.notebook-legacy {
+  padding: 20px;
+  border: 1px dashed #bbc8d9;
+  border-radius: 14px;
+}
+.project-notebook details summary {
+  cursor: pointer;
+  margin: 8px 0;
+}
+.project-notebook details label {
+  margin-top: 14px;
+}
+.notebook-embedded {
+  border-top: 1px solid #dce4ee;
+  margin-top: 32px;
+}
+@media (max-width: 700px) {
+  .project-notebook {
+    padding: 24px 12px 48px;
+  }
+  .project-notebook > header {
+    flex-direction: column;
+  }
+  .notebook-fields,
+  .notebook-cards {
+    grid-template-columns: 1fr;
+  }
+  .notebook-compose,
+  .notebook-card {
+    padding: 18px;
+  }
+}
+.notebook-form-fields {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+  display: grid;
+  gap: 16px;
+}
+.notebook-shortcut {
+  padding: 14px 32px;
+  border-bottom: 1px solid #dce4ee;
+  font-size: 0.9rem;
+}
+@media (max-width: 700px) {
+  .notebook-shortcut {
+    padding: 12px 16px;
+  }
+}

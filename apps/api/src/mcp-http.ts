@@ -88,7 +88,7 @@ export function createMcpHttpServer(
             'Proposals cannot accept decisions, verify facts, pass inspections or purchase anything.',
             'There is no public workspace API, browser login, attachment access or catalog-import endpoint on this listener.',
             '',
-            'Start with list_projects to verify the intended workspace. Use a stable requestId when starting a project.',
+            'Start with get_connection_context to understand the saved projects, notes and next actions. Use a stable requestId when starting a project.',
           ].join('\n'),
         );
         return;
@@ -173,9 +173,11 @@ export function mcpEndpoint(
       }
       const ownerRepository = repository.forUser(grant.ownerId);
       // Revoked/deleted workspaces never get recreated by a remote request.
-      await ownerRepository.read();
+      const initial = await ownerRepository.read();
       const mcp = createWorkspaceMcpServer(ownerRepository, catalog, {
         access: grant.access,
+        agent: grant.name,
+        initialWorkspace: initial.workspace,
         transport: 'streamable-http',
         ...(options.images ? { images: options.images } : {}),
         ...(options.plans

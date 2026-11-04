@@ -76,7 +76,7 @@ export function ConnectAgent() {
   };
   const address = endpoint || new URL('/mcp', window.location.origin).href;
   const local = /^http:\/\/(127\.0\.0\.1|localhost)[:/]/.test(address);
-  const introduction = `Connect to my Renovagent workspace at ${address} using MCP OAuth. Start the browser authorization flow so I can sign in and approve access. Request renovagent:read and renovagent:propose so you can read projects and save proposed plans and inspiration. Do not ask me to copy a key into chat.`;
+  const introduction = `Connect to my Renovagent workspace at ${address} using MCP OAuth. Start the browser authorization flow so I can sign in and approve access. Request renovagent:read and renovagent:propose so you can read projects and save proposed plans and inspiration. Do not ask me to copy a key into chat. Once connected, immediately call get_connection_context, read my relevant project notes, and continue from what is saved. Mention the actual project and a useful next step instead of asking a generic greeting.`;
   const guideUrl = new URL('/agent-guide.md', window.location.origin).href;
   const ask = `${introduction}\n\nRead ${guideUrl} for tool, photo and brief instructions. Use the resource metadata advertised in the 401 response to discover authorization. Register a public client, use authorization code with S256 PKCE, and open the authorization URL for me. If your connector only supports API keys, say so and link me to ${new URL('/#connect', window.location.origin).href} for manual setup; do not claim OAuth has completed.`;
   const config = JSON.stringify(

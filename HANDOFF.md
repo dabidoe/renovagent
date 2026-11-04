@@ -1,10 +1,21 @@
 # Renovagent handoff
 
-**Updated 3 November 2026 (America/New_York).** This file replaces the 29 October handoff. That version's tunnel URL, grant expiry, QA project IDs and "uncommitted work" note are historical. Git history has them.
+**Updated 4 November 2026 (America/New_York).** This file replaces the 29 October handoff. That version's tunnel URL, grant expiry, QA project IDs and "uncommitted work" note are historical. Git history has them.
 
 Any agent or person picking this up should read this file first, then [AGENTS.md](AGENTS.md). Read the linked docs only for the area you are changing.
 
 ## Resume here
+
+- **Project notebook and agent briefing (3 Nov, release preparation):** added
+  project-specific notes, links, role-labeled images, decisions/questions and
+  revision-safe edit/remove/history through dedicated notebook commands and MCP
+  tools. Agents can read actual stored images. New connection initialization
+  includes project memory; `get_connection_context` supplies current context,
+  legacy messages/drafts, standalone plans and board finds with concrete next
+  actions. Website notebooks save without sign-in, recover drafts, and share/copy
+  independently, including notebook-only projects. 52 built-site notebook checks
+  pass, including lost-response recovery after reload. Full build, 15 legacy +
+  334 TS tests (58 skips), all 66 connected tests and 202 public UI checks pass. See [implementation and verification](docs/architecture/project-notebook-and-agent-briefing.md).
 
 - **Limited guest and sharing (3 Nov, deployed):** photo intake and
   first saves now start a guest automatically. Guest browser sessions and new

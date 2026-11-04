@@ -42,6 +42,8 @@ A user can give the agent work to do, watch its real progress, inspect a produce
 
 ## Implementation boundary
 
+**November 3 project memory:** [Project notebook and agent briefing](project-notebook-and-agent-briefing.md) records project-scoped notes/images/links, versioned editing, shared notebooks, actual MCP image read-back and initialization-time workspace context. Full 3D command control and arbitrary document ingestion remain open.
+
 **November 3 public startup:** [Public startup and saved-workspace routing](public-startup.md) separates the landing page and public studios from notes-workspace bootstrap, keeps saved-project access on explicit workspace routes, and records the built-site regression checks and performance limits.
 
 **Local November 3 bathroom assets (not deployed):** [Bathroom concept assets](bathroom-assets.md) adds six owner-provided fixtures to the editable studio library and local headless Blender renderer, with source-mesh sizes and ignored licensed binaries.

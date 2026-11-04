@@ -65,7 +65,10 @@ export function ProjectLibrary() {
           <h1 id="project-library-title">My projects</h1>
           <p>Pick up where you left off, or explore a different idea.</p>
         </div>
-        <a href="#your-project">Continue your studio</a>
+        <div>
+          <a href="#your-project">Continue your studio</a> ·{' '}
+          <a href="#notebook">Start project notes</a>
+        </div>
       </header>
       {draft && (
         <article className="project-library-draft">
@@ -125,10 +128,13 @@ export function ProjectLibrary() {
                   href={
                     entry.revision
                       ? `#design/${encodeURIComponent(entry.id)}/${entry.revision}`
-                      : '#workspace/projects'
+                      : `#project/${encodeURIComponent(entry.id)}/notebook`
                   }
                 >
-                  {entry.revision ? 'Open design' : 'Open in workspace'}
+                  {entry.revision ? 'Open design' : 'Open notebook'}
+                </a>
+                <a href={`#project/${encodeURIComponent(entry.id)}/notebook`}>
+                  Notes, photos &amp; links
                 </a>
               </article>
             ))}

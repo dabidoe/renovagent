@@ -10,6 +10,7 @@ import { DesignOptionsView } from '../design/design-options-view.js';
 import { type Workspace, type Artifact } from '@renovagent/contracts';
 export const artifactTitles: Record<Artifact['payload']['kind'], string> = {
   'studio-design': 'Saved room design',
+  'project-entry': 'Project notebook entry',
   'conversation-plan': 'Conversation planning proposal',
   'photo-inventory': 'Visual home inventory',
   'inventory-direction': 'Your element direction',
@@ -127,6 +128,16 @@ export function ArtifactView({
   const p = artifact.payload;
   const photoResearch = state ? researchForArtifact(state, artifact) : null;
   switch (p.kind) {
+    case 'project-entry':
+      return (
+        <section>
+          <h2>{p.content.title}</h2>
+          <p>{p.deleted ? 'Removed notebook entry · history preserved' : p.content.text}</p>
+          <a href={`#project/${encodeURIComponent(artifact.projectId)}/notebook`}>
+            Open project notebook
+          </a>
+        </section>
+      );
     case 'photo-inventory':
       return (
         <div>

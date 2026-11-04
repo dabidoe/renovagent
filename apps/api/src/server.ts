@@ -63,6 +63,8 @@ import { McpAccessStore } from './mcp-access.js';
 import { mcpEndpoint } from './mcp-http.js';
 import { McpOAuth } from './mcp-oauth.js';
 import { StudioShares } from './studio-shares.js';
+import { ProjectNotebook } from './project-notebook.js';
+import { startAgentProject } from './agent-projects.js';
 import { configuredJevKey, judgeProducts, rankReviewFindings, readRoomPhoto } from './jev.js';
 import {
   bestValue,
@@ -674,6 +676,82 @@ export async function createWorkspaceServer(
       }
       // A plan an owner's agent saved; only that owner can open it.
       const savedPlan = path.match(/^\/studio-plans\/([^/]+)$/);
+      if (path === '/projects/start' && req.method === 'POST') {
+        json(
+          200,
+          await startAgentProject(
+            activeRepo,
+            z
+              .object({
+                requestId: id,
+                name: z.string().trim().min(1).max(300),
+                brief: z.string().trim().min(1).max(4000),
+                propertyId: id.optional(),
+              })
+              .strict()
+              .parse(await body(req)),
+          ),
+        );
+        return;
+      }
+      const notebookRoute = path.match(/^\/projects\/([^/]+)\/notebook(?:\/([^/]+)(\/remove)?)?$/);
+      if (notebookRoute) {
+        const projectId = id.parse(decodeURIComponent(notebookRoute[1]));
+        const notebook = new ProjectNotebook(activeRepo, design?.images);
+        if (req.method === 'GET' && !notebookRoute[2]) {
+          const filters = z
+            .object({
+              query: z.string().max(200).optional(),
+              room: z.string().max(120).optional(),
+              offset: z.coerce.number().int().nonnegative().default(0),
+              limit: z.coerce.number().int().min(1).max(100).default(50),
+            })
+            .parse(Object.fromEntries(url.searchParams));
+          const { workspace } = await activeRepo.read();
+          const project = workspace.projects[projectId];
+          if (!project) throw new DomainError('NOT_FOUND', 'No such project');
+          const studio = workspace.artifacts[`${projectId}:studio-design`]?.at(-1);
+          json(200, {
+            project,
+            designRevision: studio?.payload.kind === 'studio-design' ? studio.revision : null,
+            ...(await notebook.list(projectId, filters)),
+            messages: workspace.messages.filter((m) => m.projectId === projectId).slice(-30),
+            draft: workspace.drafts[projectId] ?? null,
+          });
+          return;
+        }
+        if (req.method === 'GET' && notebookRoute[2]) {
+          const revision = url.searchParams.has('revision')
+            ? z.coerce.number().int().positive().parse(url.searchParams.get('revision'))
+            : undefined;
+          json(
+            200,
+            await notebook.get(projectId, id.parse(decodeURIComponent(notebookRoute[2])), revision),
+          );
+          return;
+        }
+        if (req.method === 'POST') {
+          const raw = (await body(req)) as Record<string, unknown>;
+          const actor = { kind: 'owner' as const, name: 'You' };
+          json(
+            200,
+            notebookRoute[3]
+              ? await notebook.remove(
+                  { ...raw, projectId, entryId: decodeURIComponent(notebookRoute[2]) },
+                  actor,
+                )
+              : await notebook.save(
+                  {
+                    ...raw,
+                    projectId,
+                    ...(notebookRoute[2] ? { entryId: decodeURIComponent(notebookRoute[2]) } : {}),
+                  },
+                  actor,
+                ),
+          );
+          return;
+        }
+      }
       const sharedProject = path.match(/^\/studio-designs\/shares\/([^/]+)$/);
       if (sharedProject && shares && req.method === 'GET') {
         json(200, await shares.list(activeRepo.ownerId, decodeURIComponent(sharedProject[1])));
@@ -681,7 +759,11 @@ export async function createWorkspaceServer(
       }
       if (path === '/studio-designs/share' && req.method === 'POST' && shares) {
         const input = z
-          .object({ projectId: id, revision: z.number().int().positive(), requestId: id })
+          .object({
+            projectId: id,
+            revision: z.number().int().positive().optional(),
+            requestId: id,
+          })
           .strict()
           .parse(await body(req));
         const shared = await shares.create(

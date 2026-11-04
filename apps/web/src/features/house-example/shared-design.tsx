@@ -1,11 +1,19 @@
+import { NotebookCards } from './project-notebook.js';
 import { useEffect, useRef, useState } from 'react';
-import type { StudioDesign } from '@renovagent/contracts';
+import type { StudioDesign, ProjectNotebookRecord } from '@renovagent/contracts';
 import { studioItemBudget } from '@renovagent/core';
 import { workspaceRequest } from '../../adapters/http/project-repository.js';
 import { DEFAULT_PICK, floorImage, styleOf, roomTakeoff, money } from './paint-floor.js';
 import './shared-design.css';
 
-type Shared = { snapshot: StudioDesign; revision: number; createdAt: string };
+type Shared = {
+  snapshot?: StudioDesign;
+  notebook?: ProjectNotebookRecord[];
+  name?: string;
+  brief?: string;
+  revision: number;
+  createdAt: string;
+};
 export function SharedDesign({ token }: { token: string }) {
   const [shared, setShared] = useState<Shared | null>(null);
   const [error, setError] = useState('');
@@ -33,7 +41,10 @@ export function SharedDesign({ token }: { token: string }) {
       const saved = await workspaceRequest(`/shared-designs/${token}/copy`, {
         requestId: requestId.current,
       });
-      window.location.hash = `#design/${encodeURIComponent(saved.projectId)}/${saved.revision}`;
+      window.location.hash =
+        saved.view === 'notebook'
+          ? `#project/${encodeURIComponent(saved.projectId)}/notebook`
+          : `#design/${encodeURIComponent(saved.projectId)}/${saved.revision}`;
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not save your copy.');
       setBusy(false);
@@ -50,7 +61,7 @@ export function SharedDesign({ token }: { token: string }) {
     <section className="shared-design" aria-label="Shared project">
       <header>
         <p>Shared project · saved revision {revision}</p>
-        <h1>{snapshot.project.address}</h1>
+        <h1>{shared.name ?? snapshot?.project.address ?? 'Shared project'}</h1>
         <p>
           This saved version is viewable by anyone with the link. Your edits go into your own copy.
         </p>
@@ -60,7 +71,22 @@ export function SharedDesign({ token }: { token: string }) {
         <small>No sign-in needed. Limited guests can save projects and share links.</small>
         {error && <p role="alert">{error}</p>}
       </header>
-      {snapshot.project.rooms.map((room) => {
+      {!snapshot && shared.brief && (
+        <article className="shared-room">
+          <h2>Project brief</h2>
+          <p className="notebook-text">{shared.brief}</p>
+        </article>
+      )}
+      {!!shared.notebook?.length && (
+        <section aria-label="Shared project notebook">
+          <h2>Project notebook</h2>
+          <NotebookCards
+            entries={shared.notebook}
+            imageUrl={(sha) => `/api/workspace/shared-designs/${token}/images/${sha}`}
+          />
+        </section>
+      )}
+      {snapshot?.project.rooms.map((room) => {
         const pick = snapshot.picks[room.id] ?? DEFAULT_PICK;
         const style = styleOf(pick);
         const model = snapshot.modelRenders?.[room.id]?.image;

@@ -4,13 +4,18 @@ import { DomainError, type StudioDesign } from '@renovagent/contracts';
 import type { DesignImageStore } from './design-images.js';
 import type { MongoWorkspaceRepository } from './repository.js';
 import { readStudioDesign, saveStudioDesign, studioImageHashes } from './studio-designs.js';
+import { startAgentProject } from './agent-projects.js';
+import { notebookEntries, ProjectNotebook, type NotebookEntry } from './project-notebook.js';
 
 type Share = {
   _id: string;
   ownerId: string;
   projectId: string;
   revision: number;
-  snapshot: StudioDesign;
+  snapshot?: StudioDesign;
+  notebook?: NotebookEntry[];
+  name?: string;
+  brief?: string;
   createdAt: string;
   revoked: boolean;
 };
@@ -25,10 +30,24 @@ export class StudioShares {
   async create(
     repo: MongoWorkspaceRepository,
     projectId: string,
-    revision: number,
+    revision: number | undefined,
     requestId: string,
   ) {
-    const saved = await readStudioDesign(repo, projectId, revision);
+    const { workspace } = await repo.read();
+    const project = workspace.projects[projectId];
+    if (!project) throw new DomainError('NOT_FOUND', 'No such project');
+    const hasStudio =
+      workspace.artifacts[`${projectId}:studio-design`]?.at(-1)?.payload.kind === 'studio-design';
+    const saved = hasStudio ? await readStudioDesign(repo, projectId, revision) : null;
+    if (!saved && revision !== undefined && revision !== project.revision)
+      throw new DomainError('CONFLICT', 'Share the current notebook revision');
+    revision = saved?.revision ?? project.revision;
+    const notebook = notebookEntries(workspace, projectId);
+    const brief = workspace.artifacts[`${projectId}:agent-brief`]?.at(-1);
+    const briefText =
+      brief?.payload.kind === 'project-brief'
+        ? brief.payload.sections.map((s) => `${s.title}: ${s.text}`).join('\n')
+        : undefined;
     const token = createHash('sha256').update(`${repo.ownerId}\0${requestId}`).digest('base64url');
     const prior = await this.shares.findOne({ _id: token });
     if (prior && (prior.projectId !== projectId || prior.revision !== revision || prior.revoked))
@@ -41,7 +60,10 @@ export class StudioShares {
           ownerId: repo.ownerId,
           projectId,
           revision,
-          snapshot: saved.snapshot,
+          ...(saved ? { snapshot: saved.snapshot } : {}),
+          notebook,
+          name: project.name,
+          ...(briefText ? { brief: briefText } : {}),
           createdAt: new Date().toISOString(),
           revoked: false,
         },
@@ -59,17 +81,29 @@ export class StudioShares {
   }
   async read(token: string) {
     const share = await this.get(token);
-    const snapshot = JSON.parse(
-      JSON.stringify(share.snapshot).replace(
+    const published = JSON.parse(
+      JSON.stringify({ snapshot: share.snapshot, notebook: share.notebook ?? [] }).replace(
         /\/api\/workspace\/design-images\/([a-f0-9]{64})/g,
         `/api/workspace/shared-designs/${token}/images/$1`,
       ),
-    ) as StudioDesign;
-    return { snapshot, revision: share.revision, createdAt: share.createdAt };
+    );
+    return {
+      ...published,
+      name: share.name ?? share.snapshot?.project.address,
+      brief: share.brief,
+      revision: share.revision,
+      createdAt: share.createdAt,
+    };
+  }
+  private hashes(share: Share) {
+    const hashes = share.snapshot ? studioImageHashes(share.snapshot) : new Set<string>();
+    for (const entry of share.notebook ?? [])
+      for (const image of entry.content.images) hashes.add(image.sha256);
+    return hashes;
   }
   async image(token: string, sha: string) {
     const share = await this.get(token);
-    if (!studioImageHashes(share.snapshot).has(sha))
+    if (!this.hashes(share).has(sha))
       throw new DomainError('NOT_FOUND', 'This image is not part of the shared project');
     const image = await this.images.get(share.ownerId, sha);
     if (!image) throw new DomainError('NOT_FOUND', 'Shared image is unavailable');
@@ -77,7 +111,7 @@ export class StudioShares {
   }
   async copy(token: string, repo: MongoWorkspaceRepository, requestId: string) {
     const share = await this.get(token);
-    for (const sha of studioImageHashes(share.snapshot)) {
+    for (const sha of this.hashes(share)) {
       const image = await this.images.get(share.ownerId, sha);
       if (!image) throw new DomainError('NOT_FOUND', 'Shared image is unavailable');
       await this.images.put(
@@ -91,14 +125,36 @@ export class StudioShares {
         image.record.source,
       );
     }
-    const snapshot = structuredClone(share.snapshot);
-    // Stable for a retried copy, separate from the source's browser storage keys.
-    snapshot.project.id = `copy-${createHash('sha256').update(`${repo.ownerId}\0${token}\0${requestId}`).digest('hex').slice(0, 24)}`;
-    return saveStudioDesign(repo, this.images, {
-      requestId: `share-copy:${requestId}`,
-      expectedRevision: 0,
-      snapshot,
-    });
+    const copyId = createHash('sha256')
+      .update(`${repo.ownerId}\0${token}\0${requestId}`)
+      .digest('hex')
+      .slice(0, 24);
+    let saved;
+    if (share.snapshot) {
+      const snapshot = structuredClone(share.snapshot);
+      snapshot.project.id = `copy-${copyId}`;
+      saved = await saveStudioDesign(repo, this.images, {
+        requestId: `share-copy:${copyId}`,
+        expectedRevision: 0,
+        snapshot,
+      });
+    } else
+      saved = await startAgentProject(repo, {
+        requestId: `notebook-copy:${copyId}`,
+        name: share.name ?? 'Shared project',
+        brief: share.brief || 'Independent copy of a shared project notebook.',
+      });
+    const notebook = new ProjectNotebook(repo, this.images);
+    for (const entry of share.notebook ?? [])
+      await notebook.save(
+        {
+          projectId: saved.projectId,
+          requestId: `copy-entry:${createHash('sha256').update(`${copyId}\0${entry.id}`).digest('hex').slice(0, 32)}`,
+          content: entry.content,
+        },
+        { kind: 'owner', name: `Copied from shared notebook · ${entry.author.name}`.slice(0, 120) },
+      );
+    return { ...saved, view: share.snapshot ? 'design' : 'notebook' };
   }
   async list(ownerId: string, projectId: string) {
     return (

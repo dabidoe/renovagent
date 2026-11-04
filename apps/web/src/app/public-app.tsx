@@ -64,7 +64,9 @@ export function PublicApp() {
     // Keep the older brief handoff, without opening any saved workspace first.
     if (
       window.location.hash.startsWith('#connect/approve/') ||
-      window.location.hash.startsWith('#share/')
+      window.location.hash.startsWith('#share/') ||
+      window.location.hash.startsWith('#project/') ||
+      window.location.hash === '#notebook'
     )
       return;
     try {

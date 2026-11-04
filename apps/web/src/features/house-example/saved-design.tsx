@@ -1,3 +1,4 @@
+import { ProjectNotebook } from './project-notebook.js';
 import { useEffect, useState } from 'react';
 import { workspaceRequest } from '../../adapters/http/project-repository.js';
 import { SignInChoices } from '../connect/sign-in.js';
@@ -40,5 +41,15 @@ export function SavedDesign({ projectId, revision }: { projectId: string; revisi
       </section>
     );
   if (!design) return <p role="status">Opening saved room design…</p>;
-  return <OwnStudio key={`${projectId}:${revision}`} initialDesign={design} />;
+  return (
+    <>
+      <nav className="notebook-shortcut" aria-label="Project pages">
+        <a href={`#project/${encodeURIComponent(projectId)}/notebook`}>
+          Project notebook · notes, photos &amp; links
+        </a>
+      </nav>
+      <OwnStudio key={`${projectId}:${revision}`} initialDesign={design} />
+      <ProjectNotebook key={`notebook:${projectId}`} projectId={projectId} embedded />
+    </>
+  );
 }
