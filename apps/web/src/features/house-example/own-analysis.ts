@@ -30,7 +30,7 @@ export function uploadedOwnStudio(input: {
     analysis: { photos: input.photos, plans: input.plans },
     project: {
       ...ownProject({
-        id: `own-${input.photos[0]!.slice(0, 10)}`,
+        id: `own-${crypto.randomUUID()}`,
         address: listing ? 'Your listing' : input.where.trim() || 'Your project',
         ...(listing ? { listing } : {}),
         ceilingFt: input.ceilingFt,

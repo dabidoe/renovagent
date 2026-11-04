@@ -11,13 +11,15 @@ export type McpGrant = {
   createdAt: Date;
   expiresAt: Date;
   revokedAt: Date | null;
+  clientId?: string;
+  resource?: string;
 };
 
 // Remote agent credentials are distinct from browser sessions. Only their
 // hashes are stored; neither callers nor tool arguments select the owner.
 export class McpAccessStore {
   readonly grants: Collection<McpGrant>;
-  constructor(db: Db) {
+  constructor(readonly db: Db) {
     this.grants = db.collection<McpGrant>('mcp_access_grants');
   }
 
@@ -30,6 +32,8 @@ export class McpAccessStore {
     name: string;
     access: McpAccess;
     hours?: number;
+    clientId?: string;
+    resource?: string;
   }): Promise<{ token: string; grant: McpGrant }> {
     const hours = input.hours ?? 24;
     if (
@@ -51,6 +55,7 @@ export class McpAccessStore {
       createdAt: new Date(),
       expiresAt: new Date(Date.now() + hours * 3600_000),
       revokedAt: null,
+      ...(input.clientId ? { clientId: input.clientId, resource: input.resource } : {}),
     };
     await this.grants.insertOne(grant);
     return { token, grant };

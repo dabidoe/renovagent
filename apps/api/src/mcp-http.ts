@@ -78,6 +78,7 @@ export function createMcpHttpServer(
             'Transport: stateless Streamable HTTP; JSON responses. POST /mcp.',
             'Authentication: API key sent as Authorization: Bearer <credential>.',
             'Enter the key only in the client secure credential setup. Never send it in a chat or URL.',
+            `Create or revoke a key: ${publicUrl?.origin ?? 'https://renovagent.app'}/#connect`,
             'The credential selects one workspace. It expires and can be revoked. Each request rechecks access.',
             '',
             'Read tools: list_homes, list_projects, get_project_context, list_project_files, get_artifact, search_catalog, get_offer_history, build_checkout_review, list_floor_styles, find_paint_color, plan_paint_and_floor.',
@@ -124,6 +125,7 @@ export function mcpEndpoint(
     images?: DesignImageStore;
     // Saved studio plans and the public site address their links use.
     plans?: { store: StudioPlanStore; origin: () => string };
+    oauthResource?: () => string;
   } = {},
 ) {
   const windows = new Map<string, { start: number; count: number }>();
@@ -137,9 +139,18 @@ export function mcpEndpoint(
     try {
       const match = req.headers.authorization?.match(/^Bearer (reno_[A-Za-z0-9_-]{43})$/);
       const grant = match ? await access.authenticate(match[1]) : null;
-      if (!grant) {
-        res.setHeader('WWW-Authenticate', 'Bearer realm="renovagent", error="invalid_token"');
-        fail(401, 'An active Renovagent connector credential is required');
+      if (!grant || (grant.resource && grant.resource !== options.oauthResource?.())) {
+        const resource = options.oauthResource?.();
+        res.setHeader(
+          'WWW-Authenticate',
+          resource
+            ? `Bearer resource_metadata="${new URL('/.well-known/oauth-protected-resource/mcp', resource).href}", scope="renovagent:read"`
+            : 'Bearer realm="renovagent", error="invalid_token"',
+        );
+        fail(
+          401,
+          `An active Renovagent connector credential is required. Connect or create a key at ${resource ? new URL('/#connect', resource).href : 'https://renovagent.app/#connect'}. Website sign-in and connector credentials are separate.`,
+        );
         return;
       }
       if (req.method !== 'POST') {

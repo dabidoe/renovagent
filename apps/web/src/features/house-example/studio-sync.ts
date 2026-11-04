@@ -56,7 +56,10 @@ export class StudioSync {
   }
   private async sendPending() {
     const request = this.pending!;
-    const meta = await this.options.send(request);
+    const response = await this.options.send(request);
+    // HTTP saves also return the artifact and snapshot. Keep only metadata here
+    // so subsequent strict API requests cannot accidentally forward that payload.
+    const meta = { projectId: response.projectId, revision: response.revision };
     this.meta = meta;
     this.acknowledged = JSON.stringify(request.snapshot);
     this.options.onSaved(meta, this.acknowledged);

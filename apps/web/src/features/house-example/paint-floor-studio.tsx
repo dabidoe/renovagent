@@ -1922,7 +1922,8 @@ export function PaintFloorStudio({
         const meta = await save();
         if (!meta) throw new Error('Save the project before preparing its work plan.');
         return (await workspaceRequest('/studio-designs/prepare-scope', {
-          ...meta,
+          projectId: meta.projectId,
+          revision: meta.revision,
           roomId: room.id,
           requestId: crypto.randomUUID(),
         })) as StudioHandoff;

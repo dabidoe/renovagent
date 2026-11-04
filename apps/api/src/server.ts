@@ -61,6 +61,7 @@ import { saveStudioDesign, readStudioDesign, prepareStudioHandoff } from './stud
 import { studioProject } from './mcp-studio.js';
 import { McpAccessStore } from './mcp-access.js';
 import { mcpEndpoint } from './mcp-http.js';
+import { McpOAuth } from './mcp-oauth.js';
 import { configuredJevKey, judgeProducts, rankReviewFindings, readRoomPhoto } from './jev.js';
 import {
   bestValue,
@@ -154,6 +155,8 @@ export async function createWorkspaceServer(
   // Paint-and-floor plans owners' agents save, opened at /#plan/<id>.
   plans?: StudioPlanStore,
 ) {
+  const pairing = mcpAccess ? new McpOAuth(mcpAccess) : undefined;
+  await pairing?.ensure();
   const accountMode = Boolean(accounts);
   // One-click guests (account mode only); RENOVAGENT_GUESTS=off turns them off.
   const guestsAllowed = process.env.RENOVAGENT_GUESTS !== 'off';
@@ -330,6 +333,7 @@ export async function createWorkspaceServer(
   };
   const mcp = mcpAccess
     ? mcpEndpoint(repository, mcpAccess, catalog, {
+        oauthResource: () => `${siteOrigin()}/mcp`,
         ...(design ? { images: design.images } : {}),
         ...(plans ? { plans: { store: plans, origin: siteOrigin } } : {}),
       })
@@ -385,7 +389,16 @@ export async function createWorkspaceServer(
         await mcp.handle(req, res);
         return;
       }
-      // No OAuth discovery yet: clients that look after a 401 get JSON, not a page.
+      if (
+        pairing &&
+        (await pairing.handle(
+          req,
+          res,
+          siteOrigin(),
+          hosting.publicUrl?.origin ?? (hosting.staticDir ? siteOrigin() : 'http://127.0.0.1:8741'),
+        ))
+      )
+        return;
       if (pathname.startsWith('/.well-known/')) {
         json(404, { error: 'Not found' });
         return;
@@ -577,6 +590,21 @@ export async function createWorkspaceServer(
           !timingSafeEqual(Buffer.from(candidate), Buffer.from(token))
         )
           throw new DomainError('FORBIDDEN', 'Open the local workspace session first');
+      }
+      const pairingRequest = path.match(/^\/agent-pairing\/([A-Za-z0-9_-]{43})$/);
+      if (pairingRequest && pairing) {
+        if (req.method === 'GET') {
+          json(200, await pairing.describe(pairingRequest[1]));
+          return;
+        }
+        if (req.method === 'POST') {
+          const { approve } = z
+            .object({ approve: z.boolean() })
+            .strict()
+            .parse(await body(req));
+          json(200, await pairing.decide(pairingRequest[1], activeRepo.ownerId, approve));
+          return;
+        }
       }
       // Keys for the owner's own agents (Muse, Claude, any MCP client). A key is
       // shown once, at creation; only its hash is kept. Seven days, five at most.

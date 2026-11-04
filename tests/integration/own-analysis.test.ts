@@ -75,3 +75,17 @@ test('late analysis fills unknowns and tolerates failed masks without replacing 
   assert.equal(merged.project.ceilingFt, 9);
   assert.equal(merged.project.ceilingNote, undefined);
 });
+
+test('starting again with the same photo creates an independent studio and preserves retry identity', () => {
+  const first = pending();
+  const second = pending();
+  assert.notEqual(first.project.id, second.project.id);
+  assert.equal(first.project.rooms[0].photo.src, second.project.rooms[0].photo.src);
+  const updated = applyOwnAnalysis(first, {
+    photos: [{ sha256: sha, kind: 'other', title: 'Room', floor: 'other' }],
+    plans: [],
+    ceiling: { ft: null, note: 'unknown' },
+    walls: {},
+  });
+  assert.equal(updated.project.id, first.project.id);
+});

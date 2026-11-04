@@ -8,7 +8,7 @@
 
 Built for the **Meta Global AI Developer Hackathon**, RenovAgent combines Meta's SAM 3.1, Muse Spark, and Muse Image with an interactive design studio and an agent-accessible project workspace.
 
-**[Launch RenovAgent](https://renovagent-production.up.railway.app)** · [Architecture](docs/architecture/README.md) · [Development status](PROGRESS.md)
+**[Launch RenovAgent](https://renovagent.app)** · [Architecture](docs/architecture/README.md) · [Development status](PROGRESS.md)
 
 ![RenovAgent example projects and studio entry](docs/media/demo.png)
 
@@ -113,16 +113,16 @@ The visual studio helps you explore what a space could become. The project works
 
 ## Try it
 
-**[Open the live demo](https://renovagent-production.up.railway.app)**
+**[Open the live demo](https://renovagent.app)**
 
 You can explore prepared listing examples or start with your own room photos. The hosted experience includes guest access and a connection flow for compatible MCP clients.
 
-**Explore the examples** (no sign-in): [all examples](https://renovagent-production.up.railway.app/#examples) · [Philadelphia rowhouse](https://renovagent-production.up.railway.app/#example-house) · [Oakland](https://renovagent-production.up.railway.app/#example/oakland) · [Brooklyn](https://renovagent-production.up.railway.app/#example/brooklyn) · [bedroom refresh](https://renovagent-production.up.railway.app/#example/bedroom-refresh)
+**Explore the examples** (no sign-in): [all examples](https://renovagent.app/#examples) · [Philadelphia rowhouse](https://renovagent.app/#example-house) · [Oakland](https://renovagent.app/#example/oakland) · [Brooklyn](https://renovagent.app/#example/brooklyn) · [bedroom refresh](https://renovagent.app/#example/bedroom-refresh)
 
 For agent connections, use the application's **Connect** flow to create a scoped access key. The MCP endpoint is:
 
 ```text
-https://renovagent-production.up.railway.app/mcp
+https://renovagent.app/mcp
 ```
 
 Do not put access keys in repository files or public screenshots.

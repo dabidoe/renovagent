@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import type { AddressInfo } from 'node:net';
 import { request } from 'node:http';
+import { readFileSync } from 'node:fs';
+import { DesignImageStore } from '../../apps/api/src/design-images.js';
 import { MongoClient } from 'mongodb';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
@@ -40,6 +42,7 @@ async function withServer(
   const server = createMcpHttpServer(repo, access, undefined, {
     publicUrl: 'https://renovagent-test.example/mcp',
     requestsPerMinute,
+    images: new DesignImageStore(db),
   });
   try {
     await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
@@ -214,7 +217,9 @@ test(
   { skip: !uri },
   () =>
     withServer(async ({ base, access, token, connect, repo }) => {
-      assert.equal((await fetch(`${base}/mcp`, { method: 'POST' })).status, 401);
+      const unauthenticated = await fetch(`${base}/mcp`, { method: 'POST' });
+      assert.equal(unauthenticated.status, 401);
+      assert.match((await unauthenticated.json()).error, /https:\/\/renovagent.app\/#connect/);
       assert.equal((await fetch(`${base}/mcp?token=${token}`, { method: 'POST' })).status, 404);
       assert.equal(
         (
@@ -377,5 +382,67 @@ test(
         }),
       );
       assert.deepEqual((await repo.read()).workspace, before);
+    }),
+);
+
+test(
+  'remote chat photo upload supplies an owner-scoped source for design options',
+  { skip: !uri },
+  () =>
+    withServer(async ({ token, connect, access, repo }) => {
+      const alice = await connect(token);
+      const input = {
+        name: 'fixture-room.jpg',
+        label: 'Local QA room photo',
+        permission: 'Repository fixture used for local integration testing',
+        data: readFileSync(
+          new URL('../../public/examples/hutchinson/photo-04.jpg', import.meta.url),
+        ).toString('base64'),
+      };
+      const uploaded = await call(alice, 'upload_design_photo', input);
+      assert.equal(uploaded.error, false, uploaded.text);
+      const source = uploaded.data();
+      assert.match(source.sourcePhotoSha256, /^[a-f0-9]{64}$/);
+      assert.deepEqual((await call(alice, 'upload_design_photo', input)).data(), source);
+      const project = (
+        await call(alice, 'start_project', {
+          requestId: 'chat-photo-project',
+          name: 'Chat photo QA',
+          brief: 'Propose paint and floor options; measurements unknown.',
+        })
+      ).data();
+      const built = await call(alice, 'build_design_options', {
+        requestId: 'chat-photo-options',
+        projectId: project.projectId,
+        request: 'Propose paint and floor options',
+        sourcePhotoSha256: source.sourcePhotoSha256,
+      });
+      assert.equal(built.error, false, built.text);
+      const bobGrant = await access.issue({
+        ownerId: 'user:bob',
+        access: 'propose',
+        name: 'Other owner',
+      });
+      const bob = await connect(bobGrant.token);
+      const denied = await call(bob, 'build_design_options', {
+        requestId: 'cannot-use-photo',
+        projectId: project.projectId,
+        request: 'Propose options',
+        sourcePhotoSha256: source.sourcePhotoSha256,
+      });
+      assert.equal(denied.error, true);
+      assert.match(denied.text, /Upload the room photo/);
+      const readerGrant = await access.issue({
+        ownerId: repo.ownerId,
+        access: 'read',
+        name: 'Reader',
+      });
+      const reader = await connect(readerGrant.token);
+      assert.ok(
+        !(await reader.listTools()).tools.some((tool) => tool.name === 'upload_design_photo'),
+      );
+      assert.equal((await call(reader, 'upload_design_photo', input)).error, true);
+      const invalid = await call(alice, 'upload_design_photo', { ...input, data: 'not a photo' });
+      assert.equal(invalid.error, true);
     }),
 );

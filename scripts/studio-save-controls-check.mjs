@@ -118,7 +118,16 @@ try {
       if (failSync)
         return route.fulfill({ status: 503, json: { message: 'Fixture sync unavailable' } });
       return route.fulfill({
-        json: { projectId: 'fixture-project', revision: input.expectedRevision + 1 },
+        json: {
+          projectId: 'fixture-project',
+          revision: input.expectedRevision + 1,
+          artifactRef: {
+            kind: 'artifact',
+            id: 'fixture-project:studio-design',
+            revision: input.expectedRevision + 1,
+          },
+          snapshot: input.snapshot,
+        },
       });
     });
     await saveControls.getByRole('button', { name: 'Save to workspace', exact: true }).click();
@@ -144,6 +153,36 @@ try {
     check(
       sent.length === 2 && sent[1].expectedRevision === 1,
       'Following edits autosave a revision without another click',
+    );
+    let scopeRequest;
+    await page.route('**/api/workspace/studio-designs/prepare-scope', async (route) => {
+      scopeRequest = route.request().postDataJSON();
+      const valid =
+        Object.keys(scopeRequest).sort().join(',') === 'projectId,requestId,revision,roomId';
+      return route.fulfill({
+        status: valid ? 200 : 400,
+        json: valid
+          ? {
+              markdown: '# Fixture proposed handoff\nNot for construction.',
+              coverage: 'Fixture coverage',
+              sourceRevision: scopeRequest.revision,
+              roomId: scopeRequest.roomId,
+              questions: [],
+              checks: [],
+            }
+          : { message: 'Request failed schema validation' },
+      });
+    });
+    await page.getByText('Optional paint & floor work plan', { exact: true }).click();
+    await page.getByRole('button', { name: 'Create paint & floor work plan', exact: true }).click();
+    await page.getByRole('button', { name: 'Download work plan', exact: true }).waitFor();
+    check(
+      scopeRequest.projectId === 'fixture-project' && scopeRequest.revision === 2,
+      'Work plan uses saved project/revision after a full API save response',
+    );
+    check(
+      Object.keys(scopeRequest).length === 4,
+      'Strict work-plan request excludes snapshot/artifact metadata',
     );
     failSync = true;
     await page.getByRole('button', { name: 'Keep', exact: true }).click();

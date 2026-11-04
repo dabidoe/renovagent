@@ -391,6 +391,7 @@ async function intakeChecks(browser: Browser, base: string) {
 
 async function connectChecks(browser: Browser, base: string) {
   const { page, close } = await open(browser, base, '/#connect', viewports[0]);
+  await page.getByText('Manual key setup for clients without OAuth', { exact: true }).click();
   const create = page.getByRole('button', { name: /Create connection key/ });
   if ((await create.count()) && (await create.isDisabled())) {
     const id = await create.getAttribute('aria-describedby');

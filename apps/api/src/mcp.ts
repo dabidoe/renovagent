@@ -32,6 +32,7 @@ import {
   buildDesignOptions,
   reviseDesignOption,
   summarizeDesignOptions,
+  uploadDesignPhoto,
 } from './design-service.js';
 import type { McpAccess } from './mcp-access.js';
 import { workspaceMongoConfig } from './database-config.js';
@@ -59,6 +60,7 @@ const CAPABILITIES = {
     'start_project',
     'draft_scope',
     'build_design_options',
+    'upload_design_photo',
     'revise_design_option',
     'get_design_options',
     'propose_project_change',
@@ -256,14 +258,16 @@ export function createWorkspaceMcpServer(
     access: canPropose ? 'propose' : 'read',
     tools: [...CAPABILITIES.tools, ...(savesPlans ? STUDIO_SAVE_TOOLS : [])].filter(
       (name) =>
-        canPropose ||
-        ![
-          'start_project',
-          'draft_scope',
-          'build_design_options',
-          'revise_design_option',
-          'propose_project_change',
-        ].includes(name),
+        (name !== 'upload_design_photo' || !!options.images) &&
+        (canPropose ||
+          ![
+            'start_project',
+            'draft_scope',
+            'build_design_options',
+            'upload_design_photo',
+            'revise_design_option',
+            'propose_project_change',
+          ].includes(name)),
     ),
     proposalCommands: canPropose ? CAPABILITIES.proposalCommands : [],
     limits: [
@@ -277,8 +281,8 @@ export function createWorkspaceMcpServer(
     { name: MCP_SERVER_NAME, version: MCP_SERVER_VERSION },
     {
       instructions:
-        "Renovagent keeps durable home-improvement projects. For paint and floors from an owner's words or photos, choose with list_floor_styles and find_paint_color, then price with plan_paint_and_floor. Start with list_homes/list_projects or start_project for a new user request. Use list_project_files to discover saved work, then get_artifact to inspect exact revisions. Develop useful proposed work from project evidence. Keep unknown facts and prices explicit. Project creation stores intent only; it does not analyze photos or produce an estimate. Never claim a proposal is professional approval or a passed inspection. Chat attachments are not automatically uploaded to Renovagent. build_design_options needs the server's stored normalized image hash, not a locally computed original-file hash. There is no dedicated MCP design-photo upload tool. " +
-        `Never reuse dimensions from another room or photo without owner confirmation. For a plan the owner asks to save, use save_plan and return its link; it does not require an existing project. Guest accounts support this through their own connection key. Website Save project creates a canonical studio-design artifact; discover it with list_projects/list_project_files and read its exact revision with get_artifact. Furniture remains unpriced design intent unless separately sourced. Read ${options.plans?.origin ?? 'https://renovagent-production.up.railway.app'}/agent-guide.md for photo, Markdown brief and inspiration workflows.`,
+        "Renovagent keeps durable home-improvement projects. For paint and floors from an owner's words or photos, choose with list_floor_styles and find_paint_color, then price with plan_paint_and_floor. Start with list_homes/list_projects or start_project for a new user request. Use list_project_files to discover saved work, then get_artifact to inspect exact revisions. Develop useful proposed work from project evidence. Keep unknown facts and prices explicit. Project creation stores intent only; it does not analyze photos or produce an estimate. Never claim a proposal is professional approval or a passed inspection. Chat attachments are not automatically uploaded to Renovagent. build_design_options needs the server's stored normalized image hash, not a locally computed original-file hash. Use upload_design_photo to transfer an owner-provided chat photo, then use its sourcePhotoSha256 with build_design_options. " +
+        `Never reuse dimensions from another room or photo without owner confirmation. For a plan the owner asks to save, use save_plan and return its link; it does not require an existing project. Guest accounts support this through their own connection. Website Save project creates a canonical studio-design artifact; discover it with list_projects/list_project_files and read its exact revision with get_artifact. Furniture remains unpriced design intent unless separately sourced. Read ${options.plans?.origin ?? 'https://renovagent.app'}/agent-guide.md for photo, Markdown brief and inspiration workflows.`,
     },
   );
 
@@ -565,12 +569,59 @@ export function createWorkspaceMcpServer(
       },
     );
 
+  if (canPropose && options.images)
+    server.tool(
+      'upload_design_photo',
+      'Upload an owner-provided room photo from chat to this authenticated workspace. Send standard base64 image bytes (no data URL), at most 500 KB before encoding; resize/compress locally if needed. Do not fetch retailer images or invent permission. Returns the normalized sourcePhotoSha256 for build_design_options. This stores a photo only; it does not analyze or render it, or sign a browser into the website.',
+      {
+        name: z.string().trim().min(1).max(200),
+        label: z.string().trim().min(1).max(200),
+        permission: z
+          .string()
+          .trim()
+          .min(1)
+          .max(300)
+          .describe('The owner’s permission to use this image'),
+        data: z
+          .string()
+          .min(4)
+          .max(700000)
+          .regex(/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/),
+      },
+      { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+      async (input) => {
+        try {
+          const bytes = new Uint8Array(Buffer.from(input.data, 'base64'));
+          if (bytes.byteLength > 500 * 1024)
+            throw new DomainError(
+              'VALIDATION',
+              'Compress the photo to 500 KB or less before uploading',
+            );
+          const result = await uploadDesignPhoto(options.images!, repository.ownerId, {
+            bytes,
+            originalName: input.name,
+            label: input.label,
+            permission: input.permission,
+          });
+          return text({
+            sourcePhotoSha256: result.image.sha256,
+            path: result.path,
+            width: result.image.width,
+            height: result.image.height,
+            note: 'Photo stored privately. Use sourcePhotoSha256 with build_design_options. Open saved designs in the website account that owns this connector.',
+          });
+        } catch (error) {
+          failure(error);
+        }
+      },
+    );
+
   const designNote =
     'Previews are generated concepts, not photos, and appear once the Renovagent server finishes them (about 30 seconds each); call get_design_options to check. Costs are materials only for the priced items, from labeled demo prices.';
   if (canPropose)
     server.tool(
       'build_design_options',
-      'Show two or three visual options for one photographed room, each with its own scope and cost range. sourcePhotoSha256 must be the server-stored normalized source image hash from an upload or existing design-options artifact; hashing a chat attachment does not upload it and may produce a different hash. No dedicated MCP design-photo upload tool exists. Pass only measurements the person gave (amount null for "I don\'t know"). Reuse requestId for retries.',
+      'Show two or three visual options for one photographed room, each with its own scope and cost range. sourcePhotoSha256 must be the server-stored normalized source image hash from an upload or existing design-options artifact; hashing a chat attachment does not upload it and may produce a different hash. Use upload_design_photo first for a chat attachment. Pass only measurements the person gave (amount null for "I don\'t know"). Reuse requestId for retries.',
       {
         requestId: id,
         projectId: id,

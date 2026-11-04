@@ -7,6 +7,7 @@ import type { SavedStudioDesign } from './paint-floor-studio.js';
 export function SavedDesign({ projectId, revision }: { projectId: string; revision: number }) {
   const [design, setDesign] = useState<SavedStudioDesign | null>(null);
   const [error, setError] = useState('');
+  const [attempt, setAttempt] = useState(0);
   useEffect(() => {
     let live = true;
     setDesign(null);
@@ -27,14 +28,14 @@ export function SavedDesign({ projectId, revision }: { projectId: string; revisi
     return () => {
       live = false;
     };
-  }, [projectId, revision]);
+  }, [projectId, revision, attempt]);
   if (error)
     return (
       <section className="ca">
         <h1>This design could not be opened.</h1>
         <p>{error}</p>
         <p>Use the account or guest browser that saved it. This is a private project link.</p>
-        <SignInChoices />
+        <SignInChoices onSignedIn={async () => setAttempt((value) => value + 1)} />
         <a href="#projects">Back to my projects</a>
       </section>
     );

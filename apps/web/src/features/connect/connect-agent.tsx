@@ -76,9 +76,9 @@ export function ConnectAgent() {
   };
   const address = endpoint || new URL('/mcp', window.location.origin).href;
   const local = /^http:\/\/(127\.0\.0\.1|localhost)[:/]/.test(address);
-  const introduction = `Connect to my Renovagent workspace at ${address}. Ask me for the connection key in your secure credentials field.`;
+  const introduction = `Connect to my Renovagent workspace at ${address} using MCP OAuth. Start the browser authorization flow so I can sign in and approve access. Request renovagent:read and renovagent:propose so you can read projects and save proposed plans and inspiration. Do not ask me to copy a key into chat.`;
   const guideUrl = new URL('/agent-guide.md', window.location.origin).href;
-  const ask = `${introduction}\n\nRead ${guideUrl} for tool, photo and brief instructions. Connection details: Streamable HTTP MCP. Send the key in the Authorization header as a Bearer token.`;
+  const ask = `${introduction}\n\nRead ${guideUrl} for tool, photo and brief instructions. Use the resource metadata advertised in the 401 response to discover authorization. Register a public client, use authorization code with S256 PKCE, and open the authorization URL for me. If your connector only supports API keys, say so and link me to ${new URL('/#connect', window.location.origin).href} for manual setup; do not claim OAuth has completed.`;
   const config = JSON.stringify(
     {
       mcpServers: {
@@ -122,10 +122,8 @@ export function ConnectAgent() {
               {local && (
                 <p className="ca-note">
                   This is a local preview, which Muse cannot reach. Use the{' '}
-                  <a href="https://renovagent-production.up.railway.app/#connect">
-                    hosted connection page
-                  </a>{' '}
-                  to pair with Muse.
+                  <a href="https://renovagent.app/#connect">hosted connection page</a> to pair with
+                  Muse.
                 </p>
               )}
             </div>
@@ -135,72 +133,80 @@ export function ConnectAgent() {
               2
             </span>
             <div className="ca-step-body">
-              <h2 id="ca-permission-title">Give Muse access to your workspace.</h2>
-              {loading ? (
-                <p className="ca-note" role="status">
-                  Loading your workspace…
-                </p>
-              ) : signedOut ? (
-                <>
-                  <p className="ca-note">
-                    Continue as a guest to try it. Google sign-in is optional.
+              <h2 id="ca-permission-title">Approve access in Renovagent.</h2>
+              <p className="ca-note">
+                Your agent opens a Renovagent approval page. Sign in to your existing workspace,
+                review the requested access, and choose Approve connection. You won’t need to copy a
+                key.
+              </p>
+              <details>
+                <summary>Manual key setup for clients without OAuth</summary>
+                {loading ? (
+                  <p className="ca-note" role="status">
+                    Loading your workspace…
                   </p>
-                  <div className="ca-make">
-                    <SignInChoices className="ca-primary" />
-                  </div>
-                </>
-              ) : (
-                <>
-                  <p className="ca-note">
-                    Muse can read your projects and save plans and finds. You control approvals and
-                    purchases.
-                  </p>
-                  {!fresh && (
-                    <form
-                      className="ca-make"
-                      onSubmit={(e) => {
-                        e.preventDefault();
-                        if (name.trim()) void create();
-                      }}
-                    >
-                      <button
-                        type="submit"
-                        className="ca-primary"
-                        disabled={busy || !endpoint || !name.trim()}
-                        aria-describedby={!endpoint ? 'ca-key-unavailable' : undefined}
-                      >
-                        {busy ? 'Creating…' : 'Create connection key'}
-                        <Glyph name="right" />
-                      </button>
-                    </form>
-                  )}
-                  {!fresh && !endpoint && (
-                    <p className="ca-note" id="ca-key-unavailable">
-                      Keys can’t be created right now: the workspace service didn’t answer. Reload
-                      to try again.
+                ) : signedOut ? (
+                  <>
+                    <p className="ca-note">
+                      Continue as a guest to try it. Google sign-in is optional.
                     </p>
-                  )}
-                  <p className="ca-note">Access lasts seven days. Remove it below at any time.</p>
-                </>
-              )}
-              {fresh && (
-                <div className="ca-fresh" role="status">
-                  <p>
-                    <b>Your private key for {fresh.name}</b>
-                  </p>
-                  <div className="ca-row">
-                    <code className="ca-secret">{fresh.key}</code>
-                    <Copy value={fresh.key} label="Copy private key" />
+                    <div className="ca-make">
+                      <SignInChoices className="ca-primary" />
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <p className="ca-note">
+                      Muse can read your projects and save plans and finds. You control approvals
+                      and purchases.
+                    </p>
+                    {!fresh && (
+                      <form
+                        className="ca-make"
+                        onSubmit={(e) => {
+                          e.preventDefault();
+                          if (name.trim()) void create();
+                        }}
+                      >
+                        <button
+                          type="submit"
+                          className="ca-primary"
+                          disabled={busy || !endpoint || !name.trim()}
+                          aria-describedby={!endpoint ? 'ca-key-unavailable' : undefined}
+                        >
+                          {busy ? 'Creating…' : 'Create connection key'}
+                          <Glyph name="right" />
+                        </button>
+                      </form>
+                    )}
+                    {!fresh && !endpoint && (
+                      <p className="ca-note" id="ca-key-unavailable">
+                        Keys can’t be created right now: the workspace service didn’t answer. Reload
+                        to try again.
+                      </p>
+                    )}
+                    <p className="ca-note">Access lasts seven days. Remove it below at any time.</p>
+                  </>
+                )}
+                {fresh && (
+                  <div className="ca-fresh" role="status">
+                    <p>
+                      <b>Your private key for {fresh.name}</b>
+                    </p>
+                    <div className="ca-row">
+                      <code className="ca-secret">{fresh.key}</code>
+                      <Copy value={fresh.key} label="Copy private key" />
+                    </div>
+                    <p className="ca-note">
+                      Shown this once. Paste it into Muse’s secure credentials field when asked,
+                      outside the chat.
+                    </p>
+                    <button type="button" className="ca-link" onClick={() => setFresh(null)}>
+                      Hide key
+                    </button>
                   </div>
-                  <p className="ca-note">
-                    Shown this once. Paste it into Muse’s secure credentials field when asked,
-                    outside the chat.
-                  </p>
-                  <button type="button" className="ca-link" onClick={() => setFresh(null)}>
-                    Hide key
-                  </button>
-                </div>
-              )}
+                )}
+              </details>
             </div>
           </section>
           <section className="ca-card ca-step" aria-labelledby="ca-finish-title">
@@ -210,7 +216,8 @@ export function ConnectAgent() {
             <div className="ca-step-body">
               <h2 id="ca-finish-title">Finish in Muse, then try it.</h2>
               <p className="ca-note">
-                Paste the key into Muse’s secure field, never the chat. Then send:
+                After approval, return to your agent. It finishes the connection securely. Then
+                send:
               </p>
               <div className="ca-prompt">
                 <p>Show me my Renovagent projects.</p>

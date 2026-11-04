@@ -6,6 +6,7 @@ import { SavedPlan } from '../features/house-example/saved-plan.js';
 import { SavedDesign } from '../features/house-example/saved-design.js';
 import { ProjectLibrary } from '../features/house-example/project-library.js';
 import { ConnectAgent } from '../features/connect/connect-agent.js';
+import { ApproveAgent } from '../features/connect/approve-agent.js';
 import '../features/house-example/house-example.css';
 import '../features/house-example/paint-floor.css';
 import '../features/room3d/room-studio.css';
@@ -22,6 +23,8 @@ export default function PublicStudio({
 }) {
   if (hash === '#projects') return <ProjectLibrary />;
   if (hash === '#connect') return <ConnectAgent />;
+  if (hash.startsWith('#connect/approve/'))
+    return <ApproveAgent key={hash} requestId={hash.split('/')[2]} />;
   if (hash === '#your-project') return <OwnStudio key={start ? 'start' : 'own'} start={start} />;
   if (hash === '#example-house')
     return <HutchinsonStudio onRoomExample={() => onOpen('#workspace/example-room')} />;

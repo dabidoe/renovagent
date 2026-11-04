@@ -17,7 +17,12 @@ export default defineConfig({
     watch: {
       ignored: ['**/.claude/worktrees/**', '**/.local/**', '**/.foundation-build/**', '**/dist/**'],
     },
-    proxy: { '/api': 'http://127.0.0.1:4000', '/mcp': 'http://127.0.0.1:4010' },
+    proxy: {
+      '/api': 'http://127.0.0.1:4000',
+      '/mcp': 'http://127.0.0.1:4000',
+      '/oauth': 'http://127.0.0.1:4000',
+      '/.well-known': 'http://127.0.0.1:4000',
+    },
   },
   preview: { host: '127.0.0.1', port: 8741 },
 });

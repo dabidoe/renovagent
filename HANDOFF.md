@@ -6,6 +6,17 @@ Any agent or person picking this up should read this file first, then [AGENTS.md
 
 ## Resume here
 
+- **Demo workflow recovery (3 Nov, local):** fixed the optional work-plan schema
+  failure (full save response was spread into a strict request), isolated new
+  studios even when the same photo is reused, and retried private design loading
+  after inline sign-in. Added owner-scoped `upload_design_photo` over MCP (500 KB
+  decoded photo limit) returning the normalized hash for design options, plus
+  unauthenticated connection-page guidance. Preserved the OAuth work already in
+  this checkout. Build/types/boundaries, 15 legacy + 334 TS tests (55 skips), all
+  63 connected cases, 64 save/work-plan browser checks, 32 pairing UI checks
+  and all 202 public UI checks pass. Tests use local Mongo and fixtures; no live inference or deployment.
+  See [fixes, rehearsal and remaining limits](docs/architecture/demo-workflow-recovery.md).
+
 - **Local preview route recovery (3 Nov):** `dev:connected` now watches API/MCP
   source and forces localhost hosting settings, retaining configured database and
   provider settings. The owner's 8741 preview had been using a November 1 API,
@@ -18,7 +29,7 @@ Any agent or person picking this up should read this file first, then [AGENTS.md
 
 - **Deadline:** Meta Global AI Developer Hackathon submission is due **4 Nov 2026, 9:00 PM ET** (Cerebral Valley portal). Judging runs 4–8 Nov and finals are 9 Nov.
 - **Judging weights:** Impact 30%, use of Meta AI tooling beyond a basic integration 25%, technical depth 20%, and a demo that holds up live (including the video) 25%.
-- **Live site:** https://renovagent-production.up.railway.app. Railway redeploys every push to `main` in about 2–3 minutes. Health check: `/healthz`.
+- **Live site:** https://renovagent.app. Railway redeploys every push to `main` in about 2–3 minutes. Health check: `/healthz`.
 - **Priorities until the deadline:** a live demo that works and deeper use of the Meta models. Defer billing, Premium, Bunny and Stripe; they are in [launch-checklist.md](docs/launch-checklist.md) and not built.
 - **Latest (1 Nov):** inspiration is complete for the demo: photo → items, paints, store searches and a restyle of your own room; your agent adds links and photos to Your board over MCP; `#example/bedroom-refresh` shows a worked run. See [Next work](#next-work).
 

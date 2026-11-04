@@ -119,7 +119,9 @@ test(
         ).status,
         403,
       );
-      assert.equal((await fetch(`${origin}/.well-known/oauth-protected-resource`)).status, 404);
+      const discovery = await fetch(`${origin}/.well-known/oauth-protected-resource`);
+      assert.equal(discovery.status, 200);
+      assert.equal((await discovery.json()).resource, `${origin}/mcp`);
 
       // Another owner's key cannot be revoked from this workspace.
       const other = await access.issue({ ownerId: 'someone-else', name: 'Theirs', access: 'read' });

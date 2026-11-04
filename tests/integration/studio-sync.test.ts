@@ -12,13 +12,16 @@ const snapshot = (address: string) =>
   studioDesignSchema.parse({
     kind: 'studio-design',
     basis: 'owner-studio',
-    project: uploadedOwnStudio({
-      photos: ['a'.repeat(64)],
-      plans: [],
-      where: address,
-      ceilingFt: null,
-      idea: '',
-    }).project,
+    project: {
+      ...uploadedOwnStudio({
+        photos: ['a'.repeat(64)],
+        plans: [],
+        where: address,
+        ceilingFt: null,
+        idea: '',
+      }).project,
+      id: 'fixture-studio',
+    },
     picks: {},
     tier: 'mid',
     inspired: {},
@@ -136,4 +139,29 @@ test('reopening a saved revision restores only a pending draft from that exact p
     'server',
   );
   assert.equal(pendingStudioSave({ broken: true }), null);
+});
+
+test('save metadata excludes the full HTTP response before a strict follow-up request', async () => {
+  const fullResponse = {
+    projectId: 'saved-room',
+    revision: 1,
+    artifactRef: { kind: 'artifact', id: 'saved-room:studio-design', revision: 1 },
+    snapshot: snapshot('room'),
+  };
+  let notified: unknown;
+  const writer = new StudioSync({
+    meta: null,
+    acknowledged: '',
+    pending: null,
+    requestId: () => 'save-metadata',
+    persist: () => {},
+    send: async () => fullResponse,
+    onSaved: (meta) => {
+      notified = meta;
+    },
+  });
+  const meta = await writer.sync(fullResponse.snapshot);
+  assert.deepEqual(meta, { projectId: 'saved-room', revision: 1 });
+  assert.deepEqual(notified, meta);
+  assert.deepEqual(await writer.sync(fullResponse.snapshot), meta);
 });

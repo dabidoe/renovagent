@@ -62,6 +62,7 @@ export function PublicApp() {
   }, [hash, landing]);
   useEffect(() => {
     // Keep the older brief handoff, without opening any saved workspace first.
+    if (window.location.hash.startsWith('#connect/approve/')) return;
     try {
       const brief = sessionStorage.getItem('renovagent.project-brief');
       if (brief) {
