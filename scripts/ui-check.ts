@@ -465,8 +465,17 @@ async function intakeChecks(browser: Browser, base: string) {
 
 async function connectChecks(browser: Browser, base: string) {
   const { page, close } = await open(browser, base, '/#connect', viewports[0]);
-  await page.getByText('Manual key setup for clients without OAuth', { exact: true }).click();
   const create = page.getByRole('button', { name: /Create connection key/ });
+  check('connect: create key is visible without expansion', await create.isVisible());
+  check(
+    'connect: three setup steps in order',
+    JSON.stringify(await page.locator('.ca-step h2').allTextContents()) ===
+      JSON.stringify(['Connect to Muse', 'Create and paste your key', 'Start using RenovAgent']),
+  );
+  check(
+    'connect: OAuth instructions and What to say are absent',
+    !/OAuth|Approve access|What to say/.test(await page.locator('.ca').innerText()),
+  );
   if ((await create.count()) && (await create.isDisabled())) {
     const id = await create.getAttribute('aria-describedby');
     const reason = id ? await page.locator(`#${id}`).innerText() : '';

@@ -13,10 +13,12 @@ export function SignInChoices({
   providers,
   className = 'link-button',
   onSignedIn,
+  showGuest = true,
 }: {
   providers?: string[];
   className?: string;
   onSignedIn?: () => void | Promise<void>;
+  showGuest?: boolean;
 }) {
   const [session, setSession] = useState<{ providers: string[]; guests: boolean } | null>(null);
   const [busy, setBusy] = useState(false);
@@ -72,7 +74,7 @@ export function SignInChoices({
           Continue with {provider === 'meta' ? 'Meta' : 'Google'}
         </a>
       ))}
-      {session?.guests && (
+      {showGuest && session?.guests && (
         <button type="button" className={className} disabled={busy} onClick={() => void guest()}>
           {busy ? 'Starting…' : 'Continue as guest'}
         </button>

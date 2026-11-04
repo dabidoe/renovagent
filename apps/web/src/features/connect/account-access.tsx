@@ -112,6 +112,9 @@ export function AccountAccess() {
           <a className="public-account-projects" href="#projects" onClick={() => setOpen(false)}>
             Open my projects
           </a>
+          <a className="public-account-projects" href="#projects" onClick={() => setOpen(false)}>
+            Project notes
+          </a>
           {error && <p role="alert">{error}</p>}
         </Modal>
       )}

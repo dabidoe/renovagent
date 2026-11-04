@@ -13,18 +13,10 @@ import './connect-agent.css';
 
 type Key = { id: string; name: string; access: 'read' | 'propose'; expiresAt: string };
 const PLACEHOLDER = 'reno_YOUR_KEY';
-const STARTERS = [
-  {
-    title: 'Save a plan',
-    request:
-      'Make a paint-and-floor plan for my room. Ask for missing measurements, then save it and give me the link.',
-  },
-  { title: 'Save inspiration', request: 'Save this photo to my Renovagent inspiration board.' },
-  {
-    title: 'Use a brief',
-    request:
-      'Read this Markdown brief and start a Renovagent project. Keep unknown measurements unknown.',
-  },
+const EXAMPLE_REQUESTS = [
+  'Show me my renovation projects.',
+  'Help me plan a bathroom renovation.',
+  'Save this inspiration to my project.',
 ];
 
 export function ConnectAgent() {
@@ -54,6 +46,14 @@ export function ConnectAgent() {
     setBusy(true);
     setError('');
     try {
+      const session = await workspaceRequest('/session');
+      if (session.mode === 'account' && !session.signedIn) {
+        if (!session.guests)
+          throw new Error('Guest access is unavailable. Sign in to create a key.');
+        await workspaceRequest('/auth/guest', {});
+        window.dispatchEvent(new Event('renovagent-session'));
+        await load();
+      }
       const made = (await workspaceRequest('/agent-keys', {
         name: name.trim(),
         access: 'propose',
@@ -74,11 +74,8 @@ export function ConnectAgent() {
     );
     await load();
   };
-  const address = endpoint || new URL('/mcp', window.location.origin).href;
-  const local = /^http:\/\/(127\.0\.0\.1|localhost)[:/]/.test(address);
-  const introduction = `Connect to my Renovagent workspace at ${address} using MCP OAuth. Start the browser authorization flow so I can sign in and approve access. Request renovagent:read and renovagent:propose so you can read projects and save proposed plans and inspiration. Do not ask me to copy a key into chat. Once connected, immediately call get_connection_context, read my relevant project notes, and continue from what is saved. Mention the actual project and a useful next step instead of asking a generic greeting.`;
-  const guideUrl = new URL('/agent-guide.md', window.location.origin).href;
-  const ask = `${introduction}\n\nRead ${guideUrl} for tool, photo and brief instructions. Use the resource metadata advertised in the 401 response to discover authorization. Register a public client, use authorization code with S256 PKCE, and open the authorization URL for me. If your connector only supports API keys, say so and link me to ${new URL('/#connect', window.location.origin).href} for manual setup; do not claim OAuth has completed.`;
+  const address = 'https://renovagent.app/mcp';
+  const local = ['localhost', '127.0.0.1', '[::1]'].includes(window.location.hostname);
   const config = JSON.stringify(
     {
       mcpServers: {
@@ -92,11 +89,6 @@ export function ConnectAgent() {
     null,
     2,
   );
-  const curl = `curl -X POST ${address} \\
-  -H "Authorization: Bearer ${PLACEHOLDER}" \\
-  -H "Content-Type: application/json" \\
-  -H "Accept: application/json, text/event-stream" \\
-  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'`;
   return (
     <section className="ca" aria-label="Connect Muse or your agent">
       <header className="ca-heading">
@@ -104,125 +96,104 @@ export function ConnectAgent() {
       </header>
       <div className="ca-guide-layout">
         <div className="ca-guide">
-          <section className="ca-card ca-step" aria-labelledby="ca-ask-title">
+          <section className="ca-card ca-step" aria-labelledby="ca-connect-title">
             <span className="ca-step-number" aria-hidden="true">
               1
             </span>
             <div className="ca-step-body">
-              <h2 id="ca-ask-title">Start a conversation in Muse.</h2>
-              <p className="ca-note">Paste this into Muse.</p>
-              <div className="ca-prompt">
-                <p>{introduction}</p>
-                <Copy value={ask} label="Copy connection message" />
-                <details className="ca-full-message">
-                  <summary>Show full message</summary>
-                  <p>{ask}</p>
-                </details>
+              <h2 id="ca-connect-title">Connect to Muse</h2>
+              <p className="ca-note">
+                In Muse’s custom-connector setup, enter this as the MCP server URL.
+              </p>
+              <div className="ca-row">
+                <code>{address}</code>
+                <Copy value={address} label="Copy endpoint" />
               </div>
-              {local && (
-                <p className="ca-note">
-                  This is a local preview, which Muse cannot reach. Use the{' '}
-                  <a href="https://renovagent.app/#connect">hosted connection page</a> to pair with
-                  Muse.
-                </p>
-              )}
             </div>
           </section>
-          <section className="ca-card ca-step" aria-labelledby="ca-permission-title">
+          <section className="ca-card ca-step" aria-labelledby="ca-key-title">
             <span className="ca-step-number" aria-hidden="true">
               2
             </span>
             <div className="ca-step-body">
-              <h2 id="ca-permission-title">Approve access in Renovagent.</h2>
-              <p className="ca-note">
-                Your agent opens a Renovagent approval page. Sign in to your existing workspace,
-                review the requested access, and choose Approve connection. You won’t need to copy a
-                key.
-              </p>
-              <details>
-                <summary>Manual key setup for clients without OAuth</summary>
-                {loading ? (
-                  <p className="ca-note" role="status">
-                    Loading your workspace…
+              <h2 id="ca-key-title">Create and paste your key</h2>
+              {!fresh && (
+                <form
+                  className="ca-make"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    if (!loading && !busy && (signedOut || endpoint) && name.trim()) void create();
+                  }}
+                >
+                  <button
+                    type="submit"
+                    className="ca-primary"
+                    disabled={loading || busy || (!signedOut && !endpoint) || !name.trim()}
+                    aria-describedby={
+                      !loading && !signedOut && !endpoint ? 'ca-key-unavailable' : undefined
+                    }
+                  >
+                    {busy ? 'Creating…' : 'Create connection key'}
+                    <Glyph name="right" />
+                  </button>
+                </form>
+              )}
+              {loading ? (
+                <p className="ca-note" role="status">
+                  Loading your workspace…
+                </p>
+              ) : signedOut ? (
+                <>
+                  <p className="ca-note">
+                    Create a key to start a guest workspace. Google sign-in is optional.
                   </p>
-                ) : signedOut ? (
-                  <>
-                    <p className="ca-note">
-                      Continue as a guest to try it. Google sign-in is optional.
-                    </p>
-                    <div className="ca-make">
-                      <SignInChoices className="ca-primary" />
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <p className="ca-note">
-                      Muse can read your projects and save plans and finds. You control approvals
-                      and purchases.
-                    </p>
-                    {!fresh && (
-                      <form
-                        className="ca-make"
-                        onSubmit={(e) => {
-                          e.preventDefault();
-                          if (name.trim()) void create();
-                        }}
-                      >
-                        <button
-                          type="submit"
-                          className="ca-primary"
-                          disabled={busy || !endpoint || !name.trim()}
-                          aria-describedby={!endpoint ? 'ca-key-unavailable' : undefined}
-                        >
-                          {busy ? 'Creating…' : 'Create connection key'}
-                          <Glyph name="right" />
-                        </button>
-                      </form>
-                    )}
-                    {!fresh && !endpoint && (
-                      <p className="ca-note" id="ca-key-unavailable">
-                        Keys can’t be created right now: the workspace service didn’t answer. Reload
-                        to try again.
-                      </p>
-                    )}
-                    <p className="ca-note">Access lasts one year. Remove it below at any time.</p>
-                  </>
-                )}
-                {fresh && (
-                  <div className="ca-fresh" role="status">
-                    <p>
-                      <b>Your private key for {fresh.name}</b>
-                    </p>
-                    <div className="ca-row">
-                      <code className="ca-secret">{fresh.key}</code>
-                      <Copy value={fresh.key} label="Copy private key" />
-                    </div>
-                    <p className="ca-note">
-                      Shown this once. Paste it into Muse’s secure credentials field when asked,
-                      outside the chat.
-                    </p>
-                    <button type="button" className="ca-link" onClick={() => setFresh(null)}>
-                      Hide key
-                    </button>
+                  <div className="ca-make">
+                    <SignInChoices className="ca-link" showGuest={false} />
                   </div>
-                )}
-              </details>
+                </>
+              ) : !endpoint ? (
+                <p className="ca-note" id="ca-key-unavailable">
+                  Keys can’t be created right now: the workspace service didn’t answer. Reload to
+                  try again.
+                </p>
+              ) : (
+                <p className="ca-note">
+                  {fresh ? 'Key created. ' : ''}Access lasts one year. Revoke it in Advanced.
+                </p>
+              )}
+              {fresh ? (
+                <div className="ca-fresh" role="status">
+                  <p>
+                    <b>Your private key for {fresh.name}</b>
+                  </p>
+                  <div className="ca-row">
+                    <code className="ca-secret">{fresh.key}</code>
+                    <Copy value={fresh.key} label="Copy key" />
+                  </div>
+                  <p className="ca-note">Shown only once. Copy it before leaving this page.</p>
+                  <button type="button" className="ca-link" onClick={() => setFresh(null)}>
+                    Hide key
+                  </button>
+                </div>
+              ) : null}
+              <p className="ca-note">
+                Paste the key into Muse’s secure API-key field. Choose bearer authentication in the
+                Authorization header. Keep the key outside the chat.
+              </p>
             </div>
           </section>
-          <section className="ca-card ca-step" aria-labelledby="ca-finish-title">
+          <section className="ca-card ca-step" aria-labelledby="ca-start-title">
             <span className="ca-step-number" aria-hidden="true">
               3
             </span>
             <div className="ca-step-body">
-              <h2 id="ca-finish-title">Finish in Muse, then try it.</h2>
-              <p className="ca-note">
-                After approval, return to your agent. It finishes the connection securely. Then
-                send:
-              </p>
-              <div className="ca-prompt">
-                <p>Show me my Renovagent projects.</p>
-                <Copy value="Show me my Renovagent projects." label="Copy first request" />
-              </div>
+              <h2 id="ca-start-title">Start using RenovAgent</h2>
+              {EXAMPLE_REQUESTS.map((request) => (
+                <div className="ca-prompt" key={request}>
+                  <p>{request}</p>
+                  <Copy value={request} />
+                </div>
+              ))}
             </div>
           </section>
           {error && (
@@ -244,72 +215,28 @@ export function ConnectAgent() {
           <MuseConversation />
         </aside>
       </div>
-      <section className="ca-card ca-say" aria-labelledby="ca-say-title">
-        <h2 id="ca-say-title">What to say</h2>
-        <div className="ca-starters">
-          {STARTERS.map((s) => (
-            <div key={s.title}>
-              <h3>{s.title}</h3>
-              <p>{s.request}</p>
-              <Copy value={s.request} label={`Copy: ${s.title.toLowerCase()}`} />
-            </div>
-          ))}
-        </div>
-        <p className="ca-note">
-          Attach the photo or brief in Muse. For a room preview,{' '}
-          <a href="#new-project">upload your photo in the studio</a>.
-        </p>
-      </section>
       <details className="ca-card ca-dev">
-        <summary>Photos, briefs & agent instructions</summary>
-        <p>
-          Chat attachments aren’t automatically uploaded to Renovagent. The agent guide explains the
-          supported paths.
-        </p>
-        <div className="ca-guide-links">
-          <a href="/agent-guide.md" target="_blank" rel="noreferrer">
-            Read agent guide (.md) ↗
-          </a>
-          <a href="/project-brief.md" download>
-            Brief template ↓
-          </a>
-        </div>
-      </details>
-      {keys.length > 0 && (
-        <details className="ca-card ca-manage">
-          <summary>
-            Manage your connection keys <span>{keys.length}</span>
-          </summary>
-          <ul className="ca-keys" aria-label="Your keys">
-            {keys.map((k) => (
-              <li key={k.id}>
-                <span>
-                  <b>{k.name}</b>
-                  <small>
-                    Expires{' '}
-                    {new Date(k.expiresAt).toLocaleDateString(undefined, {
-                      month: 'short',
-                      day: 'numeric',
-                    })}
-                  </small>
-                </span>
-                <button type="button" className="ca-link" onClick={() => void revoke(k.id)}>
-                  Remove access
-                </button>
-              </li>
-            ))}
-          </ul>
-        </details>
-      )}
-      <details className="ca-card ca-dev">
-        <summary>Other agents & connection details</summary>
+        <summary>Advanced</summary>
         <p>
           Muse is one option. Any agent with a Streamable HTTP MCP client can use the same
           connection key.
         </p>
-        <div className="ca-row">
-          <code>{address}</code>
-          <Copy value={address} label="Copy address" />
+        {local && (
+          <p>
+            This is a local preview. Create your Muse key on the{' '}
+            <a href="https://renovagent.app/#connect">hosted connection page</a>.
+          </p>
+        )}
+        <p>
+          If Muse cannot open secure key entry, stop and report that error. Do not put the key in
+          chat. If access expires or is removed, create a new key. A website session alone does not
+          authenticate Muse.
+        </p>
+        <div className="ca-guide-links">
+          <a href="/agent-guide.md">Technical agent guide</a>
+          <a href="/project-brief.md" download>
+            Brief template
+          </a>
         </div>
         {!signedOut && (
           <label className="ca-connection-name">
@@ -327,11 +254,32 @@ export function ConnectAgent() {
           <pre>{config}</pre>
           <Copy value={config} />
         </div>
-        <p>Or list the available tools:</p>
-        <div className="ca-code">
-          <pre>{curl}</pre>
-          <Copy value={curl} />
-        </div>
+        {keys.length > 0 && (
+          <details className="ca-card ca-manage">
+            <summary>
+              Manage your connection keys <span>{keys.length}</span>
+            </summary>
+            <ul className="ca-keys" aria-label="Your keys">
+              {keys.map((k) => (
+                <li key={k.id}>
+                  <span>
+                    <b>{k.name}</b>
+                    <small>
+                      Expires{' '}
+                      {new Date(k.expiresAt).toLocaleDateString(undefined, {
+                        month: 'short',
+                        day: 'numeric',
+                      })}
+                    </small>
+                  </span>
+                  <button type="button" className="ca-link" onClick={() => void revoke(k.id)}>
+                    Remove access
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </details>
+        )}
       </details>
     </section>
   );

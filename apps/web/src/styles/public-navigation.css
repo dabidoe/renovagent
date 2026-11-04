@@ -68,6 +68,9 @@
   margin-top: 20px;
   color: #174785;
 }
+.public-account-projects + .public-account-projects {
+  margin-top: 8px;
+}
 .public-account-dialog {
   width: min(440px, calc(100vw - 32px));
   max-height: calc(100dvh - 32px);
