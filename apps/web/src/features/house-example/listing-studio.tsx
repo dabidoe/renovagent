@@ -49,19 +49,11 @@ export const EXAMPLES: ExampleCard[] = [
 ];
 
 type Edits = { ceilingFt?: number; sizes?: Record<string, { xFt: number; yFt: number }> };
-const editStore = (id: string) => `renovagent.example.${id}.edits.v1`;
-function loadEdits(id: string): Edits {
-  try {
-    return (JSON.parse(localStorage.getItem(editStore(id)) || 'null') as Edits) ?? {};
-  } catch {
-    return {};
-  }
-}
 
 export function ListingStudio({ id, onBack }: { id: string; onBack: () => void }) {
   const [project, setProject] = useState<(HouseProject & { receipts?: unknown }) | null>(null);
   const [error, setError] = useState('');
-  const [edits, setEdits] = useState<Edits>(() => loadEdits(id));
+  const [edits, setEdits] = useState<Edits>({});
   useEffect(() => {
     let live = true;
     fetch(`./examples/${studioDirection(id) ? 'oakland' : id}/project.json`)
@@ -85,11 +77,6 @@ export function ListingStudio({ id, onBack }: { id: string; onBack: () => void }
   }, [id]);
   const save = (next: Edits) => {
     setEdits(next);
-    try {
-      localStorage.setItem(editStore(id), JSON.stringify(next));
-    } catch {
-      // The edit still applies for this visit.
-    }
   };
   const direction = studioDirection(id);
   const seed = useMemo(
@@ -117,13 +104,15 @@ export function ListingStudio({ id, onBack }: { id: string; onBack: () => void }
   return (
     <PaintFloorStudio
       project={shown}
+      publicTemplate
+      autoImagine={false}
       initialDesign={seed}
       kicker={
         direction
-          ? 'Muse photo concept · editable 3D starter · changes stay in this browser'
+          ? 'Muse photo concept · editable 3D starter'
           : id.startsWith('starter-')
-            ? 'Prepared sample · changes stay in this browser'
-            : 'Listing example · changes stay in this browser'
+            ? 'Prepared sample'
+            : 'Listing example'
       }
       onEditRoom={(roomId, patch) =>
         patch.size && save({ ...edits, sizes: { ...edits.sizes, [roomId]: patch.size } })

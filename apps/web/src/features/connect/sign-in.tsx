@@ -3,6 +3,7 @@ import { flushOwnIntakeSave } from '../house-example/own-intake-draft.js';
 import { signInUrlFor, workspaceRequest } from '../../adapters/http/project-repository.js';
 
 import { rememberReturn } from './sign-in-return.js';
+import { GoogleLogo } from './google-logo.js';
 export { rememberReturn, takeReturn } from './sign-in-return.js';
 
 // The ways in: each configured provider, and (where the server allows it) a
@@ -67,6 +68,7 @@ export function SignInChoices({
               });
           }}
         >
+          {provider === 'google' && <GoogleLogo />}
           Continue with {provider === 'meta' ? 'Meta' : 'Google'}
         </a>
       ))}

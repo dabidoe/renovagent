@@ -2,6 +2,34 @@
 
 Follow-up: [Editable furniture and photo ideas](studio-furniture-and-ideas.md) adds the 3D asset library and furnished render path.
 
+## Public example templates — November 4, local
+
+Public listing studios, Hutchinson, furnished directions and prepared samples now
+open from their bundled template, with an isolated `example-copy-<uuid>` browser
+namespace. They ignore legacy template-keyed edits, saved-project metadata and
+pending save commands; those records are left intact. A first design edit uses the
+existing validated studio save service to create a new owner-scoped project, with
+a separate snapshot identity. Later saves update only that copy. Browsing and
+switching views do not create a workspace project or run inference.
+
+An edited history entry remembers its draft scope so refresh and a lost response
+replay the exact persisted request through `StudioSync`, without duplicate copies.
+Dimensions are edited on the copied project and recover with its draft snapshot.
+Successful saves retain the existing private saved-design URL behavior. Opening
+the public template again starts fresh; saved copies remain available in My
+projects. The editor controls/layout and canonical command/revision protections
+are unchanged. The read-only bedroom inspiration walkthrough has no editable
+project state and continues to hand off to the owner's photo intake.
+
+Verification: build/types/boundaries; regular tests (15 legacy and 336 TS passed,
+59 skipped; the one sandbox-blocked localhost hosting test passed separately with
+listener permission); two focused copy tests; 66 offline browser isolation/retry checks
+for all three listings, a furnished direction and a prepared sample; and 26
+desktop/phone furniture/rotation checks using private draft scopes. The browser
+APIs are fixtures, not live account/database verification. Existing checks that
+seed/read template-keyed browser state describe the superseded editing behavior.
+No production writes, model calls or deployment.
+
 ## Canvas layout — November 3, local
 
 **Top save/autosave follow-up:** Save look and live save status sit above the

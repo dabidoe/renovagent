@@ -1,5 +1,17 @@
 # Public startup and saved-workspace routing — November 3, 2026
 
+## Simplified header — November 4, local
+
+The public header now contains Connect, Studio and Account, with white lettering
+on a dark navigation background at every width. Studio opens `#your-project`.
+Account retains sign-in, guest recovery and sign-out; Open my projects is inside
+the account dialog and remains available before sign-in. The Google sign-in and
+guest recovery actions include a decorative multicolor Google G. Session requests,
+provider configuration, draft flushing and OAuth redirects are unchanged.
+The offline account-navigation check covers white labels, three header actions,
+Google icons, guest sign-in, saved-project access and recovery at
+1440/1024/768/390/320 px. No real OAuth, production writes or deployment.
+
 ## Incident
 
 The root URL could open the active saved project's notes workspace instead of the landing page. Clicking the logo set a component flag and revealed the intended homepage. `main.tsx` also awaited `WorkspaceController.open()` before rendering anything, so public visitors and returning owners waited for session discovery and, when signed in, a full private workspace read. Previous Mongo/image caching work did not remove that dependency.

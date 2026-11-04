@@ -3650,8 +3650,7 @@
 .room3d-object-tools {
   position: absolute;
   z-index: 4;
-  right: 12px;
-  bottom: 12px;
+  box-shadow: 0 3px 14px rgb(15 23 42 / 0.16);
   display: flex;
   gap: 4px;
   padding: 4px;

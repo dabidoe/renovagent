@@ -110,6 +110,12 @@ export class MongoWorkspaceRepository {
   forUser(userId: string) {
     return new MongoWorkspaceRepository(this.collection, this.blobStore, userId);
   }
+  // Indexes are built once at startup via ensureIndexes(), never on the
+  // request path: the Google callback runs ensure() before redirecting, and
+  // DDL there stalls sign-in.
+  async ensureIndexes() {
+    await this.blobStore.createIndex({ '_id.ownerId': 1, '_id.blobId': 1 });
+  }
   async ensure() {
     await this.collection.updateOne(
       { _id: this.ownerId },
@@ -118,13 +124,14 @@ export class MongoWorkspaceRepository {
       },
       { upsert: true },
     );
-    await this.blobStore.createIndex({ '_id.ownerId': 1, '_id.blobId': 1 });
     await this.moveEmbeddedBlobs();
   }
   // Idempotent: copies are content-checked, and the aggregate is cleared only
   // after every embedded blob is stored.
   async moveEmbeddedBlobs() {
-    const doc = await this.collection.findOne({ _id: this.ownerId });
+    // Only the legacy field is read: the workspace itself can be megabytes,
+    // and this runs on every sign-in.
+    const doc = await this.collection.findOne({ _id: this.ownerId }, { projection: { blobs: 1 } });
     if (!doc?.blobs?.length) return;
     await this.putBlobs(doc.blobs);
     await this.update((d) => {
@@ -203,6 +210,7 @@ export class MongoWorkspaceRepository {
     await client.connect();
     const repository = MongoWorkspaceRepository.forDb(client.db());
     await repository.ensure();
+    await repository.ensureIndexes();
     await repository.adoptLegacyDatabase(client);
     return { repository, client };
   }

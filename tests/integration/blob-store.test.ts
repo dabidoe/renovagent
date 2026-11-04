@@ -130,6 +130,34 @@ test('attachments embedded by the old layout move out once and stay readable', {
   }),
 );
 
+test('a login-scoped ensure() never builds indexes; ensureIndexes() does it once', { skip: !uri }, () =>
+  withDb(async (db) => {
+    const repo = MongoWorkspaceRepository.forDb(db);
+    let ddl = 0;
+    const target = repo.blobStore;
+    (repo as { blobStore: unknown }).blobStore = new Proxy(target, {
+      get(t, prop, receiver) {
+        if (prop === 'createIndex')
+          return (...args: unknown[]) => {
+            ddl++;
+            return (target.createIndex as (...a: never[]) => unknown)(...(args as never[]));
+          };
+        const value = Reflect.get(t, prop, receiver);
+        return typeof value === 'function' ? (value as () => unknown).bind(t) : value;
+      },
+    });
+    // The Google callback runs this before redirecting; DDL there stalls sign-in.
+    await repo.forUser('user:login-probe').ensure();
+    assert.equal(ddl, 0);
+    await repo.ensureIndexes();
+    const keys = (await repo.blobStore.listIndexes().toArray()).map((i) => i.key);
+    assert.ok(
+      keys.some((k) => (k as Record<string, number>)['_id.ownerId'] === 1 && (k as Record<string, number>)['_id.blobId'] === 1),
+      'the blob compound index exists after ensureIndexes()',
+    );
+  }),
+);
+
 test('cluster migration carries attachment records and checks them', { skip: !uri }, () =>
   withDb(async (db) => {
     const { repo, s } = await seeded(db);

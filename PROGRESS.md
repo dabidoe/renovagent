@@ -1,5 +1,25 @@
 # Project status — Renovagent
 
+Public examples as templates (November 4, local): listings, furnished concepts and
+prepared samples open pristine, ignoring legacy example-keyed browser edits/save
+pointers. The first edit automatically creates an independent owner project through
+the existing save service; later edits target that copy. An isolated draft/history
+identity preserves refresh and exact-command retry after a lost response. Editor
+controls/layout are unchanged. Build, focused copy tests, offline template/retry
+browser checks and 26 furniture/rotation checks pass. Regular tests pass except a
+sandbox-blocked hosting listener, which passed separately with listener permission.
+See `docs/architecture/studio-room-design.md`. No live writes or deployment.
+
+Hutchinson furniture and rotation (November 4, local): the root example now has a
+validated living/dining starter with nine editable models, oriented from the listing
+photo and marked Keep. Library approximations and unknown fit are disclosed; prior
+browser edits remain, with Project → Reset room design restoring the starter.
+Small 15° rotation buttons follow the highlighted furniture on the canvas;
+side arrows turn the camera, and empty-canvas clicks clear selection. Build/types/boundaries, five
+focused domain tests and the existing 76-check controls suite pass. See
+`docs/architecture/studio-furniture-and-ideas.md` for local browser evidence and
+limits. No provider calls, production changes or deployment.
+
 Connected preview route recovery (November 3, local): the user's preview was
 reaching API code started November 1, before studio-design saves and furnished
 renders existed. Reproduced both unknown-route errors through its authenticated

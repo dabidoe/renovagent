@@ -95,7 +95,12 @@ try {
     });
     await page.goto('http://127.0.0.1:8818', { waitUntil: 'networkidle' });
     const nav = page.getByRole('navigation', { name: 'Main navigation' });
-    assert.equal(await nav.getByRole('link').count(), 4);
+    assert.deepEqual(await nav.getByRole('link').allTextContents(), ['Connect', 'Studio']);
+    assert.equal(await nav.getByRole('button', { name: 'Account', exact: true }).count(), 1);
+    for (const item of await nav.locator(':scope > a, :scope > button').all()) {
+      assert.equal(await item.evaluate((el) => getComputedStyle(el).color), 'rgb(255, 255, 255)');
+    }
+    await page.screenshot({ path: `${out}/header-${width}.png` });
     for (const link of await nav.getByRole('link').all()) {
       assert.ok(
         await link.evaluate((el) => {
@@ -109,9 +114,10 @@ try {
         `navigation visible and unobscured at ${width}`,
       );
     }
-    await page.getByRole('button', { name: 'Sign in', exact: true }).click();
+    await page.getByRole('button', { name: 'Account', exact: true }).click();
     const dialog = page.getByRole('dialog');
     await dialog.getByRole('link', { name: 'Continue with Google' }).waitFor();
+    assert.equal(await dialog.locator('a[href*="auth/google"] svg').count(), 1);
     assert.ok(
       await dialog.evaluate((el) => {
         const r = el.getBoundingClientRect();
@@ -121,8 +127,10 @@ try {
     await page.screenshot({ path: `${out}/sign-in-${width}.png` });
     await dialog.getByRole('button', { name: 'Continue as guest' }).click();
     await dialog.waitFor({ state: 'hidden' });
-    await page.getByRole('button', { name: 'Guest account' }).waitFor();
-    await nav.getByRole('link', { name: 'My projects' }).click();
+    await nav.getByRole('button', { name: 'Account', exact: true }).click();
+    await dialog.getByRole('link', { name: 'Keep my projects with Google' }).waitFor();
+    assert.equal(await dialog.locator('a[href*="auth/google"] svg').count(), 1);
+    await dialog.getByRole('link', { name: 'Open my projects' }).click();
     await page.getByRole('heading', { name: 'My saved living room' }).waitFor();
     assert.equal(
       await page.getByRole('link', { name: 'Open design', exact: true }).getAttribute('href'),

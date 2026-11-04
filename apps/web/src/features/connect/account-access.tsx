@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect, useState } from 'react';
 import type { SessionInfo } from '../../adapters/http/project-repository.js';
 import { Modal } from '../../components/modal.js';
 import { rememberReturn } from './sign-in-return.js';
+import { GoogleLogo } from './google-logo.js';
 const SignInChoices = lazy(() =>
   import('./sign-in.js').then((module) => ({ default: module.SignInChoices })),
 );
@@ -34,7 +35,7 @@ export function AccountAccess() {
   return (
     <>
       <button className="public-account" onClick={() => setOpen(true)}>
-        {session?.signedIn ? (guest ? 'Limited guest' : 'Account') : 'Sign in'}
+        Account
       </button>
       {open && (
         <Modal
@@ -74,12 +75,10 @@ export function AccountAccess() {
                         );
                     }}
                   >
+                    <GoogleLogo />
                     Keep my projects with Google
                   </a>
                 )}
-                <a href="#projects" onClick={() => setOpen(false)}>
-                  Open my projects
-                </a>
                 <button
                   onClick={() =>
                     void sessionRequest('/auth/logout', true)
@@ -110,6 +109,9 @@ export function AccountAccess() {
               </div>
             </>
           )}
+          <a className="public-account-projects" href="#projects" onClick={() => setOpen(false)}>
+            Open my projects
+          </a>
           {error && <p role="alert">{error}</p>}
         </Modal>
       )}

@@ -4,6 +4,31 @@ November 2, 2026. Implemented locally; not deployed. Extends
 [the saved photo studio](studio-room-design.md). This is a concept-layout workflow,
 not a furniture measurement, exact-product or installation approval system.
 
+## Hutchinson photo furniture and contextual rotation — November 4, local
+
+`hutchinson-project.ts` now exports a validated starter design alongside the root
+project. The living/dining room includes nine editable models: sofa, loveseat,
+dining table, four inward-facing chairs, a bookcase standing in for the china
+cabinet, and a floor lamp. Placement follows the listing photo relative to the
+traced plan. Library sizes, shapes and positions are approximations, not measured
+reconstruction; these retained items use Keep with unknown allowances. The empty
+bedroom photos receive no invented furniture. Public template visits start pristine;
+edits and browser recovery belong to independent copies (see
+[public example templates](studio-room-design.md)). Project → Reset room design
+restores the copy's opening layout through the existing reversible history.
+
+Selected furniture shows small left/right 15° rotate buttons immediately above
+its highlight. The buttons follow the object's projected bounds as the camera or
+piece moves, stay within the canvas on phones, and disappear on deselection or in
+photoreal view. The side arrows rotate the camera by 45°. Clicking empty canvas
+clears selection. Placement updates retain undo, browser/save persistence and
+stale-render signatures. No model calls or canonical-state bypass were added.
+
+Verification: production build/types/boundaries, five focused furniture domain
+tests, the 76-check existing comparison/control browser suite, and the offline
+Hutchinson browser check at desktop/phone widths. Captures are in
+`.local/hutchinson-furniture-qa/`. No production writes, inference or deployment.
+
 ## Furnishing starters, camera and rendering styles — November 3, local
 
 Follow-up: selected pieces now have separate left/right 15° rotation buttons on

@@ -116,20 +116,14 @@ export function PublicApp() {
         <button className="prompt-brand" aria-label="Renovagent home" onClick={() => open('')}>
           <BrandMark size={174} lockup compact={landing} tone={landing ? 'light' : 'dark'} />
         </button>
-        <AccountAccess />
         <nav className="public-navigation" aria-label="Main navigation">
-          <a href="#examples" aria-current={hash === '#examples' ? 'page' : undefined}>
-            Examples
+          <a href="#connect" aria-current={hash === '#connect' ? 'page' : undefined}>
+            Connect
           </a>
           <a href="#your-project" aria-current={hash === '#your-project' ? 'page' : undefined}>
-            Your project
+            Studio
           </a>
-          <a href="#projects" aria-current={hash === '#projects' ? 'page' : undefined}>
-            My projects
-          </a>
-          <a href="#connect" aria-current={hash === '#connect' ? 'page' : undefined}>
-            Connect agent
-          </a>
+          <AccountAccess />
         </nav>
       </header>
       {errorBanner}

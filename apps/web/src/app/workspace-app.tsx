@@ -1,3 +1,4 @@
+import { GoogleLogo } from '../features/connect/google-logo.js';
 import { ReferenceBoard } from '../features/references/reference-board.js';
 import { ReferenceEditor } from '../features/references/reference-editor.js';
 import '../features/references/references.css';
@@ -407,7 +408,7 @@ export function App({ controller }: { controller: WorkspaceController }) {
         </button>
         {isLanding ? (
           <nav className="landing-nav" aria-label="Main navigation">
-            <a href="#product-proof">Studio</a>
+            <a href="#your-project">Studio</a>
             <a href="#connect">Connect your agent</a>
             <details className="landing-mobile-menu">
               <summary aria-label="Navigation menu">
@@ -419,7 +420,7 @@ export function App({ controller }: { controller: WorkspaceController }) {
                     event.currentTarget.closest('details')?.removeAttribute('open');
                 }}
               >
-                <a href="#product-proof">Studio</a>
+                <a href="#your-project">Studio</a>
                 <a href="#connect">Connect your agent</a>
               </div>
             </details>
@@ -1230,6 +1231,7 @@ export function App({ controller }: { controller: WorkspaceController }) {
               {!auth.guest && <span>{auth.email}</span>}
               {auth.guest && auth.providers.includes('google') && (
                 <a href={signInUrlFor('google')} onClick={rememberReturn}>
+                  <GoogleLogo />
                   Sign in with Google
                 </a>
               )}

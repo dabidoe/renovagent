@@ -5,6 +5,10 @@ import type { Collection, Db } from 'mongodb';
 export const ACCOUNT_COOKIE = 'renovagent_account';
 const SESSION_DAYS = 365;
 const GOOGLE_JWKS = 'https://www.googleapis.com/oauth2/v3/certs';
+// One shared fetcher for every login: jose caches the keys per the response's
+// Cache-Control and refreshes on rotation, so logins after the first skip the
+// extra certs fetch instead of blocking the callback on it.
+const googleJwks = createRemoteJWKSet(new URL(GOOGLE_JWKS));
 const GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token';
 const META_GRAPH_VERSION = 'v21.0';
 const META_DIALOG_URL = `https://www.facebook.com/${META_GRAPH_VERSION}/dialog/oauth`;
@@ -99,7 +103,7 @@ async function defaultVerifyGoogleIdToken(
   config: GoogleConfig,
   idToken: string,
 ): Promise<OAuthIdentity> {
-  const { payload } = await jwtVerify(idToken, createRemoteJWKSet(new URL(GOOGLE_JWKS)), {
+  const { payload } = await jwtVerify(idToken, googleJwks, {
     issuer: ['https://accounts.google.com', 'accounts.google.com'],
     audience: config.clientId,
   });

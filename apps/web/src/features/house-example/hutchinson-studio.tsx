@@ -1,11 +1,14 @@
 import { EXAMPLE_PRIVACY_NOTE } from './example-privacy.js';
-import { HUTCHINSON } from './hutchinson-project.js';
+import { HUTCHINSON, HUTCHINSON_DESIGN } from './hutchinson-project.js';
 import { PaintFloorStudio } from './paint-floor-studio.js';
 
 export function HutchinsonStudio({ onRoomExample }: { onRoomExample?: () => void }) {
   return (
     <PaintFloorStudio
       project={HUTCHINSON}
+      publicTemplate
+      autoImagine={false}
+      initialDesign={HUTCHINSON_DESIGN}
       kicker="Listing example · address changed for privacy"
       sources={
         <>
@@ -18,6 +21,11 @@ export function HutchinsonStudio({ onRoomExample }: { onRoomExample?: () => void
             <li>
               3D rooms: traced from the listing floor plans; door and window heights are for
               display. The rear bedroom photo is matched to that room by us.
+            </li>
+            <li>
+              Living/dining furniture: editable library approximations arranged from the listing
+              photo, marked Keep. Sizes and fit are unverified; the china cabinet uses a bookcase
+              stand-in. Edits create your own copy; Reset room design restores these starters.
             </li>
             <li>
               New floors: Muse Image edits of each listing photo (prompts and hashes beside each

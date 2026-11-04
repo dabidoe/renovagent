@@ -461,31 +461,6 @@ export function mountRoomScene(
     if (!event.ctrlKey) event.stopImmediatePropagation();
   };
   renderer.domElement.addEventListener('wheel', pageScroll, { capture: true, passive: true });
-  if (meta.onPlacementRotate) {
-    selectedTools = document.createElement('div');
-    selectedTools.className = 'room3d-object-tools';
-    selectedTools.hidden = true;
-    selectedTools.setAttribute('role', 'group');
-    selectedTools.setAttribute('aria-label', 'Selected object rotation');
-    const objectLabel = document.createElement('span');
-    objectLabel.textContent = 'Rotate piece';
-    selectedTools.append(objectLabel);
-    for (const [degrees, label, text] of [
-      [-15, 'Rotate selected object left 15 degrees', '↶'],
-      [15, 'Rotate selected object right 15 degrees', '↷'],
-    ] as const) {
-      const button = document.createElement('button');
-      button.type = 'button';
-      button.textContent = text;
-      button.title = label;
-      button.setAttribute('aria-label', label);
-      button.addEventListener('click', () => {
-        if (selectedPlacement) meta.onPlacementRotate?.(selectedPlacement, degrees);
-      });
-      selectedTools.append(button);
-    }
-    host.append(selectedTools);
-  }
   const furnitureRay = new THREE.Raycaster();
   const floorPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
   let dragging: { id: string; offset: THREE.Vector3; pointer: number } | null = null;
@@ -562,6 +537,51 @@ export function mountRoomScene(
     finishDrag,
     { width: maxX - minX, depth: maxY - minY, wallHeight: roomHeightForFrame() },
   );
+  if (meta.onPlacementRotate) {
+    selectedTools = document.createElement('div');
+    selectedTools.className = 'room3d-object-tools';
+    selectedTools.hidden = true;
+    selectedTools.setAttribute('role', 'group');
+    selectedTools.setAttribute('aria-label', 'Selected object rotation');
+    for (const [degrees, direction, icon] of [
+      [-15, 'left', '↶'],
+      [15, 'right', '↷'],
+    ] as const) {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.textContent = icon;
+      button.title = `Rotate selected object ${direction} 15 degrees`;
+      button.setAttribute('aria-label', button.title);
+      button.addEventListener('click', () => {
+        if (selectedPlacement) meta.onPlacementRotate?.(selectedPlacement, degrees);
+      });
+      selectedTools.append(button);
+    }
+    host.append(selectedTools);
+  }
+  const selectedBounds = new THREE.Box3();
+  const selectedAnchor = new THREE.Vector3();
+  const positionSelectedTools = () => {
+    if (!selectedTools) return;
+    const object = selectedPlacement && objects.get(selectedPlacement)?.group;
+    selectedTools.hidden = !object;
+    if (!object) return;
+    selectedBounds.setFromObject(object);
+    selectedBounds.getCenter(selectedAnchor);
+    selectedAnchor.y = selectedBounds.max.y;
+    selectedAnchor.project(camera);
+    if (selectedAnchor.z < -1 || selectedAnchor.z > 1) {
+      selectedTools.hidden = true;
+      return;
+    }
+    const width = selectedTools.offsetWidth;
+    const height = selectedTools.offsetHeight;
+    const x = ((selectedAnchor.x + 1) * host.clientWidth) / 2 - width / 2;
+    const y = ((1 - selectedAnchor.y) * host.clientHeight) / 2 - height - 8;
+    // Keep the controls reachable at canvas edges and below the render actions.
+    selectedTools.style.left = `${Math.max(8, Math.min(host.clientWidth - width - 8, x))}px`;
+    selectedTools.style.top = `${Math.max(64, Math.min(host.clientHeight - height - 8, y))}px`;
+  };
 
   // Callouts sit on their surfaces' measured geometry: the middle of the
   // longest wall (just inside the room), above the floor or fixture, or under
@@ -656,6 +676,8 @@ export function mountRoomScene(
         meta.onPlacementSelect(id);
         return;
       }
+      selectPlacement(null);
+      meta.onPlacementSelect(null);
     }
     const r = el.getBoundingClientRect();
     ray.setFromCamera(
@@ -892,6 +914,7 @@ export function mountRoomScene(
   const loop = () => {
     frame = requestAnimationFrame(loop);
     controls.update();
+    positionSelectedTools();
     for (const c of cutaway) {
       // Walls whose outside faces the camera stand between it and the room.
       const facing = c.out.dot(toCamera.subVectors(camera.position, c.mid).setY(0).normalize());
@@ -957,9 +980,9 @@ export function mountRoomScene(
       cancelAnimationFrame(frame);
       observer.disconnect();
       renderer.domElement.removeEventListener('wheel', pageScroll, true);
-      selectedTools?.remove();
       controls.dispose();
       navigation.dispose();
+      selectedTools?.remove();
       renderer.dispose();
       renderer.domElement.remove();
       labels.domElement.remove();

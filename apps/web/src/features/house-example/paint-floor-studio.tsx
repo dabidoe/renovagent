@@ -1,4 +1,5 @@
 import './shared-design.css';
+import { openExampleCopy } from './example-copy.js';
 import { studioAssetAvailable } from '../room3d/available-assets.js';
 import { RoomDiagram } from './room-diagram.js';
 import { useDesignHistory } from './use-design-history.js';
@@ -988,17 +989,18 @@ function SizeEntry({
 }
 
 export function PaintFloorStudio({
-  project,
+  project: sourceProject,
   kicker,
   sources,
   actions,
   renderFloor,
-  onEditRoom,
-  onCeiling,
+  onEditRoom: sourceEditRoom,
+  onCeiling: sourceCeiling,
   roomTools,
   onIdeaUsed,
   savedDesign,
-  initialDesign,
+  initialDesign: templateDesign,
+  publicTemplate = false,
   autoImagine = true,
   autoSave = false,
   intake,
@@ -1018,14 +1020,53 @@ export function PaintFloorStudio({
   savedDesign?: SavedStudioDesign;
   // Validated bundled proposal, used only when this example has no browser draft.
   initialDesign?: StudioDesign;
+  publicTemplate?: boolean;
   // Own photos open before analysis; defer automatic finish choices until sizes are ready.
   autoImagine?: boolean;
   autoSave?: boolean;
   intake?: StudioDesign['intake'];
 }) {
+  const [exampleCopy, setExampleCopy] = useState(() =>
+    publicTemplate
+      ? openExampleCopy(
+          sourceProject,
+          templateDesign,
+          window.history.state,
+          (key) => localStorage.getItem(key),
+          () => crypto.randomUUID(),
+        )
+      : null,
+  );
+  const project = exampleCopy?.project ?? sourceProject;
+  const initialDesign = exampleCopy?.seed ?? templateDesign;
+  const onEditRoom =
+    exampleCopy && sourceEditRoom
+      ? (id: string, patch: Partial<StudioRoom>) =>
+          setExampleCopy(
+            (copy) =>
+              copy && {
+                ...copy,
+                project: {
+                  ...copy.project,
+                  rooms: copy.project.rooms.map((r) => (r.id === id ? { ...r, ...patch } : r)),
+                },
+              },
+          )
+      : sourceEditRoom;
+  const onCeiling =
+    exampleCopy && sourceCeiling
+      ? (ceilingFt: number) =>
+          setExampleCopy(
+            (copy) =>
+              copy && {
+                ...copy,
+                project: { ...copy.project, ceilingFt, ceilingNote: undefined },
+              },
+          )
+      : sourceCeiling;
   const localScope = savedDesign
     ? `${project.id}.saved.${savedDesign.projectId}.${savedDesign.revision}`
-    : project.id;
+    : (exampleCopy?.scope ?? project.id);
   const [roomId, setRoomIdState] = useState(project.rooms[0]?.id ?? '');
   const setRoomId = (id: string) => {
     setApplied(false);
@@ -1529,7 +1570,7 @@ export function PaintFloorStudio({
         ? ('listing-example' as const)
         : ('owner-studio' as const)),
     project: {
-      id: project.id,
+      id: exampleCopy?.scope ?? project.id,
       address: project.address,
       place: project.place,
       listing: project.listing,
@@ -1566,6 +1607,20 @@ export function PaintFloorStudio({
   const snapshotJson = JSON.stringify(
     validatedSnapshot.success ? validatedSnapshot.data : snapshot,
   );
+  const templateJson = useRef(snapshotJson);
+  const copyEdited =
+    !!exampleCopy && (exampleCopy.resumed || templateJson.current !== snapshotJson);
+  useEffect(() => {
+    if (!exampleCopy || !copyEdited) return;
+    window.history.replaceState(
+      {
+        ...window.history.state,
+        renovagentExampleCopy: { sourceId: sourceProject.id, scope: exampleCopy.scope },
+      },
+      '',
+      window.location.href,
+    );
+  }, [copyEdited, exampleCopy?.scope, sourceProject.id]);
   const [browserSavedJson, setBrowserSavedJson] = useState('');
   const [browserSaveFailed, setBrowserSaveFailed] = useState(false);
   useEffect(() => {
@@ -1696,11 +1751,17 @@ export function PaintFloorStudio({
   const latestSave = useRef(save);
   latestSave.current = save;
   useEffect(() => {
-    if ((!autoSave && !saveMeta) || saving || saveAccess || saveError || savedJson === snapshotJson)
+    if (
+      (!autoSave && !saveMeta && !copyEdited) ||
+      saving ||
+      saveAccess ||
+      saveError ||
+      savedJson === snapshotJson
+    )
       return;
     const timer = setTimeout(() => void latestSave.current(), 750);
     return () => clearTimeout(timer);
-  }, [autoSave, saveMeta, snapshotJson, savedJson, saving, saveAccess, saveError]);
+  }, [autoSave, copyEdited, saveMeta, snapshotJson, savedJson, saving, saveAccess, saveError]);
   const [working, setWorking] = useState<Record<string, string>>({});
   const [floorErrors, setFloorErrors] = useState<Record<string, string>>({});
   const [editCeiling, setEditCeiling] = useState(false);
@@ -2304,7 +2365,7 @@ export function PaintFloorStudio({
                     setFinishTool(null);
                   }}
                 >
-                  <Glyph name="paint" /> Design
+                  <Glyph name="paint" /> Render
                 </button>
                 <button
                   type="button"
