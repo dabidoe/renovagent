@@ -58,19 +58,21 @@ const restoreFile = (file: StoredFile) => {
   const sample = sampleRoomSchema.safeParse(file.sample);
   return sample.success ? tagSampleFile(restored, sample.data) : restored;
 };
-export async function loadOwnIntake(): Promise<OwnIntakeDraft | null> {
+export async function loadOwnIntake(draftId?: string): Promise<OwnIntakeDraft | null> {
   await writes.catch(() => {});
-  const draft = await access<StoredDraft | undefined>('readonly', (store) => store.get('current'));
+  const draft = await access<StoredDraft | undefined>('readonly', (store) =>
+    store.get(draftId ?? 'current'),
+  );
   return draft
     ? { ...draft, photos: draft.photos.map(restoreFile), plans: draft.plans.map(restoreFile) }
     : null;
 }
-export function saveOwnIntake(draft: OwnIntakeDraft | null): Promise<void> {
+export function saveOwnIntake(draft: OwnIntakeDraft | null, draftId?: string): Promise<void> {
   // Serialize saves and clears, including the last keystroke before Build.
   const next = writes
     .catch(() => {})
     .then(async () => {
-      if (!draft) await access('readwrite', (store) => store.delete('current'));
+      if (!draft) await access('readwrite', (store) => store.delete(draftId ?? 'current'));
       else
         await access('readwrite', (store) =>
           store.put(
@@ -79,7 +81,7 @@ export function saveOwnIntake(draft: OwnIntakeDraft | null): Promise<void> {
               photos: draft.photos.map(storeFile),
               plans: draft.plans.map(storeFile),
             } satisfies StoredDraft,
-            'current',
+            draftId ?? 'current',
           ),
         );
     });

@@ -4,7 +4,12 @@ import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/
 import { MongoWorkspaceRepository } from './repository.js';
 import { CatalogStore } from './catalog.js';
 import type { StudioPlanStore } from './studio-plans.js';
-import { McpAccessStore } from './mcp-access.js';
+import {
+  McpAccessStore,
+  fingerprintForToken,
+  isWellFormedMcpToken,
+  redactedFingerprint,
+} from './mcp-access.js';
 import { createWorkspaceMcpServer } from './mcp.js';
 import { DesignImageStore } from './design-images.js';
 import { workspaceMongoConfig } from './database-config.js';
@@ -135,24 +140,109 @@ export function mcpEndpoint(
       res.writeHead(status, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ error: message }));
     };
+    const failAuth = (code: string, fingerprint: string | null, message: string) => {
+      res.writeHead(401, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: message, code, fingerprint }));
+    };
     res.setHeader('Cache-Control', 'no-store');
     try {
-      const match = req.headers.authorization?.match(/^Bearer (reno_[A-Za-z0-9_-]{43})$/);
-      const grant = match ? await access.authenticate(match[1]) : null;
-      if (!grant || (grant.resource && grant.resource !== options.oauthResource?.())) {
-        const resource = options.oauthResource?.();
+      const resource = options.oauthResource?.();
+      const connectUrl = resource
+        ? new URL('/#connect', resource).href
+        : 'https://renovagent.app/#connect';
+      const deny = (code: string, fingerprint: string | null, message: string) => {
         res.setHeader(
           'WWW-Authenticate',
           resource
             ? `Bearer resource_metadata="${new URL('/.well-known/oauth-protected-resource/mcp', resource).href}", scope="renovagent:read"`
             : 'Bearer realm="renovagent", error="invalid_token"',
         );
-        fail(
-          401,
-          `An active Renovagent connector credential is required. Connect or create a key at ${resource ? new URL('/#connect', resource).href : 'https://renovagent.app/#connect'}. Website sign-in and connector credentials are separate.`,
+        // Server log carries only the redacted fingerprint, never the credential.
+        console.warn(`[mcp] auth denied code=${code} fp=${fingerprint ?? 'none'}`);
+        failAuth(
+          code,
+          fingerprint,
+          `${message} Connect or create a key at ${connectUrl}. Website sign-in and connector credentials are separate.`,
+        );
+      };
+      const header = req.headers.authorization ?? '';
+      const bearer = header.match(/^Bearer (.+)$/);
+      const presented = bearer ? bearer[1].trim() : '';
+      if (!presented) {
+        deny(
+          'MCP_MISSING_CREDENTIAL',
+          null,
+          'An active Renovagent connector credential is required.',
         );
         return;
       }
+      if (presented.startsWith('hsurr:')) {
+        deny(
+          'MCP_SURROGATE_CREDENTIAL',
+          fingerprintForToken(presented),
+          'The client sent a short-lived surrogate credential instead of the workspace key. Use the full key starting with reno_ from the connection page.',
+        );
+        return;
+      }
+      if (!isWellFormedMcpToken(presented)) {
+        deny(
+          'MCP_MALFORMED_CREDENTIAL',
+          fingerprintForToken(presented),
+          'The connector credential is malformed. Use the full key starting with reno_ from the connection page.',
+        );
+        return;
+      }
+      const fingerprint = fingerprintForToken(presented);
+      const grant = await access.authenticate(presented);
+      if (!grant) {
+        const stored = await access.inspect(presented);
+        if (!stored) {
+          deny(
+            'MCP_UNKNOWN_CREDENTIAL',
+            fingerprint,
+            'The connector credential is unknown. It may belong to another workspace or was never issued.',
+          );
+          return;
+        }
+        if (stored.revokedAt) {
+          deny(
+            'MCP_REVOKED_CREDENTIAL',
+            fingerprint,
+            'The connector credential was revoked. Create a new key to reconnect.',
+          );
+          return;
+        }
+        if (stored.expiresAt.getTime() <= Date.now()) {
+          deny(
+            'MCP_EXPIRED_CREDENTIAL',
+            fingerprint,
+            'The connector credential expired. Create a new key to reconnect.',
+          );
+          return;
+        }
+        deny('MCP_UNKNOWN_CREDENTIAL', fingerprint, 'The connector credential is not active.');
+        return;
+      }
+      if (grant.resource && grant.resource !== resource) {
+        console.warn(
+          `[mcp] auth denied code=MCP_WRONG_RESOURCE fp=${redactedFingerprint(grant._id)}`,
+        );
+        res.setHeader(
+          'WWW-Authenticate',
+          resource
+            ? `Bearer resource_metadata="${new URL('/.well-known/oauth-protected-resource/mcp', resource).href}", scope="renovagent:read"`
+            : 'Bearer realm="renovagent", error="invalid_token"',
+        );
+        failAuth(
+          'MCP_WRONG_RESOURCE',
+          redactedFingerprint(grant._id),
+          `This connector credential belongs to ${grant.resource}, not to this site's /mcp. Use a key made at ${connectUrl}. Website sign-in and connector credentials are separate.`,
+        );
+        return;
+      }
+      console.info(
+        `[mcp] auth ok fp=${redactedFingerprint(grant._id)} owner=${grant.ownerId} access=${grant.access}`,
+      );
       if (req.method !== 'POST') {
         res.setHeader('Allow', 'POST');
         fail(405, 'This stateless MCP endpoint accepts POST requests');

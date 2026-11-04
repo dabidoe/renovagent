@@ -112,7 +112,7 @@ try {
         };
       });
       assert.equal(style.color, 'rgb(255, 255, 255)');
-      assert.equal(style.decoration, 'underline');
+      assert.equal(style.decoration, 'none');
       assert.equal(style.decorationColor, 'rgb(8, 102, 255)');
       if (width >= 861) assert.equal(style.fontSize, '17px');
     }
@@ -141,14 +141,16 @@ try {
     await page.locator('.pf-gallery').waitFor();
     await page.goto('http://127.0.0.1:8818/#new-project');
     await page.locator('.pf-intake').waitFor();
-    assert.equal(new URL(page.url()).hash, '#new-project');
+    assert.match(new URL(page.url()).hash, /^#new-project\/own-[a-f0-9-]{36}$/);
     for (const [oldHash, hash, selector] of [
       ['#examples', '#studio', '.pf-gallery'],
       ['#your-project', '#new-project', '.pf-intake'],
     ]) {
       await page.goto(`http://127.0.0.1:8818/${oldHash}`);
       await page.locator(selector).waitFor();
-      assert.equal(new URL(page.url()).hash, hash);
+      if (hash === '#new-project')
+        assert.match(new URL(page.url()).hash, /^#new-project\/own-[a-f0-9-]{36}$/);
+      else assert.equal(new URL(page.url()).hash, hash);
     }
     await page.goto('http://127.0.0.1:8818');
     await page.locator('.studio-preview-open').click();
@@ -193,11 +195,11 @@ try {
     );
     await page.goto('http://127.0.0.1:8818', { waitUntil: 'networkidle' });
     await page.getByRole('button', { name: 'Start a project', exact: true }).click();
-    await page.locator('.pf-studio').waitFor();
+    await page.locator('.pf-intake').waitFor();
     assert.equal(
-      await page.locator('.pf-intake').count(),
-      0,
-      'Empty start resumes the built browser studio',
+      await page.locator('.pf-intake-idea').inputValue(),
+      '',
+      'New project opens an empty intake rather than resuming an old room',
     );
     assert.ok(
       await page.evaluate(() => !!localStorage.getItem('renovagent.own-project.v1')),
@@ -206,7 +208,7 @@ try {
     await context.close();
   }
   console.log(
-    'Account dialog, unobscured navigation, guest session, saved-design discovery, reload and empty-start recovery passed at 1440/1024/768/390/320 px.',
+    'Account dialog, unobscured navigation, guest session, saved-design discovery, reload and independent new-project intake passed at 1440/1024/768/390/320 px.',
   );
 } finally {
   await browser.close();

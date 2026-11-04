@@ -49,6 +49,26 @@ The public header now shows Sign in/Account and a visible My projects link. Navi
 
 `#projects` loads owner-scoped projects only after explicit navigation. Saved studio cards link to the latest recorded design revision; notes projects retain the older workspace picker. A separate browser-recovery card points to the current studio, which may contain unsynced edits. Failed reads show retry and do not report an empty account. Guest accounts explain how to retain access with Google.
 
-An empty home-page “try your own” action resumes the current studio instead of replacing it with an empty intake. Google navigation waits for queued intake file transactions, and intake recovery preserves the actual photo/plan files. This does not add cross-device browser-draft sync, automatic account-saving of browsed examples, or new server persistence. Existing studio autosave, revision conflicts and retry commands remain unchanged.
+The former empty-start recovery behavior is superseded by the independent new-project flow below. Google navigation waits for queued intake file transactions, and intake recovery preserves the actual photo/plan files. This does not add cross-device browser-draft sync, automatic account-saving of browsed examples, or new server persistence. Existing studio autosave, revision conflicts and retry commands remain unchanged.
 
 Verified locally: production build/types/boundaries; five focused sync/recovery tests; startup regression checks; 202 public UI guardrails; and `scripts/account-navigation-check.ts` at 1440/1024/768/390/320 px. The latter intercepts all API requests and checks unobscured navigation by hit-testing, sign-in dialog bounds, guest session updates, saved-design discovery and reload. Phone sign-in and phone/desktop project screenshots were visually reviewed in `.local/account-navigation-check/`. No real OAuth round-trip, production account write or deployment was performed.
+
+## Independent new-project drafts — November 4, local
+
+`#new-project` and explicit **New project** actions now allocate a fresh
+`#new-project/own-<uuid>` route. The draft owns its intake files/brief and built
+room snapshot in separate browser-storage entries, and the uploaded studio keeps
+that identity. Refreshing or revisiting that exact URL resumes only that draft.
+A new ID never inherits another project's photos, finishes, saved metadata or
+pending command. Home-page photos/briefs are handed only to the ID they opened.
+
+Saved account projects still open at `#design/<projectId>/<revision>` through
+the existing save/revision service. **Resume current studio** in My projects is
+explicit and points to the most recent recoverable draft; older shared browser
+recovery remains at `#resume-project`. Legacy browser records are retained.
+Creating another project does not clear a prior draft or saved project.
+
+Verification uses local built-site browser fixtures for distinct IDs, photo-file
+recovery, refresh, isolated first saves, exact failed-command replay, saved-design
+reopening, explicit resume, and a fresh start after home-page photo handoff.
+No production data, model calls, authentication changes or deployment.

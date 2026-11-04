@@ -1,6 +1,7 @@
 import { ProjectNotebook } from '../features/house-example/project-notebook.js';
 import { SharedDesign } from '../features/house-example/shared-design.js';
 import { OwnStudio, type OwnStart } from '../features/house-example/own-studio.js';
+import { ownStudioDraftId } from '../features/house-example/own-studio-route.js';
 import { HutchinsonStudio } from '../features/house-example/hutchinson-studio.js';
 import { ExamplesGallery, ListingStudio } from '../features/house-example/listing-studio.js';
 import { InspoExample } from '../features/house-example/inspo-example.js';
@@ -31,7 +32,9 @@ export default function PublicStudio({
   if (hash === '#connect') return <ConnectAgent />;
   if (hash.startsWith('#connect/approve/'))
     return <ApproveAgent key={hash} requestId={hash.split('/')[2]} />;
-  if (hash === '#new-project') return <OwnStudio key={start ? 'start' : 'own'} start={start} />;
+  const draftId = ownStudioDraftId(hash);
+  if (draftId) return <OwnStudio key={draftId} draftId={draftId} start={start} />;
+  if (hash === '#resume-project') return <OwnStudio />;
   if (hash === '#example-house')
     return <HutchinsonStudio onRoomExample={() => onOpen('#workspace/example-room')} />;
   if (hash.startsWith('#plan/')) return <SavedPlan key={hash} id={hash.slice('#plan/'.length)} />;

@@ -59,7 +59,7 @@ import { studioProviders, studioRoutes, type StudioProviders } from './studio.js
 import { StudioPlanStore } from './studio-plans.js';
 import { saveStudioDesign, readStudioDesign, prepareStudioHandoff } from './studio-designs.js';
 import { studioProject } from './mcp-studio.js';
-import { McpAccessStore } from './mcp-access.js';
+import { McpAccessStore, redactedFingerprint } from './mcp-access.js';
 import { mcpEndpoint } from './mcp-http.js';
 import { McpOAuth } from './mcp-oauth.js';
 import { StudioShares } from './studio-shares.js';
@@ -633,12 +633,17 @@ export async function createWorkspaceServer(
         if (!mcpAccess)
           throw new DomainError('NOT_FOUND', 'Agent connections are not enabled here');
         const endpoint = `${hosting.publicUrl?.origin ?? `http://127.0.0.1:${port}`}/mcp`;
+        // The fingerprint matches the redacted handle in /mcp 401 responses
+        // and server logs, so an owner can tell which key a client tried.
         const shown = (g: Awaited<ReturnType<McpAccessStore['active']>>[number]) => ({
           id: g._id,
           name: g.name,
           access: g.access,
           createdAt: g.createdAt,
           expiresAt: g.expiresAt,
+          fingerprint: redactedFingerprint(g._id),
+          workspace: g.ownerId,
+          lastUsedAt: g.lastUsedAt ?? null,
         });
         if (path === '/agent-keys' && req.method === 'GET') {
           json(200, { endpoint, keys: (await mcpAccess.active(activeRepo.ownerId)).map(shown) });

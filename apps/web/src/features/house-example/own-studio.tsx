@@ -17,20 +17,24 @@ import {
   type OwnStudioDraft as Saved,
 } from './own-analysis.js';
 import { loadOwnIntake, saveOwnIntake, type OwnIntakeDraft } from './own-intake-draft.js';
+import { newOwnStudioHash, ownStudioStore, rememberOwnStudio } from './own-studio-route.js';
 
-const STORE = 'renovagent.own-project.v1';
-function load(): Saved | null {
+function load(draftId?: string): Saved | null {
   try {
-    const saved = JSON.parse(localStorage.getItem(STORE) || 'null') as Saved | null;
+    const saved = JSON.parse(
+      localStorage.getItem(ownStudioStore(draftId)) || 'null',
+    ) as Saved | null;
     return saved?.project?.rooms?.length ? saved : null;
   } catch {
     return null;
   }
 }
-function keep(saved: Saved | null) {
+function keep(saved: Saved | null, draftId?: string) {
   try {
-    if (saved) localStorage.setItem(STORE, JSON.stringify(saved));
-    else localStorage.removeItem(STORE);
+    if (saved) {
+      localStorage.setItem(ownStudioStore(draftId), JSON.stringify(saved));
+      rememberOwnStudio(draftId);
+    } else localStorage.removeItem(ownStudioStore(draftId));
     return true;
   } catch {
     // The project still works for this visit.
@@ -50,11 +54,13 @@ export type OwnStart = { idea: string; photos: File[] };
 function Intake({
   start,
   draft,
+  draftId,
   onBuilt,
   onSignedIn,
 }: {
   start?: OwnStart | null;
   draft?: OwnIntakeDraft | null;
+  draftId?: string;
   onBuilt: (saved: Saved) => void;
   onSignedIn?: () => Promise<void>;
 }) {
@@ -83,13 +89,15 @@ function Intake({
   useEffect(() => {
     let live = true;
     setRecovery(hasDraft ? 'Saving draft in this browser…' : '');
-    void saveOwnIntake({ where, ceiling, idea, photos, plans }).then(
-      () =>
-        live &&
-        hasDraft &&
-        setRecovery(
-          'Photo files and brief saved in this browser. No project saved to your account yet.',
-        ),
+    void saveOwnIntake({ where, ceiling, idea, photos, plans }, draftId).then(
+      () => {
+        if (!hasDraft) return;
+        rememberOwnStudio(draftId);
+        if (live)
+          setRecovery(
+            'Photo files and brief saved in this browser. No project saved to your account yet.',
+          );
+      },
       () =>
         live &&
         hasDraft &&
@@ -100,7 +108,7 @@ function Intake({
     return () => {
       live = false;
     };
-  }, [where, ceiling, idea, photos, plans, hasDraft]);
+  }, [where, ceiling, idea, photos, plans, hasDraft, draftId]);
   const build = async () => {
     setError('');
     const list: Step[] = [
@@ -115,7 +123,7 @@ function Intake({
     };
     advance(0);
     try {
-      await saveOwnIntake({ where, ceiling, idea, photos, plans }).catch(() => {
+      await saveOwnIntake({ where, ceiling, idea, photos, plans }, draftId).catch(() => {
         setRecovery('Draft recovery is unavailable in this browser. Keep this tab open.');
       });
       const session = (await workspaceRequest('/session')) as {
@@ -137,6 +145,7 @@ function Intake({
       const planShas = await Promise.all(plans.map(upload));
       onBuilt(
         uploadedOwnStudio({
+          id: draftId,
           photos: photoShas,
           plans: planShas,
           where,
@@ -316,10 +325,12 @@ export function OwnStudio({
   start,
   initialDesign,
   onSignedIn,
+  draftId,
 }: {
   start?: OwnStart | null;
   initialDesign?: SavedStudioDesign;
   onSignedIn?: () => Promise<void>;
+  draftId?: string;
 }) {
   const recoveredDesign = useMemo(() => {
     if (!initialDesign) return undefined;
@@ -333,7 +344,8 @@ export function OwnStudio({
       return initialDesign;
     }
   }, [initialDesign]);
-  // A new start from the home page replaces the project kept in the browser.
+  // Each new route restores only its own draft; saved designs keep their
+  // existing account identity and legacy drafts use the explicit resume route.
   const [draft, setDraft] = useState<OwnIntakeDraft | null>(null);
   const [usedStart, setUsedStart] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
@@ -356,21 +368,22 @@ export function OwnStudio({
   useEffect(() => {
     if (initialDesign) return;
     let live = true;
-    void loadOwnIntake()
+    void loadOwnIntake(draftId)
       .catch(() => null)
       .then((pending) => {
         if (!live) return;
         // An explicit new photo set wins; a recoverable intake wins over an older built room.
-        const restored = start?.photos.length ? null : pending;
+        const restored = start ? null : pending;
         setDraft(restored);
-        setSaved(start || restored?.photos.length || restored?.idea ? null : load());
+        setSaved(start || restored?.photos.length || restored?.idea ? null : load(draftId));
       });
     return () => {
       live = false;
     };
-  }, [initialDesign, start]);
+  }, [initialDesign, start, draftId]);
   const keepLocal = (next: Saved | null) => {
-    if (!initialDesign && keep(next) && next) void saveOwnIntake(null).catch(() => {});
+    if (!initialDesign && keep(next, draftId) && next)
+      void saveOwnIntake(null, draftId).catch(() => {});
   };
   const commit = (next: Saved | null) => {
     if (next) setUsedStart(true);
@@ -423,6 +436,7 @@ export function OwnStudio({
       <Intake
         start={usedStart ? null : start}
         draft={draft}
+        draftId={draftId}
         onBuilt={(next) => {
           commit(next);
           void analyze(next);
@@ -560,17 +574,10 @@ export function OwnStudio({
             type="button"
             className="pf-reset"
             onClick={() => {
-              if (
-                !window.confirm(
-                  'Start a new room? Save this project first to keep an account link. This replaces the current browser room.',
-                )
-              )
-                return;
-              setDraft(null);
-              commit(null);
+              window.location.hash = newOwnStudioHash();
             }}
           >
-            Start over
+            New project
           </button>
         }
       />

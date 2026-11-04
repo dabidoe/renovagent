@@ -164,7 +164,10 @@ async function run(browser: Browser, directory: string, before = false) {
         );
         await page.screenshot({ path: `${out}/landing-${mode}.png` });
 
-        await page.getByRole('button', { name: 'Try studio', exact: true }).click();
+        await page
+          .locator('.landing-hero')
+          .getByRole('button', { name: 'Try studio', exact: true })
+          .click();
         await page.locator('.pf-gallery').waitFor();
         assert.equal(
           api.filter((path) => path !== '/api/workspace/session').length,
@@ -268,7 +271,10 @@ async function run(browser: Browser, directory: string, before = false) {
           'sign-in failure is shown and consumed',
         );
         await page.getByRole('button', { name: 'Dismiss', exact: true }).click();
-        await page.getByRole('button', { name: 'Try studio', exact: true }).click();
+        await page
+          .locator('.landing-hero')
+          .getByRole('button', { name: 'Try studio', exact: true })
+          .click();
         await page.locator('.pf-gallery').waitFor();
         assert.ok(
           await page.locator('.pf-gallery').isVisible(),

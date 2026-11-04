@@ -11,6 +11,7 @@ export type McpGrant = {
   createdAt: Date;
   expiresAt: Date;
   revokedAt: Date | null;
+  lastUsedAt: Date | null;
   clientId?: string;
   resource?: string;
 };
@@ -55,6 +56,7 @@ export class McpAccessStore {
       createdAt: new Date(),
       expiresAt: new Date(Date.now() + hours * 3600_000),
       revokedAt: null,
+      lastUsedAt: null,
       ...(input.clientId ? { clientId: input.clientId, resource: input.resource } : {}),
     };
     await this.grants.insertOne(grant);
@@ -62,12 +64,29 @@ export class McpAccessStore {
   }
 
   async authenticate(token: string): Promise<McpGrant | null> {
-    if (!/^reno_[A-Za-z0-9_-]{43}$/.test(token)) return null;
-    return this.grants.findOne({
+    if (!isWellFormedMcpToken(token)) return null;
+    const grant = await this.grants.findOne({
       _id: hash(token),
       revokedAt: null,
       expiresAt: { $gt: new Date() },
     });
+    if (grant) {
+      // Best-effort presence signal for the owner's key list. Fire-and-forget:
+      // the write must never delay or fail the request the key just
+      // authorized, especially under the slow-request budget.
+      const at = new Date();
+      grant.lastUsedAt = at;
+      void this.grants.updateOne({ _id: grant._id }, { $set: { lastUsedAt: at } }).catch(() => {});
+    }
+    return grant;
+  }
+
+  // Diagnosis only: the stored grant for a well-formed credential, even when
+  // revoked or expired, so /mcp can name the failure without changing the
+  // allow/deny decision. Returns null for malformed credentials.
+  async inspect(token: string): Promise<McpGrant | null> {
+    if (!isWellFormedMcpToken(token)) return null;
+    return this.grants.findOne({ _id: hash(token) });
   }
 
   // With an owner, only that owner's grant can be revoked (the website); the
@@ -91,4 +110,23 @@ export class McpAccessStore {
 
 function hash(token: string) {
   return createHash('sha256').update(token).digest('hex');
+}
+
+export function isWellFormedMcpToken(token: string) {
+  return /^reno_[A-Za-z0-9_-]{43}$/.test(token);
+}
+
+export function hashMcpToken(token: string) {
+  return hash(token);
+}
+
+// Redacted correlation handle: enough to match a 401 response to a server log
+// line and to the owner's key list, never enough to reconstruct the key.
+export function redactedFingerprint(hashHex: string) {
+  if (!/^[a-f0-9]{64}$/.test(hashHex)) return 'invalid-key';
+  return `${hashHex.slice(0, 8)}…${hashHex.slice(-4)}`;
+}
+
+export function fingerprintForToken(token: string) {
+  return redactedFingerprint(hash(token));
 }

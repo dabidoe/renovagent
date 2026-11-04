@@ -3,13 +3,15 @@ import { BrandMark } from '../components/brand-mark.js';
 import { AccountAccess } from '../features/connect/account-access.js';
 import { Landing } from '../features/landing/landing.js';
 import type { OwnStart } from '../features/house-example/own-studio.js';
+import { newOwnStudioHash, ownStudioDraftId } from '../features/house-example/own-studio-route.js';
 import { canonicalPublicHash, landingAnchors, publicRoute } from './public-routes.js';
 
 const Studio = lazy(() => import('./public-studio.js'));
 const Workspace = lazy(() => import('./workspace-entry.js'));
 
 function currentHash() {
-  const hash = canonicalPublicHash(window.location.hash);
+  const canonical = canonicalPublicHash(window.location.hash);
+  const hash = canonical === '#new-project' ? newOwnStudioHash() : canonical;
   if (hash !== window.location.hash) {
     window.history.replaceState(
       null,
@@ -42,7 +44,7 @@ export function PublicApp() {
   const [hash, setHash] = useState(currentHash);
   const [prompt, setPrompt] = useState('');
   const [photos, setPhotos] = useState<File[]>([]);
-  const [start, setStart] = useState<OwnStart | null>(null);
+  const [handoff, setHandoff] = useState<{ hash: string; start: OwnStart } | null>(null);
   const [authError, setAuthError] = useState(
     () => new URLSearchParams(window.location.search).get('auth') === 'error',
   );
@@ -64,7 +66,7 @@ export function PublicApp() {
     return () => window.removeEventListener('hashchange', sync);
   }, []);
   useEffect(() => {
-    if (hash !== '#new-project') setStart(null);
+    if (!ownStudioDraftId(hash)) setHandoff(null);
     if (landing && landingAnchors.has(hash)) {
       const frame = requestAnimationFrame(() =>
         document.getElementById(hash.slice(1))?.scrollIntoView({ block: 'start' }),
@@ -78,6 +80,9 @@ export function PublicApp() {
       window.location.hash.startsWith('#connect/approve/') ||
       window.location.hash.startsWith('#share/') ||
       window.location.hash.startsWith('#project/') ||
+      window.location.hash.startsWith('#design/') ||
+      window.location.hash.startsWith('#plan/') ||
+      ownStudioDraftId(window.location.hash) ||
       window.location.hash === '#notebook'
     )
       return;
@@ -85,22 +90,23 @@ export function PublicApp() {
       const brief = sessionStorage.getItem('renovagent.project-brief');
       if (brief) {
         sessionStorage.removeItem('renovagent.project-brief');
-        setStart({ idea: brief.slice(0, 300), photos: [] });
-        window.location.hash = '#new-project';
+        const to = newOwnStudioHash();
+        setHandoff({ hash: to, start: { idea: brief.slice(0, 300), photos: [] } });
+        window.location.hash = to;
       }
     } catch {
       // The public site also works without session storage.
     }
   }, []);
   const open = (to: string) => {
-    window.location.hash = to;
+    window.location.hash = to === '#new-project' ? newOwnStudioHash() : to;
     window.scrollTo({ top: 0 });
   };
   const own = (idea?: string) => {
     const brief = idea ?? prompt.trim();
-    // An empty ‘try your own’ action resumes recovery instead of replacing it.
-    setStart(brief || photos.length ? { idea: brief, photos } : null);
-    open('#new-project');
+    const to = newOwnStudioHash();
+    setHandoff({ hash: to, start: { idea: brief, photos } });
+    open(to);
   };
   const errorBanner = authError && (
     <div className="error-banner" role="alert">
@@ -163,7 +169,11 @@ export function PublicApp() {
         <main className="prompt-main has-room">
           <RouteBoundary key={hash}>
             <Suspense fallback={<PageLoading />}>
-              <Studio hash={hash} start={start} onOpen={open} />
+              <Studio
+                hash={hash}
+                start={handoff?.hash === hash ? handoff.start : null}
+                onOpen={open}
+              />
             </Suspense>
           </RouteBoundary>
         </main>

@@ -89,3 +89,15 @@ test('starting again with the same photo creates an independent studio and prese
   });
   assert.equal(updated.project.id, first.project.id);
 });
+
+test('uploaded rooms retain the identity assigned when their new draft was opened', () => {
+  const draft = uploadedOwnStudio({
+    id: 'own-draft-one',
+    photos: [sha],
+    plans: [],
+    where: 'New room',
+    ceilingFt: null,
+    idea: '',
+  });
+  assert.equal(draft.project.id, 'own-draft-one');
+});

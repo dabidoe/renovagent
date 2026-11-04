@@ -226,7 +226,7 @@ export function ExamplesGallery({ onOpen }: { onOpen: (route: string) => void })
         <button type="button" className="pf-card is-own" onClick={() => onOpen('#new-project')}>
           <Glyph name="plus" />
           <span>
-            <b>Your project</b>
+            <b>New project</b>
             <small>Your photos and floor plan</small>
           </span>
         </button>

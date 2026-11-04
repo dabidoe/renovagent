@@ -11,7 +11,15 @@ import './connect-agent.css';
 // address and keys the owner makes here. A key is shown once, when it is
 // made; examples on this page only ever show a placeholder.
 
-type Key = { id: string; name: string; access: 'read' | 'propose'; expiresAt: string };
+type Key = {
+  id: string;
+  name: string;
+  access: 'read' | 'propose';
+  expiresAt: string;
+  fingerprint: string;
+  workspace: string;
+  lastUsedAt: string | null;
+};
 const PLACEHOLDER = 'reno_YOUR_KEY';
 const EXAMPLE_REQUESTS = [
   'What would my room look like as a study? I want white hardwood floors and cream-colored paint.',
@@ -280,7 +288,13 @@ export function ConnectAgent() {
                   <span>
                     <b>{k.name}</b>
                     <small>
-                      Expires{' '}
+                      Key {k.fingerprint} · Workspace {k.workspace}
+                    </small>
+                    <small>
+                      {k.lastUsedAt
+                        ? `Last used ${new Date(k.lastUsedAt).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}`
+                        : 'Never used yet'}{' '}
+                      · Expires{' '}
                       {new Date(k.expiresAt).toLocaleDateString(undefined, {
                         month: 'short',
                         day: 'numeric',

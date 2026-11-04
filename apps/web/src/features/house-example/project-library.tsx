@@ -3,6 +3,7 @@ import { workspaceSchema } from '@renovagent/contracts';
 import { workspaceRequest, type SessionInfo } from '../../adapters/http/project-repository.js';
 import { SignInChoices } from '../connect/sign-in.js';
 import { loadOwnIntake } from './own-intake-draft.js';
+import { ownStudioDraftId, ownStudioStore, resumeOwnStudioHash } from './own-studio-route.js';
 
 type Entry = { id: string; name: string; revision?: number; rooms?: number };
 export function ProjectLibrary() {
@@ -12,18 +13,24 @@ export function ProjectLibrary() {
   const [error, setError] = useState('');
   const [draft, setDraft] = useState(false);
   const [attempt, setAttempt] = useState(0);
+  const recoveryHash = resumeOwnStudioHash();
   useEffect(() => {
     let live = true;
     setLoading(true);
     setError('');
-    void loadOwnIntake()
+    void loadOwnIntake(ownStudioDraftId(recoveryHash) ?? undefined)
       .then((value) => {
-        if (live && value && (value.idea || value.photos.length || value.plans.length))
+        if (
+          live &&
+          value &&
+          (value.idea || value.where || value.ceiling || value.photos.length || value.plans.length)
+        )
           setDraft(true);
       })
       .catch(() => {});
     try {
-      if (localStorage.getItem('renovagent.own-project.v1')) setDraft(true);
+      if (localStorage.getItem(ownStudioStore(ownStudioDraftId(recoveryHash) ?? undefined)))
+        setDraft(true);
     } catch {
       /* Browser recovery may be unavailable. */
     }
@@ -56,7 +63,7 @@ export function ProjectLibrary() {
     return () => {
       live = false;
     };
-  }, [attempt]);
+  }, [attempt, recoveryHash]);
   const signedOut = session?.mode === 'account' && !session.signedIn;
   return (
     <section className="project-library" aria-labelledby="project-library-title">
@@ -66,8 +73,7 @@ export function ProjectLibrary() {
           <p>Pick up where you left off, or explore a different idea.</p>
         </div>
         <div>
-          <a href="#new-project">Continue your studio</a> ·{' '}
-          <a href="#notebook">Start project notes</a>
+          <a href="#new-project">New project</a> · <a href="#notebook">Start project notes</a>
         </div>
       </header>
       {draft && (
@@ -77,7 +83,7 @@ export function ProjectLibrary() {
             Browser recovery · may include changes waiting to sync. Open this first if you recently
             edited a room.
           </p>
-          <a href="#new-project">Resume current studio</a>
+          <a href={recoveryHash}>Resume current studio</a>
         </article>
       )}
       {loading ? (

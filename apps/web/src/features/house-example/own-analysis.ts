@@ -18,6 +18,7 @@ type RoomAnalysis = {
 // Upload completion is enough to open the room. Unknowns stay unknown until
 // analysis succeeds or the owner enters measurements.
 export function uploadedOwnStudio(input: {
+  id?: string;
   photos: string[];
   plans: string[];
   where: string;
@@ -30,7 +31,7 @@ export function uploadedOwnStudio(input: {
     analysis: { photos: input.photos, plans: input.plans },
     project: {
       ...ownProject({
-        id: `own-${crypto.randomUUID()}`,
+        id: input.id ?? `own-${crypto.randomUUID()}`,
         address: listing ? 'Your listing' : input.where.trim() || 'Your project',
         ...(listing ? { listing } : {}),
         ceilingFt: input.ceilingFt,

@@ -5,6 +5,11 @@ import {
   loadOwnIntake,
   saveOwnIntake,
 } from '../../apps/web/src/features/house-example/own-intake-draft.js';
+import {
+  newOwnStudioHash,
+  ownStudioDraftId,
+} from '../../apps/web/src/features/house-example/own-studio-route.js';
+import { publicRoute } from '../../apps/web/src/app/public-routes.js';
 
 test('failed-build intake restores actual photo/plan bytes and the latest brief; clear is ordered after pending saves', async () => {
   globalThis.indexedDB = indexedDB;
@@ -45,4 +50,32 @@ test('failed-build intake restores actual photo/plan bytes and the latest brief;
     null,
     'a completed build cannot be resurrected by an earlier draft save',
   );
+});
+
+test('new projects isolate intake files and briefs by route ID, preserving other drafts and legacy recovery', async () => {
+  globalThis.indexedDB = indexedDB;
+  const firstHash = newOwnStudioHash();
+  const secondHash = newOwnStudioHash();
+  assert.notEqual(firstHash, secondHash);
+  assert.equal(publicRoute(firstHash), 'studio');
+  assert.equal(publicRoute('#resume-project'), 'studio');
+  const firstId = ownStudioDraftId(firstHash)!;
+  const secondId = ownStudioDraftId(secondHash)!;
+  const draft = {
+    idea: 'First project only',
+    where: 'First room',
+    ceiling: '',
+    photos: [new File(['first photo'], 'first.jpg', { type: 'image/jpeg' })],
+    plans: [],
+  };
+  await saveOwnIntake({ ...draft, idea: 'Legacy recovery' });
+  await saveOwnIntake(draft, firstId);
+  assert.equal(await loadOwnIntake(secondId), null);
+  await saveOwnIntake({ ...draft, idea: 'Second project only', photos: [] }, secondId);
+  assert.equal((await loadOwnIntake(firstId))?.idea, 'First project only');
+  assert.equal(await (await loadOwnIntake(firstId))?.photos[0].text(), 'first photo');
+  assert.equal((await loadOwnIntake(secondId))?.idea, 'Second project only');
+  await saveOwnIntake(null, secondId);
+  assert.equal((await loadOwnIntake(firstId))?.where, 'First room');
+  assert.equal((await loadOwnIntake())?.idea, 'Legacy recovery');
 });

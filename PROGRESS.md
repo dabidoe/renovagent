@@ -1,5 +1,16 @@
 # Project status — Renovagent
 
+Independent new-project drafts (November 4, local): New project now opens a blank
+`#new-project/own-<uuid>` draft, with separate intake files, browser snapshot and
+save-command identity. Refresh resumes only that ID. Saved account designs retain
+their existing links; My projects has an explicit Resume current studio action.
+Legacy browser recovery stays available, and starting another project does not
+erase previous drafts. Home-page photo/brief handoff is scoped to its original ID.
+Build/types/boundaries, seven focused tests, 18 desktop/phone browser scenarios,
+public startup and five-width account/navigation checks pass. Browser API replies
+were fixtures; no live data, provider calls, auth changes or deployment. See
+`docs/architecture/public-startup.md`.
+
 UI guardrail recovery (November 4, local): the current suite timed out at the old
 "Save to workspace" action after copy-on-edit autosave had changed it to retry.
 The check now expects independent copy identities, permits only workspace-copy
