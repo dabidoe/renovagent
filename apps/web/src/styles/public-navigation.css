@@ -46,6 +46,24 @@
   outline: 2px solid var(--brand-blue-text, #2563eb);
   outline-offset: 2px;
 }
+.prompt-workspace.is-landing .public-navigation > a,
+.prompt-workspace.is-landing .public-navigation > .public-account {
+  color: #fff;
+  text-decoration: underline;
+  text-decoration-color: #0866ff;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 5px;
+}
+.prompt-workspace.is-landing .public-navigation > a:focus-visible,
+.prompt-workspace.is-landing .public-navigation > .public-account:focus-visible {
+  outline-color: #fff;
+}
+@media (min-width: 861px) {
+  .prompt-workspace.is-landing .public-navigation > a,
+  .prompt-workspace.is-landing .public-navigation > .public-account {
+    font-size: 17px;
+  }
+}
 .public-account-projects {
   display: block;
   margin-top: 20px;

@@ -102,7 +102,19 @@ try {
     ]);
     assert.equal(await nav.getByRole('button', { name: 'Account', exact: true }).count(), 1);
     for (const item of await nav.locator(':scope > a, :scope > button').all()) {
-      assert.equal(await item.evaluate((el) => getComputedStyle(el).color), 'rgb(37, 99, 235)');
+      const style = await item.evaluate((el) => {
+        const computed = getComputedStyle(el);
+        return {
+          color: computed.color,
+          decoration: computed.textDecorationLine,
+          decorationColor: computed.textDecorationColor,
+          fontSize: computed.fontSize,
+        };
+      });
+      assert.equal(style.color, 'rgb(255, 255, 255)');
+      assert.equal(style.decoration, 'underline');
+      assert.equal(style.decorationColor, 'rgb(8, 102, 255)');
+      if (width >= 861) assert.equal(style.fontSize, '17px');
     }
     await page.screenshot({ path: `${out}/header-${width}.png` });
     for (const link of await nav.getByRole('link').all()) {
