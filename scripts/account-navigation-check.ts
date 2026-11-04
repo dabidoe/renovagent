@@ -95,10 +95,10 @@ try {
     });
     await page.goto('http://127.0.0.1:8818', { waitUntil: 'networkidle' });
     const nav = page.getByRole('navigation', { name: 'Main navigation' });
-    assert.deepEqual(await nav.getByRole('link').allTextContents(), [
+    assert.deepEqual(await nav.locator(':scope > a, :scope > button').allTextContents(), [
       'Connect',
       'Studio',
-      '+ New Project',
+      'Account',
     ]);
     assert.equal(await nav.getByRole('button', { name: 'Account', exact: true }).count(), 1);
     for (const item of await nav.locator(':scope > a, :scope > button').all()) {
@@ -127,7 +127,7 @@ try {
     );
     await page.reload();
     await page.locator('.pf-gallery').waitFor();
-    await nav.getByRole('link', { name: '+ New Project', exact: true }).click();
+    await page.goto('http://127.0.0.1:8818/#new-project');
     await page.locator('.pf-intake').waitFor();
     assert.equal(new URL(page.url()).hash, '#new-project');
     for (const [oldHash, hash, selector] of [

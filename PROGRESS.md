@@ -1,5 +1,16 @@
 # Project status — Renovagent
 
+UI guardrail recovery (November 4, local): the current suite timed out at the old
+"Save to workspace" action after copy-on-edit autosave had changed it to retry.
+The check now expects independent copy identities, permits only workspace-copy
+sync requests, waits for visible draft-save confirmation before reload, and verifies
+paint, floor and dimensions after pending-command retry. The accessibility helper
+also checks every collapsed details ancestor instead of counting hidden nested
+summaries as unnamed visible controls. No product layout/CSS changes. Playwright
+Chromium passes all 202 checks, including all eight 320 px sample editor checks;
+types, formatting and diff checks pass. Evidence:
+`.local/ui-check/2026-11-04T15-52-55-043Z/`. No live services or deployment.
+
 Public examples as templates (November 4, local): listings, furnished concepts and
 prepared samples open pristine, ignoring legacy example-keyed browser edits/save
 pointers. The first edit automatically creates an independent owner project through

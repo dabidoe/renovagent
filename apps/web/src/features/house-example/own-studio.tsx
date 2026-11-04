@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { validateIntakePhotos } from '../../app/project-intake.js';
 import { pendingStudioSave, restorePendingStudioDesign } from './studio-sync.js';
 import { workspaceRequest } from '../../adapters/http/project-repository.js';
 import { AddPhotoSheet } from '../project-start/add-photo-sheet.js';
@@ -70,6 +71,13 @@ function Intake({
   const [needsAccess, setNeedsAccess] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
   const planInput = useRef<HTMLInputElement>(null);
+  // Tiny previews for the selected files; revoked when the selection changes.
+  const [thumbUrls, setThumbUrls] = useState<string[]>([]);
+  useEffect(() => {
+    const urls = photos.map((file) => URL.createObjectURL(file));
+    setThumbUrls(urls);
+    return () => urls.forEach((url) => URL.revokeObjectURL(url));
+  }, [photos]);
   // Nothing typed or picked yet: still save (clears an old draft), but say nothing.
   const hasDraft = !!(where || ceiling || idea || photos.length || plans.length);
   useEffect(() => {
@@ -186,7 +194,18 @@ function Intake({
           accept="image/*"
           multiple
           hidden
-          onChange={(e) => setPlans([...(e.target.files ?? [])].slice(0, 2))}
+          onChange={(e) => {
+            const next = [...(e.target.files ?? [])].slice(0, 2);
+            e.target.value = '';
+            try {
+              validateIntakePhotos(next);
+            } catch (err) {
+              setError(err instanceof Error ? err.message : String(err));
+              return;
+            }
+            setError('');
+            setPlans(next);
+          }}
         />
       </div>
       {sheetOpen && (
@@ -195,7 +214,24 @@ function Intake({
           onClose={() => setSheetOpen(false)}
         />
       )}
-      {!!photos.length && <p className="pf-sub">{photos.map((file) => file.name).join(' · ')}</p>}
+      {!!photos.length && (
+        <ul className="pf-photo-thumbs" aria-label="Selected room photos">
+          {photos.map((file, index) => (
+            <li key={`${file.name}-${file.size}-${file.lastModified}`}>
+              <img
+                src={thumbUrls[index]}
+                alt=""
+                onError={(event) => {
+                  // Formats the browser cannot render (e.g. HEIC in Chrome)
+                  // fall back to the filename alone.
+                  event.currentTarget.style.display = 'none';
+                }}
+              />
+              <span>{file.name}</span>
+            </li>
+          ))}
+        </ul>
+      )}
       <label className="pf-field">
         <span>What do you imagine?</span>
         <input

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { validateIntakePhotos } from '../../app/project-intake.js';
 import { Modal } from '../../components/modal.js';
 import { StudioError } from '../house-example/studio-error.js';
 import {
@@ -105,6 +106,13 @@ export function AddPhotoSheet({
   }, [gallery, attempt]);
   const accept = (files: File[]) => {
     if (!files.length) return;
+    try {
+      validateIntakePhotos(files);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+      return;
+    }
+    setError('');
     onFiles(files);
     onClose();
   };

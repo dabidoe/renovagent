@@ -142,9 +142,6 @@ export function PublicApp() {
           >
             Studio
           </a>
-          <a href="#new-project" aria-current={hash === '#new-project' ? 'page' : undefined}>
-            + New Project
-          </a>
           <AccountAccess />
         </nav>
       </header>

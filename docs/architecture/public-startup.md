@@ -2,8 +2,9 @@
 
 ## Simplified header — November 4, local
 
-The public header contains Connect, Studio, + New Project and Account. Studio
-opens the gallery at `#studio`; + New Project opens photo intake at `#new-project`.
+The public header is limited to Connect, Studio and Account. Studio opens the
+gallery at `#studio`; project intake remains available at `#new-project` through
+the homepage project action.
 The old `#examples` and `#your-project` fragments are replaced with their canonical
 routes on entry, retaining existing shared links and sign-in returns. Both homepage
 gallery buttons read “Try studio.” Header links wrap when needed on narrow phones.
@@ -11,7 +12,7 @@ Account retains sign-in, guest recovery and sign-out; Open my projects is inside
 the account dialog and remains available before sign-in. The Google sign-in and
 guest recovery actions include a decorative multicolor Google G. Session requests,
 provider configuration, draft flushing and OAuth redirects are unchanged.
-The offline account-navigation check covers header labels, four header actions,
+The offline account-navigation check covers header labels, exactly three header actions,
 Google icons, guest sign-in, saved-project access and recovery at
 1440/1024/768/390/320 px. No real OAuth, production writes or deployment.
 

@@ -77,9 +77,16 @@ function unnamedControls(page: Page) {
       const r = el.getBoundingClientRect();
       if (!r.width || !r.height) return false;
       if (el.closest('[aria-hidden="true"], [hidden], [inert]')) return false;
-      // Content of a closed <details> is not rendered (its text reads as empty).
-      const details = el.closest('details');
-      if (details && !details.open && !el.closest('summary')) return false;
+      // Only a closed details element's own summary is visible. Nested summaries
+      // remain hidden by a collapsed outer details, even if they have layout boxes.
+      for (let parent = el.parentElement; parent; parent = parent.parentElement) {
+        if (
+          parent instanceof HTMLDetailsElement &&
+          !parent.open &&
+          !parent.querySelector(':scope > summary')?.contains(el)
+        )
+          return false;
+      }
       const s = getComputedStyle(el);
       return s.visibility !== 'hidden' && s.display !== 'none';
     };
@@ -184,6 +191,7 @@ async function budgetChecks(browser: Browser, base: string) {
       changed !== total && changed.startsWith('$'),
       changed,
     );
+    await waitForStudioDraft(page);
     await page.reload();
     await page.locator('.pf-stage-bar').waitFor();
     await page.getByRole('button', { name: 'Edit room measurements', exact: true }).click();
@@ -224,6 +232,16 @@ async function budgetChecks(browser: Browser, base: string) {
     );
     await close();
   }
+}
+
+async function waitForStudioDraft(page: Page) {
+  // Copy drafts are debounced. Reload only after these edits are confirmed saved.
+  await page
+    .locator('.pf-autosave-status', {
+      hasText:
+        /^(Autosaved (?:in this browser|to workspace)|Workspace sync failed · browser copy saved)$/,
+    })
+    .waitFor();
 }
 
 async function preparedSampleChecks(browser: Browser, base: string) {
@@ -269,6 +287,7 @@ async function preparedSampleChecks(browser: Browser, base: string) {
       await page.getByRole('button', { name: 'Edit room measurements', exact: true }).click();
       await page.getByRole('textbox', { name: 'Width in feet', exact: true }).fill('15');
       await page.locator('.pf-size button[type="submit"]').click();
+      await waitForStudioDraft(page);
       await page.reload({ waitUntil: 'networkidle' });
       await page
         .getByRole('group', { name: 'Preview tools', exact: true })
@@ -360,16 +379,16 @@ async function preparedSampleChecks(browser: Browser, base: string) {
       });
     }
     check(
-      `${vp.tag}: browsing and editing samples needs no uploads, account creation or model calls`,
-      writes.length === 0,
+      `${vp.tag}: sample edits only sync private copies, without uploads, account creation or model calls`,
+      writes.every((url) => new URL(url).pathname === '/api/workspace/studio-designs'),
       writes.join(', '),
     );
     if (!baseArg) {
       let payload:
         | {
             snapshot: {
-              project: { id: string; place?: string };
-              picks: Record<string, { floorStyle?: string }>;
+              project: { id: string; rooms: { id: string; size?: { xFt: number } }[] };
+              picks: Record<string, { floorStyle?: string; color?: { code: string } }>;
             };
           }
         | undefined;
@@ -381,12 +400,19 @@ async function preparedSampleChecks(browser: Browser, base: string) {
           body: JSON.stringify({ projectId: 'sample-fixture', revision: 1 }),
         });
       });
-      await page.getByRole('button', { name: 'Save to workspace', exact: true }).click();
+      // Editing a public template now autosaves its private copy. The offline API
+      // makes that sync fail; retry the pending save once the fixture is installed.
+      await page.getByRole('button', { name: 'Retry workspace sync', exact: true }).click();
+      // A pending command is replayed before newer edits; wait for the whole sync.
+      await page.locator('.pf-autosave-status', { hasText: 'Autosaved to workspace' }).waitFor();
       await page.waitForFunction(() => location.hash === '#design/sample-fixture/1');
       check(
         `${vp.tag}: account save carries prepared project and edits`,
-        payload?.snapshot.project.id === `starter-${samples.at(-1)!.id}` &&
-          payload.snapshot.picks[samples.at(-1)!.id]?.floorStyle === 'walnut',
+        /^example-copy-[a-f0-9-]{36}$/.test(payload?.snapshot.project.id ?? '') &&
+          payload?.snapshot.project.rooms[0]?.id === samples.at(-1)!.id &&
+          payload.snapshot.project.rooms[0]?.size?.xFt === 15 &&
+          payload.snapshot.picks[samples.at(-1)!.id]?.floorStyle === 'walnut' &&
+          payload.snapshot.picks[samples.at(-1)!.id]?.color?.code === 'SW 6244',
       );
     }
     await close();

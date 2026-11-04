@@ -409,7 +409,6 @@ export function App({ controller }: { controller: WorkspaceController }) {
         {isLanding ? (
           <nav className="landing-nav" aria-label="Main navigation">
             <a href="#studio">Studio</a>
-            <a href="#new-project">+ New Project</a>
             <a href="#connect">Connect your agent</a>
             <details className="landing-mobile-menu">
               <summary aria-label="Navigation menu">
@@ -422,7 +421,6 @@ export function App({ controller }: { controller: WorkspaceController }) {
                 }}
               >
                 <a href="#studio">Studio</a>
-                <a href="#new-project">+ New Project</a>
                 <a href="#connect">Connect your agent</a>
               </div>
             </details>
@@ -438,12 +436,6 @@ export function App({ controller }: { controller: WorkspaceController }) {
               }
             >
               Studio
-            </a>
-            <a
-              href="#new-project"
-              aria-current={studioRoute === '#new-project' ? 'page' : undefined}
-            >
-              + New Project
             </a>
             <a href="#connect" aria-current={studioRoute === '#connect' ? 'page' : undefined}>
               Connect
