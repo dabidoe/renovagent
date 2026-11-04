@@ -28,7 +28,7 @@
   background: transparent;
   color: var(--brand-blue-text, #2563eb);
   font:
-    600 13px/1.4 'Inter Variable',
+    600 14px/1.4 'Inter Variable',
     sans-serif;
   text-decoration: none;
   cursor: pointer;
@@ -45,23 +45,6 @@
 .public-navigation > .public-account:focus-visible {
   outline: 2px solid var(--brand-blue-text, #2563eb);
   outline-offset: 2px;
-}
-/* Landing keeps plain white text with no box. */
-.prompt-workspace.is-landing .public-navigation > a,
-.prompt-workspace.is-landing .public-navigation > .public-account {
-  color: #fff;
-}
-.prompt-workspace.is-landing .public-navigation > a[aria-current='page'],
-.prompt-workspace.is-landing .public-navigation > a:hover,
-.prompt-workspace.is-landing .public-navigation > .public-account:hover {
-  color: #fff;
-  background: transparent;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-.prompt-workspace.is-landing .public-navigation > a:focus-visible,
-.prompt-workspace.is-landing .public-navigation > .public-account:focus-visible {
-  outline-color: #fff;
 }
 .public-account-projects {
   display: block;

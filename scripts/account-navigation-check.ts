@@ -102,7 +102,7 @@ try {
     ]);
     assert.equal(await nav.getByRole('button', { name: 'Account', exact: true }).count(), 1);
     for (const item of await nav.locator(':scope > a, :scope > button').all()) {
-      assert.equal(await item.evaluate((el) => getComputedStyle(el).color), 'rgb(255, 255, 255)');
+      assert.equal(await item.evaluate((el) => getComputedStyle(el).color), 'rgb(37, 99, 235)');
     }
     await page.screenshot({ path: `${out}/header-${width}.png` });
     for (const link of await nav.getByRole('link').all()) {
