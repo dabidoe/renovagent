@@ -3,10 +3,22 @@ import { BrandMark } from '../components/brand-mark.js';
 import { AccountAccess } from '../features/connect/account-access.js';
 import { Landing } from '../features/landing/landing.js';
 import type { OwnStart } from '../features/house-example/own-studio.js';
-import { landingAnchors, publicRoute } from './public-routes.js';
+import { canonicalPublicHash, landingAnchors, publicRoute } from './public-routes.js';
 
 const Studio = lazy(() => import('./public-studio.js'));
 const Workspace = lazy(() => import('./workspace-entry.js'));
+
+function currentHash() {
+  const hash = canonicalPublicHash(window.location.hash);
+  if (hash !== window.location.hash) {
+    window.history.replaceState(
+      null,
+      '',
+      `${window.location.pathname}${window.location.search}${hash}`,
+    );
+  }
+  return hash;
+}
 
 class RouteBoundary extends Component<{ children: ReactNode }, { error: boolean }> {
   state = { error: false };
@@ -27,7 +39,7 @@ class RouteBoundary extends Component<{ children: ReactNode }, { error: boolean 
 }
 
 export function PublicApp() {
-  const [hash, setHash] = useState(() => window.location.hash);
+  const [hash, setHash] = useState(currentHash);
   const [prompt, setPrompt] = useState('');
   const [photos, setPhotos] = useState<File[]>([]);
   const [start, setStart] = useState<OwnStart | null>(null);
@@ -45,14 +57,14 @@ export function PublicApp() {
   }, [authError]);
   useEffect(() => {
     const sync = () => {
-      setHash(window.location.hash);
+      setHash(currentHash());
       window.scrollTo({ top: 0 });
     };
     window.addEventListener('hashchange', sync);
     return () => window.removeEventListener('hashchange', sync);
   }, []);
   useEffect(() => {
-    if (hash !== '#your-project') setStart(null);
+    if (hash !== '#new-project') setStart(null);
     if (landing && landingAnchors.has(hash)) {
       const frame = requestAnimationFrame(() =>
         document.getElementById(hash.slice(1))?.scrollIntoView({ block: 'start' }),
@@ -74,7 +86,7 @@ export function PublicApp() {
       if (brief) {
         sessionStorage.removeItem('renovagent.project-brief');
         setStart({ idea: brief.slice(0, 300), photos: [] });
-        window.location.hash = '#your-project';
+        window.location.hash = '#new-project';
       }
     } catch {
       // The public site also works without session storage.
@@ -88,7 +100,7 @@ export function PublicApp() {
     const brief = idea ?? prompt.trim();
     // An empty ‘try your own’ action resumes recovery instead of replacing it.
     setStart(brief || photos.length ? { idea: brief, photos } : null);
-    open('#your-project');
+    open('#new-project');
   };
   const errorBanner = authError && (
     <div className="error-banner" role="alert">
@@ -120,8 +132,18 @@ export function PublicApp() {
           <a href="#connect" aria-current={hash === '#connect' ? 'page' : undefined}>
             Connect
           </a>
-          <a href="#your-project" aria-current={hash === '#your-project' ? 'page' : undefined}>
+          <a
+            href="#studio"
+            aria-current={
+              hash === '#studio' || hash === '#example-house' || hash.startsWith('#example/')
+                ? 'page'
+                : undefined
+            }
+          >
             Studio
+          </a>
+          <a href="#new-project" aria-current={hash === '#new-project' ? 'page' : undefined}>
+            + New Project
           </a>
           <AccountAccess />
         </nav>
@@ -135,7 +157,7 @@ export function PublicApp() {
             photos={photos}
             onPhotos={setPhotos}
             onOwnProject={own}
-            onExamples={() => open('#examples')}
+            onExamples={() => open('#studio')}
             onDirection={(id) => open(`#example/${id}`)}
             busy={false}
           />

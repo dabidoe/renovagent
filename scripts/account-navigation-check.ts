@@ -95,7 +95,11 @@ try {
     });
     await page.goto('http://127.0.0.1:8818', { waitUntil: 'networkidle' });
     const nav = page.getByRole('navigation', { name: 'Main navigation' });
-    assert.deepEqual(await nav.getByRole('link').allTextContents(), ['Connect', 'Studio']);
+    assert.deepEqual(await nav.getByRole('link').allTextContents(), [
+      'Connect',
+      'Studio',
+      '+ New Project',
+    ]);
     assert.equal(await nav.getByRole('button', { name: 'Account', exact: true }).count(), 1);
     for (const item of await nav.locator(':scope > a, :scope > button').all()) {
       assert.equal(await item.evaluate((el) => getComputedStyle(el).color), 'rgb(255, 255, 255)');
@@ -114,6 +118,33 @@ try {
         `navigation visible and unobscured at ${width}`,
       );
     }
+    await nav.getByRole('link', { name: 'Studio', exact: true }).click();
+    await page.locator('.pf-gallery').waitFor();
+    assert.equal(new URL(page.url()).hash, '#studio');
+    assert.equal(
+      await nav.getByRole('link', { name: 'Studio', exact: true }).getAttribute('aria-current'),
+      'page',
+    );
+    await page.reload();
+    await page.locator('.pf-gallery').waitFor();
+    await nav.getByRole('link', { name: '+ New Project', exact: true }).click();
+    await page.locator('.pf-intake').waitFor();
+    assert.equal(new URL(page.url()).hash, '#new-project');
+    for (const [oldHash, hash, selector] of [
+      ['#examples', '#studio', '.pf-gallery'],
+      ['#your-project', '#new-project', '.pf-intake'],
+    ]) {
+      await page.goto(`http://127.0.0.1:8818/${oldHash}`);
+      await page.locator(selector).waitFor();
+      assert.equal(new URL(page.url()).hash, hash);
+    }
+    await page.goto('http://127.0.0.1:8818');
+    await page.locator('.studio-preview-open').click();
+    await page.locator('.pf-gallery').waitFor();
+    assert.equal(new URL(page.url()).hash, '#studio');
+    await page.goBack();
+    await page.locator('.studio-preview-open').waitFor();
+    assert.equal(await page.locator('.studio-preview-open').innerText(), 'Try studio');
     await page.getByRole('button', { name: 'Account', exact: true }).click();
     const dialog = page.getByRole('dialog');
     await dialog.getByRole('link', { name: 'Continue with Google' }).waitFor();

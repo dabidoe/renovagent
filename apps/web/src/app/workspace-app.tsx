@@ -73,7 +73,7 @@ export function App({ controller }: { controller: WorkspaceController }) {
   );
   // Paint & floor studio pages: your own project, the examples, one example.
   const studioHash = () =>
-    /^#(your-project|examples|connect|example\/[a-z0-9-]+|plan\/[A-Za-z0-9_-]{22}|design\/[A-Za-z0-9_:%-]+\/[1-9][0-9]*)$/.test(
+    /^#(new-project|studio|connect|example\/[a-z0-9-]+|plan\/[A-Za-z0-9_-]{22}|design\/[A-Za-z0-9_:%-]+\/[1-9][0-9]*)$/.test(
       window.location.hash,
     )
       ? window.location.hash
@@ -133,7 +133,7 @@ export function App({ controller }: { controller: WorkspaceController }) {
   const [ownStart, setOwnStart] = useState<OwnStart | null>(null);
   // A home-page start is used once, by the studio it opened.
   useEffect(() => {
-    if (studioRoute !== '#your-project') setOwnStart(null);
+    if (studioRoute !== '#new-project') setOwnStart(null);
   }, [studioRoute]);
   useEffect(() => {
     // A landing-page brief is a draft for a new project, never a write to the active home.
@@ -142,7 +142,7 @@ export function App({ controller }: { controller: WorkspaceController }) {
       if (brief) {
         sessionStorage.removeItem('renovagent.project-brief');
         setOwnStart({ idea: brief.slice(0, 300), photos: [] });
-        openStudio('#your-project');
+        openStudio('#new-project');
       }
     } catch {
       // The normal workspace remains usable when session storage is unavailable.
@@ -408,7 +408,8 @@ export function App({ controller }: { controller: WorkspaceController }) {
         </button>
         {isLanding ? (
           <nav className="landing-nav" aria-label="Main navigation">
-            <a href="#your-project">Studio</a>
+            <a href="#studio">Studio</a>
+            <a href="#new-project">+ New Project</a>
             <a href="#connect">Connect your agent</a>
             <details className="landing-mobile-menu">
               <summary aria-label="Navigation menu">
@@ -420,7 +421,8 @@ export function App({ controller }: { controller: WorkspaceController }) {
                     event.currentTarget.closest('details')?.removeAttribute('open');
                 }}
               >
-                <a href="#your-project">Studio</a>
+                <a href="#studio">Studio</a>
+                <a href="#new-project">+ New Project</a>
                 <a href="#connect">Connect your agent</a>
               </div>
             </details>
@@ -428,20 +430,20 @@ export function App({ controller }: { controller: WorkspaceController }) {
         ) : showOwn || showHouse ? (
           <nav className="prompt-studio-nav" aria-label="Studio navigation">
             <a
-              href="#examples"
+              href="#studio"
               aria-current={
-                showHouse || studioRoute === '#examples' || studioRoute?.startsWith('#example/')
+                showHouse || studioRoute === '#studio' || studioRoute?.startsWith('#example/')
                   ? 'page'
                   : undefined
               }
             >
-              Examples
+              Studio
             </a>
             <a
-              href="#your-project"
-              aria-current={studioRoute === '#your-project' ? 'page' : undefined}
+              href="#new-project"
+              aria-current={studioRoute === '#new-project' ? 'page' : undefined}
             >
-              Your project
+              + New Project
             </a>
             <a href="#connect" aria-current={studioRoute === '#connect' ? 'page' : undefined}>
               Connect
@@ -490,9 +492,9 @@ export function App({ controller }: { controller: WorkspaceController }) {
             onOwnProject={(idea) => {
               // The words and photos typed on the home page carry into the studio.
               setOwnStart({ idea: idea ?? startPrompt.trim(), photos: startPhotos });
-              openStudio('#your-project');
+              openStudio('#new-project');
             }}
-            onExamples={() => openStudio('#examples')}
+            onExamples={() => openStudio('#studio')}
             onDirection={(id) => openStudio(`#example/${id}`)}
             busy={busy}
           />
@@ -501,7 +503,7 @@ export function App({ controller }: { controller: WorkspaceController }) {
         <main className="prompt-main has-room">
           {studioRoute === '#connect' ? (
             <ConnectAgent />
-          ) : studioRoute === '#your-project' ? (
+          ) : studioRoute === '#new-project' ? (
             <OwnStudio
               key={ownStart ? 'start' : 'own'}
               start={ownStart}
@@ -515,7 +517,7 @@ export function App({ controller }: { controller: WorkspaceController }) {
               projectId={decodeURIComponent(studioRoute!.split('/')[1]!)}
               revision={Number(studioRoute!.split('/')[2])}
             />
-          ) : studioRoute === '#examples' ? (
+          ) : studioRoute === '#studio' ? (
             <ExamplesGallery
               onOpen={(route) =>
                 route === '#example-house' ? safe(openExample()) : openStudio(route)
@@ -523,14 +525,14 @@ export function App({ controller }: { controller: WorkspaceController }) {
             />
           ) : studioRoute === '#example/bedroom-refresh' ? (
             <InspoExample
-              onBack={() => openStudio('#examples')}
-              onTry={() => openStudio('#your-project')}
+              onBack={() => openStudio('#studio')}
+              onTry={() => openStudio('#new-project')}
             />
           ) : (
             <ListingStudio
               key={studioRoute}
               id={studioRoute!.slice('#example/'.length)}
-              onBack={() => openStudio('#examples')}
+              onBack={() => openStudio('#studio')}
             />
           )}
         </main>
@@ -1204,17 +1206,17 @@ export function App({ controller }: { controller: WorkspaceController }) {
             className="primary prompt-new-project"
             onClick={() => {
               setOwnStart({ idea: '', photos: [] });
-              openStudio('#your-project');
+              openStudio('#new-project');
             }}
           >
             <Glyph name="plus" />
             New project
           </button>
-          {studioRoute !== '#examples' && (
+          {studioRoute !== '#studio' && (
             <button
               className="secondary prompt-example-project"
               disabled={busy}
-              onClick={() => openStudio('#examples')}
+              onClick={() => openStudio('#studio')}
             >
               <Glyph name="paint" />
               Explore the example projects

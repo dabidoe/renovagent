@@ -257,7 +257,7 @@ export function ConnectAgent() {
         </div>
         <p className="ca-note">
           Attach the photo or brief in Muse. For a room preview,{' '}
-          <a href="#your-project">upload your photo in the studio</a>.
+          <a href="#new-project">upload your photo in the studio</a>.
         </p>
       </section>
       <details className="ca-card ca-dev">

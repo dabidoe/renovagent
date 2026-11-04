@@ -66,7 +66,7 @@ export function ProjectLibrary() {
           <p>Pick up where you left off, or explore a different idea.</p>
         </div>
         <div>
-          <a href="#your-project">Continue your studio</a> ·{' '}
+          <a href="#new-project">Continue your studio</a> ·{' '}
           <a href="#notebook">Start project notes</a>
         </div>
       </header>
@@ -77,7 +77,7 @@ export function ProjectLibrary() {
             Browser recovery · may include changes waiting to sync. Open this first if you recently
             edited a room.
           </p>
-          <a href="#your-project">Resume current studio</a>
+          <a href="#new-project">Resume current studio</a>
         </article>
       )}
       {loading ? (
@@ -143,7 +143,7 @@ export function ProjectLibrary() {
         </>
       )}
       <footer>
-        <a href="#examples">Explore example projects</a>
+        <a href="#studio">Explore example projects</a>
         <span>Examples stay separate from your saved work.</span>
       </footer>
     </section>

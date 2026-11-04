@@ -31,7 +31,7 @@ export default function PublicStudio({
   if (hash === '#connect') return <ConnectAgent />;
   if (hash.startsWith('#connect/approve/'))
     return <ApproveAgent key={hash} requestId={hash.split('/')[2]} />;
-  if (hash === '#your-project') return <OwnStudio key={start ? 'start' : 'own'} start={start} />;
+  if (hash === '#new-project') return <OwnStudio key={start ? 'start' : 'own'} start={start} />;
   if (hash === '#example-house')
     return <HutchinsonStudio onRoomExample={() => onOpen('#workspace/example-room')} />;
   if (hash.startsWith('#plan/')) return <SavedPlan key={hash} id={hash.slice('#plan/'.length)} />;
@@ -43,16 +43,14 @@ export default function PublicStudio({
         revision={Number(hash.split('/')[2])}
       />
     );
-  if (hash === '#examples') return <ExamplesGallery onOpen={onOpen} />;
+  if (hash === '#studio') return <ExamplesGallery onOpen={onOpen} />;
   if (hash === '#example/bedroom-refresh')
-    return (
-      <InspoExample onBack={() => onOpen('#examples')} onTry={() => onOpen('#your-project')} />
-    );
+    return <InspoExample onBack={() => onOpen('#studio')} onTry={() => onOpen('#new-project')} />;
   return (
     <ListingStudio
       key={hash}
       id={hash.slice('#example/'.length)}
-      onBack={() => onOpen('#examples')}
+      onBack={() => onOpen('#studio')}
     />
   );
 }

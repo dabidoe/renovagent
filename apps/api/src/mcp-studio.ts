@@ -341,7 +341,7 @@ export function registerStudioTools(
           saved: created ? 'new' : 'already saved for this requestId',
           id: find._id,
           title: find.title,
-          shownAt: `${saving.origin}/#your-project`,
+          shownAt: `${saving.origin}/#new-project`,
           note: 'Shown to the owner as found by this agent, not checked. Tell them where to find it.',
         });
       },

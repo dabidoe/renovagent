@@ -104,7 +104,7 @@ test(
       };
       const saved = JSON.parse((await call(muse, 'save_inspiration', link)).body);
       assert.equal(saved.saved, 'new');
-      assert.equal(saved.shownAt, `${origin}/#your-project`);
+      assert.equal(saved.shownAt, `${origin}/#new-project`);
       const again = JSON.parse((await call(muse, 'save_inspiration', link)).body);
       assert.equal(again.id, saved.id, 'a retried requestId saves once');
 

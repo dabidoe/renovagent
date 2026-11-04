@@ -5,13 +5,16 @@
 }
 .public-navigation {
   display: flex;
+  flex-wrap: wrap;
+  max-width: 100%;
   align-items: center;
   justify-content: flex-end;
   gap: 4px;
   margin-left: auto;
-  padding: 4px;
-  border-radius: 10px;
-  background: #243e36;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
 }
 .public-navigation > a,
 .public-navigation > .public-account {
@@ -21,9 +24,9 @@
   min-height: 44px;
   padding: 8px 14px;
   border: 0;
-  border-radius: 7px;
+  border-radius: 0;
   background: transparent;
-  color: #fff;
+  color: var(--brand-blue-text, #2563eb);
   font:
     600 13px/1.4 'Inter Variable',
     sans-serif;
@@ -33,13 +36,32 @@
 .public-navigation > a[aria-current='page'],
 .public-navigation > a:hover,
 .public-navigation > .public-account:hover {
-  color: #fff;
-  background: #ffffff24;
+  color: var(--brand-blue-text, #2563eb);
+  background: transparent;
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 .public-navigation > a:focus-visible,
 .public-navigation > .public-account:focus-visible {
-  outline: 2px solid #fff;
-  outline-offset: -3px;
+  outline: 2px solid var(--brand-blue-text, #2563eb);
+  outline-offset: 2px;
+}
+/* Landing keeps plain white text with no box. */
+.prompt-workspace.is-landing .public-navigation > a,
+.prompt-workspace.is-landing .public-navigation > .public-account {
+  color: #fff;
+}
+.prompt-workspace.is-landing .public-navigation > a[aria-current='page'],
+.prompt-workspace.is-landing .public-navigation > a:hover,
+.prompt-workspace.is-landing .public-navigation > .public-account:hover {
+  color: #fff;
+  background: transparent;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.prompt-workspace.is-landing .public-navigation > a:focus-visible,
+.prompt-workspace.is-landing .public-navigation > .public-account:focus-visible {
+  outline-color: #fff;
 }
 .public-account-projects {
   display: block;
@@ -140,7 +162,7 @@
   }
   .public-navigation {
     gap: 0;
-    padding: 2px;
+    padding: 0;
   }
   .public-navigation > a,
   .public-navigation > .public-account {

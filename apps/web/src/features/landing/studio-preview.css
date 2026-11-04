@@ -75,6 +75,10 @@
 .studio-preview .pf-3d-host {
   border-radius: 0;
 }
+.studio-preview .pf-before,
+.studio-preview .pf-after {
+  object-fit: cover;
+}
 .studio-preview .pf-tag-before {
   right: auto;
   left: 12px;

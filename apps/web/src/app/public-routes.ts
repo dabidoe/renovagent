@@ -6,13 +6,20 @@ export const landingAnchors = new Set([
   '#compare-tools',
 ]);
 
+export function canonicalPublicHash(hash: string) {
+  if (hash === '#examples') return '#studio';
+  if (hash === '#your-project') return '#new-project';
+  return hash;
+}
+
 export function publicRoute(hash: string) {
+  hash = canonicalPublicHash(hash);
   if (hash === '#notebook' || /^#project\/[A-Za-z0-9_:%-]+\/notebook$/.test(hash)) return 'studio';
   if (/^#share\/[A-Za-z0-9_-]{43}$/.test(hash)) return 'studio';
   if (/^#connect\/approve\/[A-Za-z0-9_-]{43}$/.test(hash)) return 'studio';
   if (/^#workspace(?:\/(?:projects|example-room))?$/.test(hash)) return 'workspace';
   if (
-    /^#(example-house|your-project|projects|examples|connect|example\/[a-z0-9-]+|plan\/[A-Za-z0-9_-]{22}|design\/[A-Za-z0-9_:%-]+\/[1-9][0-9]*)$/.test(
+    /^#(example-house|new-project|projects|studio|connect|example\/[a-z0-9-]+|plan\/[A-Za-z0-9_-]{22}|design\/[A-Za-z0-9_:%-]+\/[1-9][0-9]*)$/.test(
       hash,
     )
   )

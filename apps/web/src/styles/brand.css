@@ -149,6 +149,20 @@
     linear-gradient(var(--mark), var(--mark)) right bottom / 18px 1px no-repeat,
     linear-gradient(var(--mark), var(--mark)) right bottom / 1px 18px no-repeat;
 }
+/* Every other page shares the landing's faint drafting grid instead of the
+   stronger masked one above. Corner marks stay as they were. */
+.prompt-workspace:not(.is-landing)::before {
+  background-image:
+    linear-gradient(rgb(59 130 246 / 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(59 130 246 / 0.045) 1px, transparent 1px);
+  background-size: 40px 40px;
+  background-position: center top;
+  mask-image: none;
+}
+/* Example pages hide the backdrop outright; re-enable the faint grid there. */
+.prompt-workspace.is-example-project:not(.is-landing)::before {
+  display: block;
+}
 .prompt-workspace {
   background: transparent;
 }

@@ -27,12 +27,12 @@ const viewports = [
 ] as const;
 const routes = [
   '/',
-  '/#examples',
+  '/#studio',
   '/#example/oakland',
   '/#example/brooklyn',
   '/#example/bedroom-refresh',
   '/#example-house',
-  '/#your-project',
+  '/#new-project',
   '/#projects',
   '/#connect',
 ];
@@ -394,7 +394,7 @@ async function preparedSampleChecks(browser: Browser, base: string) {
 }
 
 async function intakeChecks(browser: Browser, base: string) {
-  const { page, close } = await open(browser, base, '/#your-project', viewports[1]);
+  const { page, close } = await open(browser, base, '/#new-project', viewports[1]);
   const idea = page.locator('.pf-intake input.pf-intake-idea');
   // Start from an empty draft.
   await idea.fill('');

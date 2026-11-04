@@ -85,7 +85,7 @@ export function Landing({
           {/* "Start a project" opens the studio; these are the two other ways in. */}
           <p className="hero-paint-line">
             <button type="button" onClick={onExamples}>
-              See listing examples <Glyph name="right" />
+              Try studio <Glyph name="right" />
             </button>
             <a href="#connect">
               <img

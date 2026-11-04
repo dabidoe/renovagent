@@ -223,7 +223,7 @@ export function ExamplesGallery({ onOpen }: { onOpen: (route: string) => void })
       </div>
       <h2>Listing rooms & more</h2>
       <div className="pf-cards">
-        <button type="button" className="pf-card is-own" onClick={() => onOpen('#your-project')}>
+        <button type="button" className="pf-card is-own" onClick={() => onOpen('#new-project')}>
           <Glyph name="plus" />
           <span>
             <b>Your project</b>
