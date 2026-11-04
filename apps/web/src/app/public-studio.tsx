@@ -1,3 +1,4 @@
+import { SharedDesign } from '../features/house-example/shared-design.js';
 import { OwnStudio, type OwnStart } from '../features/house-example/own-studio.js';
 import { HutchinsonStudio } from '../features/house-example/hutchinson-studio.js';
 import { ExamplesGallery, ListingStudio } from '../features/house-example/listing-studio.js';
@@ -21,6 +22,7 @@ export default function PublicStudio({
   start: OwnStart | null;
   onOpen: (route: string) => void;
 }) {
+  if (hash.startsWith('#share/')) return <SharedDesign key={hash} token={hash.slice(7)} />;
   if (hash === '#projects') return <ProjectLibrary />;
   if (hash === '#connect') return <ConnectAgent />;
   if (hash.startsWith('#connect/approve/'))

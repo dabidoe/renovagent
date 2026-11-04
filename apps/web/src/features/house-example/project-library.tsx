@@ -102,8 +102,8 @@ export function ProjectLibrary() {
         <>
           {session?.user?.guest && (
             <p className="project-library-note">
-              Guest workspace · use Account above to connect Google and keep access on other
-              devices.
+              Limited guest · projects are saved. Use Share project to open a design on another
+              device. Keep this browser’s cookies to retain editing access.
             </p>
           )}
           {!entries.length && (

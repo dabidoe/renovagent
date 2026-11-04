@@ -77,7 +77,7 @@ export function MuseConversation({
               <>
                 <div className="muse-demo-result-title">
                   <b>Renovagent</b>
-                  <span>Private access · 7 days</span>
+                  <span>Private access · 1 year</span>
                 </div>
                 <div className="muse-demo-secure">
                   <span>•••• •••• ••••</span>

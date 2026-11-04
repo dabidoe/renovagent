@@ -5,6 +5,7 @@ import {
   id,
   studioDesignSaveRequestSchema,
   type Command,
+  type StudioDesign,
 } from '@renovagent/contracts';
 import {
   handleCommand,
@@ -46,20 +47,7 @@ export async function saveStudioDesign(
   raw: unknown,
 ) {
   const input = saveStudioDesignSchema.parse(raw);
-  const hashes = new Set(
-    [
-      ...JSON.stringify(input.snapshot).matchAll(
-        /\/api\/workspace\/design-images\/([a-f0-9]{64})/g,
-      ),
-    ].map((m) => m[1]!),
-  );
-  for (const draft of Object.values(input.snapshot.styling))
-    if (draft.inspo) hashes.add(draft.inspo.sha256);
-  for (const hash of [
-    ...(input.snapshot.intake?.analysis?.photos ?? []),
-    ...(input.snapshot.intake?.analysis?.plans ?? []),
-  ])
-    hashes.add(hash);
+  const hashes = studioImageHashes(input.snapshot);
   for (const hash of hashes)
     if (!images || !(await images.get(repo.ownerId, hash)))
       throw new DomainError('NOT_FOUND', 'A studio image is missing from this owner’s workspace');
@@ -268,4 +256,20 @@ export async function prepareStudioHandoff(
     questions: summary.nextQuestions,
     checks: review?.findings ?? [],
   };
+}
+
+export function studioImageHashes(snapshot: StudioDesign) {
+  const hashes = new Set(
+    [...JSON.stringify(snapshot).matchAll(/\/api\/workspace\/design-images\/([a-f0-9]{64})/g)].map(
+      (m) => m[1]!,
+    ),
+  );
+  for (const draft of Object.values(snapshot.styling))
+    if (draft.inspo) hashes.add(draft.inspo.sha256);
+  for (const hash of [
+    ...(snapshot.intake?.analysis?.photos ?? []),
+    ...(snapshot.intake?.analysis?.plans ?? []),
+  ])
+    hashes.add(hash);
+  return hashes;
 }

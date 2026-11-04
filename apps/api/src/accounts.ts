@@ -3,7 +3,7 @@ import { createRemoteJWKSet, jwtVerify } from 'jose';
 import type { Collection, Db } from 'mongodb';
 
 export const ACCOUNT_COOKIE = 'renovagent_account';
-const SESSION_DAYS = 30;
+const SESSION_DAYS = 365;
 const GOOGLE_JWKS = 'https://www.googleapis.com/oauth2/v3/certs';
 const GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token';
 const META_GRAPH_VERSION = 'v21.0';
@@ -281,6 +281,13 @@ export class AccountService {
       _id: createHash('sha256').update(token).digest('hex'),
     });
     if (!session || session.expiresAt.getTime() < Date.now()) return null;
+    if (session.expiresAt.getTime() < Date.now() + 330 * 86400_000)
+      await this.sessions.updateOne(
+        { _id: session._id },
+        {
+          $set: { expiresAt: new Date(Date.now() + SESSION_DAYS * 86400_000) },
+        },
+      );
     return this.users.findOne({ _id: session.userId });
   }
 

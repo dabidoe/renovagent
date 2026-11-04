@@ -308,14 +308,14 @@ export class McpOAuth {
         ownerId: code.ownerId,
         name: code.name,
         access: code.scope.split(' ').includes(PROPOSE) ? 'propose' : 'read',
-        hours: 168,
+        hours: 8760,
         clientId: code.clientId,
         resource,
       });
       json(200, {
         access_token: token,
         token_type: 'Bearer',
-        expires_in: 7 * 86400,
+        expires_in: 365 * 86400,
         scope: code.scope,
       });
     } catch (e) {

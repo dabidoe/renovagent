@@ -110,11 +110,20 @@ function Intake({
       await saveOwnIntake({ where, ceiling, idea, photos, plans }).catch(() => {
         setRecovery('Draft recovery is unavailable in this browser. Keep this tab open.');
       });
-      const session = (await workspaceRequest('/session')) as { mode?: string; signedIn?: boolean };
+      const session = (await workspaceRequest('/session')) as {
+        mode?: string;
+        signedIn?: boolean;
+        guests?: boolean;
+      };
       if (session.mode === 'account' && !session.signedIn) {
-        setSteps(null);
-        setNeedsAccess(true);
-        return;
+        if (session.guests) {
+          await workspaceRequest('/auth/guest', {});
+          window.dispatchEvent(new Event('renovagent-session'));
+        } else {
+          setSteps(null);
+          setNeedsAccess(true);
+          return;
+        }
       }
       const photoShas = await Promise.all(photos.map(upload));
       const planShas = await Promise.all(plans.map(upload));

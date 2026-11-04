@@ -28,6 +28,8 @@ import { configuredJevKey, rankReviewFindings } from './jev.js';
 import { startAgentProject } from './agent-projects.js';
 import { draftProjectScope } from './scope-drafts.js';
 import { DesignImageStore } from './design-images.js';
+import { StudioShares } from './studio-shares.js';
+import { readStudioDesign, saveStudioDesign } from './studio-designs.js';
 import {
   buildDesignOptions,
   reviseDesignOption,
@@ -36,7 +38,12 @@ import {
 } from './design-service.js';
 import type { McpAccess } from './mcp-access.js';
 import { workspaceMongoConfig } from './database-config.js';
-import { STUDIO_MCP_TOOLS, STUDIO_SAVE_TOOLS, registerStudioTools } from './mcp-studio.js';
+import {
+  STUDIO_MCP_TOOLS,
+  STUDIO_SAVE_TOOLS,
+  registerStudioTools,
+  studioProject,
+} from './mcp-studio.js';
 import type { StudioPlanStore } from './studio-plans.js';
 
 export const MCP_SERVER_NAME = 'renovagent-workspace';
@@ -61,6 +68,7 @@ const CAPABILITIES = {
     'draft_scope',
     'build_design_options',
     'upload_design_photo',
+    'share_project',
     'revise_design_option',
     'get_design_options',
     'propose_project_change',
@@ -258,13 +266,14 @@ export function createWorkspaceMcpServer(
     access: canPropose ? 'propose' : 'read',
     tools: [...CAPABILITIES.tools, ...(savesPlans ? STUDIO_SAVE_TOOLS : [])].filter(
       (name) =>
-        (name !== 'upload_design_photo' || !!options.images) &&
+        (!['upload_design_photo', 'share_project'].includes(name) || !!options.images) &&
         (canPropose ||
           ![
             'start_project',
             'draft_scope',
             'build_design_options',
             'upload_design_photo',
+            'share_project',
             'revise_design_option',
             'propose_project_change',
           ].includes(name)),
@@ -282,7 +291,7 @@ export function createWorkspaceMcpServer(
     {
       instructions:
         "Renovagent keeps durable home-improvement projects. For paint and floors from an owner's words or photos, choose with list_floor_styles and find_paint_color, then price with plan_paint_and_floor. Start with list_homes/list_projects or start_project for a new user request. Use list_project_files to discover saved work, then get_artifact to inspect exact revisions. Develop useful proposed work from project evidence. Keep unknown facts and prices explicit. Project creation stores intent only; it does not analyze photos or produce an estimate. Never claim a proposal is professional approval or a passed inspection. Chat attachments are not automatically uploaded to Renovagent. build_design_options needs the server's stored normalized image hash, not a locally computed original-file hash. Use upload_design_photo to transfer an owner-provided chat photo, then use its sourcePhotoSha256 with build_design_options. " +
-        `Never reuse dimensions from another room or photo without owner confirmation. For a plan the owner asks to save, use save_plan and return its link; it does not require an existing project. Guest accounts support this through their own connection. Website Save project creates a canonical studio-design artifact; discover it with list_projects/list_project_files and read its exact revision with get_artifact. Furniture remains unpriced design intent unless separately sourced. Read ${options.plans?.origin ?? 'https://renovagent.app'}/agent-guide.md for photo, Markdown brief and inspiration workflows.`,
+        `Never reuse dimensions from another room or photo without owner confirmation. For a plan the owner asks to save, use save_plan and return its link; it does not require an existing project. Limited guests can save projects. When the owner asks to share, use share_project with a saved projectId or planId and return its no-sign-in link. Website Save project creates a canonical studio-design artifact; discover it with list_projects/list_project_files and read its exact revision with get_artifact. Furniture remains unpriced design intent unless separately sourced. Read ${options.plans?.origin ?? 'https://renovagent.app'}/agent-guide.md for photo, Markdown brief and inspiration workflows.`,
     },
   );
 
@@ -609,6 +618,67 @@ export function createWorkspaceMcpServer(
             width: result.image.width,
             height: result.image.height,
             note: 'Photo stored privately. Use sourcePhotoSha256 with build_design_options. Open saved designs in the website account that owns this connector.',
+          });
+        } catch (error) {
+          failure(error);
+        }
+      },
+    );
+
+  if (canPropose && options.images)
+    server.tool(
+      'share_project',
+      'Only when the owner asks to share: publish a fixed saved studio revision or saved agent plan as an anyone-with-the-link view. Visitors need no sign-in and can save an independent editable copy. The original remains private and unchanged. Supply exactly one of projectId or planId; use the id returned by save_plan for planId. Reuse requestId for retries. Return the share URL and explain that its saved design and photos are visible to anyone with that link.',
+      {
+        requestId: id,
+        projectId: id.optional(),
+        planId: z
+          .string()
+          .regex(/^[A-Za-z0-9_-]{22}$/)
+          .optional(),
+        revision: z.number().int().positive().optional(),
+      },
+      { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+      async (input) => {
+        try {
+          if (!!input.projectId === !!input.planId)
+            throw new DomainError('VALIDATION', 'Supply exactly one projectId or planId');
+          let saved;
+          if (input.planId) {
+            const plan = await options.plans?.store.get(repository.ownerId, input.planId);
+            if (!plan) throw new DomainError('NOT_FOUND', 'No such plan in this workspace');
+            const project = studioProject(
+              `plan-${plan._id}`,
+              plan.title,
+              plan.ceilingFt,
+              plan.tier,
+              plan.rooms,
+            );
+            saved = await saveStudioDesign(repository, options.images, {
+              requestId: `share-plan:${input.requestId}`,
+              expectedRevision: 0,
+              snapshot: {
+                kind: 'studio-design',
+                basis: 'owner-studio',
+                project,
+                picks: project.starting,
+                tier: plan.tier,
+                inspired: {},
+                styling: {},
+                renderSignatures: {},
+              },
+            });
+          } else saved = await readStudioDesign(repository, input.projectId!, input.revision);
+          const shared = await new StudioShares(options.images!).create(
+            repository,
+            saved.projectId,
+            saved.revision,
+            input.requestId,
+          );
+          return text({
+            url: `${options.plans?.origin ?? 'https://renovagent.app'}/#share/${shared.token}`,
+            revision: saved.revision,
+            note: 'Anyone with this link can view the saved design and photos and save an independent copy. It does not grant access to the rest of the workspace.',
           });
         } catch (error) {
           failure(error);

@@ -1,3 +1,4 @@
+import './shared-design.css';
 import { studioAssetAvailable } from '../room3d/available-assets.js';
 import { RoomDiagram } from './room-diagram.js';
 import { useDesignHistory } from './use-design-history.js';
@@ -1484,6 +1485,40 @@ export function PaintFloorStudio({
   const [saveError, setSaveError] = useState('');
   const [saveAccess, setSaveAccess] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
+  const [sharing, setSharing] = useState(false);
+  const [sharedLink, setSharedLink] = useState<{
+    url: string;
+    token: string;
+    version: string;
+  } | null>(null);
+  const [shareError, setShareError] = useState('');
+  const shareRequest = useRef<{ projectId: string; revision: number; requestId: string } | null>(
+    null,
+  );
+  useEffect(() => {
+    if (!saveMeta || sharing) return;
+    let live = true;
+    void workspaceRequest(`/studio-designs/shares/${encodeURIComponent(saveMeta.projectId)}`)
+      .then((links) => {
+        if (!live || !Array.isArray(links)) return;
+        const latest = links[0];
+        setSharedLink(
+          latest
+            ? {
+                token: latest.token,
+                url: new URL(`#share/${latest.token}`, window.location.href).href,
+                version:
+                  latest.revision === saveMeta.revision ? savedJson : 'previous-shared-revision',
+              }
+            : null,
+        );
+      })
+      .catch(() => {});
+    return () => {
+      live = false;
+    };
+  }, [saveMeta?.projectId, saveMeta?.revision, sharing]);
+
   const snapshot = {
     kind: 'studio-design' as const,
     intake,
@@ -1615,6 +1650,13 @@ export function PaintFloorStudio({
         throw new Error(
           `This design cannot be saved: ${parsed.error.issues[0]?.path.join('.')} ${parsed.error.issues[0]?.message}`,
         );
+      if (!saveMeta) {
+        const session = await workspaceRequest('/session').catch(() => null);
+        if (session?.mode === 'account' && !session.signedIn && session.guests) {
+          await workspaceRequest('/auth/guest', {});
+          window.dispatchEvent(new Event('renovagent-session'));
+        }
+      }
       return await writer.current!.sync(parsed.data);
     } catch (e) {
       if (e instanceof DomainError && e.code === 'FORBIDDEN') setSaveAccess(true);
@@ -1622,6 +1664,33 @@ export function PaintFloorStudio({
       return null;
     } finally {
       setSaving(false);
+    }
+  };
+  const shareProject = async () => {
+    setSharing(true);
+    setShareError('');
+    try {
+      const meta = await save();
+      if (!meta) throw new Error('Save this project before sharing.');
+      if (
+        shareRequest.current?.projectId !== meta.projectId ||
+        shareRequest.current.revision !== meta.revision
+      )
+        shareRequest.current = {
+          projectId: meta.projectId,
+          revision: meta.revision,
+          requestId: crypto.randomUUID(),
+        };
+      const shared = (await workspaceRequest('/studio-designs/share', shareRequest.current)) as {
+        url: string;
+        token: string;
+      };
+      setSharedLink({ ...shared, version: snapshotJson });
+      await navigator.clipboard.writeText(shared.url).catch(() => {});
+    } catch (e) {
+      setShareError(e instanceof Error ? e.message : 'Could not share this project.');
+    } finally {
+      setSharing(false);
     }
   };
   const latestSave = useRef(save);
@@ -2076,7 +2145,7 @@ export function PaintFloorStudio({
                       );
                     }}
                   >
-                    {linkCopied ? 'Link copied' : 'Copy project link'}
+                    {linkCopied ? 'Private link copied' : 'Copy private link'}
                   </button>
                 </>
               )}
@@ -2331,6 +2400,53 @@ export function PaintFloorStudio({
               >
                 {saveError ? 'Retry workspace sync' : 'Save to workspace'}
               </button>
+            )}
+            <button
+              type="button"
+              className="pf-reset"
+              disabled={saving || sharing}
+              title="Anyone with the link can view the saved design and its photos"
+              onClick={() => void shareProject()}
+            >
+              {sharing ? 'Creating share link…' : 'Share project'}
+            </button>
+            {sharedLink && (
+              <div className="pf-share-result" role="status">
+                <p>
+                  Anyone with this link can view this saved design and its photos.{' '}
+                  {sharedLink.version !== snapshotJson
+                    ? 'Choices changed; share again for an updated link.'
+                    : 'The original stays yours.'}
+                </p>
+                <input
+                  aria-label="Shareable project link"
+                  readOnly
+                  value={sharedLink.url}
+                  onFocus={(e) => e.currentTarget.select()}
+                />
+                <a href={sharedLink.url} target="_blank" rel="noreferrer">
+                  Open shared project
+                </a>
+                <button
+                  type="button"
+                  className="pf-reset"
+                  onClick={() => {
+                    void workspaceRequest(`/shared-designs/${sharedLink.token}/revoke`, {})
+                      .then(() => {
+                        setSharedLink(null);
+                        shareRequest.current = null;
+                      })
+                      .catch((e) => setShareError(e.message));
+                  }}
+                >
+                  Stop sharing this link
+                </button>
+              </div>
+            )}
+            {shareError && (
+              <p className="pf-share-result" role="alert">
+                {shareError}
+              </p>
             )}
           </div>
           {view === 'photo' && !photoless && (

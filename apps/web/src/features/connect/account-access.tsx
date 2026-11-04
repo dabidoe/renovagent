@@ -34,7 +34,7 @@ export function AccountAccess() {
   return (
     <>
       <button className="public-account" onClick={() => setOpen(true)}>
-        {session?.signedIn ? (guest ? 'Guest account' : 'Account') : 'Sign in'}
+        {session?.signedIn ? (guest ? 'Limited guest' : 'Account') : 'Sign in'}
       </button>
       {open && (
         <Modal
@@ -52,7 +52,7 @@ export function AccountAccess() {
             <>
               <p>
                 {guest
-                  ? 'You’re using a guest workspace in this browser. Connect Google to return to these projects on another device.'
+                  ? 'Your projects are saved on the server. This browser keeps guest access for one year. Share a project link to open it anywhere; Google is optional for account recovery.'
                   : session.user?.email}
               </p>
               <div className="public-account-choices">
@@ -94,8 +94,8 @@ export function AccountAccess() {
           ) : (
             <>
               <p>
-                Sign in with Google to keep your projects and open them on another device. Or try a
-                private guest workspace in this browser.
+                Continue as a limited guest to save and share projects. Google is optional for
+                account recovery.
               </p>
               <div className="public-account-choices">
                 <Suspense fallback={<p role="status">Loading sign-in options…</p>}>

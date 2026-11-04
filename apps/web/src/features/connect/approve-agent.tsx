@@ -67,8 +67,8 @@ export function ApproveAgent({ requestId }: { requestId: string }) {
                 : 'This agent can read your projects. It cannot save changes.'}
             </p>
             <p>
-              You keep control of approvals and purchases. Access expires in seven days. Remove it
-              at any time on the connection page.
+              You keep control of approvals and purchases. Access expires in one year. Remove it at
+              any time on the connection page.
             </p>
             <p>
               Return address supplied by this agent:{' '}

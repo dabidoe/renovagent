@@ -43,9 +43,9 @@ export class McpAccessStore {
       !['read', 'propose'].includes(input.access) ||
       !Number.isFinite(hours) ||
       hours < 1 ||
-      hours > 168
+      hours > 8760
     )
-      throw new DomainError('VALIDATION', 'Invalid MCP access grant (lifetime: 1–168 hours)');
+      throw new DomainError('VALIDATION', 'Invalid MCP access grant (lifetime: 1–8760 hours)');
     const token = `reno_${randomBytes(32).toString('base64url')}`;
     const grant: McpGrant = {
       _id: hash(token),

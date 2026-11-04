@@ -79,7 +79,7 @@ test(
         'a key is shown once, at creation, never listed',
       );
       const days = (new Date(made.grant.expiresAt).getTime() - Date.now()) / 86_400_000;
-      assert.ok(days > 6.9 && days <= 7, 'keys last seven days');
+      assert.ok(days > 364.9 && days <= 365, 'demo connections last one year');
 
       // The agent connects to the site's own /mcp with the key.
       const agent = new Client({ name: 'agent-key-test', version: '1.0' });

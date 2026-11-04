@@ -102,7 +102,7 @@ export class DesignImageStore {
   private readonly byteCache = new Map<string, Uint8Array>();
   private cachedBytes = 0;
   constructor(
-    db: Db,
+    readonly db: Db,
     private readonly cacheLimitBytes = 32 * 1024 * 1024,
   ) {
     this.collection = db.collection<StoredDesignImage>('design_images');

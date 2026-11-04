@@ -154,6 +154,7 @@ test(
         'AUTHORIZED',
       );
       assert.ok(tokens?.access_token);
+      assert.equal(tokens?.expires_in, 365 * 86400);
       assert.equal(tokens?.refresh_token, undefined);
       const client = new Client({ name: 'approved-client', version: '1' });
       try {

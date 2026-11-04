@@ -6,7 +6,7 @@ Use Renovagent's tools to keep a home-improvement project, propose plans, and sa
 
 The canonical site is https://renovagent.app and its Streamable HTTP MCP endpoint is https://renovagent.app/mcp. A 401 without a credential starts authorization; it does not mean the service is broken. Read the `resource_metadata` URL in `WWW-Authenticate`, then the advertised authorization-server metadata. Use dynamic client registration (`token_endpoint_auth_method: none`), authorization code with S256 PKCE, and the exact MCP URL as `resource` in both authorization and token requests. Open the authorization URL for the owner: they sign in and approve on Renovagent, then the client receives the code at its registered callback and exchanges it securely. Preserve and verify OAuth state in the client. Request `renovagent:read renovagent:propose` to read and save proposals, or only `renovagent:read` for read-only access. Never claim connection success until initialization and a tool read succeed.
 
-Access lasts seven days; reconnect when it expires (no refresh tokens). Owners can revoke access at https://renovagent.app/#connect. Existing API keys still work for clients without OAuth: link the owner to that connection page, expand **Manual key setup for clients without OAuth**, and enter the key only through the client's secure credential UI. `/agent-keys` is an authenticated API path, not the setup page. Never put a token in chat, a URL, a document, or a tool argument. Google sign-in is optional: **Continue as guest** creates a separate private workspace. To use existing projects, sign in to their existing account. A client must support OAuth or provide a secure API-key setup UI; prose alone cannot install a connector.
+Access lasts one year; reconnect when it expires (no refresh tokens). Owners can revoke access at https://renovagent.app/#connect. Existing API keys still work for clients without OAuth: link the owner to that connection page, expand **Manual key setup for clients without OAuth**, and enter the key only through the client's secure credential UI. `/agent-keys` is an authenticated API path, not the setup page. Never put a token in chat, a URL, a document, or a tool argument. Google sign-in is optional: **Continue as guest** creates a separate private workspace. To use existing projects, sign in to their existing account. A client must support OAuth or provide a secure API-key setup UI; prose alone cannot install a connector.
 
 ## What the owner can say
 
@@ -65,6 +65,14 @@ In the photo Before/after view, **Download preview** exports the current full Af
 For an owner-provided chat photo, use `upload_design_photo` with `name`, `label`, the owner’s `permission`, and standard base64 `data` (no data URL). Compress/resize locally to at most 500 KB before encoding. Use the returned `sourcePhotoSha256` with `build_design_options` after `start_project`. Retries store the same normalized photo. Uploads remain private to the connector’s owner; they do not sign a browser in or create a website studio. If your client cannot access attachment bytes or this tool is unavailable, use the website photo studio. Do not invent a hash, completed upload or generated preview.
 
 For existing design options, `get_design_options` reports preview status and `revise_design_option` proposes revisions. A preview is a generated concept, not evidence of fit or completed work.
+
+## Sharing with judges or another device
+
+Limited guests save durable server projects. Website photo intake and first saves start a guest workspace automatically when signed out; Google is optional. Browser guest access lasts one year and renews on use. Keep cookies to retain the original editing workspace.
+
+For an owner request to share, call `share_project` with a saved `projectId` (and optional exact `revision`) or the `planId` returned by `save_plan`, plus a stable `requestId`. Return its `/#share/<token>` URL. Anyone with that link can view the fixed saved design and its photos without signing in, and **Save a copy & edit** creates an independent persistent project. Sharing never gives access to the original account or permission to edit its other projects. Do not publish a share unless the owner asked to share. Existing `/#design/...` and `/#plan/...` links are still private editing links.
+
+In the website, **Share project** saves the current design and creates the same no-sign-in view. Later edits do not silently change an older shared revision. The owner can stop sharing the link; copies already saved by viewers remain theirs. Share links do not have a seven-day expiry.
 
 ## Inspiration and shopping finds
 

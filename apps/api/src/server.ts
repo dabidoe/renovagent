@@ -2,7 +2,7 @@ import { createServer, type IncomingMessage } from 'node:http';
 import { randomBytes, timingSafeEqual, createHash } from 'node:crypto';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { z } from 'zod';
-import { DomainError, moneySchema } from '@renovagent/contracts';
+import { DomainError, id, moneySchema } from '@renovagent/contracts';
 import { MongoWorkspaceRepository } from './repository.js';
 import { PhotoWorker, requestPhotoJob, publicJob, type StoredPhotoJob } from './photo-jobs.js';
 import {
@@ -62,6 +62,7 @@ import { studioProject } from './mcp-studio.js';
 import { McpAccessStore } from './mcp-access.js';
 import { mcpEndpoint } from './mcp-http.js';
 import { McpOAuth } from './mcp-oauth.js';
+import { StudioShares } from './studio-shares.js';
 import { configuredJevKey, judgeProducts, rankReviewFindings, readRoomPhoto } from './jev.js';
 import {
   bestValue,
@@ -155,6 +156,7 @@ export async function createWorkspaceServer(
   // Paint-and-floor plans owners' agents save, opened at /#plan/<id>.
   plans?: StudioPlanStore,
 ) {
+  const shares = design ? new StudioShares(design.images) : undefined;
   const pairing = mcpAccess ? new McpOAuth(mcpAccess) : undefined;
   await pairing?.ensure();
   const accountMode = Boolean(accounts);
@@ -419,6 +421,22 @@ export async function createWorkspaceServer(
         throw new DomainError('FORBIDDEN', 'Only the local workspace origin is allowed');
       if (req.method === 'POST' && req.headers['x-renovagent-client'] !== 'workspace')
         throw new DomainError('FORBIDDEN', 'Workspace request header required');
+      const publicShare = path.match(
+        /^\/shared-designs\/([A-Za-z0-9_-]{43})(?:\/images\/([a-f0-9]{64}))?$/,
+      );
+      if (publicShare && shares && req.method === 'GET') {
+        res.setHeader('Referrer-Policy', 'no-referrer');
+        res.setHeader('Cache-Control', 'no-store');
+        if (publicShare[2]) {
+          const image = await shares.image(publicShare[1], publicShare[2]);
+          res.writeHead(200, {
+            'Content-Type': image.mediaType,
+            'X-Content-Type-Options': 'nosniff',
+          });
+          res.end(image.bytes);
+        } else json(200, await shares.read(publicShare[1]));
+        return;
+      }
       const cookies = Object.fromEntries(
         (req.headers.cookie || '')
           .split(';')
@@ -534,6 +552,7 @@ export async function createWorkspaceServer(
           throw new DomainError('FORBIDDEN', 'Workspace request header required');
         if (accountMode) {
           const user = await accounts!.getSession(cookies[ACCOUNT_COOKIE] || '');
+          if (user) res.setHeader('Set-Cookie', accountCookie(cookies[ACCOUNT_COOKIE], secure));
           json(
             200,
             user
@@ -607,7 +626,7 @@ export async function createWorkspaceServer(
         }
       }
       // Keys for the owner's own agents (Muse, Claude, any MCP client). A key is
-      // shown once, at creation; only its hash is kept. Seven days, five at most.
+      // shown once, at creation; only its hash is kept. One year, five at most.
       if (path.startsWith('/agent-keys')) {
         if (!mcpAccess)
           throw new DomainError('NOT_FOUND', 'Agent connections are not enabled here');
@@ -636,7 +655,7 @@ export async function createWorkspaceServer(
           const { token: key, grant } = await mcpAccess.issue({
             ownerId: activeRepo.ownerId,
             ...input,
-            hours: 168,
+            hours: 8760,
           });
           json(200, { endpoint, key, grant: shown(grant) });
           return;
@@ -655,6 +674,39 @@ export async function createWorkspaceServer(
       }
       // A plan an owner's agent saved; only that owner can open it.
       const savedPlan = path.match(/^\/studio-plans\/([^/]+)$/);
+      const sharedProject = path.match(/^\/studio-designs\/shares\/([^/]+)$/);
+      if (sharedProject && shares && req.method === 'GET') {
+        json(200, await shares.list(activeRepo.ownerId, decodeURIComponent(sharedProject[1])));
+        return;
+      }
+      if (path === '/studio-designs/share' && req.method === 'POST' && shares) {
+        const input = z
+          .object({ projectId: id, revision: z.number().int().positive(), requestId: id })
+          .strict()
+          .parse(await body(req));
+        const shared = await shares.create(
+          activeRepo,
+          input.projectId,
+          input.revision,
+          input.requestId,
+        );
+        json(200, {
+          ...shared,
+          url: `${hosting.publicUrl?.origin ?? (hosting.staticDir ? siteOrigin() : 'http://127.0.0.1:8741')}/#share/${shared.token}`,
+        });
+        return;
+      }
+      const shareAction = path.match(/^\/shared-designs\/([A-Za-z0-9_-]{43})\/(copy|revoke)$/);
+      if (shareAction && shares && req.method === 'POST') {
+        if (shareAction[2] === 'copy') {
+          const { requestId } = z
+            .object({ requestId: id })
+            .strict()
+            .parse(await body(req));
+          json(200, await shares.copy(shareAction[1], activeRepo, requestId));
+        } else json(200, await shares.revoke(shareAction[1], activeRepo.ownerId));
+        return;
+      }
       if (path === '/studio-designs' && req.method === 'POST') {
         json(200, await saveStudioDesign(activeRepo, design?.images, await body(req)));
         return;

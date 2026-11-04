@@ -185,7 +185,7 @@ export function ConnectAgent() {
                         to try again.
                       </p>
                     )}
-                    <p className="ca-note">Access lasts seven days. Remove it below at any time.</p>
+                    <p className="ca-note">Access lasts one year. Remove it below at any time.</p>
                   </>
                 )}
                 {fresh && (

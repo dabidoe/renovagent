@@ -91,7 +91,7 @@ async function main() {
 
 main().catch(() => {
   console.error(
-    'Connector access command failed. Check the workspace URI, existing --owner, --name and --hours (1–168). No credential was printed.',
+    'Connector access command failed. Check the workspace URI, existing --owner, --name and --hours (1–8760). No credential was printed.',
   );
   process.exitCode = 1;
 });

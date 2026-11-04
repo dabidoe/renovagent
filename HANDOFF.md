@@ -6,6 +6,18 @@ Any agent or person picking this up should read this file first, then [AGENTS.md
 
 ## Resume here
 
+- **Limited guest and sharing (3 Nov, release preparation):** photo intake and
+  first saves now start a guest automatically. Guest browser sessions and new
+  agent connections last one year; guest sessions renew on use. **Share project**
+  publishes one saved revision and its referenced photos at `#share/<token>`;
+  anyone with the link can view without an account and save an independent
+  editable copy. MCP `share_project` supports saved studios and `save_plan`
+  records. No shared link opens the rest of an owner's workspace. Owners can
+  revoke shares; existing saved copies persist. Build, 15 legacy + 334 TS tests
+  (56 skips), 64 connected cases, 36 built-site guest-sharing browser checks and
+  64 existing save/work-plan checks pass. See
+  [guest sharing](docs/architecture/limited-guest-sharing.md) for verification.
+
 - **Demo workflow recovery (3 Nov, deployed and rehearsed):** fixed the optional work-plan schema
   failure (full save response was spread into a strict request), isolated new
   studios even when the same photo is reused, and retried private design loading
@@ -47,7 +59,7 @@ Any agent or person picking this up should read this file first, then [AGENTS.md
 | `#examples`                       | Three real listings: Hutchinson, Oakland, Brooklyn. Each opens a paint and floor studio                                                                                                                                                                                                        | `listing-studio.tsx`, `hutchinson-studio.tsx`, `public/examples/<id>/` (built by `scripts/prepare-listing-example.ts`) |
 | Studio (examples and own project) | Per room: photo before/after with SAM wall masks tinted to the chosen paint, Muse Image floors, 3D room, priced paint and floor list, "Imagine" (words to paint and floor picks), **Inspiration** (photo you love → items, colours, 3 nearest paints, shop searches, restyle → _Inspired_ tab) | `paint-floor-studio.tsx`, `inspo-panel.tsx`, `paint-floor.ts`, `apps/api/src/studio.ts`                                |
 | `#your-project`                   | Owner uploads their own photos and an optional floor plan → SAM walls, Muse Spark reads (room type, ceiling height from doors), Muse floors, priced plan                                                                                                                                       | `own-studio.tsx`, `own-project.ts`                                                                                     |
-| `#connect`                        | Signed-in owner (guest or Google) makes or revokes 7-day agent keys for `https://<site>/mcp`. Muse and any MCP client                                                                                                                                                                          | `apps/web/src/features/connect/`, `apps/api/src/mcp-access.ts`, `mcp-http.ts`                                          |
+| `#connect`                        | Signed-in owner (guest or Google) makes or revokes one-year agent connections for `https://<site>/mcp`. Muse and any MCP client                                                                                                                                                                | `apps/web/src/features/connect/`, `apps/api/src/mcp-access.ts`, `mcp-http.ts`                                          |
 | Workspace (project picker)        | The older prompt-first project workspace: projects, evidence, inspiration & products board, scope drafts, design options, review, contractor handoff                                                                                                                                           | `apps/web/src/app/workspace-app.tsx`, `features/*`                                                                     |
 
 **Accounts:**
@@ -194,7 +206,7 @@ npx vite --config .local/vite.e2e.config.js   # 8743, proxies /api to 4100
 
 ## MCP for agents
 
-The endpoint is `https://<site>/mcp`, a stateless Streamable HTTP endpoint. Each key belongs to one owner and expires after 7 days. Owners make keys at `#connect`. Local stdio: `npm run serve:mcp`.
+The endpoint is `https://<site>/mcp`, a stateless Streamable HTTP endpoint. Each key belongs to one owner and expires after one year. Owners make keys at `#connect`. Local stdio: `npm run serve:mcp`.
 
 **Tools (from `CAPABILITIES` in `apps/api/src/mcp.ts` and `mcp-studio.ts`)**
 

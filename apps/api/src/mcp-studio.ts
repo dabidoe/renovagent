@@ -278,6 +278,7 @@ export function registerStudioTools(
           plan.rooms,
         );
         return text({
+          planId: plan._id,
           url: `${saving.origin}/#plan/${plan._id}`,
           saved: created ? 'new' : 'already saved for this requestId',
           title: plan.title,

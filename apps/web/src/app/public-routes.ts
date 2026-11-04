@@ -7,6 +7,7 @@ export const landingAnchors = new Set([
 ]);
 
 export function publicRoute(hash: string) {
+  if (/^#share\/[A-Za-z0-9_-]{43}$/.test(hash)) return 'studio';
   if (/^#connect\/approve\/[A-Za-z0-9_-]{43}$/.test(hash)) return 'studio';
   if (/^#workspace(?:\/(?:projects|example-room))?$/.test(hash)) return 'workspace';
   if (
