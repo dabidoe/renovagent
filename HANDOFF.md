@@ -6,7 +6,7 @@ Any agent or person picking this up should read this file first, then [AGENTS.md
 
 ## Resume here
 
-- **Demo workflow recovery (3 Nov, local):** fixed the optional work-plan schema
+- **Demo workflow recovery (3 Nov, deployed and rehearsed):** fixed the optional work-plan schema
   failure (full save response was spread into a strict request), isolated new
   studios even when the same photo is reused, and retried private design loading
   after inline sign-in. Added owner-scoped `upload_design_photo` over MCP (500 KB
@@ -14,7 +14,13 @@ Any agent or person picking this up should read this file first, then [AGENTS.md
   unauthenticated connection-page guidance. Preserved the OAuth work already in
   this checkout. Build/types/boundaries, 15 legacy + 334 TS tests (55 skips), all
   63 connected cases, 64 save/work-plan browser checks, 32 pairing UI checks
-  and all 202 public UI checks pass. Tests use local Mongo and fixtures; no live inference or deployment.
+  and all 202 public UI checks pass. Release `b163d66` was pushed to main and
+  verified on https://renovagent.app at 8:56 PM ET. Sixteen live checks passed
+  in a separate QA guest: browser upload, actual Muse read/SAM masks/Muse floor
+  render, save/reopen, work-plan creation/download, phone layout, OAuth approval
+  and PKCE exchange, MCP project read/photo upload and revocation. Existing owner
+  projects were untouched. Evidence is in `.local/live-workflow-smoke/`; the QA
+  browser session stays private and the temporary agent grant was revoked.
   See [fixes, rehearsal and remaining limits](docs/architecture/demo-workflow-recovery.md).
 
 - **Local preview route recovery (3 Nov):** `dev:connected` now watches API/MCP

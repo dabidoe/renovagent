@@ -1,7 +1,7 @@
 # Demo workflow recovery — November 3, 2026
 
-Local fixes following the owner's live troubleshooting notes. These changes are
-not a claim that the hosted build or a fresh Meta inference run has been verified.
+Fixes following the owner's live troubleshooting notes. Release `b163d66` was
+published to https://renovagent.app and rehearsed on November 3 at 8:56 PM ET.
 
 ## Fixed paths
 
@@ -62,9 +62,19 @@ simulated successful model response is introduced.
 - Regular suite: 15 legacy JavaScript + 334 TypeScript passed; 55 connected skips.
 - Connected suite: 63 passed. Offline OAuth pairing UI: 32 assertions passed.
 - Offline public-page checks: 202/202 passed in installed Chrome.
-- No fresh paid inference, live account mutation or deployment is part of these checks.
+- Production rehearsal after deployment: 16 checks passed in a separate QA guest.
+  Browser photo upload, actual Muse room analysis, SAM wall masks and Muse floor
+  render succeeded. Saving/reopening the exact revision, work-plan creation and
+  download, phone layout, OAuth owner approval/PKCE exchange, MCP reading the same
+  saved project and uploading photo bytes all succeeded. The QA agent grant was
+  revoked. No browser page errors or changes to existing owner projects occurred.
+- Evidence: `.local/live-workflow-smoke/report.json`, `saved-desktop.png`,
+  `saved-mobile.png`, and `proposed-work-plan.md`. The ignored QA browser-session
+  file is mode 0600; it is not part of the release.
 
 Remaining issues from the source notes include photo-estimate variability across
 fresh analysis, provider availability and render-mask edge quality. Browser/account
-sessions cannot transfer merely by sharing a private URL. Actual consumer-client
-attachment transfer and production inference still need a rehearsal in that client.
+sessions cannot transfer merely by sharing a private URL. The live checks used Chrome and the MCP SDK. Actual Muse consumer-client
+attachment transfer and its own OAuth connector UI still need rehearsal in that client.
+The generated floor was visually inspected; no new full-room furnishing render or
+3D-to-image render was requested during this rehearsal.
