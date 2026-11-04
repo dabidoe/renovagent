@@ -8,7 +8,7 @@
 //
 // Without an API the workspace endpoints fail; the static examples must still work,
 // and those failed requests are not counted as console errors.
-import { mkdir } from 'node:fs/promises';
+import { mkdir, writeFile } from 'node:fs/promises';
 import { chromium, type Browser, type Page } from 'playwright';
 import { createLogger, createServer, type ViteDevServer } from 'vite';
 import {
@@ -295,10 +295,58 @@ async function preparedSampleChecks(browser: Browser, base: string) {
         (await page.getByRole('textbox', { name: 'Width in feet', exact: true }).inputValue()) ===
           '15',
       );
+      const editorLayout = await page.evaluate(() => {
+        const describe = (element: Element) => {
+          const rect = element.getBoundingClientRect();
+          const css = getComputedStyle(element);
+          return {
+            element:
+              element.tagName.toLowerCase() +
+              (element.className
+                ? '.' + String(element.className).trim().replace(/\s+/g, '.')
+                : ''),
+            rect: rect.toJSON(),
+            scrollWidth: element.scrollWidth,
+            clientWidth: element.clientWidth,
+            minWidth: css.minWidth,
+            gridTemplateColumns: css.gridTemplateColumns,
+          };
+        };
+        const editor = document.querySelector('.pf-size');
+        const prompt = document.querySelector('.pf-imagine');
+        const promptRow = document.querySelector('.pf-imagine > div');
+        return {
+          viewport: { width: innerWidth, height: innerHeight },
+          document: describe(document.documentElement),
+          editor: editor ? describe(editor) : null,
+          prompt: prompt ? describe(prompt) : null,
+          promptRow: promptRow ? describe(promptRow) : null,
+          overflowing: [...document.querySelectorAll('body *')]
+            .filter((el) => {
+              const r = el.getBoundingClientRect();
+              return r.width > 0 && r.right > innerWidth + 1;
+            })
+            .map(describe),
+          actual: document.documentElement.scrollWidth,
+          maximum: innerWidth + 1,
+        };
+      });
+      console.log(`LAYOUT ${vp.tag} ${sample.id}: ${JSON.stringify(editorLayout)}`);
+      await writeFile(
+        `${outDir}/${vp.tag}-sample-${sample.id}-editor.json`,
+        JSON.stringify(editorLayout, null, 2),
+      );
+      const editorFits = editorLayout.actual <= editorLayout.maximum;
       check(
         `${vp.tag} ${sample.id}: editor fits viewport`,
-        await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1),
+        editorFits,
+        `document.scrollWidth=${editorLayout.actual} > innerWidth+1=${editorLayout.maximum}`,
       );
+      if (!editorFits)
+        await page.screenshot({
+          path: `${outDir}/${vp.tag}-sample-${sample.id}-editor.png`,
+          fullPage: true,
+        });
       await page.locator('.pf-project-details > summary').click();
       await page.locator('.sample-room-info > summary').click();
       check(

@@ -884,6 +884,9 @@
 
 .pf-imagine {
   display: grid;
+  /* Native input widths must not set this grid item's minimum width. */
+  min-width: 0;
+  grid-template-columns: minmax(0, 1fr);
   gap: 8px;
 }
 .pf-imagine label {
