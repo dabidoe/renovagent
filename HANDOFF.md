@@ -6,7 +6,7 @@ Any agent or person picking this up should read this file first, then [AGENTS.md
 
 ## Resume here
 
-- **Limited guest and sharing (3 Nov, release preparation):** photo intake and
+- **Limited guest and sharing (3 Nov, deployed):** photo intake and
   first saves now start a guest automatically. Guest browser sessions and new
   agent connections last one year; guest sessions renew on use. **Share project**
   publishes one saved revision and its referenced photos at `#share/<token>`;
@@ -15,7 +15,12 @@ Any agent or person picking this up should read this file first, then [AGENTS.md
   records. No shared link opens the rest of an owner's workspace. Owners can
   revoke shares; existing saved copies persist. Build, 15 legacy + 334 TS tests
   (56 skips), 64 connected cases, 36 built-site guest-sharing browser checks and
-  64 existing save/work-plan checks pass. See
+  64 existing save/work-plan checks pass; all 202 public UI checks pass. Release
+  `446be27` is live. Twelve production checks passed: automatic guest save/share,
+  one-year cookie and connection lifetime, no-cookie viewing, responsive photos,
+  persistent editable copies, agent-plan sharing, real uploaded/generated image
+  sharing and revocation. No new model calls or existing owner project changes.
+  Evidence: `.local/live-guest-sharing/`. See
   [guest sharing](docs/architecture/limited-guest-sharing.md) for verification.
 
 - **Demo workflow recovery (3 Nov, deployed and rehearsed):** fixed the optional work-plan schema
