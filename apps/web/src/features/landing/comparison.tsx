@@ -43,7 +43,7 @@ export function Comparison() {
     >
       <div className="comparison-heading">
         <h2 id="comparison-title">
-          Open code.
+          Open source.
           <br />
           <em>Not open wallet.</em>
         </h2>

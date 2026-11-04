@@ -1033,7 +1033,7 @@ export function PaintFloorStudio({
     setRoomIdState(id);
   };
   // A room with no photo (a plan an agent saved) is shown in 3D.
-  const [view, setView] = useState<'photo' | '3d' | 'inspired' | 'diagram'>(
+  const [view, setView] = useState<'photo' | '3d' | 'inspired'>(
     project.rooms[0]?.photo.src ? 'inspired' : '3d',
   );
   // A room restyled from an inspiration photo, kept in this browser.
@@ -1971,6 +1971,16 @@ export function PaintFloorStudio({
   const roomPlan = (
     <RoomPlan
       key={room.id}
+      diagrams={
+        <RoomDiagram
+          sizeEstimated={!!(room.sizeNote || project.ceilingNote)}
+          model={roomModel(room, ceilingFt)}
+          title={room.title}
+          placements={(placements[room.id] ?? []).filter((p) =>
+            (items[room.id] ?? []).some((i) => i.id === p.itemId),
+          )}
+        />
+      }
       items={items[room.id] ?? []}
       onChange={(next) => {
         setItems((current) => ({ ...current, [room.id]: next }));
@@ -2322,18 +2332,6 @@ export function PaintFloorStudio({
                 >
                   <Glyph name="layers" /> Furnishings
                 </button>
-                <button
-                  type="button"
-                  role="tab"
-                  aria-selected={view === 'diagram'}
-                  onClick={() => {
-                    setView('diagram');
-                    setToolsOpen(false);
-                    setFinishTool(null);
-                  }}
-                >
-                  <Glyph name="layers" /> Diagrams
-                </button>
               </div>
             )}
             <div className="pf-total" aria-live="polite">
@@ -2564,18 +2562,9 @@ export function PaintFloorStudio({
               </details>
             </div>
           )}
-          {view === 'diagram' ? (
-            <RoomDiagram
-              sizeEstimated={!!(room.sizeNote || project.ceilingNote)}
-              model={roomModel(room, ceilingFt)}
-              title={room.title}
-              placements={(placements[room.id] ?? []).filter((p) =>
-                (items[room.id] ?? []).some((i) => i.id === p.itemId),
-              )}
-            />
-          ) : view === 'photo' &&
-            (comparisonBase !== 'original' ||
-              !['finishes', 'rendered'].includes(comparisonTarget)) ? (
+          {view === 'photo' &&
+          (comparisonBase !== 'original' ||
+            !['finishes', 'rendered'].includes(comparisonTarget)) ? (
             <div className="pf-comparison-pair">
               {comparisonImage(comparisonBase)}
               {comparisonImage(comparisonTarget)}
@@ -2686,7 +2675,7 @@ export function PaintFloorStudio({
               />
             </div>
           )}
-          {!photoless && view !== 'diagram' && (
+          {!photoless && (
             <section
               className="pf-finish-dock"
               aria-label="Preview finish toolbar"

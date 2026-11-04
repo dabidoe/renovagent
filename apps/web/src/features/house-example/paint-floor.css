@@ -2823,6 +2823,10 @@
   padding: 18px;
   background: var(--pf-soft);
 }
+.pf-room-diagrams > .room-diagram {
+  padding: 16px 0 0;
+  background: transparent;
+}
 .pf-plan-section .pf-work-plan > .pf-group-head h3 {
   margin: 0;
 }

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { RollingNumber } from '../../components/rolling-number.js';
 import { studioItemSchema, type StudioItem } from '@renovagent/contracts';
 import { studioItemAsset, studioItemBudget, withDemoFurnitureAllowances } from '@renovagent/core';
@@ -45,6 +45,7 @@ function Allowance({
 
 export function RoomPlan({
   items,
+  diagrams,
   onChange,
   finishesMinor,
   finishesIncomplete = false,
@@ -53,6 +54,7 @@ export function RoomPlan({
   versionKey,
 }: {
   items: StudioItem[];
+  diagrams?: ReactNode;
   onChange: (items: StudioItem[]) => void;
   finishesMinor: number;
   finishesIncomplete?: boolean;
@@ -61,6 +63,7 @@ export function RoomPlan({
   versionKey: string;
 }) {
   const [name, setName] = useState('');
+  const [diagramsOpen, setDiagramsOpen] = useState(false);
   const [handoff, setHandoff] = useState<{ data: StudioHandoff; version: string } | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -119,6 +122,15 @@ export function RoomPlan({
             Labor, tax & delivery separate
           </small>
         </div>
+        {diagrams && (
+          <details
+            className="pf-work-plan pf-room-diagrams"
+            onToggle={(event) => setDiagramsOpen(event.currentTarget.open)}
+          >
+            <summary>Diagrams</summary>
+            {diagramsOpen && diagrams}
+          </details>
+        )}
         <details className="pf-work-plan">
           <summary>Optional paint & floor work plan</summary>
           <section aria-label="Room work plan">
