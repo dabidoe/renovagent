@@ -95,5 +95,13 @@ clients may need to reconnect/refresh their tool catalog to discover the new too
   copies and immutable shared contents are covered, including legacy board import.
 - Built-site Chrome: 52 notebook assertions at 1440/390/320 px. Screenshots in
   `.local/notebook-qa/` were visually inspected.
-- Full-suite, public-page and hosted verification results are recorded in HANDOFF.md
-  after completion. All local providers use fixtures; no live inference is implied.
+- Full build, 15 legacy plus 334 TS tests (58 skips), all 66 connected tests and
+  all 202 public-page checks pass. A clean archive of release `24d8072` also built
+  and passed all 52 notebook browser checks without unrelated checkout changes.
+- Release `24d8072` was deployed and passed ten production checks in isolated QA
+  guests: startup briefing, mixed capture, actual image content, reconnection
+  recall, website display/edit/history, anonymous phone sharing and independent
+  persistent copies. Shared contents were checked against the completed edit.
+  Both health endpoints returned 200. Screenshots/report: `.local/live-notebook/`.
+  QA connector grants were revoked. No inference ran or existing owner project
+  changed. Consumer Muse compliance/rendering still requires client support.

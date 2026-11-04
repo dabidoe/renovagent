@@ -6,7 +6,7 @@ Any agent or person picking this up should read this file first, then [AGENTS.md
 
 ## Resume here
 
-- **Project notebook and agent briefing (3 Nov, release preparation):** added
+- **Project notebook and agent briefing (4 Nov, deployed):** added
   project-specific notes, links, role-labeled images, decisions/questions and
   revision-safe edit/remove/history through dedicated notebook commands and MCP
   tools. Agents can read actual stored images. New connection initialization
@@ -15,7 +15,15 @@ Any agent or person picking this up should read this file first, then [AGENTS.md
   actions. Website notebooks save without sign-in, recover drafts, and share/copy
   independently, including notebook-only projects. 52 built-site notebook checks
   pass, including lost-response recovery after reload. Full build, 15 legacy +
-  334 TS tests (58 skips), all 66 connected tests and 202 public UI checks pass. See [implementation and verification](docs/architecture/project-notebook-and-agent-briefing.md).
+  334 TS tests (58 skips), all 66 connected tests and 202 public UI checks pass. Release `24d8072` is live. Ten production checks passed: guest notebook creation,
+  immediate project briefing, mixed agent capture, actual image readback, reconnect
+  recall, browser display, persisted owner edits/history, anonymous phone sharing,
+  independent persistent copies and no browser errors. Both health endpoints return 200. Evidence: `.local/live-notebook/`. QA grants were revoked; no inference ran
+  and existing owner projects were untouched. The exact committed release also
+  passed a clean build and all 52 browser checks outside this checkout.
+  Consumer Muse instruction compliance remains client-dependent; reconnect or
+  refresh tools to pick up the new capabilities.
+  See [implementation and verification](docs/architecture/project-notebook-and-agent-briefing.md).
 
 - **Limited guest and sharing (3 Nov, deployed):** photo intake and
   first saves now start a guest automatically. Guest browser sessions and new
