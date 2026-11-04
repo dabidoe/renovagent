@@ -14,9 +14,9 @@ import './connect-agent.css';
 type Key = { id: string; name: string; access: 'read' | 'propose'; expiresAt: string };
 const PLACEHOLDER = 'reno_YOUR_KEY';
 const EXAMPLE_REQUESTS = [
-  'Show me my renovation projects.',
-  'Help me plan a bathroom renovation.',
-  'Save this inspiration to my project.',
+  'What would my room look like as a study? I want white hardwood floors and cream-colored paint.',
+  'How much would that cost to do?',
+  "Furnish it as a study — a desk, a bookshelf, and a reading chair. Show me the layout and flag anything that won't fit.",
 ];
 
 export function ConnectAgent() {
@@ -75,6 +75,7 @@ export function ConnectAgent() {
     await load();
   };
   const address = 'https://renovagent.app/mcp';
+  const connectMessage = `Muse, please connect to Renovagent at ${address}`;
   const local = ['localhost', '127.0.0.1', '[::1]'].includes(window.location.hostname);
   const config = JSON.stringify(
     {
@@ -102,12 +103,12 @@ export function ConnectAgent() {
             </span>
             <div className="ca-step-body">
               <h2 id="ca-connect-title">Connect to Muse</h2>
-              <p className="ca-note">
-                In Muse’s custom-connector setup, enter this as the MCP server URL.
-              </p>
-              <div className="ca-row">
-                <code>{address}</code>
-                <Copy value={address} label="Copy endpoint" />
+              <p className="ca-note">Send this to Muse to begin setup.</p>
+              <div className="ca-prompt">
+                <p>
+                  Muse, please connect to Renovagent at <a href={address}>{address}</a>
+                </p>
+                <Copy value={connectMessage} label="Copy connection message" />
               </div>
             </div>
           </section>
@@ -182,20 +183,6 @@ export function ConnectAgent() {
               </p>
             </div>
           </section>
-          <section className="ca-card ca-step" aria-labelledby="ca-start-title">
-            <span className="ca-step-number" aria-hidden="true">
-              3
-            </span>
-            <div className="ca-step-body">
-              <h2 id="ca-start-title">Start using RenovAgent</h2>
-              {EXAMPLE_REQUESTS.map((request) => (
-                <div className="ca-prompt" key={request}>
-                  <p>{request}</p>
-                  <Copy value={request} />
-                </div>
-              ))}
-            </div>
-          </section>
           {error && (
             <p className="ca-error" role="alert">
               {error}
@@ -215,6 +202,34 @@ export function ConnectAgent() {
           <MuseConversation />
         </aside>
       </div>
+      <section className="ca-card ca-step" aria-labelledby="ca-start-title">
+        <span className="ca-step-number" aria-hidden="true">
+          3
+        </span>
+        <div className="ca-step-body">
+          <h2 id="ca-start-title">Start using RenovAgent</h2>
+          <div className="ca-example-prompts">
+            {EXAMPLE_REQUESTS.map((request, index) => (
+              <div className="ca-example-item" key={request}>
+                <div className="ca-example-prompt">
+                  <Copy
+                    value={request}
+                    label={`Copy example ${index + 1}`}
+                    className="ca-copy ca-prompt-copy"
+                    iconOnly
+                  />
+                  <p>{request}</p>
+                </div>
+                {index === 0 && (
+                  <p className="ca-note ca-example-helper">
+                    Send a photo of your room with this one.
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
       <details className="ca-card ca-dev">
         <summary>Advanced</summary>
         <p>

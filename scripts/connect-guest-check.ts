@@ -106,7 +106,11 @@ try {
     assert.ok(copied === generated, 'Clipboard matches generated key');
     pass(`${width}px: page Copy button copies the exact generated key`);
 
-    const displayedEndpoint = await page.locator('.ca-step').nth(0).locator('code').innerText();
+    const displayedEndpoint = await page
+      .locator('.ca-step')
+      .nth(0)
+      .locator('a')
+      .getAttribute('href');
     assert.equal(displayedEndpoint, 'https://renovagent.app/mcp');
     // Backend checks stay on the isolated local server, never the displayed production URL.
     const endpoint = base + '/mcp';
