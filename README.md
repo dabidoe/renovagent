@@ -24,9 +24,9 @@
   <a href="docs/architecture/README.md">Documentation</a>
 </p>
 
-## What you can do
+[![Watch the RenovAgent Demo](https://img.youtube.com/vi/E97iGaoiMz4/hqdefault.jpg)](https://www.youtube.com/watch?v=E97iGaoiMz4)
 
-![RenovAgent example projects and studio entry](docs/media/demo.png)
+## What you can do
 
 ### 1. Select real surfaces with SAM 3.1
 
@@ -58,7 +58,10 @@ Move beyond a flat photograph with an interactive 3D room representation. Explor
 - Interactive 3D room scenes
 - Furniture and layout exploration
 - Photorealistic render options
-- Blender-based high-quality rendering workflow
+- Headless Blender Cycles rendering on Modal GPU workers
+- Downloadable interior, dollhouse perspective, and top-down renders, plus a GLB model
+
+**Modal headless 3D workflow:** the browser sends the room model and selected wall and floor finishes to the API. The API submits a render job to Modal, where Blender runs in background mode, then polls for the completed images and GLB. Results return to the studio for viewing and download. The same Blender script supports local rendering with `npm run render:room`; the hosted path requires the configured Modal render service.
 
 **AR placement is a future direction**, not a verified feature of the current public demo.
 
@@ -92,6 +95,19 @@ Create a personal workspace, retain your uploaded room photos, and let an extern
 
 ![Persistent project workspace](docs/media/project-sharing.png)
 
+### 6. Plan material costs with a catalog stored in MongoDB
+
+The connected workspace stores product specifications, retailer offers, and dated price observations in MongoDB. Saved catalog records retain retailer and SKU details, product links, pack sizes, currency, observation dates, source labels, and freshness so a material estimate has a traceable basis.
+
+- Match material requirements against compatible catalog products
+- Compare builder-grade, mid-tier, and high-end material plans
+- Calculate pack-rounded quantities and material totals from stored prices
+- Retain pricing details in saved purchase-plan artifacts
+
+The curated retail catalog contains manually recorded reference prices with source notes. Demo catalogs use explicitly labeled fictional products and prices. These are planning estimates; live retailer prices, inventory, and checkout totals are not connected. Tax and labor are excluded from catalog material totals.
+
+See [catalog implementation](docs/architecture/commerce-catalog.md) and [retail reference sources](docs/retail-reference-prices.md).
+
 ## How Meta AI powers RenovAgent
 
 Built for the **Meta Global AI Developer Hackathon**, using **SAM 3.1, Muse Spark, and Muse Image** to connect visual design with practical renovation planning.
@@ -102,8 +118,11 @@ Built for the **Meta Global AI Developer Hackathon**, using **SAM 3.1, Muse Spar
 | **Muse Spark** | Analyzes rooms, interprets design instructions, and translates inspiration into structured choices |
 | **Muse Image** | Generates flooring edits, inspiration-guided restyles, and photorealistic room imagery |
 | **Model Context Protocol (MCP)** | Connects external AI agents to persistent renovation projects and bounded proposal tools |
+| **Modal + Blender** | Runs headless GPU rendering jobs for room images and GLB exports |
+| **MongoDB Atlas** | Persists project workspaces, product catalogs, retailer offers, and dated price observations |
+| **Railway** | Hosts the web application, API, and authenticated MCP endpoint at one public origin |
 
-Supporting technologies include React, TypeScript, Three.js, MongoDB, and Blender. The hosted application runs on Railway.
+React, TypeScript, and Three.js power the browser studio. Railway hosts [renovagent.app](https://renovagent.app), with MongoDB Atlas for persistent data and Modal for the separate Blender render jobs.
 
 ## From a photo to a project
 
@@ -187,7 +206,7 @@ RenovAgent is an active prototype. Its visual studio, selected 3D rendering work
 
 **Planned or incomplete capabilities** include camera-based AR placement, broader sharing and collaboration, verified live supplier prices, contractor verification, purchasing, and billing.
 
-Example material prices are illustrative rather than live offers. AI-generated designs are conceptual; physical dimensions, material suitability, code requirements, and contractor decisions require separate verification.
+Material prices are saved reference observations or labeled demo examples rather than live offers. AI-generated designs are conceptual; physical dimensions, material suitability, code requirements, and contractor decisions require separate verification.
 
 For detailed implementation status and limitations, see [PROGRESS.md](PROGRESS.md) and [HANDOFF.md](HANDOFF.md).
 
