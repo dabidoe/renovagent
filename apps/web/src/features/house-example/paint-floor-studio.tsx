@@ -413,6 +413,8 @@ export function Room3D({
   const host = useRef<HTMLDivElement>(null);
   const scene = useRef<RoomScene | null>(null);
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const live = useRef({ onPlacementSelect, onPlacementMove, onPlacementRotate, modelRender });
   live.current = { onPlacementSelect, onPlacementMove, onPlacementRotate, modelRender };
   const look = {
@@ -429,6 +431,9 @@ export function Room3D({
     const model = roomModel(room, ceilingFt);
     if (!host.current || !model) return;
     let disposed = false;
+    setLoading(true);
+    setLoadError('');
+    setError('');
     const mount = (mountRoomScene: typeof import('../room3d/room-scene.js').mountRoomScene) => {
       if (disposed || !host.current) return;
       scene.current = mountRoomScene(
@@ -466,13 +471,15 @@ export function Room3D({
       scene.current.setLook(now.look);
       scene.current.setPlacements(now.placements);
       scene.current.selectPlacement(now.selectedPlacement ?? null);
-      setError('');
+      setLoading(false);
     };
     import('../room3d/room-scene.js')
       .then(({ mountRoomScene }) => mount(mountRoomScene))
-      .catch((e: unknown) =>
-        setError(e instanceof Error ? e.message : '3D needs WebGL in this browser.'),
-      );
+      .catch((e: unknown) => {
+        if (disposed) return;
+        setLoading(false);
+        setLoadError(e instanceof Error ? e.message : '3D needs WebGL in this browser.');
+      });
     return () => {
       disposed = true;
       scene.current?.dispose();
@@ -492,7 +499,29 @@ export function Room3D({
   }, [selectedPlacement]);
   return (
     <div className="pf-3d">
-      <div ref={host} className="pf-3d-host" />
+      <div ref={host} className="pf-3d-host">
+        {loading && (
+          <div className="pf-3d-status" role="status">
+            Loading 3D viewer…
+          </div>
+        )}
+        {loadError && (
+          <div className="pf-3d-status" role="alert">
+            <strong>The 3D viewer couldn’t load.</strong>
+            <p>
+              A site update or interrupted download can cause this. Reload to load the current
+              viewer. Your browser draft is kept.
+            </p>
+            <button type="button" onClick={() => window.location.reload()}>
+              Reload viewer
+            </button>
+            <details>
+              <summary>Error details</summary>
+              <p>{loadError}</p>
+            </details>
+          </div>
+        )}
+      </div>
       <details className="pf-3d-basis">
         <summary>Room dimensions & fit</summary>
         <p>

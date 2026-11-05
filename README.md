@@ -2,13 +2,23 @@
 
 # RenovAgent
 
-### See the possibilities. Plan the renovation. Bring your AI agent.
+### Know what works. Before you build.
 
-**RenovAgent is an AI-powered renovation studio that transforms real room photos into visual designs, 3D mockups, and persistent renovation projects.**
+**Turn real room photos into AI-powered renovation plans.**
 
-Built for the **Meta Global AI Developer Hackathon**, RenovAgent combines Meta's SAM 3.1, Muse Spark, and Muse Image with an interactive design studio and an agent-accessible project workspace.
+RenovAgent is an open-source renovation studio combining AI visualization, interactive 3D mockups, material cost estimates, and persistent project workspaces.
 
-**[Launch RenovAgent](https://renovagent.app)** · [Architecture](docs/architecture/README.md) · [Development status](PROGRESS.md)
+Built for the **Meta Global AI Developer Hackathon**, using **SAM 3.1, Muse Spark, and Muse Image** to connect visual design with practical renovation planning.
+
+**[Launch RenovAgent](https://renovagent.app)** · [Architecture](docs/architecture/README.md) · [Development Status](PROGRESS.md)
+
+## 🎬 Watch the Demo
+
+[![Watch the RenovAgent Demo](https://img.youtube.com/vi/E97iGaoiMz4/hqdefault.jpg)](https://www.youtube.com/watch?v=E97iGaoiMz4)
+
+[▶ Watch the 3-minute demo](https://www.youtube.com/watch?v=E97iGaoiMz4)
+
+![RenovAgent example projects and studio entry](docs/media/demo.png)
 
 ![RenovAgent example projects and studio entry](docs/media/demo.png)
 

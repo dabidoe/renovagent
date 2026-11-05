@@ -105,3 +105,33 @@ clients may need to reconnect/refresh their tool catalog to discover the new too
   Both health endpoints returned 200. Screenshots/report: `.local/live-notebook/`.
   QA connector grants were revoked. No inference ran or existing owner project
   changed. Consumer Muse compliance/rendering still requires client support.
+
+## Local capture UI follow-up — November 4
+
+The notebook composer now leads with a visible photo picker/drop area and notes.
+Image previews include explicit source roles and removal; title, room, entry type,
+links and tags are optional filing details in a collapsed section (expanded when
+editing). The same uploader is available before project creation. Creation saves
+its initial photos/text through the existing notebook command. A failed or lost
+first-save response leaves a recoverable draft with the exact retry identity;
+when browser recovery is unavailable, a failed first save keeps the original page
+open instead of losing the material. New-project names, notes and upload references
+also survive browser reload through the existing draft store.
+
+Uploads retain each successful image/text file if another file fails, show file
+progress, deduplicate existing photo hashes, and report the twelve-image ceiling
+instead of silently truncating. Saving and editing are blocked while an upload
+is running. Empty entries cannot be submitted. Saved-card edit/remove labels are
+compact visually and retain entry-specific accessible names. Image roles and
+reported/agent/source distinctions continue to use the existing contracts.
+
+Verification uses the built site against a disposable database on localhost:27018:
+initial capture, first-save lost-response retry, mixed-file failure, duplicate
+photos, actual file dropping, draft removal, save/edit/reload recovery, search,
+MCP refresh, anonymous share and independent copy, at 1440/390/320 px. Screenshots
+in `.local/notebook-qa/` were visually inspected. The production build, types,
+dependency boundaries and both notebook integration scenarios pass. The general
+suite passed 15 legacy and 340 TypeScript tests with 60 skips; its hosting-listener
+case was sandbox-blocked and passed separately with localhost permission (all five
+hosting cases passed). No live data, model calls, deployment or authorization
+changes were used in this follow-up.

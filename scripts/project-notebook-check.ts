@@ -60,14 +60,74 @@ try {
     const errors: string[] = [];
     page.on('pageerror', (e) => errors.push(e.message));
     await page.goto(base + '/#notebook', { waitUntil: 'networkidle' });
+    check(
+      await page.getByRole('button', { name: 'Add photos', exact: true }).isVisible(),
+      'New notebook also exposes photo upload',
+    );
+    await page.screenshot({ path: `${out}/start-${width}.png`, fullPage: true });
+    if (width === 1440) {
+      await page
+        .getByLabel('Add photos or text documents', { exact: true })
+        .setInputFiles('public/examples/hutchinson/photo-04.jpg');
+      await page.getByRole('button', { name: 'Remove image', exact: true }).waitFor();
+    }
     await page
       .getByRole('textbox', { name: 'Project name', exact: true })
       .fill(`QA living room ${width}`);
     await page
       .getByRole('textbox', { name: 'What are you working on?', exact: true })
       .fill('Keep the existing sofa. Collect warm finishes; dimensions unknown.');
+    if (width === 1440) {
+      let dropped = false;
+      await page.route('**/api/workspace/projects/*/notebook', async (route) => {
+        if (route.request().method() === 'POST' && !dropped) {
+          dropped = true;
+          await route.fetch();
+          await route.abort('failed');
+        } else await route.continue();
+      });
+    }
     await page.getByRole('button', { name: 'Create project notebook', exact: true }).click();
     await page.getByRole('button', { name: 'Save entry', exact: true }).waitFor();
+    if (width === 1440) {
+      await page.unroute('**/api/workspace/projects/*/notebook');
+      await page.getByRole('button', { name: 'Save entry', exact: true }).click();
+      await page.getByText('Saved to this project. Muse can read it.', { exact: true }).waitFor();
+      check(
+        (await page
+          .getByRole('heading', {
+            name: 'Keep the existing sofa. Collect warm finishes; dimensions unknown.',
+            exact: true,
+          })
+          .count()) === 1,
+        'A lost initial-save response recovers and retries without duplicating the first entry',
+      );
+    }
+
+    check(
+      await page.getByRole('button', { name: 'Add photos', exact: true }).isVisible(),
+      'Photo upload is visible without expanding optional details',
+    );
+    check(
+      await page.getByRole('button', { name: 'Save entry', exact: true }).isDisabled(),
+      'Empty entries do not offer a failing save',
+    );
+    await page.screenshot({ path: `${out}/capture-${width}.png`, fullPage: true });
+    await page.getByText('Organize & add links', { exact: true }).click();
+    await page
+      .getByRole('heading', {
+        name: 'Keep the existing sofa. Collect warm finishes; dimensions unknown.',
+        exact: true,
+      })
+      .waitFor();
+    if (width === 1440)
+      check(
+        await page
+          .locator('.notebook-card img')
+          .first()
+          .evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth > 0),
+        'Starting a notebook saves the initial photo and note together',
+      );
     const projectId = decodeURIComponent(new URL(page.url()).hash.split('/')[1]);
     check(!!projectId, 'Notebook starts without signing in or measurements');
     await page
@@ -82,7 +142,6 @@ try {
     await page
       .getByRole('textbox', { name: 'Links · one per line', exact: true })
       .fill('https://example.com/room-reference');
-    await page.getByText('Tags and files', { exact: true }).click();
     await page
       .getByRole('textbox', { name: 'Tags · comma separated', exact: true })
       .fill('keep, warm');
@@ -91,6 +150,61 @@ try {
       .setInputFiles('public/examples/hutchinson/photo-04.jpg');
     await page.getByRole('button', { name: 'Remove image', exact: true }).waitFor();
     await page.getByRole('combobox', { name: /Role for/ }).selectOption('room');
+    if (width === 1440) {
+      const upload = page.getByLabel('Add photos or text documents', { exact: true });
+      await upload.setInputFiles([
+        {
+          name: 'unsupported.pdf',
+          mimeType: 'application/pdf',
+          buffer: Buffer.from('not supported'),
+        },
+        {
+          name: 'good-note.txt',
+          mimeType: 'text/plain',
+          buffer: Buffer.from('Imported reference text'),
+        },
+      ]);
+      await page.getByRole('alert').filter({ hasText: 'unsupported.pdf' }).waitFor();
+      check(
+        (await page.getByRole('textbox', { name: 'Notes', exact: true }).inputValue()).includes(
+          'Imported reference text',
+        ),
+        'Valid file is retained when another selected file fails',
+      );
+      check(
+        (await page.getByRole('button', { name: 'Remove image', exact: true }).count()) === 1,
+        'Existing photo remains after mixed upload failure',
+      );
+      await upload.setInputFiles('public/examples/hutchinson/photo-04.jpg');
+      await page
+        .getByText('Files ready. Save the entry to attach them to this project.', { exact: true })
+        .waitFor({ state: 'hidden' });
+      await page
+        .getByRole('button', { name: 'Add more photos', exact: true })
+        .click({ trial: true });
+      check(
+        (await page.getByRole('button', { name: 'Remove image', exact: true }).count()) === 1,
+        'Reattaching the same photo does not duplicate its preview',
+      );
+      // Exercise the native file-drop path with a real local image.
+      const { readFile } = await import('node:fs/promises');
+      const bytes = [...(await readFile('public/examples/hutchinson/photo-05.jpg'))];
+      const transfer = await page.evaluateHandle((data) => {
+        const dt = new DataTransfer();
+        dt.items.add(new File([new Uint8Array(data)], 'dropped-room.jpg', { type: 'image/jpeg' }));
+        return dt;
+      }, bytes);
+      await page.locator('.notebook-dropzone').dispatchEvent('drop', { dataTransfer: transfer });
+      await page.getByRole('button', { name: 'Remove image', exact: true }).nth(1).waitFor();
+      check(true, 'Dropping a photo adds a visible preview');
+      await page.getByRole('button', { name: 'Remove image', exact: true }).nth(1).click();
+      check(
+        (await page.getByRole('button', { name: 'Remove image', exact: true }).count()) === 1,
+        'A draft photo can be removed before save',
+      );
+      await transfer.dispose();
+    }
+    await page.screenshot({ path: `${out}/attachments-${width}.png`, fullPage: true });
     await page.getByRole('button', { name: 'Save entry', exact: true }).click();
     await page.getByRole('heading', { name: 'Keep sofa and warm finishes', exact: true }).waitFor();
     check(true, 'Mixed notes, link, tags and role-labeled image save together');
@@ -99,6 +213,7 @@ try {
     check(
       await page
         .locator('.notebook-card img')
+        .first()
         .evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth > 0),
       'Image and notebook survive reload',
     );
@@ -110,6 +225,7 @@ try {
       'Unsent notebook draft survives reload',
     );
     if (width === 1440) {
+      await page.getByText('Organize & add links', { exact: true }).click();
       await page
         .getByRole('textbox', { name: 'Title (optional)', exact: true })
         .fill('Recovered save');
@@ -232,6 +348,7 @@ try {
     check(
       await view
         .locator('.notebook-card img')
+        .first()
         .evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth > 0),
       'Shared notebook photo loads without owner session',
     );

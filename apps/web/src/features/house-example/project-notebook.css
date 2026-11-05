@@ -236,3 +236,194 @@
     padding: 12px 16px;
   }
 }
+
+/* Capture first; the optional filing details stay out of the way. */
+.project-notebook > header > div > p:last-child {
+  color: #526781;
+  line-height: 1.6;
+  max-width: 640px;
+}
+.notebook-compose {
+  box-shadow: 0 8px 32px #1b2c4505;
+  padding: 28px;
+  gap: 20px;
+}
+.notebook-compose h2 {
+  font-size: 1.15rem;
+  margin: 0;
+}
+.notebook-form-fields {
+  gap: 20px;
+}
+.notebook-dropzone {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  column-gap: 18px;
+  row-gap: 8px;
+  border: 1.5px dashed #a9bdb5;
+  border-radius: 14px;
+  padding: 28px 24px;
+  background: #f6f9f7;
+  transition:
+    border-color 150ms,
+    background 150ms;
+}
+.notebook-dropzone.is-dragging {
+  background: #e6f1e9;
+  border-color: #31514b;
+  border-style: solid;
+}
+.notebook-dropzone > svg {
+  color: #54756b;
+}
+.notebook-dropzone strong {
+  font-size: 1rem;
+  font-weight: 650;
+}
+.notebook-dropzone p {
+  margin: 6px 0 0;
+  font-size: 0.88rem;
+  color: #526781;
+  line-height: 1.5;
+}
+.notebook-dropzone > small {
+  grid-column: 2 / -1;
+  color: #657870;
+  font-size: 0.75rem;
+  line-height: 1.6;
+}
+.project-notebook .notebook-dropzone > button {
+  background: #fff;
+  border-color: #a9bdb5;
+  color: #31514b;
+  font-size: 0.88rem;
+  font-weight: 650;
+}
+.project-notebook .notebook-file-input {
+  display: none;
+}
+.notebook-note-label textarea {
+  padding: 14px 16px;
+  border-color: #dce4ee;
+  background: #fcfdfd;
+}
+.notebook-details {
+  border-top: 1px solid #e8edec;
+  padding-top: 8px;
+}
+.notebook-details summary {
+  color: #526781;
+  font-size: 0.85rem;
+}
+.notebook-compose-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.notebook-compose-footer > small {
+  font-size: 0.78rem;
+  color: #657870;
+}
+.notebook-compose-footer .notebook-actions {
+  margin: 0;
+}
+.notebook-attachments {
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  margin-top: 16px;
+  gap: 14px;
+}
+.notebook-attachments > figure {
+  min-width: 0;
+  margin: 0;
+  display: grid;
+  align-content: start;
+  gap: 8px;
+}
+.notebook-attachment-preview {
+  position: relative;
+}
+.notebook-attachments img {
+  display: block;
+  height: auto;
+  aspect-ratio: 4 / 3;
+}
+.project-notebook .notebook-attachment-preview button {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 32px;
+  height: 32px;
+  min-height: 32px;
+  padding: 0;
+  background: #fff;
+  border: 0;
+  box-shadow: 0 1px 8px #0003;
+  font-size: 1.4rem;
+}
+.notebook-attachments figcaption {
+  font-size: 0.75rem;
+  color: #526781;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.notebook-attachments select {
+  font-size: 0.8rem;
+  padding: 8px;
+}
+.notebook-card {
+  align-self: start;
+}
+.notebook-empty {
+  text-align: center;
+  color: #526781;
+  padding: 36px 20px;
+  line-height: 1.7;
+}
+.notebook-disclaimer {
+  color: #657081;
+  font-size: 0.75rem;
+  line-height: 1.6;
+  margin-top: 32px;
+}
+.notebook-status {
+  color: #31514b;
+  font-size: 0.88rem;
+}
+.project-notebook [role='alert'] {
+  padding: 12px 16px;
+  border-radius: 10px;
+  background: #fff4ee;
+  color: #85391f;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 700px) {
+  .notebook-compose {
+    padding: 18px;
+  }
+  .notebook-dropzone {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    text-align: center;
+    padding: 24px 14px;
+    gap: 12px;
+  }
+  .notebook-dropzone > small {
+    grid-column: 1;
+  }
+  .notebook-dropzone > button {
+    width: 100%;
+  }
+  .notebook-attachments {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .notebook-attachments .notebook-attachment-preview button {
+    width: 40px;
+    height: 40px;
+  }
+}

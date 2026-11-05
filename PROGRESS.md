@@ -1,5 +1,17 @@
 # Project status — Renovagent
 
+Notebook capture cleanup (November 4, local): Notes now exposes photo upload and
+file dropping immediately, including before project creation. Draft thumbnails
+have role labels and removal; the note is primary and optional title, room, type,
+links and tags sit behind one disclosure. Starting a notebook saves the initial
+photos/text through the existing validated command, with recoverable/idempotent
+first-save retries. Uploads show progress, retain successful files on partial
+failure, deduplicate photos and report the twelve-image limit. Empty-entry saves
+are disabled; saved cards have compact accessible edit/remove actions. Build,
+notebook integration and desktop/390/320 px browser checks pass; screenshots in
+`.local/notebook-qa/`. Checks use disposable local MongoDB, with no live data,
+model calls or deployment. See `docs/architecture/project-notebook-and-agent-briefing.md`.
+
 Independent new-project drafts (November 4, local): New project now opens a blank
 `#new-project/own-<uuid>` draft, with separate intake files, browser snapshot and
 save-command identity. Refresh resumes only that ID. Saved account designs retain
