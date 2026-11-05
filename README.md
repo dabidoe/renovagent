@@ -1,28 +1,32 @@
-<img src="apps/web/src/assets/brand/renovagent-mark.png" alt="RenovAgent logo" width="120" />
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="apps/web/src/assets/brand/renovagent-logo-light.webp" />
+    <source media="(prefers-color-scheme: light)" srcset="apps/web/src/assets/brand/renovagent-logo.webp" />
+    <img src="apps/web/src/assets/brand/renovagent-logo-light.webp" alt="RenovAgent logo" width="240" height="160" />
+  </picture>
+</p>
 
-# RenovAgent
+<h1 align="center">RenovAgent</h1>
 
-### Know what works. Before you build.
+<p align="center"><strong>See the possibilities. Plan the renovation. Bring your AI agent.</strong></p>
 
-**Turn real room photos into AI-powered renovation plans.**
+<p align="center">RenovAgent is an open-source renovation studio combining AI visualization, interactive 3D mockups, material cost estimates, and persistent project workspaces.</p>
 
-RenovAgent is an open-source renovation studio combining AI visualization, interactive 3D mockups, material cost estimates, and persistent project workspaces.
+<p align="center">
+  <img src="docs/media/avatar-making_something.gif"
+       alt="RenovAgent mascot imagining a renovation"
+       width="200" />
+</p>
 
-Built for the **Meta Global AI Developer Hackathon**, using **SAM 3.1, Muse Spark, and Muse Image** to connect visual design with practical renovation planning.
-
-**[Launch RenovAgent](https://renovagent.app)** · [Architecture](docs/architecture/README.md) · [Development Status](PROGRESS.md)
-
-## 🎬 Watch the Demo
-
-[![Watch the RenovAgent Demo](https://img.youtube.com/vi/E97iGaoiMz4/hqdefault.jpg)](https://www.youtube.com/watch?v=E97iGaoiMz4)
-
-[▶ Watch the 3-minute demo](https://www.youtube.com/watch?v=E97iGaoiMz4)
-
-![RenovAgent example projects and studio entry](docs/media/demo.png)
-
-![RenovAgent example projects and studio entry](docs/media/demo.png)
+<p align="center">
+  <a href="https://renovagent.app">Launch App</a> |
+  <a href="https://www.youtube.com/watch?v=E97iGaoiMz4">Watch Demo</a> |
+  <a href="docs/architecture/README.md">Documentation</a>
+</p>
 
 ## What you can do
+
+![RenovAgent example projects and studio entry](docs/media/demo.png)
 
 ### 1. Select real surfaces with SAM 3.1
 
@@ -89,6 +93,8 @@ Create a personal workspace, retain your uploaded room photos, and let an extern
 ![Persistent project workspace](docs/media/project-sharing.png)
 
 ## How Meta AI powers RenovAgent
+
+Built for the **Meta Global AI Developer Hackathon**, using **SAM 3.1, Muse Spark, and Muse Image** to connect visual design with practical renovation planning.
 
 | Technology | Role |
 | --- | --- |
