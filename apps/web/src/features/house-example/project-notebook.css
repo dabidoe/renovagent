@@ -79,11 +79,17 @@
   cursor: pointer;
   min-height: 42px;
 }
-.project-notebook .notebook-primary {
-  background: #31514b;
+.project-notebook .notebook-primary,
+.project-notebook .notebook-dropzone > button {
+  background: var(--brand-blue-text, #2563eb);
   color: #fff;
-  border-color: #31514b;
+  border-color: var(--brand-blue-text, #2563eb);
   font-weight: 650;
+}
+.project-notebook .notebook-primary:hover:not(:disabled),
+.project-notebook .notebook-dropzone > button:hover:not(:disabled) {
+  background: #1d4ed8;
+  border-color: #1d4ed8;
 }
 .project-notebook button:disabled {
   opacity: 0.6;
@@ -295,11 +301,7 @@
   line-height: 1.6;
 }
 .project-notebook .notebook-dropzone > button {
-  background: #fff;
-  border-color: #a9bdb5;
-  color: #31514b;
   font-size: 0.88rem;
-  font-weight: 650;
 }
 .project-notebook .notebook-file-input {
   display: none;
