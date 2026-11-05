@@ -6,6 +6,7 @@ import './landing-v2.css';
 import { Comparison } from './comparison.js';
 import { HeroScene } from './hero-scene.js';
 import { StudioPreview } from './studio-preview.js';
+import { ProductDemo } from './product-demo.js';
 import { StudioStory, AgentConnection } from './landing-story.js';
 import './hero-scene.css';
 import './product-experience.css';
@@ -101,6 +102,7 @@ export function Landing({
       </section>
 
       <StudioPreview onOpen={onExamples} busy={busy} />
+      <ProductDemo />
       <StudioStory onOwnProject={onOwnProject} onDirection={onDirection} busy={busy} />
       <AgentConnection />
       <Comparison />
