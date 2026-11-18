@@ -1,0 +1,19 @@
+{
+  "importedAt": "2026-11-16",
+  "files": {
+    "poly-haven-interior-tiles.webp": {
+      "bytes": 11434,
+      "sha256": "8e652b569621c3e89dbdfdff17b5779b9ab831961e5187b1626757c37a52fabf",
+      "source": "https://polyhaven.com/a/interior_tiles",
+      "license": "CC0-1.0",
+      "conversion": "Diffuse or color map resized to 384 px WebP"
+    },
+    "ambientcg-tiles074.webp": {
+      "bytes": 16144,
+      "sha256": "f63d0579e4d24365d3af8ac382cd822da871c6723fb98fe404d4a4304a7c5b2b",
+      "source": "https://ambientcg.com/view?id=Tiles074",
+      "license": "CC0-1.0",
+      "conversion": "Diffuse or color map resized to 384 px WebP"
+    }
+  }
+}

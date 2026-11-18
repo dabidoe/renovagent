@@ -36,6 +36,7 @@ export function HutchinsonStudio({ onRoomExample }: { onRoomExample?: () => void
               example catalog for this demo, not live offers. Labor is quoted separately.
             </li>
           </ul>
+          <a href="#example/hutchinson-vanity/r1">Compare the two vanity estimates</a>
           {onRoomExample && (
             <button type="button" className="link-button" onClick={onRoomExample}>
               The measured-room example: work steps, quotes and Blender stages

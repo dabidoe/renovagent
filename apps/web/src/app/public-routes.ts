@@ -16,6 +16,8 @@ export function canonicalPublicHash(hash: string) {
 export function publicRoute(hash: string) {
   hash = canonicalPublicHash(hash);
   if (ownStudioDraftId(hash) || hash === '#resume-project') return 'studio';
+  if (/^#example\/hutchinson-vanity(?:\/r[12](?:\/scope)?)?(?:\?tile=(?:gray|ivory))?$/.test(hash))
+    return 'studio';
   if (hash === '#notebook' || /^#project\/[A-Za-z0-9_:%-]+\/notebook$/.test(hash)) return 'studio';
   if (/^#share\/[A-Za-z0-9_-]{43}$/.test(hash)) return 'studio';
   if (/^#connect\/approve\/[A-Za-z0-9_-]{43}$/.test(hash)) return 'studio';

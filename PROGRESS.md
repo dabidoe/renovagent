@@ -1,5 +1,33 @@
 # Project status — Renovagent
 
+Hutchinson model swap (November 17, local): the proposed room uses the imported
+Kenney fixtures. White freestanding / floating oak changes cabinet geometry and
+appearance alongside the sourced price and contractor checks. Vanity and mirror
+pins open existing-condition annotations; the mirror stays in scope as retained.
+Generic geometry and fixture placement are explicitly schematic; fit is unverified.
+
+Hutchinson vanity beta (November 16, local): added two linkable draft estimate
+revisions in the existing example studio. The floating option changes the
+sourced vanity cost and adds site-dependent mounting and plumbing checks.
+A finished concept shows the proposed visual direction. Contractor labor and
+fit are pending. Both revision URLs, clipboard sharing, render loading and
+390 px layout passed local Chrome checks. See
+[beta evidence and render provenance](docs/architecture/hutchinson-vanity-beta.md).
+
+Hutchinson drain prototype (November 16, local): added a SwiftUI iPhone target
+for a LiDAR basement scan, visible drain tags, an editable proposed trace and
+a local materials estimate. A private Mac bridge reuses the existing SAM
+provider and returns mask samples for a single selected frame. The phone
+projects samples with matching depth and pose and asks the user to accept
+the suggested straight segment. The estimate reuses shared commerce math in
+JavaScriptCore and takes manually sourced pack prices and fitting counts.
+Fixture-backed bridge tests and macOS JavaScriptCore arithmetic passed.
+The sandbox rejected a loopback listener used by one existing test.
+The unsigned iPhone app built in Xcode 27.2 with the takeoff resource bundled.
+Device signing, real SAM on basement imagery, measurement accuracy, and the
+supplier basket are pending a physical field run. See [setup and field
+protocol](apps/ios/README.md).
+
 Notebook capture cleanup (November 4, local): Notes now exposes photo upload and
 file dropping immediately, including before project creation. Draft thumbnails
 have role labels and removal; the note is primary and optional title, room, type,

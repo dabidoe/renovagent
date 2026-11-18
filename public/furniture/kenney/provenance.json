@@ -55,6 +55,22 @@
     "furniture-kit-License.txt": {
       "sha256": "78c8043c884b33abee06000a32e11530f25957c5210be8ae2573244f14ba9bbc",
       "bytes": 572
+    },
+    "bathroomCabinet.glb": {
+      "sha256": "9db540227acaaedbbadc6a085f4a00460b73944e608afaad4770e53238a3b7f8",
+      "bytes": 7216
+    },
+    "bathroomSinkSquare.glb": {
+      "sha256": "360853c822f268e7267c62ef20cf646f170a13d76254cc0804a1d397a4a3ea67",
+      "bytes": 15108
+    },
+    "bathtub.glb": {
+      "sha256": "54c405c7035aab63dc41e709dc3c50fc5bcfbc4cddc91ffc54188075a6d25d01",
+      "bytes": 35500
+    },
+    "toilet.glb": {
+      "sha256": "16165cfd03c56c2cb443b800570810a22ef770f65e7a468f6761d9dc14eaaeae",
+      "bytes": 18112
     }
   }
 }

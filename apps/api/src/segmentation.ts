@@ -25,7 +25,16 @@ export type PhotoSegmentation = {
   segments: PhotoSegment[];
 };
 
-export async function parseSegmentation(phrase: string, text: string): Promise<PhotoSegmentation> {
+export async function parseSegmentation(
+  phrase: string,
+  text: string,
+  onMask?: (
+    segment: PhotoSegment,
+    raster: Uint8Array,
+    maskWidth: number,
+    maskHeight: number,
+  ) => void,
+): Promise<PhotoSegmentation> {
   const size = /;w=(\d+);h=(\d+)/.exec(text);
   if (!text || !size) return { phrase, width: 0, height: 0, segments: [] };
   const width = Number(size[1]),
@@ -50,7 +59,7 @@ export async function parseSegmentation(phrase: string, text: string): Promise<P
     for (const value of raster) on += value;
     const scaleX = (bounds.right - bounds.left) / mask.width,
       scaleY = (bounds.bottom - bounds.top) / mask.height;
-    return {
+    const segment: PhotoSegment = {
       id: record.objectId,
       ...(record.confidence === undefined ? {} : { confidence: record.confidence }),
       box: { ...bounds },
@@ -59,6 +68,8 @@ export async function parseSegmentation(phrase: string, text: string): Promise<P
       scaleY,
       imageShare: (on * scaleX * scaleY) / (width * height),
     };
+    onMask?.(segment, raster, mask.width, mask.height);
+    return segment;
   });
   return { phrase, width, height, segments };
 }

@@ -1,3 +1,4 @@
+import { VanityReview } from '../features/house-example/vanity-review.js';
 import { ProjectNotebook } from '../features/house-example/project-notebook.js';
 import { SharedDesign } from '../features/house-example/shared-design.js';
 import { OwnStudio, type OwnStart } from '../features/house-example/own-studio.js';
@@ -24,6 +25,8 @@ export default function PublicStudio({
   start: OwnStart | null;
   onOpen: (route: string) => void;
 }) {
+  if (/^#example\/hutchinson-vanity(?:\/r[12](?:\/scope)?)?(?:\?tile=(?:gray|ivory))?$/.test(hash))
+    return <VanityReview key={hash} hash={hash} />;
   if (hash === '#notebook') return <ProjectNotebook key={hash} />;
   if (hash.startsWith('#project/'))
     return <ProjectNotebook key={hash} projectId={decodeURIComponent(hash.split('/')[1])} />;

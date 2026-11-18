@@ -126,6 +126,17 @@ export function PublicApp() {
         </RouteBoundary>
       </>
     );
+  if (
+    /^#example\/hutchinson-vanity(?:\/r[12](?:\/scope)?)?(?:\?tile=(?:gray|ivory))?$/.test(hash)
+  ) {
+    return (
+      <RouteBoundary key={hash}>
+        <Suspense fallback={<PageLoading />}>
+          <Studio hash={hash} start={null} onOpen={open} />
+        </Suspense>
+      </RouteBoundary>
+    );
+  }
   return (
     <div
       className={`prompt-workspace ${landing ? 'is-landing' : 'is-example-project is-house-example'}`}
